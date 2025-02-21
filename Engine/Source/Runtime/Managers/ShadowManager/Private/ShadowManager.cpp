@@ -213,9 +213,9 @@ namespace Engine::Managers
 			primitive.commandList->FlagReady();
 		}
 
-		Renderer::GetInstance().RenderPassVanillaInclusion<Engine::ForwardRenderPassTask>
+		Renderer::GetInstance().RenderPassVanillaInclusion<SHADER_DOMAIN_OPAQUE, Engine::ForwardRenderPassTask>
 			(
-			 dt, true, SHADER_DOMAIN_OPAQUE, local_param, { m_light_sb_.get(), m_light_vp_sb_.get() },
+			 dt, true, local_param, { m_light_sb_.get(), m_light_vp_sb_.get() },
 			 [](const Strong<Abstracts::ObjectBase>& obj)
 			 {
 				 if (obj->GetLayer() == RESERVED_LAYER_CAMERA ||

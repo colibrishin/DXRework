@@ -56,13 +56,14 @@ namespace Engine::Managers
 		using RenderPassTaskUniqueContainer = std::unordered_map<std::wstring, Unique<RenderPassTask>>;
 		using RenderPassTaskBorrowedContainer = std::unordered_map<std::wstring, RenderPassTask*>;
 
+    private:
         template <typename Cont>
         void RenderPass( 
-                const Cont                                                        container[ SHADER_DOMAIN_MAX ],
+                const Cont                                                       &container,
                 float                                                             dt,
                 bool                                                              shader_bypass,
                 eShaderDomain                                                     domain,
-                const SBs::LocalParamSB                                          &local_param_sb,
+                const Graphics::SBs::LocalParamSB                                &local_param_sb,
                 const aligned_vector<const StructuredBufferDecorator *>          &additional_sbs,
                 const ObjectPredication                                          &predication,
                 const ContextSetupFunction                                       &prerender_predicate,
@@ -70,9 +71,9 @@ namespace Engine::Managers
                 const std::unordered_map<std::string_view, ContextSetupFunction> &prerender_funcs,
                 const std::unordered_map<std::string_view, ContextSetupFunction> &postrender_funcs ) const
         {
-            if constexpr ( std::is_same_v<std::remove_const_t<std::remove_reference_t<decltype( m_render_pass_tasks_[ 0 ] )>>, Cont> )
+            if constexpr ( is_val_cont_v<Cont, RenderPassTask*> )
             {
-                for ( const auto &task : container[ domain ] | std::views::values )
+                for ( const auto &task : container )
                 {
                     task->Run( dt,
                                shader_bypass,
@@ -84,11 +85,11 @@ namespace Engine::Managers
                                postrender_predicate,
                                prerender_funcs,
                                postrender_funcs );
-                }
+                }   
             }
-            else
+            else if constexpr ( is_key_val_cont_v<Cont, RenderPassTask *> )
             {
-                for ( const auto &task : container[ domain ] )
+                for ( const auto &task : container | std::views::values )
                 {
                     task->Run( dt,
                                shader_bypass,
@@ -105,17 +106,17 @@ namespace Engine::Managers
         }
 
         template <typename Cont>
-        void RenderPassAssisted( const Cont               container[ SHADER_DOMAIN_MAX ],
-                                 float                    dt,
-                                 bool                     shader_bypass,
-                                 eShaderDomain            domain,
-                                 const SBs::LocalParamSB &local_param_sb,
+        void RenderPassAssisted( const Cont                        &container,
+                                 float                              dt,
+                                 bool                               shader_bypass,
+                                 eShaderDomain                      domain,
+                                 const Graphics::SBs::LocalParamSB &local_param_sb,
                                  const aligned_vector<const StructuredBufferDecorator *> &additional_sbs,
                                  const ObjectPredication                                 &predication,
                                  const ContextSetupFunction                              &prerender_predicate,
                                  const ContextSetupFunction                              &postrender_predicate ) const
         {
-            RenderPass( container[ SHADER_DOMAIN_MAX ],
+            RenderPass( container,
                         dt,
                         shader_bypass,
                         domain,
@@ -131,28 +132,24 @@ namespace Engine::Managers
 		template <typename... ExcludeRenderTaskTs>
 		struct ExclusionPredicate
 		{
-            static void ResolveDirtyness( const RenderPassTaskBorrowedContainer cont[ SHADER_DOMAIN_MAX ],
-                                          std::vector<RenderPassTask *> tasks[ SHADER_DOMAIN_MAX ] )
+            static void ResolveDirtyness( const RenderPassTaskUniqueContainer &cont,
+                                          std::vector<RenderPassTask *>       &tasks )
 			{
-                for ( size_t i = 0; i < SHADER_DOMAIN_MAX; ++i )
+                tasks.clear();
+                tasks.reserve( cont.size() );
+
+                for ( const auto &task : cont | std::views::values )
                 {
-                    tasks[ i ]->clear();
-                    tasks[ i ]->reserve( cont[ i ]->size() );
-
-                    for ( const auto &task : cont[ i ] | std::views::values )
+                    if ( bool check[] = { task->GetTypeHash() == ExcludeRenderTaskTs::StaticTypeHash() ... };
+                         std::any_of(
+                                 std::begin( check ), std::end( check ), []( const bool b ) { return b == true; } ) )
                     {
-                        if ( bool check[] = { task->GetTypeHash() == ExcludeRenderTaskTs::StaticTypeHash()... };
-                             std::any_of( std::begin( check ),
-                                          std::end( check ),
-                                          []( const bool b ) { return b == true; } ) )
-                        {
-                            continue;
-                        }
+                        continue;
+                    }
 
-                        if ( task != nullptr )
-                        {
-                            tasks[ i ]->emplace_back( task.get() );
-                        }
+                    if ( task != nullptr )
+                    {
+                        tasks.emplace_back( task.get() );
                     }
                 }
 			}
@@ -161,33 +158,30 @@ namespace Engine::Managers
 		template <typename... IncludeRenderTaskTs>
         struct InclusionPredicate
         {
-            static void ResolveDirtyness( const RenderPassTaskBorrowedContainer cont[ SHADER_DOMAIN_MAX ],
-                                          std::vector<RenderPassTask *> tasks[ SHADER_DOMAIN_MAX ] )
+            static void ResolveDirtyness( const RenderPassTaskUniqueContainer &cont,
+                                          std::vector<RenderPassTask *>       &tasks )
             {
-                for ( size_t i = 0; i < SHADER_DOMAIN_MAX; ++i )
-                {
-                    tasks[ i ]->clear();
-                    tasks[ i ]->reserve( cont[ i ]->size() );
+                tasks.clear();
+                tasks.reserve( cont.size() );
 
-                    for ( const auto &task : cont[ i ] | std::views::values )
+                for ( const auto &task : cont | std::views::values )
+                {
+                    if ( bool check[] = { task->GetTypeHash() == IncludeRenderTaskTs::StaticTypeHash() ... };
+                         std::any_of(
+                                 std::begin( check ), std::end( check ), []( const bool b ) { return b == true; } ) )
                     {
-                        if ( bool check[] = { task->GetTypeHash() == IncludeRenderTaskTs::StaticTypeHash()... };
-                             std::any_of( std::begin( check ),
-                                          std::end( check ),
-                                          []( const bool b ) { return b == true; } ) )
-                        {
-                            tasks[ i ]->emplace_back( task.get() );
-                        }
+                        tasks.emplace_back( task.get() );
                     }
                 }
             }
         };
 
-	    template <typename PredicationT>
+    public:
+
+	    template <typename PredicationT, eShaderDomain Domain>
         void RenderPassVanillaPredicate(
             float                                                             dt,
             bool                                                              shader_bypass,
-            eShaderDomain                                                     domain,
             const Graphics::SBs::LocalParamSB&                                local_param_sb,
             const aligned_vector<const StructuredBufferDecorator*>&           additional_sbs,
             const ObjectPredication&                                          predication,
@@ -197,12 +191,12 @@ namespace Engine::Managers
             const std::unordered_map<std::string_view, ContextSetupFunction>& postrender_funcs
         )
 	    {
-	        static std::vector<RenderPassTask*> render_pass_task_copy[ SHADER_DOMAIN_MAX ];
+	        static std::vector<RenderPassTask*> borrowed_render_pass_task_;
             static std::once_flag               delegate_flag;
-            static const auto& func = [ this ]()
-            {
-                PredicationT::ResolveDirtyness( m_render_pass_tasks_, render_pass_task_copy );
-            };
+            static const auto                  &func = [ this ]()
+                { 
+                    PredicationT::ResolveDirtyness( m_unique_render_pass_tasks_, borrowed_render_pass_task_ );
+                };
 
             std::call_once( delegate_flag, [ this ]()
             {
@@ -210,10 +204,10 @@ namespace Engine::Managers
                 onRenderTaskDirty.Listen( func );
             } );
 
-            RenderPass( render_pass_task_copy,
+            RenderPass( borrowed_render_pass_task_,
                         dt,
                         shader_bypass,
-                        domain,
+                        Domain,
                         local_param_sb,
                         additional_sbs,
                         predication,
@@ -223,24 +217,22 @@ namespace Engine::Managers
                         postrender_funcs );
 	    }
 
-	    template <typename PredicationT>
-        void RenderPassAssistedPredicate(
-            float                                                   dt,
-            bool                                                    shader_bypass,
-            eShaderDomain                                           domain,
-            const Graphics::SBs::LocalParamSB&                      local_param_sb,
-            const aligned_vector<const StructuredBufferDecorator*>& additional_sbs,
-            const ObjectPredication&                                predication,
-            const ContextSetupFunction&                             prerender_predicate,
-            ContextSetupFunction&                             postrender_predicate
+	    template <typename PredicationT, eShaderDomain Domain>
+        void RenderPassAssistedPredicate( float                                                    dt,
+                                          bool                                                     shader_bypass,
+                                          const Graphics::SBs::LocalParamSB                       &local_param_sb,
+                                          const aligned_vector<const StructuredBufferDecorator *> &additional_sbs,
+                                          const ObjectPredication                                 &predication,
+                                          const ContextSetupFunction                              &prerender_predicate,
+                                          ContextSetupFunction &postrender_predicate
         )
 	    {
-            static std::vector<RenderPassTask *> render_pass_task_copy[ SHADER_DOMAIN_MAX ];
+            static std::vector<RenderPassTask *> render_pass_task_copy;
             static std::once_flag               delegate_flag;
-            static const auto& func = [ this ]()
-            {
-                PredicationT::ResolveDirtyness( m_render_pass_tasks_, render_pass_task_copy );
-            };
+            static const auto                   &func = [ this ]()
+                { 
+                    PredicationT::ResolveDirtyness( m_unique_render_pass_tasks_, render_pass_task_copy );
+                };
 
             std::call_once( delegate_flag, [ this ]()
             {
@@ -251,7 +243,7 @@ namespace Engine::Managers
             RenderPassAssisted( render_pass_task_copy,
                                 dt,
                                 shader_bypass,
-                                domain,
+                                Domain,
                                 local_param_sb,
                                 additional_sbs,
                                 predication,
@@ -259,13 +251,12 @@ namespace Engine::Managers
                                 postrender_predicate );
 	    }
 
-		template <typename... RenderTaskTs>
+		template <eShaderDomain Domain, typename... RenderTaskTs>
             requires( std::is_base_of_v<RenderPassTask, RenderTaskTs>, ... )
         void
         RenderPassVanillaExclusion(
 			    float                                                    dt,
 				bool                                                     shader_bypass,
-				eShaderDomain                                            domain,
 				const Graphics::SBs::LocalParamSB& local_param_sb,
 				const aligned_vector<const StructuredBufferDecorator*>& additional_sbs,
 				const ObjectPredication& predication,
@@ -274,24 +265,22 @@ namespace Engine::Managers
 				const std::unordered_map<std::string_view, ContextSetupFunction>& prerender_funcs,
 				const std::unordered_map<std::string_view, ContextSetupFunction>& postrender_funcs)
 		{
-            RenderPassVanillaPredicate<ExclusionPredicate<RenderTaskTs...>>( dt,
-                                                                                shader_bypass,
-                                                                                domain,
-                                                                                local_param_sb,
-                                                                                additional_sbs,
-                                                                                predication,
-                                                                                prerender_predicate,
-                                                                                postrender_predicate,
-                                                                                prerender_funcs,
-                                                                                postrender_funcs );
+            RenderPassVanillaPredicate<ExclusionPredicate<RenderTaskTs...>, Domain>( dt,
+                                                                                     shader_bypass,
+                                                                                     local_param_sb,
+                                                                                     additional_sbs,
+                                                                                     predication,
+                                                                                     prerender_predicate,
+                                                                                     postrender_predicate,
+                                                                                     prerender_funcs,
+                                                                                     postrender_funcs );
 		}
 
-		template <typename... RenderTaskTs>
+		template <eShaderDomain Domain, typename... RenderTaskTs>
             requires( std::is_base_of_v<RenderPassTask, RenderTaskTs>, ... )
         void
         RenderPassVanillaInclusion( float                                                    dt,
                                    bool                                                     shader_bypass,
-                                   eShaderDomain                                            domain,
                                    const Graphics::SBs::LocalParamSB                       &local_param_sb,
                                    const aligned_vector<const StructuredBufferDecorator *> &additional_sbs,
                                    const ObjectPredication                                 &predication,
@@ -300,63 +289,58 @@ namespace Engine::Managers
                                    const std::unordered_map<std::string_view, ContextSetupFunction> &prerender_funcs,
                                    const std::unordered_map<std::string_view, ContextSetupFunction> &postrender_funcs )
         {
-            RenderPassVanillaPredicate<InclusionPredicate<RenderTaskTs...>>( dt,
-                                                                                shader_bypass,
-                                                                                domain,
-                                                                                local_param_sb,
-                                                                                additional_sbs,
-                                                                                predication,
-                                                                                prerender_predicate,
-                                                                                postrender_predicate,
-                                                                                prerender_funcs,
-                                                                                postrender_funcs );
+            RenderPassVanillaPredicate<InclusionPredicate<RenderTaskTs...>, Domain>( dt,
+                                                                                     shader_bypass,
+                                                                                     local_param_sb,
+                                                                                     additional_sbs,
+                                                                                     predication,
+                                                                                     prerender_predicate,
+                                                                                     postrender_predicate,
+                                                                                     prerender_funcs,
+                                                                                     postrender_funcs );
         }
 
-		template <typename... RenderTaskTs>
+		template <eShaderDomain Domain, typename... RenderTaskTs>
             requires( std::is_base_of_v<RenderPassTask, RenderTaskTs>, ... )
 		void RenderPassAssistedInclusion(
 			float                                                    dt,
 			bool                                                     shader_bypass,
-			eShaderDomain                                            domain,
 			const Graphics::SBs::LocalParamSB& local_param_sb,
 			const aligned_vector<const StructuredBufferDecorator*>& additional_sbs,
 			const ObjectPredication& predication,
 			const ContextSetupFunction& prerender_predicate,
 			const ContextSetupFunction& postrender_predicate) const
 		{
-            RenderPassAssistedPredicate<InclusionPredicate<RenderTaskTs...>>( dt,
-                                                                           shader_bypass,
-                                                                           domain,
-                                                                           local_param_sb,
-                                                                           additional_sbs,
-                                                                           predication,
-                                                                           prerender_predicate,
-                                                                           postrender_predicate,
-                                                                           m_prerender_funcs_,
-                                                                           m_postrender_funcs_ );
-		}
+            RenderPassAssistedPredicate<InclusionPredicate<RenderTaskTs...>, Domain>( dt,
+                                                                                      shader_bypass,
+                                                                                      local_param_sb,
+                                                                                      additional_sbs,
+                                                                                      predication,
+                                                                                      prerender_predicate,
+                                                                                      postrender_predicate,
+                                                                                      m_prerender_funcs_,
+                                                                                      m_postrender_funcs_ );
+        }
 
-		template <typename... RenderTaskTs>
+		template <eShaderDomain Domain, typename... RenderTaskTs>
             requires( std::is_base_of_v<RenderPassTask, RenderTaskTs>, ... )
         void RenderPassAssistedExclusion( float                                                    dt,
                                           bool                                                     shader_bypass,
-                                          eShaderDomain                                            domain,
                                           const Graphics::SBs::LocalParamSB                       &local_param_sb,
                                           const aligned_vector<const StructuredBufferDecorator *> &additional_sbs,
                                           const ObjectPredication                                 &predication,
                                           const ContextSetupFunction                              &prerender_predicate,
                                           const ContextSetupFunction &postrender_predicate ) const
         {
-            RenderPassAssistedPredicate<ExclusionPredicate<RenderTaskTs...>>( dt,
-                                                                           shader_bypass,
-                                                                           domain,
-                                                                           local_param_sb,
-                                                                           additional_sbs,
-                                                                           predication,
-                                                                           prerender_predicate,
-                                                                           postrender_predicate,
-                                                                           m_prerender_funcs_,
-                                                                           m_postrender_funcs_ );
+            RenderPassAssistedPredicate<ExclusionPredicate<RenderTaskTs...>, Domain>( dt,
+                                                                                      shader_bypass,
+                                                                                      local_param_sb,
+                                                                                      additional_sbs,
+                                                                                      predication,
+                                                                                      prerender_predicate,
+                                                                                      postrender_predicate,
+                                                                                      m_prerender_funcs_,
+                                                                                      m_postrender_funcs_ );
         }
 
 		[[nodiscard]] bool Ready() const;

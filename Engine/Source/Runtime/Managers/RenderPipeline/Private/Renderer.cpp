@@ -48,7 +48,7 @@ namespace Engine::Managers
 	{
 		for (size_t i = 0; i < SHADER_DOMAIN_MAX; ++i)
 		{
-            RenderPassAssisted( m_render_pass_tasks_,
+            RenderPassAssisted( m_render_pass_tasks_[ i ],
                                 dt,
                                 false,
                                 static_cast<eShaderDomain>( i ),
@@ -95,7 +95,7 @@ namespace Engine::Managers
 
 		if ( m_unique_render_pass_tasks_.contains( name.data() ) )
 		{
-            m_render_pass_tasks_[ domain ].emplace( m_unique_render_pass_tasks_.at( name.data() ).get() );
+            m_render_pass_tasks_[ domain ].emplace( name.data(), m_unique_render_pass_tasks_.at( name.data() ).get() );
             onRenderTaskDirty.Broadcast();
 		}
 	}

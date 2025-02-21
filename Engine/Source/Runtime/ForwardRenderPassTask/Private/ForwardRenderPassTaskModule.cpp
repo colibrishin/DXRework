@@ -13,16 +13,12 @@ namespace Engine
         std::string_view typename_str = ForwardRenderPassTask::StaticTypeName();
         std::wstring     typename_wstr( typename_str.begin(), typename_str.end() );
 
-		ForwardRenderPassTask *new_task = new ForwardRenderPassTask();
-		for ( size_t i = 0; i < SHADER_DOMAIN_MAX; ++i )
-		{
-            Managers::Renderer::GetInstance().RegisterRenderPass( typename_wstr, new_task, (eShaderDomain)i);
-		}
+        Managers::Renderer::GetInstance().RegisterRenderPass( typename_wstr, new ForwardRenderPassTask() );
 
 #ifdef CFG_RENDERTYPE_FORWARDONLY
         for ( size_t i = 0; i < SHADER_DOMAIN_MAX; ++i )
         {
-            Managers::Renderer::GetInstance().AddToMainPassTask( typename_wstr.data(), (eShaderDomain)i);
+            Managers::Renderer::GetInstance().RenderPassWith( typename_wstr.data(), ( eShaderDomain )i );
         }
 #endif
 		return true;
@@ -32,6 +28,13 @@ namespace Engine
 	{
         std::string_view typename_str = ForwardRenderPassTask::StaticTypeName();
         std::wstring     typename_wstr( typename_str.begin(), typename_str.end() );
+
+#ifdef CFG_RENDERTYPE_FORWARDONLY
+        for ( size_t i = 0; i < SHADER_DOMAIN_MAX; ++i )
+        {
+            Managers::Renderer::GetInstance().RenderPassWithout( typename_wstr.data(), ( eShaderDomain )i );
+        }
+#endif
 
         Managers::Renderer::GetInstance().UnregisterRenderPass( typename_wstr );
 		return true;
