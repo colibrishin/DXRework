@@ -41,11 +41,6 @@ public class Utils
         }
     }
 
-    public static bool HasRaytracingOn(Project.Configuration conf)
-    {
-        return conf.Defines.Contains("CFG_RAYTRACING=1");
-    }
-
     public static EngineTarget GetDefinedTarget() 
     {
         return new EngineTarget(

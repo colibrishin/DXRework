@@ -97,6 +97,15 @@ namespace Engine
             slot);
     }
 
+    void DescriptorPtrImpl::SetSampler( const PrimitiveSampler *sampler, const eSampler slot ) const
+    {
+        if (!IsValid()) { return; }
+        m_handler_->SetSampler(
+            m_cpu_sampler_handle_,
+            static_cast<D3D12_CPU_DESCRIPTOR_HANDLE>(sampler->GetCPUAddress()),
+            slot);
+    }
+
     void DescriptorPtrImpl::SetSampler(const D3D12_CPU_DESCRIPTOR_HANDLE& sampler, const UINT slot) const
     {
         if (!IsValid()) { return; }

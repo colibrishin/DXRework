@@ -1,7 +1,7 @@
 #include "CoreModule/Public/CoreModule.h"
 #include "CoreModule.generated.h"
 
-MODULE_IMPL(Engine::CoreModule, Core)
+MODULE_IMPL( Engine::CoreModule, Core )
 
 #if WITH_EDITOR
 UPDATE_CALL_TEMPLATE_OneParam(OnUIUpdate, Engine::UIContext* const, parent)
@@ -89,8 +89,7 @@ bool Engine::CoreModule::InitializeImpl()
 			 CoreLoop::LOOP_TYPE_LOGIC,
 			 &Managers::ResourceManager::GetInstance,
 			 &Managers::SceneManager::GetInstance,
-			 &Managers::TaskScheduler::GetInstance,
-			 &Managers::CameraManager::GetInstance
+			 &Managers::TaskScheduler::GetInstance
 			);
 
 #if WITH_DEBUG
@@ -111,8 +110,7 @@ bool Engine::CoreModule::ShutdownImpl()
 			 CoreLoop::LOOP_TYPE_LOGIC,
 			 &Managers::ResourceManager::GetInstance,
 			 &Managers::SceneManager::GetInstance,
-			 &Managers::TaskScheduler::GetInstance,
-			 &Managers::CameraManager::GetInstance
+			 &Managers::TaskScheduler::GetInstance
 			);
 
 #if WITH_DEBUG
@@ -122,8 +120,6 @@ bool Engine::CoreModule::ShutdownImpl()
 			 &Managers::Debugger::GetInstance
 			);
 #endif
-
-	GraphicInterfaceAccessor::Shutdown();
 	
 #if WITH_EDITOR
 	UIInterfaceAccessor::Shutdown();

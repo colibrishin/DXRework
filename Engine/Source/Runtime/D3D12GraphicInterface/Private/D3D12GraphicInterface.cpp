@@ -18,53 +18,55 @@
 
 #include "D3D12PrimitiveTexture.h"
 #include "D3D12ComputePrimitiveShader.h"
+#include "D3D12ConstantBuffer.hpp"
 #include "D3D12GraphicMemoryPool.h"
 #include "D3D12GraphicResourcePrimitive.h"
-#include "D3D12RaytracingShader.h"
-#include "RaytracingShader.h"
 #include "ToolkitAPI.h"
+
+#if CFG_RAYTRACING
+#include "RaytracingShader.h"
+#include "D3D12RaytracingShader.h"
+#endif
 
 #include "CoreModule/Public/CoreModule.h"
 
 MODULE_IMPL(Engine::D3D12GraphicInterfaceModule, D3D12GraphicInterface)
 
-namespace Engine
+bool Engine::D3D12GraphicInterfaceModule::InitializeImpl()
 {
-	bool Engine::D3D12GraphicInterfaceModule::InitializeImpl()
-	{
-		GraphicInterfaceAccessor::SetGraphicInterface<D3D12GraphicInterface>();
-		
-		CoreModule::GetContext().AddManager(
-			CoreLoop::LOOP_TYPE_RENDER,
-			Managers::ToolkitAPI::GetInstance);
+	GraphicInterfaceAccessor::SetGraphicInterface<D3D12GraphicInterface>();
+	
+	CoreModule::GetContext().AddManager(
+		CoreLoop::LOOP_TYPE_RENDER,
+		Managers::ToolkitAPI::GetInstance);
 
-		return true;
-	}
-
-	bool Engine::D3D12GraphicInterfaceModule::ShutdownImpl()
-	{
-		CoreModule::GetContext().RemoveManager(
-			CoreLoop::LOOP_TYPE_RENDER,
-			Managers::ToolkitAPI::GetInstance);
-
-		auto& gi = GraphicInterfaceAccessor::GetInterface();
-		gi.Shutdown();
-
-		return true;
-	}
-
-	bool Engine::D3D12GraphicInterfaceModule::DynamicLoadable()
-	{
-		return true;
-	}
-	const std::vector<std::string>& D3D12GraphicInterfaceModule::LoadAfter() const
-	{
-#if Platform == Windows
-		static std::vector<std::string> load_after{ "WinAPIWrapper" };
-#endif
-		return load_after;
-	}
+	return true;
 }
+
+bool Engine::D3D12GraphicInterfaceModule::ShutdownImpl()
+{
+	CoreModule::GetContext().RemoveManager(
+		CoreLoop::LOOP_TYPE_RENDER,
+		Managers::ToolkitAPI::GetInstance);
+
+	auto& gi = GraphicInterfaceAccessor::GetInterface();
+	gi.Shutdown();
+
+	return true;
+}
+
+bool Engine::D3D12GraphicInterfaceModule::DynamicLoadable()
+{
+	return true;
+}
+const std::vector<std::string>& Engine::D3D12GraphicInterfaceModule::LoadAfter() const
+{
+#if Platform == Windows
+	static std::vector<std::string> load_after{ "WinAPIWrapper" };
+#endif
+	return load_after;
+}
+
 
 Engine::D3D12GraphicInterface::D3D12GraphicInterface() {}
 
@@ -90,11 +92,13 @@ void Engine::D3D12GraphicInterface::Initialize()
 	InitializeDevice();
 	DetachCommandThread();
 
+#if CFG_RAYTRACING
     if (auto& rgi = static_cast<RaytracingExtensionInterface&>(*this);
         rgi.IsRaytracingSupported())
     {
         rgi.InitializeRaytracing();
     }
+#endif
 }
 
 void Engine::D3D12GraphicInterface::Shutdown()
@@ -606,10 +610,12 @@ Engine::PrimitiveSampler *Engine::D3D12GraphicInterface::GetNewPrimitiveSampler(
     return new D3D12PrimitiveSampler();
 }
 
+#if CFG_RAYTRACING
 Engine::RaytracingPrimitiveShader* Engine::D3D12GraphicInterface::GetNewRaytracingShader()
 {
     return new D3D12RaytracingShader();
 }
+#endif
 
 Engine::GraphicInterfaceContextReturnType Engine::D3D12GraphicInterface::GetNewContext(const int8_t type, bool heap_allocation, const std::wstring_view debug_name)
 {

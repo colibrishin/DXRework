@@ -4,7 +4,7 @@ using Sharpmake;
 [module: Include("%EngineDir%/Build/CommonProject.build.cs")]
 
 [Generate]
-public class RaytracingRenderPassTask : CommonProject
+public class RaytracingRenderPassTask : EngineCommonProject
 {
     public RaytracingRenderPassTask() { }
 

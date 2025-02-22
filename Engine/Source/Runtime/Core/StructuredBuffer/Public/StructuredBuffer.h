@@ -77,17 +77,6 @@ namespace Engine
 			SB_T(SB_TYPE_LOCAL_PARAM)
 		};
 
-	    struct ENGINE_CORE_API LightSB
-	    {
-	        SB_T(SB_TYPE_LIGHT)
-
-            Matrix         world;
-	        Color          color;
-	        OffsetT<int>   type;
-	        OffsetT<float> range;
-	        OffsetT<float> radius;
-	    };
-
 		struct ENGINE_CORE_API InstanceSB : public ParamBase
 		{
 			SB_T(SB_TYPE_INSTANCE)

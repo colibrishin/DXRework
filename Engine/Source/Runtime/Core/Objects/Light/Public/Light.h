@@ -44,10 +44,6 @@ namespace Engine::Objects
 
 		void OnDeserialized() override;
 
-#if WITH_EDITOR
-	    void OnUIUpdate(UIContext* const parent, const float dt) override;
-#endif
-
 		Color GetColor() const
 		{
 			return m_color_;

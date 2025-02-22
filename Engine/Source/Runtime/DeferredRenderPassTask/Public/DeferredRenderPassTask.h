@@ -110,6 +110,13 @@ namespace Engine
                                               GraphicInterface                       &gi,
                                               const Resources::Texture               *tex );
 
+    public:
+        void PreRun( const RenderMap *render_map,
+                const size_t render_map_count,
+                const ObjectPredication &predication
+                ) override;
+
+    private:
         SpinLockTicket m_gi_ticket_;
         SpinLockTicket m_local_param_pool_ticket;
         SpinLockTicket m_instance_pool_ticket;

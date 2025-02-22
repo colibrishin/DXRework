@@ -81,8 +81,11 @@ public class EngineSolution : Solution
                 conf.AddProject<InputManager>(target);
             }
 
-            conf.AddProject<RaytracingShader>(target);
-            conf.AddProject<RaytracingRenderPassTask>(target);
+            if (target.RenderType == ERenderType.Raytracing)
+            {
+                conf.AddProject<RaytracingShader>(target);
+                conf.AddProject<RaytracingRenderPassTask>(target);
+            }
 
             {
                 conf.AddProject<AnimationTexture>(target);

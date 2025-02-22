@@ -1,6 +1,5 @@
 #include "../Public/InputManager.h"
 #include "InputInterface.h"
-#include "GraphicInterface.h"
 
 namespace Engine::Managers
 {

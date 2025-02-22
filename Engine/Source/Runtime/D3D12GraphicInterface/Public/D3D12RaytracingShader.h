@@ -1,4 +1,5 @@
 ﻿#pragma once
+#if CFG_RAYTRACING
 #include "D3D12GraphicPrimitiveShader.h"
 
 namespace Engine
@@ -37,3 +38,4 @@ namespace Engine
         size_t m_allocated_shader_record_size_[RAY_SHADER_REC_MAX]{};
     };
 }
+#endif

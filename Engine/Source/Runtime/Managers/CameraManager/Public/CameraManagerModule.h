@@ -1,5 +1,5 @@
 ﻿#pragma once
-#include "ModuleManager/Public/IModule.h"
+#include "ModuleManager.h"
 
 #include "CameraManagerModule.generated.h"
 
@@ -9,8 +9,8 @@ namespace Engine
     struct ENGINE_CAMERAMANAGER_API CameraManagerModule : public IModule
     {
         GENERATE_BODY
-        void Initialize() override;
-        void Shutdown() override;
+        bool InitializeImpl() override;
+        bool ShutdownImpl() override;
         bool DynamicLoadable() override;
     };
 }

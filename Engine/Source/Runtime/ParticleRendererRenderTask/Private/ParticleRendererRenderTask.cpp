@@ -10,8 +10,6 @@
 #include "Source/Runtime/Resources/Material/Public/Material.h"
 #include "Source/Runtime/Core/Components/Transform/Public/Transform.h"
 #include "Shape.h"
-
-#include "Source/Runtime/Resources/RaytracingShader/Public/RaytracingShader.h"
 #include "Source/Runtime/Components/Animator/Public/Animator.h"
 
 namespace Engine

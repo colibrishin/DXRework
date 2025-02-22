@@ -1,4 +1,5 @@
 ﻿#pragma once
+#if CFG_RAYTRACING
 #include "GraphicInterface.h"
 #include "Source/Runtime/Resources/Shader/Public/ShaderBase.h"
 #include "Resource/Public/Resource.h"
@@ -74,3 +75,4 @@ namespace Engine::Resources
         Unique<RaytracingPrimitiveShader> m_primitive_shader_;
     };   
 }
+#endif

@@ -10,7 +10,9 @@
 #include "Source/Runtime/Resources/Texture/Public/Texture.h"
 #include "UIHelpersResourceManager.h"
 
-#include "source/runtime/resources/raytracingshader/public/RaytracingShader.h"
+#if CFG_RAYTRACING
+#include "RaytracingShader.h"
+#endif
 
 namespace Engine::Resources
 {
@@ -115,8 +117,12 @@ namespace Engine::Resources
 			if (m_ui_shader_dialog_)
 			{
 				if (Weak<Resource> resource_to_load;
+#if CFG_RAYTRACING
 					UIHelpers::SingleResourceSelectionDialogInclusion<Material, Shader, RaytracingShader>(GetSharedPtr<Material>(), resource_to_load))
-				{
+#else
+				    UIHelpers::SingleResourceSelectionDialogInclusion<Material, Shader>(GetSharedPtr<Material>(), resource_to_load))
+#endif
+				    {
 					if (const Strong<ShaderBase>& shader = Cast<ShaderBase>(resource_to_load))
 					{
 						SetShader(shader);
@@ -242,7 +248,7 @@ namespace Engine::Resources
 			}
 			
 			m_cached_textures_[slot] = locked;
-			m_material_sb_.texSlotEnable[slot] = true;
+			m_material_sb_.texEnabled[slot] = true;
 
 			if (set_path)
 			{
@@ -266,7 +272,7 @@ namespace Engine::Resources
 			}
 
 			std::swap(m_cached_textures_[before], m_cached_textures_[after]);
-		    std::swap(m_material_sb_.texSlotEnable[before], m_material_sb_.texSlotEnable[after]);
+		    std::swap(m_material_sb_.texEnabled[before], m_material_sb_.texEnabled[after]);
 			std::swap(m_material_sb_.texSlot[before], m_material_sb_.texSlot[after]);
 			std::swap(m_texture_paths_[before], m_texture_paths_[after]);
 		}

@@ -44,49 +44,24 @@
 template <typename Enum>
 constexpr auto CStrEnumStrings()
 {
-	constexpr auto enum_val = magic_enum::enum_names<Enum>();
-	std::array<const char*, enum_val.size()> ret{};
-	for (size_t i = 0; i < enum_val.size(); ++i)
-	{
-		ret[i] = enum_val[i].data();
-	}
-	return ret;
-}
-
-template <typename Enum>
-Enum RecastNonlinearEnum(const auto& cstr_array, size_t value)
-{
-	if (const auto format_validity = magic_enum::enum_cast<Enum>(cstr_array[value]);
-		format_validity.has_value())
-	{
-		return format_validity.value();
-	}
-
-	return static_cast<Enum>(0);
-}
-
-template <typename Enum>
-constexpr auto CStrEnumStrings()
-{
-    constexpr auto enum_val = magic_enum::enum_names<Enum>();
-    std::array<const char*, enum_val.size()> ret{};
-    for (size_t i = 0; i < enum_val.size(); ++i)
+    constexpr auto                            enum_val = magic_enum::enum_names<Enum>();
+    std::array<const char *, enum_val.size()> ret{};
+    for ( size_t i = 0; i < enum_val.size(); ++i )
     {
-        ret[i] = enum_val[i].data();
+        ret[ i ] = enum_val[ i ].data();
     }
     return ret;
 }
 
 template <typename Enum>
-Enum RecastNonlinearEnum(const auto& cstr_array, size_t value)
+Enum RecastNonlinearEnum( const auto &cstr_array, size_t value )
 {
-    if (const auto format_validity = magic_enum::enum_cast<Enum>(cstr_array[value]);
-        format_validity.has_value())
+    if ( const auto format_validity = magic_enum::enum_cast<Enum>( cstr_array[ value ] ); format_validity.has_value() )
     {
         return format_validity.value();
     }
 
-    return static_cast<Enum>(0);
+    return static_cast<Enum>( 0 );
 }
 
 template<class T, std::size_t... N>

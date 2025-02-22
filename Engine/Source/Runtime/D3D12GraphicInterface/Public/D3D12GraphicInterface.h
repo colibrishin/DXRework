@@ -31,7 +31,7 @@ namespace Engine
 	};
 
 #if CFG_RAYTRACING
-	struct ENGINE_D3D12GRAPHICINTERFACE_API D3D12GraphicInterface : public virtual GraphicInterface, public virtual RaytracingExtensionInterface
+	struct ENGINE_D3D12GRAPHICINTERFACE_API D3D12GraphicInterface : public GraphicInterface, public RaytracingExtensionInterface
 #else
 	struct ENGINE_D3D12GRAPHICINTERFACE_API D3D12GraphicInterface : public GraphicInterface
 #endif
@@ -47,11 +47,14 @@ namespace Engine
 		void* GetNativeInterface() override;
 		void* GetNativePipeline() override;
 
+#if CFG_RAYTRACING
 		bool IsRaytracingSupported() override;
 		void InitializeRaytracing() override;
 		void ShutdownRaytracing() override;
 
 	    Unique<GraphicHeapBase> GetRaytracingHeap() override;
+	    
+	    RaytracingPrimitiveShader* GetNewRaytracingShader() override;
 		
 		void* GetRaytracingNativeInterface() override;
 		void* GetRaytracingNativePipeline() override;
@@ -95,7 +98,6 @@ namespace Engine
 		ComputePrimitiveShader* GetNewComputePrimitiveShader() override;
 	    PrimitiveFont          *GetNewPrimitiveFont() override;
 	    PrimitiveSampler       *GetNewPrimitiveSampler() override;
-	    RaytracingPrimitiveShader* GetNewRaytracingShader() override;
 
 		GraphicInterfaceContextReturnType GetNewContext(const int8_t type, bool heap_allocation, const std::wstring_view debug_name) override;
 

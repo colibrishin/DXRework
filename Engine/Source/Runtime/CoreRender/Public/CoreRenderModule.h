@@ -1,12 +1,13 @@
-﻿#pragma once
+#pragma once
 #include "CoreType.h"
 #include "ModuleManager.h"
 
-#include "RaytracingShaderModule.generated.h"
+#include "CoreRenderModule.generated.h"
 
 namespace Engine
 {
-    struct ENGINE_RAYTRACINGSHADER_API RaytracingShaderModule : public IModule
+    ECLASS(module)
+    struct ENGINE_CORERENDER_API CoreRenderModule : public IModule
     {
         GENERATE_BODY
         bool InitializeImpl() override;

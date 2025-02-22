@@ -1,8 +1,6 @@
 #pragma once
-#include <memory>
-
-#include "Source/Runtime/Core/ModuleManager/Public/IModule.h"
-
+#include "CoreType.h"
+#include "ModuleManager.h"
 #include "RaytracingRenderPassTaskModule.generated.h"
 
 namespace Engine 
@@ -11,8 +9,8 @@ namespace Engine
 	struct ENGINE_RAYTRACINGRENDERPASSTASK_API RaytracingRenderPassTaskModule : public IModule
 	{
 		GENERATE_BODY
-		void Initialize() override;
-		void Shutdown() override;
+		bool InitializeImpl() override;
+		bool ShutdownImpl() override;
 		bool DynamicLoadable() override;
 	};
 }

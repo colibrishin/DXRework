@@ -18,7 +18,11 @@ public class Material : EngineCommonProject
         conf.AddPublicDependency<Shader>(target);
         conf.AddPublicDependency<AtlasAnimation>(target);
         conf.AddPublicDependency<AtlasAnimationTexture>(target);
-        conf.AddPublicDependency<RaytracingShader>(target);
+
+        if (target.RenderType == ERenderType.Raytracing)
+        {
+            conf.AddPublicDependency<RaytracingShader>(target);   
+        }
 
         conf.AddPrivateDependency<Texture>(target);
     }

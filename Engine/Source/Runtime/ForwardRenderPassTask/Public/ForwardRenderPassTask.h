@@ -1,10 +1,10 @@
 #pragma once
 #include <memory>
 
-#include "Source/Runtime/Core/GraphicInterface.h"
+#include "GraphicInterface.h"
 #include "Source/Runtime/Core/ConcurrentTypeLibrary/Public/ConcurrentTypeLibrary.h"
 #include "Source/Runtime/Core/TypeLibrary/Public/TypeLibrary.h"
-#include "Source/Runtime/Managers/RenderPipeline/Public/RenderTask.h"
+#include "RenderTask.h"
 #include "Texture.h"
 
 #include "SingletonSpinLock/Public/SingletonSpinLock.h"
@@ -81,7 +81,7 @@ namespace Engine
                                             const std::unordered_map<std::string_view, ContextSetupFunction> &postrender_predicates,
                                             const aligned_vector<InstancePair>                               &instance_pairs );
 
-		[[nodiscard]] void RecordUsedTexture(
+		void RecordUsedTexture(
 			const GraphicInterfaceContextPrimitive* context, GraphicInterface& gi, const Resources::Texture* tex
 		);
 
@@ -96,7 +96,14 @@ namespace Engine
                                            const aligned_vector<Graphics::SBs::InstanceSB *>    &instances,
                                            const aligned_vector<TexturePair>                    &texture_pairs );
 
-		SpinLockTicket m_gi_ticket_;
+    public:
+        void PreRun( const RenderMap *render_map,
+                const size_t render_map_count,
+                const ObjectPredication &predication
+                ) override;
+
+    private:
+        SpinLockTicket m_gi_ticket_;
 		SpinLockTicket m_local_param_pool_ticket;
 		SpinLockTicket m_instance_pool_ticket;
 		SpinLockTicket m_texture_record_ticket_;

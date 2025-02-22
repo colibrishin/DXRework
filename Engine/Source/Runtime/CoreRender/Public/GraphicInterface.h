@@ -1,11 +1,14 @@
 #pragma once
 #include <boost/serialization/access.hpp>
 #include "ConstantBuffer.h"
+#include "RenderType.h"
 #include "StructuredBuffer/Public/StructuredBuffer.h"
 
 namespace Engine
-{    
-	enum ENGINE_CORERENDER_API eHeapType
+{
+    struct AccelStructBuffer;
+
+    enum ENGINE_CORERENDER_API eHeapType
 	{
 		HEAP_TYPE_DEFAULT	= 1,
 		HEAP_TYPE_UPLOAD	= 2,
@@ -882,15 +885,6 @@ namespace Engine
         void* m_resource_ = nullptr;
     };
 
-	struct ENGINE_CORERENDER_API AccelStructBuffer
-	{
-        Unique<GraphicMemoryPool> instanceDescPool;
-        Unique<GraphicMemoryPool> resultPool;
-        Unique<GraphicMemoryPool> scratchPool;
-
-		bool empty = true;
-	};
-
 	struct ENGINE_CORERENDER_API PrimitiveFont
 	{
 		virtual ~PrimitiveFont() = default;
@@ -1641,6 +1635,17 @@ namespace Engine
 	    size_t                           m_allocated_size_;
 		size_t                           m_used_size_;
 	};
+
+#if CFG_RAYTRACING
+    struct ENGINE_CORERENDER_API AccelStructBuffer
+    {
+        Unique<GraphicMemoryPool> instanceDescPool;
+        Unique<GraphicMemoryPool> resultPool;
+        Unique<GraphicMemoryPool> scratchPool;
+
+        bool empty = true;
+    };
+#endif
 }
 
 namespace boost::serialization

@@ -2,25 +2,26 @@
 #include "CameraManagerModule.generated.h"
 
 #include "CameraManager.h"
+#include "CoreModule/Public/CoreModule.h"
 
-#include "CoreModuel/Public/CoreModule.h"
+MODULE_IMPL( Engine::CameraManagerModule, CameraManager )
 
-#include "ModuleManager/Public/ModuleManager.h"
-
-MODULE_IMPL(Engine::CameraManagerModule, CameraManager)
-
-void Engine::CameraManagerModule::Initialize()
+bool Engine::CameraManagerModule::InitializeImpl()
 {
     CoreModule::GetContext().AddManager(
         CoreLoop::LOOP_TYPE_LOGIC,
         &Managers::CameraManager::GetInstance);
+
+    return true;
 }
 
-void Engine::CameraManagerModule::Shutdown()
+bool Engine::CameraManagerModule::ShutdownImpl()
 {
     CoreModule::GetContext().RemoveManager(
         CoreLoop::LOOP_TYPE_LOGIC,
         &Managers::CameraManager::GetInstance);
+
+    return true;
 }
 
 bool Engine::CameraManagerModule::DynamicLoadable()

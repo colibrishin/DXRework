@@ -1,4 +1,5 @@
-﻿#include "D3D12RaytracingShader.h"
+﻿#if CFG_RAYTRACING
+#include "D3D12RaytracingShader.h"
 #include <directx-dxc/dxcapi.h>
 #include <directx-dxc/d3d12shader.h>
 
@@ -363,3 +364,4 @@ namespace Engine
         }
     }
 }
+#endif

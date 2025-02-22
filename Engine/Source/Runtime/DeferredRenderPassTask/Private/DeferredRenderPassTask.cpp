@@ -595,3 +595,8 @@ void Engine::DeferredRenderPassTask::RecordUsedTexture( const GraphicInterfaceCo
         }
     }
 }
+
+void Engine::DeferredRenderPassTask::PreRun( const RenderMap *render_map,
+        const size_t render_map_count,
+        const ObjectPredication &predication)
+{}

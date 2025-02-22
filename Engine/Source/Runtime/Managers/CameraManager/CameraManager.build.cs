@@ -4,7 +4,7 @@ using Sharpmake;
 [module: Include("%EngineDir%/Build/CommonProject.build.cs")]
 
 [Generate]
-public class CameraManager : CommonProject
+public class CameraManager : EngineCommonProject
 {
     public CameraManager() { }
 
@@ -13,7 +13,6 @@ public class CameraManager : CommonProject
         base.ConfigureAll(conf, target);
         conf.AddPublicDependency<Core>(target);
         conf.AddPublicDependency<CoreRender>(target);
-        conf.AddPublicDependency<DirectXTK>(target);
         conf.AddPublicDependency<Boost>(target);
     }
 }

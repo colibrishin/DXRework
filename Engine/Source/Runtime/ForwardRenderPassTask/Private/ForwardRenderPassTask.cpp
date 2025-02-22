@@ -428,4 +428,9 @@ namespace Engine
 			instance_resolved += instance_to_resolve;
 		}
 	}
+
+    void ForwardRenderPassTask::PreRun( const RenderMap *render_map,
+            const size_t render_map_count,
+            const ObjectPredication &predication)
+    {}
 }

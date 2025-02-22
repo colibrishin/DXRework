@@ -120,28 +120,4 @@ namespace Engine::Objects
 	{
 		ObjectBase::OnDeserialized();
 	}
-    
-#if WITH_EDITOR
-    void Light::OnUIUpdate(UIContext* const parent, const float dt)
-	{
-	    if (parent)
-	    {
-	        ObjectBase::OnUIUpdate(parent, dt);
-
-	        if (m_ui_info_.dialogOpened)
-	        {
-	            UIInterface& ui = UIInterfaceAccessor::GetInterface();
-	            static constexpr auto light_type_enum = CStrEnumStrings<eLightType>();
-	            
-	            if (UIContext context = UIInterface::NewContext(ui.NewDialog({ this, m_ui_info_.label, m_ui_info_.dialogOpened })))
-	            {
-	                context |= ui.NewLabelAndFloat( { "Radius", m_radius_, 0.f, 0.f, FLT_MAX, true } );
-	                context |= ui.NewLabelAndFloat( { "Range", m_range_, 0.f, 0.f, FLT_MAX, true } );
-	                context |= ui.NewCombobox( { "Light type", reinterpret_cast<int*>(&m_type_), light_type_enum.data(), light_type_enum.size() } );
-	                context |= ui.NewLabelAndVec4( { "Color", &m_color_.x, 0.f, 0.f, 1.f, true } );
-	            }
-	        }
-	    }
-	}
-#endif
 } // namespace Engine::Objects
