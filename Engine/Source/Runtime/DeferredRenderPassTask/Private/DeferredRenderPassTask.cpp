@@ -377,7 +377,7 @@ inline void Engine::DeferredRenderPassTask::MaterialPass_Multithread(
                 break;
             }
 
-            const TexturePair &pair                      = texture_pairs[ instance_resolved ];
+            const TexturePair &pair                      = texture_pairs[ instance_resolved + instance_to_resolve ];
             bool               reserved_texture_tolerant = false;
 
             for ( size_t i = 0; i < pair.reservedTextures->size(); ++i )
@@ -409,7 +409,7 @@ inline void Engine::DeferredRenderPassTask::MaterialPass_Multithread(
                 }
             }
 
-            if ( count > pair.textures->size() )
+            if ( count > pair.GetTextureCount() )
             {
                 size_t msb = count - 1;
                 size_t lsb = max_tex_binds - count;
