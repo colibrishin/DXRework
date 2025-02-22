@@ -138,7 +138,7 @@ void Engine::AlignText(const std::string_view label)
 
 std::string Engine::LabelSuffix(const std::string_view label)
 {
-	std::string labelID = "##";
+	std::string labelID = "###";
 	labelID += label;
 
 	return labelID;
