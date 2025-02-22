@@ -12,6 +12,7 @@ namespace Engine::UIHelpers
     using ObjectUIPredicateSignature = std::function<bool(const Strong<Abstracts::ObjectBase>&)>;
     using ObjectUITypePredicateSignature = std::function<bool(const HashType)>;
 
+    template <bool Multiple>
     struct UISceneIterator
     {
         void operator()( const auto &                             container,
@@ -55,7 +56,10 @@ namespace Engine::UIHelpers
                                                                  selection_map[ ptr ][ locked ] } ) ).SetFunction(
                                     [&window]()
                                     {
-                                        window = false;
+                                        if constexpr (!Multiple)
+                                        {
+                                            window = false;   
+                                        }
                                     } );
                         }
                     }
@@ -73,7 +77,7 @@ namespace Engine::UIHelpers
             const ObjectUIPredicateSignature &    predicate      = {},
             const ObjectUITypePredicateSignature &type_predicate = {} )
     {
-        return SingleSelectionDialog<T, Abstracts::ObjectBase, UISceneIterator>(
+        return SingleSelectionDialog<T, Abstracts::ObjectBase, UISceneIterator<false>>(
                 Managers::SceneManager::GetInstance().GetScenes(),
                 ptr,
                 object_selected,
@@ -88,7 +92,7 @@ namespace Engine::UIHelpers
         const ObjectUIPredicateSignature& predicate = {},
         const ObjectUITypePredicateSignature& type_predicate = {})
     {
-        return MultipleSelectionDialog<T, Abstracts::ObjectBase, UISceneIterator>(
+        return MultipleSelectionDialog<T, Abstracts::ObjectBase, UISceneIterator<true>>(
                 Managers::SceneManager::GetInstance().GetScenes(),
                 ptr,
                 object_selected,

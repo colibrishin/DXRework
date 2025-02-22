@@ -182,6 +182,7 @@ namespace Engine::UIHelpers
         static const std::string dialog_id    = std::format( "Single{}SelectionDialog", U::StaticTypeName() );
         static const std::string dialog_title = std::format( "Select {}...", U::StaticTypeName() );
         static const std::string dialog_listbox_name = std::format( "Single{}SelectionDialogListBox", U::StaticTypeName() );
+        static const std::string dialog_confirm = std::format( "Single{}SelectionDialogListBoxConfirmButton", U::StaticTypeName() );
 
         if ( UIContext context = UIInterface::NewContext( ui.NewDialog(
                 ptr.get(),
@@ -191,6 +192,11 @@ namespace Engine::UIHelpers
             context += ui.NewListBox( ptr.get(), dialog_listbox_name, { "List", 0, 0 } );
             iterator( container, &context, ptr, predicate, type_predicate, selection, window );
             --context;
+
+            (context |= ui.NewButton( ptr.get(), dialog_confirm, { "Confirm" } )).SetFunction( [&window]()
+            {
+                window = false;
+            } );
         }
 
         if ( !window )
@@ -228,15 +234,21 @@ namespace Engine::UIHelpers
         static const std::string dialog_id    = std::format( "Multiple{}SelectionDialog", U::StaticTypeName() );
         static const std::string dialog_title = std::format( "Select {}...", U::StaticTypeName() );
         static const std::string dialog_listbox_name = std::format( "Multiple{}SelectionDialogListBox", U::StaticTypeName() );
+        static const std::string dialog_confirm = std::format( "Multiple{}SelectionDialogListBoxConfirmButton", U::StaticTypeName() );
+
 
         if ( UIContext context = UIInterface::NewContext( ui.NewDialog(
                 ptr.get(),
                 dialog_id,
                 { dialog_title, window } ) ) )
         {
-            context += ui.NewListBox( ptr.get(), "MultipleSelectionDialogListBox", { "List", 0, 0 } );
+            context += ui.NewListBox( ptr.get(), dialog_listbox_name, { "List", 0, 0 } );
             iterator( container, &context, ptr, predicate, type_predicate, selection, window );
             --context;
+            ( context |= ui.NewButton( ptr.get(), dialog_confirm, { "Confirm" } ) ).SetFunction( [&window]()
+            {
+                window = false;
+            } );
         }
 
         if ( !window )

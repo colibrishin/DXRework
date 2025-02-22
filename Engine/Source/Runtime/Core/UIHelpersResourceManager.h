@@ -10,6 +10,7 @@ namespace Engine::UIHelpers
     using ResourceUIPredicateSignature = std::function<bool(const Strong<Abstracts::Resource>&)>;
     using ResourceUITypePredicateSignature = std::function<bool(const ResourceType)>;
 
+    template <bool Multiple>
     struct UIResourceIterator
     {
         void operator()( const auto &                            container,
@@ -62,7 +63,10 @@ namespace Engine::UIHelpers
                                                        { resource->GetName(), selection_map[ ptr ][ resource ] } ) ).
                             SetFunction( [&window]()
                             {
-                                window = false;
+                                if constexpr (!Multiple)
+                                {
+                                    window = false;         
+                                }
                             } );
                 }
 
@@ -78,7 +82,7 @@ namespace Engine::UIHelpers
             const ResourceUIPredicateSignature &    predicate      = {},
             const ResourceUITypePredicateSignature &type_predicate = {} )
     {
-        return SingleSelectionDialog<T, Abstracts::Resource, UIResourceIterator>(
+        return SingleSelectionDialog<T, Abstracts::Resource, UIResourceIterator<false>>(
                 Managers::ResourceManager::GetInstance().GetResources(),
                 ptr,
                 resources_to_load,
@@ -94,7 +98,7 @@ namespace Engine::UIHelpers
             const ResourceUITypePredicateSignature & type_predicate = {} )
     {
 
-        return MultipleSelectionDialog<T, Abstracts::Resource, UIResourceIterator>(
+        return MultipleSelectionDialog<T, Abstracts::Resource, UIResourceIterator<true>>(
                 Managers::ResourceManager::GetInstance().GetResources(),
                 ptr,
                 resources_to_load,
