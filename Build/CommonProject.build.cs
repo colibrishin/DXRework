@@ -35,8 +35,13 @@ public enum EGraphicAPI
 public enum ERenderType
 {
     Deferred = 1 << 0,
-    ForwardOnly = 1 << 1,
-    Raytracing = 1 << 2
+    ForwardOnly = 1 << 1
+}
+
+public enum ERaytracing
+{
+    Off = 1 << 0,
+    On = 1 << 1
 }
 
 public class EngineTarget : Target
@@ -44,6 +49,7 @@ public class EngineTarget : Target
     public ELaunchType LaunchType;
     public EGraphicAPI GraphicAPI;
     public ERenderType RenderType;
+    public ERaytracing Raytracing;
 
     public EngineTarget() { }
     public EngineTarget(
@@ -54,6 +60,7 @@ public class EngineTarget : Target
         OutputType outputType = OutputType.Lib,
         EGraphicAPI graphicAPI = EGraphicAPI.D3D12,
         ERenderType renderType = ERenderType.Deferred,
+        ERaytracing raytracing = ERaytracing.On,
         Blob blob = Blob.NoBlob,
         BuildSystem buildSystem = BuildSystem.FastBuild,
         DotNetFramework framework = DotNetFramework.v3_5) 
@@ -62,6 +69,7 @@ public class EngineTarget : Target
         LaunchType = launchType;
         GraphicAPI = graphicAPI;
         RenderType = renderType;
+        Raytracing = raytracing;
     }
 }
 
@@ -231,7 +239,7 @@ public abstract class CommonProject : Project
                 conf.Defines.Add("USE_DX12");
             }
 
-            conf.Defines.Add($"CFG_RAYTRACING={Convert.ToInt32(target.RenderType == ERenderType.Raytracing)}");
+            conf.Defines.Add($"CFG_RAYTRACING={Convert.ToInt32(target.Raytracing == ERaytracing.On)}");
 
             //conf.Defines.Add("SNIFF_DEVICE_REMOVAL");
 

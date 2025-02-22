@@ -6,7 +6,6 @@
 #include "RenderPipeline.h"
 #include "Renderer.h"
 
-#include "Source/Runtime/Resources/AtlasAnimationTexture/Public/AtlasAnimationTexture.h"
 #include "Source/Runtime/Resources/Material/Public/Material.h"
 #include "Source/Runtime/Resources/Shape/Public/Shape.h"
 #include "Source/Runtime/Resources/RaytracingShader/Public/RaytracingShader.h"
@@ -24,20 +23,23 @@ namespace Engine
     void RaytracingRenderPassTask::PreRun(RenderMap const* render_map, const size_t render_map_count, const ObjectPredication& predication)
 	{
 	    GraphicInterface& gi = GraphicInterfaceAccessor::GetInterface();
-	    RaytracingExtensionInterface& rgi = GraphicInterfaceAccessor::GetRaytracingInterface();
 
-	    const auto& context = gi.GetNewContext(0, false, L"Building Top Level Acceleration Buffer");
-	    const auto& primitive = context.GetPointers();
-	    primitive.commandList->SoftReset();
+        if ( RaytracingExtensionInterface& rgi = GraphicInterfaceAccessor::GetRaytracingInterface();
+             rgi.ShouldUseRaytracing() )
+	    {
+	        const auto& context = gi.GetNewContext(0, false, L"Building Top Level Acceleration Buffer");
+	        const auto& primitive = context.GetPointers();
+	        primitive.commandList->SoftReset();
 	    
-	    rgi.BuildTopLevelAccelerationBuffer(
-	        &primitive,
-	        render_map,
-	        render_map_count,
-	        m_top_level_acceleration_buffer_,
-	        predication);
+	        rgi.BuildTopLevelAccelerationBuffer(
+                &primitive,
+                render_map,
+                render_map_count,
+                m_top_level_acceleration_buffer_,
+                predication);
 	    
-	    primitive.commandList->FlagReady();
+	        primitive.commandList->FlagReady();   
+	    }
 	}
 
 	void RaytracingRenderPassTask::Run(
@@ -62,79 +64,88 @@ namespace Engine
 		{
 			return;
 		}
-		
-		// Filter the instances by the predicate
-		uint64_t instance_count = 0;
-		IntermediateShaderMap intermediate_shader_map;
-		PredicateObject(predicate, domain_map, instance_count, intermediate_shader_map);
 
-		m_local_param_pool_.Update(nullptr, instance_count);
-		m_instance_pool_.Update(nullptr, instance_count);
+        if ( RaytracingExtensionInterface& rgi = GraphicInterfaceAccessor::GetRaytracingInterface();
+             rgi.ShouldUseRaytracing() )
+		{
+		    // Filter the instances by the predicate
+		    uint64_t instance_count = 0;
+		    IntermediateShaderMap intermediate_shader_map;
+		    PredicateObject(predicate, domain_map, instance_count, intermediate_shader_map);
 
-        for (const auto& renderer : *domain_map | std::views::values)
-        {
-            tbb::parallel_for_each
-                (
-                 renderer.begin(), renderer.end(),
-                 [this, &intermediate_shader_map, &dt, &shader_bypass, &additional_sbs, &local_param,
-                     &prerender_predicate, &postrender_predicate, &prerender_predicates, &postrender_predicates]
-                     (const std::pair<Strong<Resources::ShaderBase>, MeshMap>& pair)
-                 {
-                     std::vector<RaytracingMeshInstancePair> meshes;
-                     meshes.reserve(pair.second.size());
-                     for (const auto& [mesh, instances] : pair.second)
+		    m_local_param_pool_.Update(nullptr, instance_count);
+		    m_instance_pool_.Update(nullptr, instance_count);
+
+            for (const auto& renderer : *domain_map | std::views::values)
+            {
+                tbb::parallel_for_each
+                    (
+                     renderer.begin(), renderer.end(),
+                     [this, &intermediate_shader_map, &dt, &shader_bypass, &additional_sbs, &local_param,
+                         &prerender_predicate, &postrender_predicate, &prerender_predicates, &postrender_predicates]
+                         (const std::pair<Strong<Resources::ShaderBase>, MeshMap>& pair)
                      {
-                         meshes.emplace_back(mesh.get(), instances.size());
-                     }
-
-                     if (const Strong<Resources::RaytracingShader>& locked_shader =
-                         Cast<Resources::RaytracingShader>(pair.first))
-                     {
-                         if (decltype(intermediate_shader_map)::const_accessor acc;
-                         intermediate_shader_map.find(acc, locked_shader.get()))
+                         std::vector<RaytracingMeshInstancePair> meshes;
+                         meshes.reserve(pair.second.size());
+                         for (const auto& [mesh, instances] : pair.second)
                          {
-                             StartPhase_MultiThread(
-                                  dt, shader_bypass, meshes, locked_shader.get(), additional_sbs, local_param,
-                                  prerender_predicate, postrender_predicate, prerender_predicates, postrender_predicates,
-                                  acc->second);
+                             meshes.emplace_back(mesh.get(), instances.size());
+                         }
+
+                         if (const Strong<Resources::RaytracingShader>& locked_shader =
+                             Cast<Resources::RaytracingShader>(pair.first))
+                         {
+                             if (decltype(intermediate_shader_map)::const_accessor acc;
+                             intermediate_shader_map.find(acc, locked_shader.get()))
+                             {
+                                 StartPhase_MultiThread(
+                                      dt, shader_bypass, meshes, locked_shader.get(), additional_sbs, local_param,
+                                      prerender_predicate, postrender_predicate, prerender_predicates, postrender_predicates,
+                                      acc->second);
+                             }
                          }
                      }
-                 }
-                );
-        }
+                    );
+            }
 
-		auto& gi = GraphicInterfaceAccessor::GetInterface();
-		auto context = gi.GetNewContext(0, false, L"Lazy Shader Resource Texture Transition Back");
-		auto primitive = context.GetPointers();
-		
-		primitive.commandList->SoftReset();
-		const auto& range = std::ranges::unique(m_used_shader_textures_);
-		const size_t indeterminate = std::distance(range.begin(), range.begin());
-		const size_t unique_idx = m_used_shader_textures_.size() - indeterminate;
-		if (m_used_shader_textures_.size() > 0 && m_used_shader_textures_[0] != nullptr)
-		{
-			gi.TransitBackMultiple(&primitive, m_used_shader_textures_.data(), unique_idx, BIND_TYPE_SRV);
+		    auto& gi = GraphicInterfaceAccessor::GetInterface();
+		    auto context = gi.GetNewContext(0, false, L"Lazy Shader Resource Texture Transition Back");
+		    auto primitive = context.GetPointers();
+		    
+		    primitive.commandList->SoftReset();
+		    const auto& range = std::ranges::unique(m_used_shader_textures_);
+		    const size_t indeterminate = std::distance(range.begin(), range.begin());
+		    const size_t unique_idx = m_used_shader_textures_.size() - indeterminate;
+		    if (m_used_shader_textures_.size() > 0 && m_used_shader_textures_[0] != nullptr)
+		    {
+			    gi.TransitBackMultiple(&primitive, m_used_shader_textures_.data(), unique_idx, BIND_TYPE_SRV);
+		    }
+            rgi.CopyRaytracingToRenderTarget( &primitive );
+		    primitive.commandList->FlagReady();
 		}
-		primitive.commandList->FlagReady();
 	}
 
 	void RaytracingRenderPassTask::Cleanup()
 	{
-		m_local_param_pool_.reset();
-		m_instance_pool_.reset();
-	    m_local_heaps_.clear();
-
-	    for (auto& mask : m_byte_stream_usage_)
+        if ( RaytracingExtensionInterface& rgi = GraphicInterfaceAccessor::GetRaytracingInterface();
+             rgi.ShouldUseRaytracing() )
 	    {
-	        mask = 0;
-	    }
+	        m_local_param_pool_.reset();
+	        m_instance_pool_.reset();
+	        m_local_heaps_.clear();
 
-	    for (auto& stream : m_byte_stream_)
-	    {
-	        stream.reset();
-	    }
+	        for (auto& mask : m_byte_stream_usage_)
+	        {
+	            mask = 0;
+	        }
+
+	        for (auto& stream : m_byte_stream_)
+	        {
+	            stream.reset();
+	        }
 	    
-		std::ranges::fill(m_used_shader_textures_, nullptr);
+	        std::ranges::fill(m_used_shader_textures_, nullptr);
+	    }
 	}
 
 	void RaytracingRenderPassTask::PredicateObject(const ObjectPredication& predicate, RenderMap const* domain_map, uint64_t& instance_count, IntermediateShaderMap& out_map) const

@@ -1339,6 +1339,12 @@ namespace Engine
 		virtual void InitializeRaytracing() = 0;
 		virtual void ShutdownRaytracing() = 0;
 
+	    void UseRaytracing(const bool flag)
+	    {
+	        m_b_raytracing_ = flag;
+	    }
+	    [[nodiscard]] bool ShouldUseRaytracing() const noexcept { return m_b_raytracing_; }
+
 	    virtual Unique<GraphicHeapBase> GetRaytracingHeap() = 0;
 	    virtual RaytracingPrimitiveShader* GetNewRaytracingShader() = 0;
 	    
@@ -1360,6 +1366,9 @@ namespace Engine
         ) = 0;
 
 	    virtual void CopyRaytracingToRenderTarget(const GraphicInterfaceContextPrimitive* context) = 0;
+
+	private:
+	    bool m_b_raytracing_ = false;
 	};
 
 	struct ENGINE_CORERENDER_API GraphicInterface : public virtual PolymorphicGraphicInterface

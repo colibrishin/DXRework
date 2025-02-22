@@ -26,9 +26,9 @@ namespace Engine::Managers
 			return m_active_scene_;
 		}
 
-		void AddScene(const std::string& name);
-	    void RemoveScene(const std::string& name);
-        void                                            SetActive( const std::string &name );
+        void AddScene( const std::string &name );
+        void RemoveScene( const std::string &name );
+        void SetActive( const std::string &name );
 
 		[[nodiscard]] Weak<Scene> GetScene(const std::string& name) const;
 		[[nodiscard]] const std::vector<Strong<Scene>>& GetScenes() const;

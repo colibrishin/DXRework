@@ -3,7 +3,6 @@
 
 #include "RaytracingShader.h"
 
-
 MODULE_IMPL(Engine::RaytracingShaderModule, RaytracingShader)
 
 bool Engine::RaytracingShaderModule::InitializeImpl()
@@ -24,4 +23,10 @@ bool Engine::RaytracingShaderModule::ShutdownImpl()
 bool Engine::RaytracingShaderModule::DynamicLoadable()
 {
     return true;
+}
+
+const std::vector<std::string> & Engine::RaytracingShaderModule::LoadAfter() const
+{
+    static const std::vector<std::string> load_after = { "RenderPipeline" };
+    return load_after;
 }

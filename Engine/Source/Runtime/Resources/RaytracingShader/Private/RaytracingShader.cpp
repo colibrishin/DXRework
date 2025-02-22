@@ -93,9 +93,9 @@ Engine::Resources::RaytracingShader::RaytracingShader()
 
 void Engine::Resources::RaytracingShader::Load_INTERNAL()
 {
-    RaytracingExtensionInterface& rgi = GraphicInterfaceAccessor::GetRaytracingInterface();
-    m_primitive_shader_ = std::unique_ptr<decltype(m_primitive_shader_)::element_type>(rgi.GetNewRaytracingShader());
-    m_primitive_shader_->Generate(this, rgi.GetRaytracingNativePipeline());
+    RaytracingExtensionInterface &rgi = GraphicInterfaceAccessor::GetRaytracingInterface();
+    m_primitive_shader_ = std::unique_ptr<decltype(m_primitive_shader_)::element_type>( rgi.GetNewRaytracingShader() );
+    m_primitive_shader_->Generate( this, rgi.GetRaytracingNativePipeline() );
 }
 
 void Engine::Resources::RaytracingShader::Unload_INTERNAL()
