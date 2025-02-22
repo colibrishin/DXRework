@@ -40,64 +40,80 @@ namespace Engine::Managers
 	{
 		UIInterface& ui = UIInterfaceAccessor::GetInterface();
 
-		if (UIContext context = UIInterface::NewContext(ui.NewDialog({this, m_ui_info_.label, m_ui_info_.dialogOpened})))
-		{
-			for (const auto& set : m_resources_ | std::views::values)
-			{
-				if (set.empty())
-				{
-					continue;
-				}
+        if ( UIContext context = UIInterface::NewContext(
+                ui.NewDialog( this, "ResourceManagerDialog", { m_ui_info_.label, m_ui_info_.dialogOpened } ) ) )
+        {
+            for ( const auto &set : m_resources_ | std::views::values )
+            {
+                if ( set.empty() )
+                {
+                    continue;
+                }
 
-				const std::string_view type_name = (*set.begin())->GetPrettyTypeName();
-				context += ui.NewTreeNode({type_name});
+                const std::string_view type_name = ( *set.begin() )->GetPrettyTypeName();
+                context += ui.NewTreeNode( this, "ResourceTreeNode", { type_name } );
 
-				for (const Strong<Abstracts::Resource>& resource : set)
-				{
-					context += ui.NewSelectable({resource->GetName(), resource->m_ui_info_.dialogOpened});
-					context >> ui.NewDragAndDropSource({"RESOURCE", resource->GetName(), &resource, sizeof(decltype(resource))});
+                for ( auto it = set.begin(); it != set.end(); ++it )
+                {
+                    const Strong<Abstracts::Resource> &resource = *it;
+                    const ptrdiff_t                    idx      = std::distance( set.begin(), it );
 
-					if (resource->m_ui_info_.dialogOpened)
-					{
-						if (UIContext resource_context = UIInterface::NewContext(ui.NewDialog({resource.get(), resource->m_ui_info_.label, resource->m_ui_info_.dialogOpened})))
-						{
-							resource->OnUIUpdate(&resource_context, dt);
-						}
-					}
+                    context += ui.NewSelectable( this,
+                                                 std::format( "Resource{}", idx ),
+                                                 { resource->GetName(), resource->m_ui_info_.dialogOpened } );
+                    context >> ui.NewDragAndDropSource( this,
+                                                        std::format( "ResourceDragAndDropSource{}", idx ),
+                                                        { "RESOURCE",
+                                                          resource->GetName(),
+                                                          &resource,
+                                                          sizeof( decltype(resource) ) } );
 
-					--context;
-				}
+                    if ( resource->m_ui_info_.dialogOpened )
+                    {
+                        if ( UIContext resource_context = UIInterface::NewContext(
+                                ui.NewDialog( this,
+                                              std::format( "ResourceDialog{}", idx ),
+                                              { resource->m_ui_info_.label, resource->m_ui_info_.dialogOpened } ) ) )
+                        {
+                            resource->OnUIUpdate( &resource_context, dt );
+                        }
+                    }
 
-				--context;
-			}
+                    --context;
+                }
+
+                --context;
+            }
 		}
 
-		if (UIContext menu_context = UIInterface::NewContext(ui.NewMainMenuBar({})))
-		{
-			menu_context += ui.NewMenu({ "New" });
+        if ( UIContext menu_context = UIInterface::NewContext( ui.NewMainMenuBar( nullptr, "MainMenuBar", {} ) ) )
+        {
+            menu_context += ui.NewMenu( nullptr, "NewMenu", { "New" } );
 
-			for (const auto& name : m_ui_new_functions_ | std::views::keys) 
-			{
-				(menu_context |= ui.NewMenuItem({ name })).SetFunction([&]()
-					{
-						m_ui_new_functions_[name].first = true;
-					});
-			}
+            for ( const auto &name : m_ui_new_functions_ | std::views::keys )
+            {
+                ( menu_context |= ui.NewMenuItem( this, std::format( "NewMenuItem{}", name ), { name } ) ).SetFunction(
+                        [&]()
+                        {
+                            m_ui_new_functions_[ name ].first = true;
+                        } );
+            }
 
-			--menu_context;
+            --menu_context;
 
-			menu_context += ui.NewMenu({"Load"});
+            menu_context += ui.NewMenu( nullptr, "LoadMenu", { "Load" } );
 
-			for (const auto& name : m_ui_load_functions_ | std::views::keys)
-			{
-				(menu_context |= ui.NewMenuItem({name})).SetFunction([&]()
-					{
-						m_ui_load_functions_[name].first = true;
-					});
-			}
+            for ( const auto &name : m_ui_load_functions_ | std::views::keys )
+            {
+                ( menu_context |= ui.NewMenuItem( this, std::format( "LoadMenuItem{}", name ), { name } ) ).SetFunction(
+                        [&]()
+                        {
+                            m_ui_load_functions_[ name ].first = true;
+                        } );
+            }
 
-			--menu_context;
-		}
+            --menu_context;
+        }
 
 		for (auto& [flag, func] : m_ui_new_functions_ | std::views::values)
 		{

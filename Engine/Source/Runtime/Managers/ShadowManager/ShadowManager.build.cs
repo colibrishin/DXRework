@@ -9,8 +9,8 @@ public class ShadowManager : EngineCommonProject
 {
     public ShadowManager() 
     {
-        SourceFilesExtensions.Add(".hlsl");
-        SourceFilesExtensions.Add(".hlsli");
+        ResourceFilesExtensions.Add(".hlsl");
+        ResourceFilesExtensions.Add(".hlsli");
     }
 
     public override void ConfigureAll(Configuration conf, EngineTarget target)
@@ -24,7 +24,8 @@ public class ShadowManager : EngineCommonProject
         conf.AddPrivateDependency<Shader>(target);
         conf.AddPrivateDependency<ShadowTexture>(target);
         conf.AddPrivateDependency<ShadowRenderTarget>(target);
-        
+        conf.AddPrivateDependency<ForwardRenderPassTask>(target);
+
         conf.TargetCopyFiles.Add
         (
             @"cascade_shadow_stage1.hlsl"

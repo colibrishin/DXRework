@@ -49,8 +49,8 @@ public class Utils
             DevEnv.vs2022,
             Optimization.Debug | Optimization.Release,
             OutputType.Lib,
-            Blob.NoBlob,
-            BuildSystem.FastBuild
+            EGraphicAPI.D3D12,
+            ERenderType.Deferred
         );
     }
 
@@ -90,11 +90,13 @@ public class Utils
 
             if (target.LaunchType == ELaunchType.Editor)
             {
+                conf.Defines.Add("SHADER_DEBUG=1");
                 conf.Defines.Add("WITH_EDITOR=1");
                 conf.ResourceFileDefine += "WITH_EDITOR=1";
             }
             else
             {
+                conf.Defines.Add("SHADER_DEBUG=0");
                 conf.Defines.Add("WITH_EDITOR=0");
                 conf.ResourceFileDefine += "WITH_EDITOR=0";
             }

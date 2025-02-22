@@ -8,8 +8,8 @@ public class Shader : EngineCommonProject
 {
     public Shader() 
     {
-        SourceFilesExtensions.Add(".hlsl");
-        SourceFilesExtensions.Add(".hlsli");
+        ResourceFilesExtensions.Add(".hlsl");
+        ResourceFilesExtensions.Add(".hlsli");
     }
 
     public override void ConfigureAll(Configuration conf, EngineTarget target)

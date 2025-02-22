@@ -275,7 +275,7 @@ namespace Engine::Components
 			UIInterface& ui = UIInterfaceAccessor::GetInterface();
 
 			Component::OnUIUpdate(context, dt);
-			(*context |= ui.NewLabelAndVec3({ "Position", &m_position_.x, 0.1f, 0.f, 0.f, true })).SetFunction([&]()
+			(*context |= ui.NewLabelAndVec3( this, "Position", { "Position", &m_position_.x, 0.1f, 0.f, 0.f, true })).SetFunction([&]()
 				{
 					if (const Strong<Rigidbody>& rb = GetOwner().lock()->GetComponent<Rigidbody>().lock())
 					{
@@ -286,7 +286,7 @@ namespace Engine::Components
 
 			m_euler_rotation_ = MathExtension::ToEuler(m_rotation_);
 			m_euler_rotation_ *= 180.f / M_PI;
-			(*context |= ui.NewLabelAndVec3({"Rotation", &m_euler_rotation_.x, 0.1f, 0.f, 0.f, true })).SetFunction([&]()
+			(*context |= ui.NewLabelAndVec3( this, "Rotation", {"Rotation", &m_euler_rotation_.x, 0.1f, 0.f, 0.f, true })).SetFunction([&]()
 			{
 				m_euler_rotation_ *= M_PI / 180.f;
 				// since z axis is the forward, roll should be z.
@@ -302,9 +302,9 @@ namespace Engine::Components
 				}
 			});
 
-			*context |= ui.NewLabelAndVec3({"Scale", &m_scale_.x, 0.1f, 0.f, 0.f, true });
-			*context |= ui.NewCheckbox({"Absolute Size", m_b_s_absolute_});
-			*context |= ui.NewCheckbox({"Absolute Rotation",m_b_r_absolute_});
+			*context |= ui.NewLabelAndVec3( this, "Scale", {"Scale", &m_scale_.x, 0.1f, 0.f, 0.f, true });
+			*context |= ui.NewCheckbox( this, "AbsSize", {"Absolute Size", m_b_s_absolute_});
+			*context |= ui.NewCheckbox( this, "AbsRot", {"Absolute Rotation",m_b_r_absolute_});
 		}
 	}
 #endif

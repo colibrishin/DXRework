@@ -1,12 +1,13 @@
 #pragma once
+#include "CoreType.h"
 #include "ModuleManager.h"
 
-#include "GenericRenderPassTaskModule.generated.h"
+#include "ForwardRenderPassTaskModule.generated.h"
 
 namespace Engine 
 {
 	ECLASS(module)
-	struct ENGINE_GENERICRENDERPASSTASK_API GenericRenderPassTaskModule : public IModule
+    struct ENGINE_FORWARDRENDERPASSTASK_API ForwardRenderPassTaskModule : public IModule
 	{
 		GENERATE_BODY
 		bool InitializeImpl() override; 

@@ -14,6 +14,7 @@ public class SoundPlayer : EngineCommonProject
 
         conf.AddPublicDependency<Core>(target);
         conf.AddPublicDependency<Boost>(target);
+        conf.AddPublicDependency<TBB>(target);
         conf.AddPublicDependency<Sound>(target);
     }
 }

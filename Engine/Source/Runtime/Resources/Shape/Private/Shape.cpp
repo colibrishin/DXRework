@@ -56,37 +56,46 @@ namespace Engine::Resources
 	{
 		if (parent) 
 		{
-			Resource::OnUIUpdate(parent, dt);
+            Resource::OnUIUpdate( parent, dt );
 
-			UIInterface& ui = UIInterfaceAccessor::GetInterface();
-			*parent += ui.NewListBox({ "Mesh List", 0, 0 });
-			*parent |= ui.NewDragAndDropTarget({ "RESOURCE", [&](void* ptr)
-				{
-					if (auto casted = static_cast<Strong<Resource>*>(ptr))
-					{
-						Add(*casted);
-					}
-				} });
+            UIInterface &ui = UIInterfaceAccessor::GetInterface();
+            *parent += ui.NewListBox( this, "MeshList", { "Mesh List", 0, 0 } );
+            *parent |= ui.NewDragAndDropTarget( this,
+                                                "DragAndDropTargetResource",
+                                                { "RESOURCE",
+                                                  [&]( void *scary_ptr )
+                                                  {
+                                                      if ( const auto &casted = static_cast<Strong<Resource> *>(scary_ptr ) )
+                                                      {
+                                                          Add( *casted );
+                                                      }
+                                                  } } );
 
-			for (size_t i = 0; i < m_cached_meshes_.size(); ++i)
-			{
-				const auto& mesh = m_cached_meshes_[i].first.lock();
+            for ( size_t i = 0; i < m_cached_meshes_.size(); ++i )
+            {
+                const auto &mesh = m_cached_meshes_[ i ].first.lock();
 
-				*parent |= ui.NewSelectable({ mesh->GetName(), mesh->m_ui_info_.dialogOpened});
-				(*parent |= ui.NewButton({ "Edit Material" })).SetFunction([i, this]()
-					{
-						m_ui_material_add_opened_[i] = true;
-					});
-				*parent |= ui.NewSeparator({});
+                *parent |= ui.NewSelectable( this,
+                                             std::format( "Mesh{}", i ),
+                                             { mesh->GetName(), mesh->m_ui_info_.dialogOpened } );
+                ( *parent |= ui.NewButton( this, std::format( "Mesh{}EditMaterialButton", i ), { "Edit Material" } ) ).
+                        SetFunction( [i, this]()
+                        {
+                            m_ui_material_add_opened_[ i ] = true;
+                        } );
+                *parent |= ui.NewSeparator( this, std::format( "Mesh{}Separator", i ), {} );
 
-				if (mesh->m_ui_info_.dialogOpened)
-				{
-					if (UIContext context = UIInterface::NewContext(ui.NewDialog({ mesh.get(), mesh->m_ui_info_.label, mesh->m_ui_info_.dialogOpened })))
-					{
-						mesh->OnUIUpdate(&context, dt);
-					}
-				}
-			}
+                if ( mesh->m_ui_info_.dialogOpened )
+                {
+                    if ( UIContext context = UIInterface::NewContext( ui.NewDialog(
+                            this,
+                            std::format( "Mesh{}Dialog", i ),
+                            { mesh->m_ui_info_.label, mesh->m_ui_info_.dialogOpened } ) ) )
+                    {
+                        mesh->OnUIUpdate( &context, dt );
+                    }
+                }
+            }
 
 			for (auto it = m_cached_meshes_.begin(); it != m_cached_meshes_.end(); ++it)
 			{
@@ -111,26 +120,28 @@ namespace Engine::Resources
 
 			--*parent;
 
-			(*parent |= ui.NewButton({ "Add New..." })).SetFunction([&]() 
-				{
-					m_ui_mesh_add_opened_ = !m_ui_mesh_add_opened_;
-				});
+            ( *parent |= ui.NewButton( this, "AddNewMeshButton", { "Add New..." } ) ).SetFunction( [&]()
+            {
+                m_ui_mesh_add_opened_ = !m_ui_mesh_add_opened_;
+            } );
 
-			if (m_ui_mesh_add_opened_) 
-			{
-				if (std::vector<Weak<Resource>> resource_to_load;
-					UIHelpers::MultipleResourceSelectionDialogInclusion<Shape, Mesh, AnimationTexture>(GetSharedPtr<Shape>(), resource_to_load))
-				{
-					for (const Weak<Resource>& resource : resource_to_load)
-					{
-						Add(resource);
-					}
+            if ( m_ui_mesh_add_opened_ )
+            {
+                if ( std::vector<Weak<Resource> > resource_to_load;
+                    UIHelpers::MultipleResourceSelectionDialogInclusion<Shape, Mesh, AnimationTexture>(
+                            GetSharedPtr<Shape>(),
+                            resource_to_load ) )
+                {
+                    for ( const Weak<Resource> &resource : resource_to_load )
+                    {
+                        Add( resource );
+                    }
 
-					m_ui_mesh_add_opened_ = false;
-				}
-			}
-		}
-	}
+                    m_ui_mesh_add_opened_ = false;
+                }
+            }
+        }
+    }
 #endif
 
 	void Shape::OnSerialized()

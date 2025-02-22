@@ -25,7 +25,7 @@ namespace Engine
 		ComPtr<ID3DBlob> error;
 		UINT             flag = 0;
 
-#if WITH_DEBUG
+#if SHADER_DEBUG
 		flag |= D3DCOMPILE_SKIP_OPTIMIZATION | D3DCOMPILE_DEBUG;
 #endif
 

@@ -3,6 +3,7 @@ using System.IO;
 using Sharpmake;
 
 [module: Include("%EngineDir%/Build/CommonProject.build.cs")]
+[module: Include("%EngineDir%/Engine/Source/Programs/**/*.build.cs")]
 [module: Include("%EngineDir%/Engine/Source/Runtime/**/*.build.cs")]
 [module: Include("%EngineDir%/Engine/Source/Runtime/Managers/**/*.build.cs")]
 [module: Include("%EngineDir%/Engine/Source/Runtime/Resources/**/*.build.cs")]
@@ -44,7 +45,12 @@ public class EngineSolution : Solution
             {
                 conf.AddProject<ParticleRendererRenderTask>(target);
                 conf.AddProject<ModelRendererRenderTask>(target);
-                conf.AddProject<GenericRenderPassTask>(target);
+                conf.AddProject<ForwardRenderPassTask>(target);
+                
+                if (target.RenderType == ERenderType.Deferred)
+                {
+                    conf.AddProject<DeferredRenderPassTask>(target);
+                }
             }
 
             {

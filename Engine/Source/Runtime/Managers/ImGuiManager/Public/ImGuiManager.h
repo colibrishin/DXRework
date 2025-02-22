@@ -14,6 +14,8 @@ namespace Engine
 
     struct ENGINE_IMGUIMANAGER_API ImGuiMainMenuBarToken : MainMenuBarToken
     {
+        using MainMenuBarToken::MainMenuBarToken;
+
         void               End() override;
         [[nodiscard]] bool DoImpl() override;
     };
@@ -41,7 +43,7 @@ namespace Engine
 	    void End() override;
 
     protected:
-	    [[nodiscard]] bool DoImpl(const void*, const std::string_view, bool&) override;
+	    [[nodiscard]] bool DoImpl(const std::string_view, bool&) override;
 
     private:
         UITokenInputContext value;
@@ -296,9 +298,9 @@ namespace Engine
     };
 
 #define IMGUI_INLINE_GETTER_DECL(Name) \
-    Name##Token* New##Name##(const Name##Token::ArgumentTuple& arguments) override \
+    Name##Token* New##Name##(const void* context, const std::string_view name, const Name##Token::ArgumentTuple& arguments) override \
     { \
-		return Generate<ImGui##Name##Token>(arguments); \
+		return Generate<ImGui##Name##Token>(context, name, arguments); \
     }
 
     struct ENGINE_IMGUIMANAGER_API ImGuiUIInterface final : UIInterface

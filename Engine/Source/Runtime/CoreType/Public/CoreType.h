@@ -88,6 +88,31 @@ constexpr bool is_serializable_v = std::is_base_of_v<std::true_type, is_serializ
 template <typename T>
 constexpr bool is_internal_v = std::is_base_of_v<std::true_type, is_internal<T>>;
 
+template <typename T, typename U, typename = void>
+struct is_val_cont : std::false_type
+{};
+
+template <typename T, typename U>
+struct is_val_cont<T, U, std::void_t<decltype( typename T::template value_type{} == U{} )>> : std::true_type
+{};
+
+template <typename T, typename U>
+constexpr bool is_val_cont_v = is_val_cont<T, U>::value;
+
+template <typename Cont, typename Val, typename = void>
+struct is_key_val_cont : std::false_type {};
+
+template <typename Cont, typename Val>
+struct is_key_val_cont<Cont,
+                       Val,
+                       std::void_t<decltype( typename Cont::template value_type::second_type{} == Val{} ),
+                                   std::is_same<typename Cont::template value_type::template second_type, Val>>>
+    : std::true_type
+{};
+
+template <typename T, typename U>
+constexpr bool is_key_val_cont_v = is_key_val_cont<T, U>::value;
+
 #define bswap_32(x) bswap<uint32_t>(x)
 #define bswap_64(x) bswap<uint64_t>(x)
 

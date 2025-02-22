@@ -45,19 +45,21 @@ namespace Engine::Abstracts
 		: m_bLoaded_(false) {}
 
 #if WITH_EDITOR
-	void Resource::OnUIUpdate(UIContext* const parent, const float dt)
-	{
-		if (parent)
-		{
-			Entity::OnUIUpdate(parent, dt);
-			UIInterface& ui = UIInterfaceAccessor::GetInterface();
-			*parent |= ui.NewLabelAndPath( { "Raw Path", m_path_ } );
-			( *parent |= ui.NewButton( { "Clone" } ) ).SetFunction( [this]()
-			{
-				const auto& cloned = Clone();
-				Managers::ResourceManager::GetInstance().AddResource( cloned, cloned->GetTypeHash() );
-			} );
-		}
+    void Resource::OnUIUpdate( UIContext *const parent, const float dt )
+    {
+        if ( parent )
+        {
+            Entity::OnUIUpdate( parent, dt );
+            UIInterface &ui = UIInterfaceAccessor::GetInterface();
+            *parent |= ui.NewLabelAndPath( this, "RawPath", { "Raw Path", m_path_ } );
+            ( *parent |= ui.NewButton( this, "CloneButton", { "Clone" } ) )
+                    .SetFunction(
+                            [ this ]()
+                            {
+                                const auto &cloned = Clone();
+                                Managers::ResourceManager::GetInstance().AddResource( cloned, cloned->GetTypeHash() );
+                            } );
+        }
 	}
 #endif
 

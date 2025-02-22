@@ -30,9 +30,9 @@ namespace Engine::Graphics
         EPROPERTY()
         int atlas = false;
         EPROPERTY()
-        int RESERVED_texOffset = 0; // Should be defined by renderer
+        int texSlot[ g_max_texture_per_material ]{};
         EPROPERTY()
-        int texSlot[g_max_texture_per_material]{};
+        int texEnabled[ g_max_texture_per_material ]{};
 
         void Apply(SBs::InstanceSB& instance) const;
     };

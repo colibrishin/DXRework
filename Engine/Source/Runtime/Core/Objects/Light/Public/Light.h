@@ -38,6 +38,10 @@ namespace Engine::Objects
 		void PostRender(const float dt) override;
 		void PostUpdate(const float dt) override;
 
+#if WITH_EDITOR
+        void OnUIUpdate( UIContext *const parent, const float dt ) override;
+#endif
+
 		void OnDeserialized() override;
 
 		Color GetColor() const

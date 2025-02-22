@@ -2,12 +2,10 @@
 #include <filesystem>
 #include <magic_enum.hpp>
 #include <memory>
+#include "ShaderBase.h"
 
 #include "ConcurrentTypeLibrary/Public/ConcurrentTypeLibrary.h"
-
-#include "ObjectBase/Public/ObjectBase.h"
 #include "ResourceManager/Public/ResourceManager.h"
-#include "Source/Runtime/Core/Resource/Public/Resource.h"
 
 #include "Shader.generated.h"
 
@@ -20,7 +18,7 @@ namespace Engine
 namespace Engine::Resources
 {
 	ECLASS(resource, serialize)
-	class ENGINE_SHADER_API Shader : public Abstracts::Resource
+	class ENGINE_SHADER_API Shader : public ShaderBase
 	{
 		GENERATE_BODY
 		
@@ -71,21 +69,21 @@ namespace Engine::Resources
 		void FixedUpdate(float dt) override;
 		void PostUpdate(float dt) override;
 
-		[[nodiscard]] eShaderDomain GetDomain() const;
-		[[nodiscard]] bool IsDepthEnabled() const;
-		[[nodiscard]] eShaderDepthMode GetDepthMode() const;
-		[[nodiscard]] eShaderDepthFunction GetDepthFunction() const;
-		[[nodiscard]] eShaderSamplerAddress GetSamplerAddressMode() const;
-		[[nodiscard]] eShaderSamplerFunction GetSamplerFunction() const;
-		[[nodiscard]] eSamplerFilter GetSamplerFilter() const;
-		[[nodiscard]] eShaderRasterizerCull GetRasterizerCull() const;
-		[[nodiscard]] eShaderRasterizerDraw GetRasterizerDraw() const;
-		[[nodiscard]] const std::vector<eFormat>& GetRTVFormat() const;
-		[[nodiscard]] eFormat GetDSVFormat() const;
-		[[nodiscard]] ePrimitiveTopology GetPrimitiveTopology() const;
-		[[nodiscard]] ePrimitiveTopologyType GetPrimitiveTopologyType() const;
-		[[nodiscard]] eSampler GetSampler() const;
-		[[nodiscard]] GraphicPrimitiveShader& GetGraphicPrimitiveShader() const;
+		[[nodiscard]] eShaderDomain               GetDomain() const;
+        [[nodiscard]] bool                        IsDepthEnabled() const;
+        [[nodiscard]] eShaderDepthMode            GetDepthMode() const;
+        [[nodiscard]] eShaderDepthFunction        GetDepthFunction() const;
+        [[nodiscard]] eShaderSamplerAddress       GetSamplerAddressMode() const;
+        [[nodiscard]] eShaderSamplerFunction      GetSamplerFunction() const;
+        [[nodiscard]] eSamplerFilter              GetSamplerFilter() const;
+        [[nodiscard]] eShaderRasterizerCull       GetRasterizerCull() const;
+        [[nodiscard]] eShaderRasterizerDraw       GetRasterizerDraw() const;
+        [[nodiscard]] const std::vector<eFormat> &GetRTVFormat() const;
+        [[nodiscard]] eFormat                     GetDSVFormat() const;
+        [[nodiscard]] ePrimitiveTopology          GetPrimitiveTopology() const;
+        [[nodiscard]] ePrimitiveTopologyType      GetPrimitiveTopologyType() const;
+        [[nodiscard]] eSampler                    GetSampler() const;
+        [[nodiscard]] PrimitiveShaderBase        &GetPrimitive() const override;
 
 	protected:
 		void OnSerialized() override;
@@ -97,8 +95,6 @@ namespace Engine::Resources
 	private:
 		Shader();
 
-		EPROPERTY()
-		eShaderDomain m_domain_;
 		EPROPERTY()
 		bool m_depth_enabled_;
 		EPROPERTY()
@@ -145,5 +141,5 @@ namespace Engine::Resources
 #endif
 		
 		std::unique_ptr<GraphicPrimitiveShader> m_primitive_;
-	};
+    };
 } // namespace Engine::Graphic

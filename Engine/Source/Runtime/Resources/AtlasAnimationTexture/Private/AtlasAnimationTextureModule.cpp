@@ -45,10 +45,10 @@ bool Engine::AtlasAnimationTextureModule::InitializeImpl()
                     UIInterface& ui = UIInterfaceAccessor::GetInterface();
                     constexpr const char* expected_tex_extensions[] = { ".png", ".jpg", ".bmp" ".dds" };
 
-                    *context |= ui.NewLabelAndText({ "Atlas Name", sub_atlas_name_buffer, true });
-                    *context |= ui.NewLabelAndText({ "Atlas Texture", sub_atlas_texture_path_buffer, true });
-                    *context |= ui.NewLabelAndText({ "Atlas XML", sub_atlas_xml_path_buffer, true });
-                    (*context |= ui.NewButton({ "Add" })).SetFunction([&expected_tex_extensions]()
+                    *context |= ui.NewLabelAndText(nullptr, "AtlasName", { "Atlas Name", sub_atlas_name_buffer, true });
+                    *context |= ui.NewLabelAndText(nullptr, "AtlasTexture", { "Atlas Texture", sub_atlas_texture_path_buffer, true });
+                    *context |= ui.NewLabelAndText(nullptr, "AtlasXML", { "Atlas XML", sub_atlas_xml_path_buffer, true });
+                    (*context |= ui.NewButton( nullptr, "AtlasTextureAddButton", { "Add" } )).SetFunction([&expected_tex_extensions]()
                         {
                             if (!sub_atlas_name_buffer.empty() && sub_atlas_xml_path_buffer.empty()) 
                             {
@@ -112,8 +112,8 @@ bool Engine::AtlasAnimationTextureModule::InitializeImpl()
                         });
 
                     static std::string search_folder;
-                    *context |= ui.NewLabelAndText({ "Folder", search_folder, true });
-                    (*context |= ui.NewButton({ "Add Multiples..." })).SetFunction([&expected_tex_extensions]()
+                    *context |= ui.NewLabelAndText(nullptr, "AtlasAnimationTextureFolder", { "Folder", search_folder, true });
+                    (*context |= ui.NewButton(nullptr, "AtlasAnimationAddMultipleButton", { "Add Multiples..." })).SetFunction([&expected_tex_extensions]()
                         {
                             std::filesystem::path                               folder = search_folder;
                             const std::filesystem::recursive_directory_iterator it(folder);
@@ -146,13 +146,16 @@ bool Engine::AtlasAnimationTextureModule::InitializeImpl()
                             }
                         });
 
-                    *context += ui.NewListBox({ "ListedAtlasTexture", -1, 300 });
+                    *context += ui.NewListBox(nullptr, "AtlasTexturesListBox", { "Atlas Textures", -1, 300 });
+
+                    size_t idx = 0;
                     for (const auto& [name, tex_path, xml_path] : listed_pair) 
                     {
-                        *context |= ui.NewText({ name });
-                        *context |= ui.NewText({ tex_path });
-                        *context |= ui.NewText({ xml_path });
-                        *context |= ui.NewSeparator({});
+                        *context |= ui.NewText( nullptr, std::format("AtlasTexturesListBoxName{}", idx), { name });
+                        *context |= ui.NewText(nullptr, std::format("AtlasTexturesListBoxTexPath{}", idx),{ tex_path });
+                        *context |= ui.NewText(nullptr, std::format("AtlasTexturesListBoxXMLPath{}", idx),{ xml_path });
+                        *context |= ui.NewSeparator(nullptr, std::format("AtlasTexturesListBoxSeparator{}", idx),{});
+                        idx++;
                     }
                     --*context;
                 };

@@ -1,7 +1,6 @@
 #include "D3D12PrimitiveTexture.h"
 
 #include <DirectXTex.h>
-
 #include <directxtk12/BufferHelpers.h>
 #include <directxtk12/ResourceUploadBatch.h>
 #include <directxtk12/WICTextureLoader.h>

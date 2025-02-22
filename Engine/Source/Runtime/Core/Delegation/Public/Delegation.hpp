@@ -85,6 +85,11 @@ public:
 		m_listener_.emplace(bucket_type{ {}, reinterpret_cast<address_type>(&function) }, function);
 	}
 
+	void Listen(const std::function<void()>& func)
+	{
+		m_listener_.emplace(bucket_type{ {}, reinterpret_cast<address_type>(func.target<void(*)(Args...)>()) }, func);
+	}
+
 	void Broadcast(Args... args)
 	{
 		for (typename decltype(m_listener_)::iterator it = m_listener_.begin(); it != m_listener_.end();)

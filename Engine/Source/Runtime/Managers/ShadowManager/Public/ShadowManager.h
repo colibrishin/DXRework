@@ -18,17 +18,6 @@ namespace Engine::Graphics
 {
 	namespace SBs
 	{
-		struct ENGINE_SHADOWMANAGER_API LightSB
-		{
-			SB_T(SB_TYPE_LIGHT)
-
-			Matrix         world;
-			Color          color;
-			OffsetT<int>   type;
-			OffsetT<float> range;
-			OffsetT<float> radius;
-		};
-
 		struct ENGINE_SHADOWMANAGER_API LightVPSB
 		{
 			SB_T(SB_TYPE_LIGHT_VP)
@@ -102,7 +91,6 @@ namespace Engine::Managers
 		);
 
 		Strong<Resources::Shader> m_shadow_shader_;
-		Strong<Resources::ShadowRenderTarget> m_shadow_map_mask_;
 		std::map<LocalActorID, Strong<Resources::ShadowTexture>> m_shadow_texs_;
 
 		// sub part of the view frustum

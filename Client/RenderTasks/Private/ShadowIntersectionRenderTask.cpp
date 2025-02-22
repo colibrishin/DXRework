@@ -19,6 +19,7 @@
 
 #include "Resources/Public/IntensityTexture.h"
 #include "Resources/Public/IntensityPositionTexture.h"
+#include "ForwardRenderPassTask.h"
 
 using namespace Engine;
 
@@ -131,10 +132,9 @@ void ShadowIntersectionRenderTask::FirstPass(float dt,
 		Graphics::SBs::LocalParamSB local_param{};
 		local_param.SetParam<int>(shadow_slot, i);
 
-		Managers::Renderer::GetInstance().RenderPassValinaExclusion<ShadowIntersectionRenderTask>(
+		Managers::Renderer::GetInstance().RenderPassVanillaInclusion<SHADER_DOMAIN_OPAQUE, Engine::ForwardRenderPassTask>(
 		    dt,
 		    true,
-		    SHADER_DOMAIN_OPAQUE,
 		    local_param,
 		    {
 		        &Managers::ShadowManager::GetInstance().GetLightBuffer(),
@@ -172,10 +172,9 @@ void ShadowIntersectionRenderTask::FirstPass(float dt,
 	    Graphics::SBs::LocalParamSB local_param{};
 	    local_param.SetParam<int>(shadow_slot, i);
 
-	    Managers::Renderer::GetInstance().RenderPassValinaExclusion<ShadowIntersectionRenderTask>(
+	    Managers::Renderer::GetInstance().RenderPassVanillaInclusion<SHADER_DOMAIN_OPAQUE, Engine::ForwardRenderPassTask>(
             dt,
             true,
-            SHADER_DOMAIN_OPAQUE,
             local_param,
             {
                 &Managers::ShadowManager::GetInstance().GetLightBuffer(),
@@ -281,10 +280,9 @@ void ShadowIntersectionRenderTask::SecondPass( const float dt,
 		local_param.SetParam<Matrix>(custom_view_slot, light_vps[i].view[z_clip]);
 		local_param.SetParam<Matrix>(custom_proj_slot, light_vps[i].proj[z_clip]);
 
-        Managers::Renderer::GetInstance().RenderPassValinaExclusion<ShadowIntersectionRenderTask>
-                ( dt,
+        Managers::Renderer::GetInstance().RenderPassVanillaInclusion<SHADER_DOMAIN_OPAQUE, Engine::ForwardRenderPassTask>( 
+                  dt,
                   true,
-                  SHADER_DOMAIN_OPAQUE,
                   local_param,
                   { &Managers::ShadowManager::GetInstance().GetLightBuffer(),
                     &Managers::ShadowManager::GetInstance().GetLightVPBuffer() },

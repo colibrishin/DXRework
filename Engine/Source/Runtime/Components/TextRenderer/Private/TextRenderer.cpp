@@ -34,8 +34,8 @@ void Engine::Components::TextRenderer::OnUIUpdate(UIContext* const parent, const
     if (parent)
     {
         RenderComponent::OnUIUpdate(parent, dt);
-        UIInterface& ui = UIInterfaceAccessor::GetInterface();
         {
+            UIInterface&       ui = UIInterfaceAccessor::GetInterface();
             static std::string font_name;
             if (m_loaded_font_)
             {
@@ -45,16 +45,17 @@ void Engine::Components::TextRenderer::OnUIUpdate(UIContext* const parent, const
             {
                 font_name = "";
             }
-            *parent |= ui.NewLabelAndText({ "Font", font_name, false });
-            (*parent |= ui.NewButton({ "Select Font..." })).SetFunction([this]() {
+            *parent |= ui.NewLabelAndText( this, "Font", { "Font", font_name, false } );
+            ( *parent |= ui.NewButton( this, "FontSelectionButton", { "Select Font..." } ) ).SetFunction( [this]()
+            {
                 m_b_font_dialog_ = !m_b_font_dialog_;
-                });
+            } );
 
-            *parent |= ui.NewLabelAndText( { "Text", m_text_, true } );
-            *parent |= ui.NewLabelAndVec2({ "Position", &m_position_.x, 0.1f, 0, 0, true });
-            *parent |= ui.NewLabelAndVec4({ "Color", &m_color_.x, 0.1f, 0, 1, true });
-            *parent |= ui.NewLabelAndFloat({ "Rotation", m_rotation_rad_, 0, 0, 1, true });
-            *parent |= ui.NewLabelAndVec2({ "Scale", &m_scale_.x, 0.1f, 0, 0, true });
+            *parent |= ui.NewLabelAndText( this, "Text", { "Text", m_text_, true } );
+            *parent |= ui.NewLabelAndVec2( this, "Position", { "Position", &m_position_.x, 0.1f, 0, 0, true } );
+            *parent |= ui.NewLabelAndVec4( this, "Color", { "Color", &m_color_.x, 0.1f, 0, 1, true } );
+            *parent |= ui.NewLabelAndFloat( this, "Rotation", { "Rotation", m_rotation_rad_, 0, 0, 1, true } );
+            *parent |= ui.NewLabelAndVec2( this, "Scale", { "Scale", &m_scale_.x, 0.1f, 0, 0, true } );
         }
 
         if (m_b_font_dialog_)

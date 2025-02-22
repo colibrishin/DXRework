@@ -29,32 +29,39 @@ namespace Engine::Components
 #if WITH_EDITOR
 	void ShapeRenderComponent::OnUIUpdate(UIContext* const parent, const float dt)
 	{
-		if (parent)
-		{
-			RenderComponent::OnUIUpdate(parent, dt);
+        if ( parent )
+        {
+            RenderComponent::OnUIUpdate( parent, dt );
 
-			static std::string empty_string;
-			UIInterface& ui = UIInterfaceAccessor::GetInterface();
-			*parent |= ui.NewLabelAndText({ "Shape", m_shape_ ? const_cast<std::string&>(m_shape_->GetName()) : empty_string, false });
-			(*parent |= ui.NewButton("Set Shape")).SetFunction([&]()
-				{
-					m_shape_set_dialog_ = !m_shape_set_dialog_;
-				});
+            static std::string empty_string;
+            UIInterface &      ui = UIInterfaceAccessor::GetInterface();
+            *parent |= ui.NewLabelAndText( this,
+                                           "Shape",
+                                           { "Shape",
+                                             m_shape_ ? const_cast<std::string &>( m_shape_->GetName() ) : empty_string,
+                                             false } );
+            ( *parent |= ui.NewButton( this, "SetShapeButton", { "Set Shape" } ) )
+                    .SetFunction( [ & ]()
+                    {
+                        m_shape_set_dialog_ = !m_shape_set_dialog_;
+                    } );
 
-			if (m_shape_set_dialog_)
-			{
-				if (Weak<Engine::Abstracts::Resource> resource_to_load;
-					UIHelpers::SingleResourceSelectionDialogInclusion<RenderComponent, Resources::Shape>(GetSharedPtr<Entity>(), resource_to_load))
-				{
-					if (const Strong<Engine::Abstracts::Resource>& shape = resource_to_load.lock())
-					{
-						SetShape(shape->GetSharedPtr<Resources::Shape>());
-					}
+            if ( m_shape_set_dialog_ )
+            {
+                if ( Weak<Engine::Abstracts::Resource> resource_to_load;
+                    UIHelpers::SingleResourceSelectionDialogInclusion<RenderComponent, Resources::Shape>(
+                            GetSharedPtr<Entity>(),
+                            resource_to_load ) )
+                {
+                    if ( const Strong<Engine::Abstracts::Resource> &shape = resource_to_load.lock() )
+                    {
+                        SetShape( shape->GetSharedPtr<Resources::Shape>() );
+                    }
 
-					m_shape_set_dialog_ = false;
-				}
-			}
-		}
+                    m_shape_set_dialog_ = false;
+                }
+            }
+        }
 	}
 #endif
 

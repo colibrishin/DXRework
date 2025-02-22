@@ -405,7 +405,7 @@ void CubifyComponent::OnUIUpdate(Engine::UIContext* const parent, const float dt
 		Component::OnUIUpdate(parent, dt);
 		UIInterface& ui = UIInterfaceAccessor::GetInterface();
 
-		(*parent |= ui.NewLabelAndVec3({ "Cube Dimension", &m_cube_dimension_.x, 0.1f, 0.1f, FLT_MAX, true })).SetFunction([]()
+		(*parent |= ui.NewLabelAndVec3(this, "CubeDimension", { "Cube Dimension", &m_cube_dimension_.x, 0.1f, 0.1f, FLT_MAX, true })).SetFunction([]()
 			{
 				DispatchNormalUpdate();
 				DispatchUpdateWithoutNormal();
@@ -413,7 +413,7 @@ void CubifyComponent::OnUIUpdate(Engine::UIContext* const parent, const float dt
 
 		static constexpr auto cube_type_enum = CStrEnumStrings<eCubeType>();
 
-		(*parent |= ui.NewCombobox({ "Cube Type", reinterpret_cast<int*>(&m_cube_type_), cube_type_enum.data(), cube_type_enum.size(), true })).SetFunction([]()
+		(*parent |= ui.NewCombobox(this, "CubeType", { "Cube Type", reinterpret_cast<int*>(&m_cube_type_), cube_type_enum.data(), cube_type_enum.size(), true })).SetFunction([]()
 			{
 				DispatchNormalUpdate();
 				DispatchUpdateWithoutNormal();

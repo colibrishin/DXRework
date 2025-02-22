@@ -108,11 +108,11 @@ namespace Engine::Components
 			Component::OnUIUpdate(context, dt);
 
 			UIInterface& ui = UIInterfaceAccessor::GetInterface();
-			(*context |= ui.NewCombobox({ "Collider Type", reinterpret_cast<int*>(&m_type_), Engine::s_stock_shape_names, std::size(Engine::s_stock_shape_names), true })).SetFunction([&]()
+			(*context |= ui.NewCombobox( this, "Collider Type", { "Collider Type", reinterpret_cast<int*>(&m_type_), Engine::s_stock_shape_names, std::size(Engine::s_stock_shape_names), true })).SetFunction([&]()
 			{
 				SetType(m_type_);
 			});
-			*context |= ui.NewLabelAndFloat({ "Mass", m_mass_, 0.1f, 0.f, 0.f, true});
+			*context |= ui.NewLabelAndFloat( this, "Mass", { "Mass", m_mass_, 0.1f, 0.f, 0.f, true});
 		}
 	}
 #endif

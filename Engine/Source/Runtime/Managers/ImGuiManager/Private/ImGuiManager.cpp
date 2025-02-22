@@ -98,7 +98,6 @@ namespace Engine::Managers
 #endif
 		
 		primitive.commandList->FlagReady();
-        UIDialogMapper::Clear();
 #endif
 	}
 
@@ -179,11 +178,9 @@ void Engine::ImGuiDialogToken::End()
 	ImGui::End();
 }
 
-bool Engine::ImGuiDialogToken::DoImpl( const void * ptr, const std::string_view title, bool &opened )
+bool Engine::ImGuiDialogToken::DoImpl(const std::string_view title, bool &opened )
 {
-    value = UIDialogMapper::Map( ptr );
-    const std::string &value_str  = std::to_string( value );
-	const std::string& temp_label = std::string(title) + LabelSuffix(value_str);
+	const std::string& temp_label = std::string( title ) + LabelSuffix( GetIdentifier() );
 	return ImGui::Begin(temp_label.c_str(), &opened, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysAutoResize);
 }
 
@@ -191,7 +188,8 @@ void Engine::ImGuiButtonToken::End() {}
 
 bool Engine::ImGuiButtonToken::DoImpl(const std::string_view title)
 {
-	return ImGui::Button(title.data(), {0, 20});
+    const std::string &temp_label = std::string( title ) + LabelSuffix( GetIdentifier() );
+    return ImGui::Button( temp_label.c_str(), { 0, 20 } );
 }
 
 void Engine::ImGuiLabelAndTextToken::End() {}

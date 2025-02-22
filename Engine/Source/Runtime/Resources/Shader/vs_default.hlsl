@@ -1,7 +1,5 @@
 #include "common.hlsli"
 
-#define PARAM_NUM_LIGHT g_iParam[0].x
-
 PixelInputType vs_main(VertexInputType input, uint instanceId : SV_InstanceID)
 {
 	PixelInputType output;
@@ -12,7 +10,7 @@ PixelInputType vs_main(VertexInputType input, uint instanceId : SV_InstanceID)
 	output.tangent  = input.tangent;
 	output.binormal = input.binormal;
 
-    if (INST_BONE_FLAG(instanceId) && !INST_NO_ANIM(instanceId))
+    if (INST_BONE_FLAG(bufInstance, instanceId) && !INST_NO_ANIM(bufInstance, instanceId))
 	{
 		matrix animation_transform;
 
@@ -22,9 +20,9 @@ PixelInputType vs_main(VertexInputType input, uint instanceId : SV_InstanceID)
 			const float  weight     = input.bone_element.boneWeight[i];
 			const matrix transform  = LoadAnimation
 					(
-					 INST_ANIM_IDX(instanceId),
-					 INST_ANIM_FRAME(instanceId),
-					 INST_ANIM_DURATION(instanceId),
+					 INST_ANIM_IDX(bufInstance, instanceId),
+					 INST_ANIM_FRAME(bufInstance, instanceId),
+					 INST_ANIM_DURATION(bufInstance, instanceId),
 					 bone_index
 					);
 
@@ -38,7 +36,7 @@ PixelInputType vs_main(VertexInputType input, uint instanceId : SV_InstanceID)
 		output.binormal = mul(input.binormal, (float3x3)animation_transform);
 	}
 
-	const matrix world = INST_WORLD(instanceId);
+    const matrix world = INST_WORLD(bufInstance, instanceId);
 	output.scale       = GetScale(world);
 
 	// Calculate the position of the vertex against the world, view, and
@@ -92,7 +90,7 @@ PixelInputType vs_main(VertexInputType input, uint instanceId : SV_InstanceID)
 	output.refraction = mul(output.position, vpw);
 
 	output.clipSpacePosZ = output.position.z;
-    output.clipPlane = dot(mul(input.position, world), INST_CLIP_PLANE(instanceId));
+    output.clipPlane = dot(mul(input.position, world), INST_CLIP_PLANE(bufInstance, instanceId));
 
 	output.instanceId = instanceId;
 

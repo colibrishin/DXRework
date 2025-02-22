@@ -814,25 +814,25 @@ namespace Engine
 	}
 
 #if WITH_EDITOR
-	void Scene::OnUIUpdate(UIContext* const parent, const float dt)
-	{
-		UIInterface& ui = UIInterfaceAccessor::GetInterface();
+    void Scene::OnUIUpdate( UIContext *const parent, const float dt )
+    {
+        UIInterface &ui = UIInterfaceAccessor::GetInterface();
 
-		if (UIContext context = UIInterface::NewContext(ui.NewDialog({this, m_ui_info_.label, m_ui_info_.dialogOpened})))
-		{
-			context << [&]()
-			{
-				m_layer_list_box_name_ = "Layers##LayerListBox" + std::to_string(GetID());
-				Renderable::OnUIUpdate(&context, dt);
-				context += ui.NewListBox({m_layer_list_box_name_, 0, 300.f});
+        if ( UIContext context = UIInterface::NewContext(
+                ui.NewDialog( this, "SceneDialog", { m_ui_info_.label, m_ui_info_.dialogOpened } ) ) )
+        {
+            context << [&]()
+            {
+                Renderable::OnUIUpdate( &context, dt );
+                context += ui.NewListBox( this, "LayerListBox", { "Layers", 0, 300.f } );
 
-				for (const auto& layer : m_layers_)
-				{
-					layer->OnUIUpdate(&context, dt);
-				}
-			};
-		}
-	}
+                for ( const auto &layer : m_layers_ )
+                {
+                    layer->OnUIUpdate( &context, dt );
+                }
+            };
+        }
+    }
 #endif
 
 	void Scene::OnSerialized()

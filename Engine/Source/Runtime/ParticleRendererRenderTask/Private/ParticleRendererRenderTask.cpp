@@ -34,117 +34,129 @@ namespace Engine
         const size_t map_size
     )
     {
-        const auto& prs = scene->GetCachedComponentsConcurrent<Components::ParticleRenderer>();
+        const auto &prs = scene->GetCachedComponentsConcurrent<Components::ParticleRenderer>();
 
-        tbb::parallel_for_each(prs.begin(), prs.end(), [&](const Weak<Abstracts::Component>& comp)
-        {
-            if (const Strong<Abstracts::Component>& raw_component = comp.lock())
-            {
-                if (!raw_component->GetActive())
+        tbb::parallel_for_each(
+                prs.begin(),
+                prs.end(),
+                [ & ]( const Weak<Abstracts::Component> &comp )
                 {
-                    return;
-                }
-
-                const Strong<Components::ParticleRenderer>& pr = raw_component->GetSharedPtr<Components::ParticleRenderer>();
-                const Strong<Abstracts::ObjectBase>& obj = raw_component->GetOwner().lock();
-                const Strong<Resources::Shape>& shape = pr->GetShape().lock();
-                const Strong<Components::Transform>& tr  = obj->GetComponent<Components::Transform>().lock();
-
-                if (!shape || !tr)
-                {
-                    return;
-                }
-                
-                // Pre-mapping by the shader domain.
-                for (auto i = 0; i < map_size; ++i)
-                {
-                    const auto domain = static_cast<eShaderDomain>(i);
-                    auto& domain_map = render_map[domain];
-
-                    RenderMap::accessor acc;
-                    if (!domain_map.find(acc, Components::ParticleRenderer::StaticTypeHash()))
+                    if ( const Strong<Abstracts::Component> &raw_component = comp.lock() )
                     {
-                        domain_map.insert(acc, Components::ParticleRenderer::StaticTypeHash());
-                    }
-
-                    for (const auto& [mesh, mtr] : shape->GetMeshes())
-                    {
-                        if (mesh.expired() || mtr.expired())
+                        if ( !raw_component->GetActive() )
                         {
-                            continue;
+                            return;
                         }
 
-                        const Strong<Resources::Material>& locked_mtr = mtr.lock();
-                        const Strong<Resources::Mesh>& locked_mesh = mesh.lock();
+                        const Strong<Components::ParticleRenderer> &pr =
+                                raw_component->GetSharedPtr<Components::ParticleRenderer>();
+                        const Strong<Abstracts::ObjectBase> &obj   = raw_component->GetOwner().lock();
+                        const Strong<Resources::Shape>      &shape = pr->GetShape().lock();
+                        const Strong<Components::Transform> &tr    = obj->GetComponent<Components::Transform>().lock();
 
-                        MeshMap::accessor mesh_acc;
-                        if (!acc->second.find(mesh_acc, locked_mesh))
+                        if ( !shape || !tr )
                         {
-                            acc->second.insert(mesh_acc, locked_mesh);
+                            return;
                         }
 
-                        if (const Strong<Resources::Shader>& locked_shader = locked_mtr->GetShader().lock())
+                        // Pre-mapping by the shader domain.
+                        for ( auto i = 0; i < map_size; ++i )
                         {
-                            if (locked_shader->GetDomain() != domain)
+                            const auto domain     = static_cast<eShaderDomain>( i );
+                            auto      &domain_map = render_map[ domain ];
+
+                            RenderMap::accessor acc;
+                            if ( !domain_map.find( acc, Components::ParticleRenderer::StaticTypeHash() ) )
                             {
-                                continue;
+                                domain_map.insert( acc, Components::ParticleRenderer::StaticTypeHash() );
                             }
 
-                            decltype(mesh_acc->second)::accessor shader_acc;
-                            if (!mesh_acc->second.find(shader_acc, locked_shader))
+                            for ( const auto &[ mesh, mtr ] : shape->GetMeshes() )
                             {
-                                mesh_acc->second.insert(shader_acc, locked_shader);
-                            }
-
-                            auto& particles = reinterpret_cast<aligned_vector<Graphics::SBs::InstanceSB>&>(pr->GetInstances());
-                            
-                            for (auto& particle : particles)
-                            {
-                                InstancePair instance_pair;
-                                instance_pair.object = obj;
-                                instance_pair.instance = GetInstance();
-
-                                *instance_pair.instance = particle;
-                                if (pr->IsFollowOwner())
+                                if ( mesh.expired() || mtr.expired() )
                                 {
-                                    auto mat = particle.GetParam<Matrix>(0);
-                                    mat = tr->GetWorldMatrix().Transpose() * mat;
-                                    instance_pair.instance->SetParam(0, mat);
+                                    continue;
                                 }
 
-                                locked_mtr->GetPrimitive().Apply(*instance_pair.instance);
-                                
-                                if (const Strong<Components::Animator>& anim = obj->GetComponent<Components::Animator>().lock())
+                                const Strong<Resources::Material>   &locked_mtr    = mtr.lock();
+                                const Strong<Resources::ShaderBase> &locked_shader = locked_mtr->GetShader().lock();
+
+                                if ( locked_shader->GetShaderDomain() != domain )
                                 {
-                                    anim->GetPrimitive().Apply(*instance_pair.instance);
+                                    continue;
                                 }
 
-                                for (auto it = locked_mtr->GetTextures().begin(); it != locked_mtr->GetTextures().end(); ++it)
+                                ShaderMap::accessor shader_acc;
+                                if ( !acc->second.find( shader_acc, locked_shader ) )
                                 {
-                                    const size_t idx = std::distance(locked_mtr->GetTextures().begin(), it);
-                                    if (const Strong<Resources::Texture>& locked = it->lock())
+                                    acc->second.insert( shader_acc, locked_shader );
+                                }
+
+                                if ( const Strong<Resources::Mesh> &locked_mesh = mesh.lock() )
+                                {
+                                    decltype( shader_acc->second )::accessor mesh_acc;
+                                    if ( !shader_acc->second.find( mesh_acc, locked_mesh ) )
                                     {
-                                        instance_pair.textures[idx] = locked;
+                                        shader_acc->second.insert( mesh_acc, locked_mesh );
+                                    }
+
+                                    auto &particles = reinterpret_cast<aligned_vector<Graphics::SBs::InstanceSB> &>(
+                                            pr->GetInstances() );
+
+                                    for ( auto &particle : particles )
+                                    {
+                                        InstancePair instance_pair;
+                                        instance_pair.object   = obj;
+                                        instance_pair.instance = GetInstance();
+
+                                        *instance_pair.instance = particle;
+                                        if ( pr->IsFollowOwner() )
+                                        {
+                                            auto mat = particle.GetParam<Matrix>( 0 );
+                                            mat      = tr->GetWorldMatrix().Transpose() * mat;
+                                            instance_pair.instance->SetParam( 0, mat );
+                                        }
+
+                                        locked_mtr->GetPrimitive().Apply( *instance_pair.instance );
+
+                                        if ( const Strong<Components::Animator> &anim =
+                                                     obj->GetComponent<Components::Animator>().lock() )
+                                        {
+                                            anim->GetPrimitive().Apply( *instance_pair.instance );
+                                        }
+
+                                        for ( auto it = locked_mtr->GetTextures().begin();
+                                              it != locked_mtr->GetTextures().end();
+                                              ++it )
+                                        {
+                                            const size_t idx = std::distance( locked_mtr->GetTextures().begin(), it );
+                                            if ( const Strong<Resources::Texture> &locked = it->lock() )
+                                            {
+                                                instance_pair.textures[ idx ] = locked;
+                                            }
+                                        }
+
+                                        if ( const Strong<Resources::AnimationTexture> &anims =
+                                                     shape->GetAnimations().lock() )
+                                        {
+                                            instance_pair.reservedTextures[ RESERVED_USER_TEX_BONES -
+                                                                            RESERVED_USER_TEX_BEGIN ] = anims;
+                                        }
+
+                                        if ( const Strong<Resources::AtlasAnimationTexture> &atlas =
+                                                     locked_mtr->GetAtlasTexture().lock() )
+                                        {
+                                            instance_pair.reservedTextures[ RESERVED_USER_TEX_ATLAS -
+                                                                            RESERVED_USER_TEX_BEGIN ] = atlas;
+                                        }
+
+                                        mesh_acc->second.push_back( instance_pair );
                                     }
                                 }
-
-                                if (const Strong<Resources::AnimationTexture>& anims = shape->GetAnimations().lock())
-                                {
-                                    instance_pair.reservedTextures[RESERVED_USER_TEX_BONES - RESERVED_USER_TEX_BEGIN] = anims;
-                                }
-                            
-                                if (const Strong<Resources::AtlasAnimationTexture>& atlas = locked_mtr->GetAtlasTexture().lock())
-                                {
-                                    instance_pair.reservedTextures[RESERVED_USER_TEX_ATLAS - RESERVED_USER_TEX_BEGIN] = atlas;
-                                }
-
-                                shader_acc->second.push_back(instance_pair);
                             }
                         }
                     }
-                }
-            }
-        });
+                } );
     }
 
     void ParticleRendererRenderInstanceTask::Cleanup(RenderMap* render_map, const size_t map_size) 

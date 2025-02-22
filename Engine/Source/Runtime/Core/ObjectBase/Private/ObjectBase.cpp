@@ -564,182 +564,233 @@ namespace Engine::Abstracts
 		{
 			UIInterface& ui = UIInterfaceAccessor::GetInterface();
 
-			if (m_ui_info_.dialogOpened)
-			{
-                if ( UIContext context = UIInterface::NewContext( ui.NewDialog( { this, m_ui_info_.label, m_ui_info_.dialogOpened } ) ) )
-				{
-					Actor::OnUIUpdate(&context, dt);
-					(context |= ui.NewButton({"Clone"})).SetFunction([&]()
-					{
-						const auto& _ = Clone(true);
-					});
+            if ( m_ui_info_.dialogOpened )
+            {
+                if ( UIContext context = UIInterface::NewContext(
+                        ui.NewDialog( this, "ObjectBaseDialog", { GetName(), m_ui_info_.dialogOpened } ) ) )
+                {
+                    Actor::OnUIUpdate( &context, dt );
+                    ( context |= ui.NewButton( this, "CloneButton", { "Clone" } ) )
+                            .SetFunction( [ & ]()
+                            {
+                                const auto &_ = Clone( true );
+                            } );
 
-					(context |= ui.NewButton({ "Add Component" })).SetFunction([&]()
-					{
-						m_b_add_component_dialog_opened_ = !m_b_add_component_dialog_opened_;
-					});
+                    ( context |= ui.NewButton( this, "AddComponentButton", { "Add Component" } ) )
+                            .SetFunction( [ & ]()
+                            {
+                                m_b_add_component_dialog_opened_ = !m_b_add_component_dialog_opened_;
+                            } );
 
-					(context |= ui.NewButton({ "Children" })).SetFunction([&]()
-						{
-							m_b_child_dialog_ = !m_b_child_dialog_;
-						});
+                    ( context |= ui.NewButton( this, "ChildrenButton", { "Children" } ) )
+                            .SetFunction( [ & ]()
+                            {
+                                m_b_child_dialog_ = !m_b_child_dialog_;
+                            } );
 
-					if (m_b_add_component_dialog_opened_)
-					{
-                        if ( UIContext add_com_context = UIInterface::NewContext( ui.NewDialog(
-                                     { this, "Add Component dialog", m_b_add_component_dialog_opened_ } ) ) ) 
-						{
-							const auto& internalComponentTemplate = [&] <typename T> requires (std::is_base_of_v<Component, T>)()
-							{
-								(add_com_context |= ui.NewButton({ T::StaticTypeName() })).SetFunction([&]()
-									{
-										AddComponent<T>();
-									});
-							};
-
-							internalComponentTemplate.operator() < Components::Collider > ();
-							internalComponentTemplate.operator() < Components::Transform > ();
-							internalComponentTemplate.operator() < Components::Rigidbody > ();
-
-							for (const auto& [type, predicate] : ComponentFactory::GetGenerators())
-							{
-								(add_com_context |= ui.NewButton({ type->GetTypeName() })).SetFunction([&]()
-								{
-									addComponent(predicate(GetSharedPtr<ObjectBase>()));
-								});
-							}
-						};
-					}
-
-					context += ui.NewTreeNode({"Components"});
-					context += [&]()
-					{
-						for (const Weak<Component>& w_component : m_cached_component_)
-						{
-							if (const Strong<Component>& component = w_component.lock())
-							{
-							    (context |= ui.NewButton( { "Remove" } )).SetFunction( [this, type = component->GetTypeHash()]()
-							    {
-							        removeComponent( type );
-							    });
-							    context |= ui.NewSameLine( {} );
-								context |= ui.NewSelectable({ component->m_ui_info_.label, component->m_ui_info_.dialogOpened });
-							};
-						}
-					};
-				}
-
-				for (const Weak<Component>& w_component : m_cached_component_)
-				{
-					if (const Strong<Component>& component = w_component.lock())
-					{
-						if (component->m_ui_info_.dialogOpened)
-						{
-							if (UIContext context = UIInterface::NewContext(ui.NewDialog({ component.get(), component->m_ui_info_.label, component->m_ui_info_.dialogOpened })))
-							{
-								component->OnUIUpdate(&context, dt);
-							}
-						}
-					}
-				}
-			    
-
-				if (m_b_child_dialog_)
-				{
-                    if ( UIContext child_context = ui.NewContext( ui.NewDialog(
-                                 { this, m_ui_info_.temporaryStrings[ "child_title" ], m_b_child_dialog_ } ) ) )
-					{
-						(child_context |= ui.NewButton({ "Add Child" })).SetFunction([&]()
-							{
-								m_b_child_add_dialog_ = !m_b_child_add_dialog_;
-							});
-
-						if (m_b_child_add_dialog_)
-						{
-                            if ( UIContext child_select_context = ui.NewContext(
-                                         ui.NewDialog( { this, "Add New Child", m_b_child_add_dialog_ } ) ) )
-							{
-								(child_select_context |= ui.NewButton({ "Object" })).SetFunction([this]()
-									{
-										if (const Strong<Scene>& scene = GetScene().lock())
-										{
-											const Strong<Object>& child = scene->CreateGameObject<Object>(GetLayer()).lock();
-											AddChild(child, false);
-										}
-								    
-								        m_b_child_add_dialog_ = false;
-									});
-
-								for (const auto& [type, predicate] : ObjectFactory::GetGenerators())
-								{
-									(child_select_context |= ui.NewButton({ type->GetTypeName() })).SetFunction([this, &predicate]()
-										{
-											if (const Strong<Scene>& scene = GetScene().lock())
-											{
-												const Strong<ObjectBase>& child = predicate();
-												scene->AddGameObject(GetLayer(), child);
-												AddChild(child, false);
-											}
-
-									        m_b_child_add_dialog_ = false;
-										});
-								}
-							}
-						}
-
-						child_context += ui.NewListBox( { m_ui_info_.temporaryStrings[ "child_listbox" ], 0, 0 } );
-                        child_context |= ui.NewDragAndDropTarget(
-                                { "OBJECT",
-                                  [ this ]( void *ptr )
-                                  {
-                                      if ( const Strong<ObjectBase> *scary_ptr =
-                                                   static_cast<Strong<ObjectBase> *>( ptr ) )
-                                      {
-										  if ( ( *scary_ptr )->GetParent().lock() == GetSharedPtr<ObjectBase>() )
-										  {
-                                              return;
-										  }
-
-                                          if ( const Strong<Scene> &scene = GetScene().lock() )
-                                          {
-                                              scene->ChangeLayer( GetLayer(), ( *scary_ptr )->GetID() );
-                                              AddChild( ( *scary_ptr ) );
-                                          }
-                                      }
-                                  } } );
-
-						if ( m_children_cache_.empty() )
+                    if ( m_b_add_component_dialog_opened_ )
+                    {
+                        if ( UIContext add_com_context = UIInterface::NewContext( ui.NewDialog( this,
+                            "AddComponentDialog",
+                            { "Add Component dialog", m_b_add_component_dialog_opened_ } ) ) )
                         {
-                            child_context |= ui.NewText( { "No child found." } );
+                            const auto &internalComponentTemplate = [&] <typename T> requires ( std::is_base_of_v<
+                                        Component, T> )()
+                            {
+                                ( add_com_context |= ui.NewButton( this,
+                                                                   std::format(
+                                                                           "Add{}ComponentButton",
+                                                                           T::StaticTypeName() ),
+                                                                   { T::StaticTypeName() } ) ).SetFunction( [&]()
+                                {
+                                    AddComponent<T>();
+                                } );
+                            };
+
+                            internalComponentTemplate.operator()<Components::Collider>();
+                            internalComponentTemplate.operator()<Components::Transform>();
+                            internalComponentTemplate.operator()<Components::Rigidbody>();
+
+                            for ( const auto &[ type, predicate ] : ComponentFactory::GetGenerators() )
+                            {
+                                ( add_com_context |= ui.NewButton( this,
+                                                                   std::format(
+                                                                           "Add{}ComponentButton",
+                                                                           type->GetTypeName() ),
+                                                                   { type->GetTypeName() } ) )
+                                        .SetFunction( [ & ]()
+                                        {
+                                            addComponent( predicate( GetSharedPtr<ObjectBase>() ) );
+                                        } );
+                            }
+                        };
+                    }
+
+                    context += ui.NewTreeNode( this, "ComponentTreeNode", { "Components" } );
+                    context += [&]()
+                    {
+                        for ( auto it = m_cached_component_.begin(); it != m_cached_component_.end(); ++it )
+                        {
+                            const Weak<Component> &w_component = *it;
+                            const ptrdiff_t        idx         = std::distance( m_cached_component_.begin(), it );
+                            if ( const Strong<Component> &component = w_component.lock() )
+                            {
+                                ( context |= ui.
+                                            NewButton( this, std::format( "ComponentRemove{}", idx ), { "Remove" } ) ).
+                                        SetFunction( [this, type = component->GetTypeHash()]()
+                                        {
+                                            removeComponent( type );
+                                        } );
+                                context |= ui.NewSameLine( this, std::format( "SLComponent{}", idx ), {} );
+                                context |= ui.NewSelectable( this,
+                                                             std::format( "ComponentSelectable{}", idx ),
+                                                             { component->m_ui_info_.label,
+                                                               component->m_ui_info_.dialogOpened } );
+                            };
+                        }
+                    };
+                }
+
+                for ( auto it = m_cached_component_.begin(); it != m_cached_component_.end(); ++it )
+                {
+                    const Weak<Component> &w_component = *it;
+                    const ptrdiff_t        idx         = std::distance( m_cached_component_.begin(), it );
+
+                    if ( const Strong<Component> &component = w_component.lock() )
+                    {
+                        if ( component->m_ui_info_.dialogOpened )
+                        {
+                            if ( UIContext context = UIInterface::NewContext( ui.NewDialog(
+                                    this,
+                                    std::format( "ComponentDialog{}", idx ),
+                                    { component->m_ui_info_.label, component->m_ui_info_.dialogOpened } ) ) )
+                            {
+                                component->OnUIUpdate( &context, dt );
+                            }
+                        }
+                    }
+                }
+
+                if ( m_b_child_dialog_ )
+                {
+                    if ( UIContext child_context = ui.NewContext( ui.NewDialog( this,
+                        "ChildDialog",
+                        { m_ui_info_.temporaryStrings[ "child_title" ], m_b_child_dialog_ } ) ) )
+                    {
+                        ( child_context |= ui.NewButton( this, "AddChildButton", { "Add Child" } ) ).SetFunction( [&]()
+                        {
+                            m_b_child_add_dialog_ = !m_b_child_add_dialog_;
+                        } );
+
+                        if ( m_b_child_add_dialog_ )
+                        {
+                            if ( UIContext child_select_context = UIInterface::NewContext(
+                                    ui.NewDialog( this,
+                                                  "AddNewChildButton",
+                                                  { "Add New Child", m_b_child_add_dialog_ } ) ) )
+                            {
+                                ( child_select_context |= ui.NewButton( this, "AddObjectButton", { "Object" } ) ).
+                                        SetFunction( [this]()
+                                        {
+                                            if ( const Strong<Scene> &scene = GetScene().lock() )
+                                            {
+                                                const Strong<Object> &child = scene->CreateGameObject<Object>(
+                                                        GetLayer() ).lock();
+                                                AddChild( child, false );
+                                            }
+
+                                            m_b_child_add_dialog_ = false;
+                                        } );
+
+                                for ( const auto &[ type, predicate ] : ObjectFactory::GetGenerators() )
+                                {
+                                    ( child_select_context |= ui.NewButton(
+                                            this,
+                                            std::format( "Add{}Button", type->GetTypeName() ),
+                                            { type->GetTypeName() } ) ).SetFunction( [this, &predicate]()
+                                    {
+                                        if ( const Strong<Scene> &scene = GetScene().lock() )
+                                        {
+                                            const Strong<ObjectBase> &child = predicate();
+                                            scene->AddGameObject( GetLayer(), child );
+                                            AddChild( child, false );
+                                        }
+
+                                        m_b_child_add_dialog_ = false;
+                                    } );
+                                }
+                            }
                         }
 
-						for (const auto& [id, child] : m_children_cache_)
-						{
-							if (const Strong<ObjectBase>& locked = child.lock())
-							{
-                                ( child_context |= ui.NewButton( { "Remove" } ) ).SetFunction([this, &locked]() 
-									{ 
-										if (const Strong<Scene>& scene = locked->GetScene().lock())
-										{
-                                            DetachChild( locked->GetLocalID() );
-                                            scene->RemoveGameObject( locked->GetID(), locked->GetLayer() );
-										}
-								} );
-                                child_context |= ui.NewSameLine( {} );
-                                child_context |= ui.NewSelectable( { locked->m_ui_info_.label, locked->m_ui_info_.dialogOpened } );
-                                child_context |= ui.NewDragAndDropSource(
-                                        { "OBJECT", locked->m_ui_info_.label, &locked, sizeof( decltype( locked ) ) } );
+                        child_context += ui.NewListBox( this, "ChildListBox", { "Children", 0, 0 } );
+                        child_context |= ui.NewDragAndDropTarget( this,
+                                                                  "DragAndDropTarget",
+                                                                  { "OBJECT",
+                                                                    [ this ]( void *ptr )
+                                                                    {
+                                                                        if ( const Strong<ObjectBase> *scary_ptr =
+                                                                                static_cast<Strong<ObjectBase> *>( ptr ) )
+                                                                        {
+                                                                            if ( ( *scary_ptr )->GetParent().lock() ==
+                                                                                GetSharedPtr<ObjectBase>() )
+                                                                            {
+                                                                                return;
+                                                                            }
 
-								if (locked->m_ui_info_.dialogOpened)
-								{
-									locked->OnUIUpdate(&child_context, dt);
-								}
-							}
-						}
+                                                                            if ( const Strong<Scene> &scene = GetScene()
+                                                                                    .lock() )
+                                                                            {
+                                                                                scene->ChangeLayer(
+                                                                                        GetLayer(),
+                                                                                        ( *scary_ptr )->GetID() );
+                                                                                AddChild( ( *scary_ptr ) );
+                                                                            }
+                                                                        }
+                                                                    } } );
 
-						--child_context;
-					}
-				}
+                        if ( m_children_cache_.empty() )
+                        {
+                            child_context |= ui.NewText( this, "EmptyChildText", { "No child found." } );
+                        }
+
+                        for ( auto it = m_children_cache_.begin(); it != m_children_cache_.end(); ++it )
+                        {
+                            const auto &[ id, child ] = *it;
+
+                            if ( const Strong<ObjectBase> &locked = child.lock() )
+                            {
+                                ( child_context |= ui.NewButton( this,
+                                                                 std::format( "Remove{}Button", id ),
+                                                                 { "Remove" } ) ).SetFunction( [this, &locked]()
+                                {
+                                    if ( const Strong<Scene> &scene = locked->GetScene().lock() )
+                                    {
+                                        DetachChild( locked->GetLocalID() );
+                                        scene->RemoveGameObject( locked->GetID(), locked->GetLayer() );
+                                    }
+                                } );
+                                child_context |= ui.NewSameLine( this, std::format( "SL{}", id ), {} );
+                                child_context |= ui.NewSelectable( this,
+                                                                   std::format( "ChildSelectable{}", id ),
+                                                                   { locked->m_ui_info_.label,
+                                                                     locked->m_ui_info_.dialogOpened } );
+                                child_context |= ui.NewDragAndDropSource( this,
+                                                                          std::format( "ChildDragAndDropSource{}", id ),
+                                                                          { "OBJECT",
+                                                                            locked->m_ui_info_.label,
+                                                                            &locked,
+                                                                            sizeof( decltype( locked ) ) } );
+
+                                if ( locked->m_ui_info_.dialogOpened )
+                                {
+                                    locked->OnUIUpdate( &child_context, dt );
+                                }
+                            }
+                        }
+
+                        --child_context;
+                    }
+                }
 			}
 		}
 	}

@@ -253,9 +253,22 @@ void Engine::D3D12GraphicInterface::SetDefaultComputePipeline(const GraphicInter
 void Engine::D3D12GraphicInterface::Draw(const GraphicInterfaceContextPrimitive* context, const Resources::Mesh* mesh, const UINT instance_count, const UINT instance_offset)
 {
 	const auto cmd = reinterpret_cast<CommandPair*>(context->commandList);
-	const UINT index_count = mesh->GetIndexCount();
-	cmd->GetList()->IASetVertexBuffers(0, 1, static_cast<D3D12_VERTEX_BUFFER_VIEW*>(mesh->GetPrimitive()->GetNativeVertexBuffer()));
-	cmd->GetList()->IASetIndexBuffer(static_cast<const D3D12_INDEX_BUFFER_VIEW*>(mesh->GetPrimitive()->GetNativeIndexBuffer()));
+    UINT       index_count = 0;
+	if (mesh)
+	{
+        index_count = mesh->GetIndexCount();
+        cmd->GetList()->IASetVertexBuffers(
+                0, 1, static_cast<D3D12_VERTEX_BUFFER_VIEW *>( mesh->GetPrimitive()->GetNativeVertexBuffer() ) );
+        cmd->GetList()->IASetIndexBuffer(
+                static_cast<const D3D12_INDEX_BUFFER_VIEW *>( mesh->GetPrimitive()->GetNativeIndexBuffer() ) );
+	}
+	
+	if ( index_count == 0 )
+	{
+        cmd->GetList()->DrawInstanced( 3, 1, 0, 0 );
+        return;
+	}
+
 	cmd->GetList()->DrawIndexedInstanced(index_count, instance_count, 0, 0, instance_offset);
 }
 
@@ -290,9 +303,9 @@ void Engine::D3D12GraphicInterface::BindGraphic(const GraphicInterfaceContextPri
 	const auto cmd = static_cast<const CommandPair*>(context->commandList);
 	const auto heap = static_cast<DescriptorPtrImpl*>(context->heap);
 	heap->SetSampler(
-		static_cast<ID3D12DescriptorHeap*>(shader->GetGraphicPrimitiveShader().GetNativeSampler())->GetCPUDescriptorHandleForHeapStart(),
+		static_cast<ID3D12DescriptorHeap*>(shader->GetPrimitive().GetNativeSampler())->GetCPUDescriptorHandleForHeapStart(),
 		shader->GetSampler());
-	cmd->GetList()->SetPipelineState(static_cast<ID3D12PipelineState*>(shader->GetGraphicPrimitiveShader().GetNativeShader()));
+    cmd->GetList()->SetPipelineState( static_cast<ID3D12PipelineState *>( shader->GetPrimitive().GetNativeShader() ) );
 	cmd->GetList()->IASetPrimitiveTopology(static_cast<D3D12_PRIMITIVE_TOPOLOGY>(shader->GetPrimitiveTopology()));
 }
 
@@ -398,8 +411,12 @@ void Engine::D3D12GraphicInterface::TransitMultiple(
 	if (count > 0)
 	{
 		const auto cmd  = static_cast<CommandPair*>(context->commandList);
-		aligned_vector<D3D12_RESOURCE_BARRIER> transitions{};
-		transitions.reserve(count);
+		static std::vector<D3D12_RESOURCE_BARRIER> transitions{};
+		
+		if ( transitions.size() < count )
+		{
+            transitions.resize( count );
+		}
 		
 		for (size_t i = 0; i < count; ++i)
 		{
@@ -412,7 +429,7 @@ void Engine::D3D12GraphicInterface::TransitMultiple(
 					 after
 					);
 
-			transitions.push_back(transition);
+			transitions[i] = transition;
 		}
 
 		cmd->GetList()->ResourceBarrier(static_cast<UINT>(count), transitions.data());
@@ -540,15 +557,24 @@ void Engine::D3D12GraphicInterface::BindMultiple(
 {
 	CommandPair* cmd = static_cast<CommandPair*>(context->commandList);
 	
-	std::vector<D3D12_CPU_DESCRIPTOR_HANDLE> rtvs_heap;
+	static std::array<D3D12_CPU_DESCRIPTOR_HANDLE, 8> rtvs_heap{};
 	D3D12_CPU_DESCRIPTOR_HANDLE dsv_heap;
 
-	D3D12PrimitiveTexture* native_dsv = reinterpret_cast<D3D12PrimitiveTexture*>(dsv->GetPrimitiveTexture());
-	dsv_heap = native_dsv->GetDsv()->GetCPUDescriptorHandleForHeapStart();
+	if ( rtvs != nullptr )
+	{
+        for ( size_t i = 0; i < rtv_count; ++i )
+        {
+            D3D12PrimitiveTexture *dtex = static_cast<D3D12PrimitiveTexture *>( rtvs[ i ]->GetPrimitiveTexture() );
+            rtvs_heap[i] = ( dtex->GetRtv()->GetCPUDescriptorHandleForHeapStart() );
+        }
+	}
+	
+	D3D12PrimitiveTexture *native_dsv = reinterpret_cast<D3D12PrimitiveTexture *>( dsv->GetPrimitiveTexture() );
+    dsv_heap                          = native_dsv->GetDsv()->GetCPUDescriptorHandleForHeapStart();
 
 	cmd->GetList()->OMSetRenderTargets
 	(
-		rtvs_heap.size(),
+		rtv_count,
 		rtvs_heap.data(),
 		false,
 		&dsv_heap
