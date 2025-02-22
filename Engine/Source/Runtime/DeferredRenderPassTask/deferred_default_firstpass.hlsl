@@ -12,15 +12,15 @@ struct DeferredOutput
 DeferredOutput ps_main(PixelInputType input)
 {
     DeferredOutput output;
-    float4 worldNormal = float4(0.f, 0.f, 0.f, 1.f);
-    float4 baseColor = float4(0.f, 0.f, 0.f, 1.f);
-    float metalic = 0.f;
+    float4 worldNormal = float4(input.normal, 1.f);
+    float4 baseColor = input.color;
+    float metallic = 0.f;
     float roughness = 0.f;
     float ao = 0.f;
     
     if (INST_TEX_SLOT0_ENABLE(bufInstance, input.instanceId) == true)
     {
-        float3 localNormal = BiasX2(Sample(PSSampler, input.tex, INST_TEX_SLOT0(bufInstance, input.instanceId)).rgb);
+        const float3 localNormal = BiasX2(Sample(PSSampler, input.tex, INST_TEX_SLOT0(bufInstance, input.instanceId)).rgb);
         worldNormal = float4(PeturbNormal(localNormal, input.worldPosition.xyz, input.normal, input.tex), 1.f);
     }
     if (INST_TEX_SLOT1_ENABLE(bufInstance, input.instanceId) == true)
@@ -30,14 +30,14 @@ DeferredOutput ps_main(PixelInputType input)
     if (INST_TEX_SLOT2_ENABLE(bufInstance, input.instanceId) == true)
     {
         float4 mra = Sample(PSSampler, input.tex, INST_TEX_SLOT2(bufInstance, input.instanceId));
-        metalic = mra.r;
+        metallic = mra.r;
         roughness = mra.g;
         ao = mra.b;
     }
 
     output.A = worldNormal;
     output.B = baseColor;
-    output.C = float4(metalic, roughness, ao, 1.f);
+    output.C = float4(metallic, roughness, ao, 1.f);
     output.D = input.worldPosition;
     return output;
 }

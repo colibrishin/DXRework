@@ -1,28 +1,36 @@
 #include "common.hlsli"
 
-// https://wallisc.github.io/rendering/2021/04/18/Fullscreen-Pass.html
-float4 vs_main(uint id : SV_VertexID) : SV_Position
+struct DeferredLightPixelInputType
 {
-    float2 uv = float2((id << 1) & 2, id & 2);
-    return float4(uv * float2(2, -2) + float2(-1, 1), 0, 1);
+    float4 position : SV_Position;
+    float2 uv : TEXCOORD0;
 };
 
-float4 ps_main(float4 input : SV_Position) : SV_Target
+// https://wallisc.github.io/rendering/2021/04/18/Fullscreen-Pass.html
+DeferredLightPixelInputType vs_main(uint id : SV_VertexID)
+{
+    DeferredLightPixelInputType output;
+    output.uv = float2((id << 1) & 2, id & 2);
+    output.position = float4(output.uv * float2(2, -2) + float2(-1, 1), 0, 1);
+    return output;
+};
+
+float4 ps_main(DeferredLightPixelInputType input) : SV_Target
 {
     float4 worldNormal = float4(0.f, 0.f, 0.f, 1.f);
     float4 baseColor = float4(0.f, 0.f, 0.f, 1.f);
-    float metalic = 0.f;
+    float metallic = 0.f;
     float roughness = 0.f;
     float ao = 0.f;
     float4 worldPosition = float4(0.f, 0.f, 0.f, 1.f);
     
-    worldNormal = tex[0].Sample(PSSampler, input.xy);
-    baseColor = tex[1].Sample(PSSampler, input.xy);
-    float4 MRA = tex[2].Sample(PSSampler, input.xy);
-    metalic = MRA.x;
+    worldNormal = tex[0].Sample(PSSampler, input.uv);
+    baseColor = tex[1].Sample(PSSampler, input.uv);
+    float4 MRA = tex[2].Sample(PSSampler, input.uv);
+    metallic = MRA.x;
     roughness = MRA.y;
     ao = MRA.z;
-    worldPosition = tex[3].Sample(PSSampler, input.xy);
+    worldPosition = tex[3].Sample(PSSampler, input.uv);
     
     float4 lightIntensity[MAX_NUM_LIGHTS];
     float4 colorArray[MAX_NUM_LIGHTS];
@@ -42,7 +50,7 @@ float4 ps_main(float4 input : SV_Position) : SV_Target
     }
     
     float4 lightColor = g_ambientColor;
-    for (i = 0; i < PARAM_NUM_LIGHT; ++i)
+    for (int i = 0; i < PARAM_NUM_LIGHT; ++i)
     {
         lightColor.r += colorArray[i].r;
         lightColor.g += colorArray[i].g;
