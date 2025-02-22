@@ -663,7 +663,7 @@ namespace Engine::Abstracts
                             if ( UIContext context = UIInterface::NewContext( ui.NewDialog(
                                     this,
                                     std::format( "ComponentDialog{}", idx ),
-                                    { component->GetName(), component->m_ui_info_.dialogOpened } ) ) )
+                                    { component->m_ui_info_.label, component->m_ui_info_.dialogOpened } ) ) )
                             {
                                 component->OnUIUpdate( &context, dt );
                             }
