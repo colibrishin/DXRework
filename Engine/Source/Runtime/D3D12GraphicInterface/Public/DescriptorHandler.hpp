@@ -2,11 +2,11 @@
 #include <directx/d3d12.h>
 #include <wrl/client.h>
 
-#include "CoreEntity.h"
+
 #include "GraphicInterface.h"
 
 #include "DescriptorPtrImpl.h"
-#include "SIMDExtension/Public/SIMDExtension.hpp"
+#include "SIMDExtension.hpp"
 
 namespace Engine
 {

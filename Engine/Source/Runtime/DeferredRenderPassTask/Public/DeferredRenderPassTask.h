@@ -2,7 +2,7 @@
 #include <array>
 
 #include "RenderTask.h"
-#include "SingletonSpinLock/Public/SingletonSpinLock.h"
+#include "SingletonSpinLock.h"
 
 #include <ranges>
 

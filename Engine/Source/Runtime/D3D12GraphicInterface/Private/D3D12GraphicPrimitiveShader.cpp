@@ -2,8 +2,8 @@
 #include <d3dcompiler.h>
 #include <ranges>
 
-#include "Source/Runtime/D3D12GraphicInterface/Public/ThrowIfFailed.h"
-#include "Source/Runtime/Resources/Shader/Public/Shader.h"
+#include "ThrowIfFailed.h"
+#include "Shader.h"
 
 std::vector<std::tuple<Engine::eShaderType, std::string, std::string>> Engine::D3D12GraphicPrimitiveShader::s_main_version =
 		{

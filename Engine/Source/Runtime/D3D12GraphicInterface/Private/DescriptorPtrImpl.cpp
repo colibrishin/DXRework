@@ -1,4 +1,4 @@
-#include "../Public/DescriptorPtrImpl.h"
+#include "DescriptorPtrImpl.h"
 
 #include "CommandPair.h"
 #include "DescriptorHandler.hpp"

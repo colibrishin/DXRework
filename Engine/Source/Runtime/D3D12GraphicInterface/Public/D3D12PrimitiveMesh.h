@@ -3,7 +3,7 @@
 #include <directx/d3d12.h>
 #include <wrl/client.h>
 
-#include "Source/Runtime/Resources/Mesh/Public/Mesh.h"
+#include "Mesh.h"
 
 namespace Engine 
 {

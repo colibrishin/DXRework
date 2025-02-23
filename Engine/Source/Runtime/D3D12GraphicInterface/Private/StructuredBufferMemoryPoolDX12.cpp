@@ -1,1 +1,1 @@
-#include "../Public/StructuredBufferDX12.hpp"
+#include "StructuredBufferDX12.hpp"

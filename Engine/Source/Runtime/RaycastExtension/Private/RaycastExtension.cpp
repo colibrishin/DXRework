@@ -1,7 +1,7 @@
-#include "../Public/RaycastExtension.hpp"
+#include "RaycastExtension.hpp"
 
-#include "Source/Runtime/Core/Components/Collider/Public/Collider.h"
-#include "Source/Runtime/Core/GenericBounding/Public/GenericBounding.hpp"
+#include "Collider.h"
+#include "GenericBounding.hpp"
 
 bool Engine::Physics::RaycastExtension::Intersects(
 	const Weak<Components::Collider>& collider,

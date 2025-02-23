@@ -1,5 +1,5 @@
-#include "Source/Runtime/Managers/WinAPIWrapper/Public/WinAPIWrapper.hpp"
-#include "Source/Runtime/EngineEntryPoint/Public/EngineEntryPoint.h"
+#include "WinAPIWrapper.hpp"
+#include "EngineEntryPoint.h"
 
 int WINAPI WinMain(
 	HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline,

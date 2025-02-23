@@ -12,8 +12,8 @@
 
 #include "DescriptorHandler.hpp"
 
-#include "Source/Runtime/Core/Allocator/Public/Allocator.h"
-#include "Source/Runtime/Core/TypeLibrary/Public/TypeLibrary.h"
+#include "Allocator.h"
+#include "TypeLibrary.h"
 #include "DescriptorPtrImpl.h"
 
 namespace Engine

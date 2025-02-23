@@ -15,8 +15,6 @@ public class ShapeImporter : EngineCommonProject
         base.ConfigureAll(conf, target);
 
         conf.AddPublicDependency<Core>(target);
-        conf.AddPublicDependency<Mesh>(target);
-        conf.AddPublicDependency<Shape>(target);
         conf.AddPrivateDependency<Assimp>(target);
         conf.AddPrivateDependency<Boost>(target);
     }

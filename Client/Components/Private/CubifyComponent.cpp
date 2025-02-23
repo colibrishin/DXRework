@@ -1,13 +1,13 @@
 #include "Components/Public/CubifyComponent.h"
 #include "CubifyComponent.generated.h"
 
-#include "Scene/Public/Scene.h"
-#include "ObjectBase/Public/ObjectBase.h"
-#include "Components/Transform/Public/Transform.h"
-#include "SceneManager/Public/SceneManager.h"
-#include "Objects/Camera/Public/Camera.h"
-#include "Components/Collider/Public/Collider.h"
-#include "Objects/Object/Public/Object.h"
+#include "Scene.h"
+#include "ObjectBase.h"
+#include "Transform.h"
+#include "SceneManager.h"
+#include "Camera.h"
+#include "Collider.h"
+#include "Object.h"
 #include "Components/Public/FezPlayerComponent.h"
 
 using namespace Engine;

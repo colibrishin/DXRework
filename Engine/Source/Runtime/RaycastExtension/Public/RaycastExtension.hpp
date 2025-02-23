@@ -1,5 +1,5 @@
 #pragma once
-#include "Source/Runtime/Core/TypeLibrary/Public/TypeLibrary.h"
+#include "TypeLibrary.h"
 
 namespace Engine::Physics 
 {

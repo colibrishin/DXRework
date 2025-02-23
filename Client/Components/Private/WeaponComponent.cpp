@@ -1,12 +1,12 @@
 #include "Components/Public/WeaponComponent.h"
 #include "WeaponComponent.generated.h"
 
-#include "Objects/Object/Public/Object.h"
+#include "Object.h"
 #include "Shape.h"
 #include "ModelRenderer.h"
 #include "Animator.h"
-#include "Components/Transform/Public/Transform.h"
-#include "Components/Collider/Public/Collider.h"
+#include "Transform.h"
+#include "Collider.h"
 
 void WeaponComponent::Initialize()
 {

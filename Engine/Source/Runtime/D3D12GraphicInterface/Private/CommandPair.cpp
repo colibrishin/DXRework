@@ -1,4 +1,4 @@
-#include "../Public/CommandPair.h"
+#include "CommandPair.h"
 
 #pragma comment(lib, "d3d12.lib")
 

@@ -1,0 +1,31 @@
+#pragma once
+#include "Singleton.h"
+#include "TypeLibrary.h"
+
+#include "CameraManager.generated.h"
+
+namespace Engine::Managers
+{
+	ECLASS()
+	class ENGINE_CAMERAMANAGER_API CameraManager : public Abstracts::Singleton<CameraManager>
+	{
+		GENERATE_BODY
+	public:
+		CameraManager(SINGLETON_LOCK_TOKEN)
+			: Singleton() {}
+
+		void Initialize() override;
+		void PreUpdate(const float dt) override;
+		void Update(const float dt) override;
+		void PreRender(const float dt) override;
+		void Render(const float dt) override;
+		void PostRender(const float dt) override;
+		void PostUpdate(const float dt) override;
+		void FixedUpdate(const float dt) override;
+
+	private:
+		CameraManager() = default;
+		friend struct SingletonDeleter;
+		~CameraManager() override = default;
+	};
+} // namespace Engine::Managers

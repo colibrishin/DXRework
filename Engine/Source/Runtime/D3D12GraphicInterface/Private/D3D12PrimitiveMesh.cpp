@@ -6,10 +6,10 @@
 #include <directxtk12/BufferHelpers.h>
 
 #include "GraphicInterface.h"
-#include "Source/Runtime/Core/VertexElement/Public/VertexElement.h"
-#include "Source/Runtime/Core/SIMDExtension/Public/SIMDExtension.hpp"
-#include "Source/Runtime/D3D12GraphicInterface/Public/ThrowIfFailed.h"
-#include "Source/Runtime/D3d12Graphicinterface/Public/CommandPair.h"
+#include "VertexElement.h"
+#include "SIMDExtension.hpp"
+#include "ThrowIfFailed.h"
+#include "CommandPair.h"
 #include "D3D12GraphicResourcePrimitive.h"
 
 namespace Engine

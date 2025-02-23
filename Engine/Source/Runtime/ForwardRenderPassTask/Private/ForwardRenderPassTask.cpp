@@ -1,4 +1,4 @@
-#include "../Public/ForwardRenderPassTask.h"
+#include "ForwardRenderPassTask.h"
 #include "ForwardRenderPassTask.generated.h"
 
 #include <ranges>
@@ -7,9 +7,9 @@
 #include "RenderPipeline.h"
 #include "Renderer.h"
 
-#include "Source/Runtime/Resources/AtlasAnimationTexture/Public/AtlasAnimationTexture.h"
-#include "Source/Runtime/Resources/Material/Public/Material.h"
-#include "Source/Runtime/Resources/Shape/Public/Shape.h"
+#include "AtlasAnimationTexture.h"
+#include "Material.h"
+#include "Shape.h"
 
 namespace Engine
 {

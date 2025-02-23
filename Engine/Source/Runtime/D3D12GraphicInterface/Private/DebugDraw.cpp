@@ -5,7 +5,7 @@
 // Licensed under the MIT License.
 //-------------------------------------------------------------------------------------
 
-#include "../Public/DebugDraw.h"
+#include "DebugDraw.h"
 #include <Windows.h>
 
 #include <algorithm>

@@ -1,5 +1,5 @@
 #pragma once
-#include "Component/Public/Component.h"
+#include "Component.h"
 
 #include "CubifyComponent.generated.h"
 

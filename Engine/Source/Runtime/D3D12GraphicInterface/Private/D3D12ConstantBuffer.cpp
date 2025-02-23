@@ -1,6 +1,6 @@
-#include "../Public/D3D12ConstantBuffer.hpp"
+#include "D3D12ConstantBuffer.hpp"
 
-#include "SIMDExtension/Public/SIMDExtension.hpp"
+#include "SIMDExtension.hpp"
 
 Engine::Graphics::D3D12ConstantBufferTypeless::~D3D12ConstantBufferTypeless()
 {

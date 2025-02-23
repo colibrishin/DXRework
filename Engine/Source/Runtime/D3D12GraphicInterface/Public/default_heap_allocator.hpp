@@ -1,7 +1,7 @@
 ﻿#pragma once
 #include <directx/d3d12.h>
 #include "ThrowIfFailed.h"
-#include "TypeLibrary/Public/TypeLibrary.h"
+#include "TypeLibrary.h"
 
 namespace Engine
 {

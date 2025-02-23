@@ -20,12 +20,10 @@ public class D3D12GraphicInterface : EngineCommonProject
         conf.AddPublicDependency<Mesh>(target);
         conf.AddPublicDependency<Shader>(target);
         conf.AddPublicDependency<ComputeShader>(target);
-        conf.AddPublicDependency<CoreRender>(target);
 
         conf.AddPrivateDependency<DirectXTex>(target);
         conf.AddPrivateDependency<Font>(target);
         conf.AddPrivateDependency<WinAPIWrapper>(target);
         conf.AddPrivateDependency<RenderPipeline>(target);
-        conf.AddPrivateDependency<EngineEntryPoint>(target);
     }
 }

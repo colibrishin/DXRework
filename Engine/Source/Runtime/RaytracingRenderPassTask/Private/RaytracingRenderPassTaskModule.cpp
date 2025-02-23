@@ -1,4 +1,4 @@
-#include "../Public/RaytracingRenderPassTaskModule.h"
+#include "RaytracingRenderPassTaskModule.h"
 #include "RaytracingRenderPassTaskModule.generated.h"
 
 #include "ModuleManager.h"

@@ -1,15 +1,15 @@
 #include "Components/Public/PlayerHitboxComponent.h"
 #include "PlayerHitboxComponent.generated.h"
 
-#include "ObjectBase/Public/ObjectBase.h"
+#include "ObjectBase.h"
 #include "Shape.h"
 #include "ModelRenderer.h"
 #include "Animator.h"
 #include "BoneAnimation.h"
-#include "Components/Collider/Public/Collider.h"
-#include "Components/Transform/Public/Transform.h"
-#include "Components/Rigidbody/Public/Rigidbody.h"
-#include <Objects/Object/Public/Object.h>
+#include "Collider.h"
+#include "Transform.h"
+#include "Rigidbody.h"
+#include <Object.h>
 
 void PlayerHitboxComponent::Initialize()
 {

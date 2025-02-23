@@ -2,10 +2,10 @@
 #include "D3D12GraphicInterface.h"
 #include "D3D12GraphicResourcePrimitive.h"
 
-#include "Source/Runtime/Core/Allocator/Public/Allocator.h"
+#include "Allocator.h"
 #include "ThrowIfFailed.h"
 
-#include "Source/Runtime/Core/SIMDExtension/Public/SIMDExtension.hpp"
+#include "SIMDExtension.hpp"
 
 namespace Engine
 {

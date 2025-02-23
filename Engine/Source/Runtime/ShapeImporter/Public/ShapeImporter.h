@@ -1,7 +1,7 @@
 #pragma once
 #include <assimp/Importer.hpp>
 
-#include "Source/Runtime/Core/TypeLibrary/Public/TypeLibrary.h"
+#include "TypeLibrary.h"
 #include <filesystem>
 
 namespace Engine 

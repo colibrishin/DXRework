@@ -1,7 +1,7 @@
 #pragma once
 #include "RenderTask.h"
 
-#include "SingletonSpinLock/Public/SingletonSpinLock.h"
+#include "SingletonSpinLock.h"
 
 #include "ParticleRendererRenderTask.generated.h"
 

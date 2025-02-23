@@ -18,8 +18,6 @@ public class Launch : EngineCommonProject
         conf.AddPublicDependency<Boost>(target);
         conf.AddPublicDependency<TBB>(target);
 
-        conf.AddPrivateDependency<EngineEntryPoint>(target);
-
         if (target.Platform == Platform.win64 || target.Platform == Platform.win32) 
         {
             conf.AddPublicDependency<WinAPIWrapper>(target);

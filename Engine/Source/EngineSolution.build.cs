@@ -5,9 +5,6 @@ using Sharpmake;
 [module: Include("%EngineDir%/Build/CommonProject.build.cs")]
 [module: Include("%EngineDir%/Engine/Source/Programs/**/*.build.cs")]
 [module: Include("%EngineDir%/Engine/Source/Runtime/**/*.build.cs")]
-[module: Include("%EngineDir%/Engine/Source/Runtime/Managers/**/*.build.cs")]
-[module: Include("%EngineDir%/Engine/Source/Runtime/Resources/**/*.build.cs")]
-[module: Include("%EngineDir%/Engine/Source/Runtime/Components/**/*.build.cs")]
 
 [Generate]
 public class EngineSolution : Solution
@@ -33,8 +30,6 @@ public class EngineSolution : Solution
 		// Add Projects
         {
             conf.AddProject<Core>(target);
-            conf.AddProject<CoreTaskScheduler>(target);
-            conf.AddProject<CoreModuleManager>(target);
             conf.AddProject<RaycastExtension>(target);
 
             {
@@ -68,7 +63,6 @@ public class EngineSolution : Solution
                 
                 conf.AddProject<PhysicsManager>(target);
                 conf.AddProject<SoundManager>(target);
-                conf.AddProject<EngineEntryPoint>(target);
                 conf.AddProject<ProjectionFrustum>(target);
                 conf.AddProject<ReflectionEvaluator>(target);
                 conf.AddProject<RenderPipeline>(target);

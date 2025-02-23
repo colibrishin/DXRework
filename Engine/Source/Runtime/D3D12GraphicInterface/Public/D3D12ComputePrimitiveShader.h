@@ -3,7 +3,7 @@
 #include <directx/d3d12.h>
 #include <directx/d3dx12.h>
 
-#include "Source/Runtime/Resources/ComputeShader/Public/ComputeShader.h"
+#include "ComputeShader.h"
 
 namespace Engine
 {

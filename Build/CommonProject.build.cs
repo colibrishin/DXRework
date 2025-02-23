@@ -133,6 +133,7 @@ public abstract class CommonProject : Project
         else
         {
             conf.Output = Configuration.OutputType.Lib;
+            conf.Options.Add(Options.Vc.Linker.LinkLibraryDependencies.Enable);
         }
         
         conf.Options.Add(Options.Vc.General.CharacterSet.Unicode);
