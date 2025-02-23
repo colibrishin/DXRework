@@ -24,13 +24,13 @@ namespace Engine
 		[[nodiscard]] ID3D12DescriptorHeap* GetDsv() const;
 		[[nodiscard]] ID3D12DescriptorHeap* GetRtv() const;
 		[[nodiscard]] ID3D12DescriptorHeap* GetUav() const;
-
+	    [[nodiscard]] uint64_t GetGPUAddress() const override;
 	private:
 		D3D12_RESOURCE_DIMENSION ConvertDimension(const eTexType type);
 		void InitializeDescriptorHeaps();
 		void InitializeResourceViews() const;
 
-	private:
+    private:
 		D3D12_RESOURCE_DESC       m_native_desc_{};
 
 		DXGI_FORMAT m_rtv_format_ = DXGI_FORMAT_R8G8B8A8_UNORM;

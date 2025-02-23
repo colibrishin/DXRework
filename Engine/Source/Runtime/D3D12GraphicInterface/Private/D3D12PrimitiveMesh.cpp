@@ -5,15 +5,16 @@
 
 #include <directxtk12/BufferHelpers.h>
 
+#include "GraphicInterface.h"
 #include "Source/Runtime/Core/VertexElement/Public/VertexElement.h"
-#include "Source/Runtime/Core/GraphicInterface.h"
 #include "Source/Runtime/Core/SIMDExtension/Public/SIMDExtension.hpp"
 #include "Source/Runtime/D3D12GraphicInterface/Public/ThrowIfFailed.h"
 #include "Source/Runtime/D3d12Graphicinterface/Public/CommandPair.h"
+#include "D3D12GraphicResourcePrimitive.h"
 
 namespace Engine
 {
-	void D3D12PrimitiveMesh::Generate(const Resources::Mesh* mesh)
+	void D3D12PrimitiveMesh::Generate(Resources::Mesh* mesh)
     {
 		std::string generic_name = mesh->GetName();
 
@@ -146,13 +147,21 @@ namespace Engine
 		SetNativeIndexBuffer(&m_index_buffer_view_);
 
 #if CFG_RAYTRACING
-		AccelStructBuffer& blas = GetAccelStructBuffer(mesh);
+	    RaytracingExtensionInterface& rgi    = GraphicInterfaceAccessor::GetRaytracingInterface();
+        auto                          rt_dev = static_cast<ID3D12Device5*>(rgi.GetRaytracingNativeInterface());
+		AccelStructBuffer&            blas   = mesh->GetBLAS();
 		
-		if (Managers::RaytracingPipeline::GetInstance().IsRaytracingSupported() && pure_vertices.size() % 3 == 0)
+		if (rgi.IsRaytracingSupported() && mesh->GetVertexCollection().size() % 3 == 0)
 		{
+		    std::vector<Vector3> pure_vertices{};
+		    for (const Graphics::VertexElement& elem : vertices)
+		    {
+		        pure_vertices.push_back(elem.position);
+		    }
+		    
 			// -- Structured Buffer -- //
 			// structured buffer for the raytracing pipeline.
-			StructuredBufferTypeInterface<Graphics::VertexElement>& sb = GetVertexStructuredBuffer(mesh);
+			StructuredBufferTypeProxy<Graphics::VertexElement>& sb = mesh->GetVertexStructuredBuffer();
     	
 			CheckSize<UINT>(vertices.size(), L"Warning: Vertices are too many to upload!");
 			sb.SetData
@@ -163,7 +172,7 @@ namespace Engine
 					);
 
 			// Since vertices are not going to be modified, we can transition to SRV and keep it.
-			sb.GetTypeless().TransitionToSRV(&primitive);
+			sb.TransitionToSRV(&primitive);
 			
 			const auto& vtx_pure_buffer_desc = CD3DX12_RESOURCE_DESC::Buffer(sizeof(Vector3) * pure_vertices.size());
 			const auto& idx_pure_buffer_desc = CD3DX12_RESOURCE_DESC::Buffer(sizeof(UINT) * indices.size());
@@ -264,7 +273,7 @@ namespace Engine
 				.IndexCount = static_cast<UINT>(indices.size()),
 				.VertexCount = static_cast<UINT>(vertices.size()),
 				.IndexBuffer = m_raytracing_index_buffer_->GetGPUVirtualAddress(),
-				.VertexBuffer = {m_raytracing_vertex_buffer_->GetGPUVirtualAddress(), sizeof(Vector3)}
+				.VertexBuffer = { m_raytracing_vertex_buffer_->GetGPUVirtualAddress(), sizeof(Vector3) }
 			};
 			geo_desc.Flags = D3D12_RAYTRACING_GEOMETRY_FLAG_OPAQUE;
 
@@ -276,8 +285,7 @@ namespace Engine
 			blas_inputs.pGeometryDescs = &geo_desc;
 
 			D3D12_RAYTRACING_ACCELERATION_STRUCTURE_PREBUILD_INFO blas_prebuild_info{};
-			GetRaytracingPipeline().GetDevice()->GetRaytracingAccelerationStructurePrebuildInfo
-					(&blas_inputs, &blas_prebuild_info);
+			rt_dev->GetRaytracingAccelerationStructurePrebuildInfo(&blas_inputs, &blas_prebuild_info);
 
 			if (blas_prebuild_info.ResultDataMaxSizeInBytes == 0)
 			{
@@ -291,16 +299,19 @@ namespace Engine
 
 			const auto& scratch_size = Align
 					(blas_prebuild_info.ScratchDataSizeInBytes, D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BYTE_ALIGNMENT);
-			
-			blas.resultPool->Update(nullptr, result_size, 1);
-			blas.scratchPool->Update(nullptr, scratch_size, 1);
+
+		    blas.resultPool = std::make_unique<D3D12GraphicMemoryPool<D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BYTE_ALIGNMENT, D3D12_HEAP_TYPE_DEFAULT, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_RAYTRACING_ACCELERATION_STRUCTURE>>();
+		    blas.scratchPool = std::make_unique<D3D12GraphicMemoryPool<D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BYTE_ALIGNMENT, D3D12_HEAP_TYPE_DEFAULT, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_UNORDERED_ACCESS>>();
+
+		    blas.resultPool->Update(nullptr, result_size, 1);
+            blas.scratchPool->Update(nullptr, scratch_size, 1);
 
 			D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_DESC blas_desc{};
 
-			blas_desc.DestAccelerationStructureData    = blas.resultPool->GetGPUAddress();
+			blas_desc.DestAccelerationStructureData    = blas.resultPool->GetResource<ID3D12Resource>()->GetGPUVirtualAddress();
 			blas_desc.Inputs                           = blas_inputs;
-			blas_desc.ScratchAccelerationStructureData = blas.scratchPool->GetGPUAddress();
-
+			blas_desc.ScratchAccelerationStructureData = blas.scratchPool->GetResource<ID3D12Resource>()->GetGPUVirtualAddress();
+		    
 			cmd->GetList4()->BuildRaytracingAccelerationStructure
 					(
 					 &blas_desc,
@@ -321,4 +332,14 @@ namespace Engine
 
     	cmd->Execute();
     }
+
+    uint64_t D3D12PrimitiveMesh::GetNativeVertexBufferGPUAddress() const
+	{
+	    return m_vertex_buffer_view_.BufferLocation;
+	}
+    
+    uint64_t D3D12PrimitiveMesh::GetNativeIndexBufferGPUAddress() const
+	{
+	    return m_index_buffer_view_.BufferLocation;
+	}
 }

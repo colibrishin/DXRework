@@ -1,7 +1,7 @@
 #pragma once
 #include "Source/Runtime/CoreSingleton/Public/Singleton.h"
 #include "Source/Runtime/Core/Delegation/Public/Delegation.hpp"
-#include "Source/Runtime/Core/TaskScheduler/Public/TaskScheduler.h"
+#include "TaskScheduler.h"
 
 #include "UIHelpers.h"
 #include "SceneManager.generated.h"
@@ -26,9 +26,9 @@ namespace Engine::Managers
 			return m_active_scene_;
 		}
 
-		void AddScene(const std::string& name);
-	    void RemoveScene(const std::string& name);
-        void                                            SetActive( const std::string &name );
+        void AddScene( const std::string &name );
+        void RemoveScene( const std::string &name );
+        void SetActive( const std::string &name );
 
 		[[nodiscard]] Weak<Scene> GetScene(const std::string& name) const;
 		[[nodiscard]] const std::vector<Strong<Scene>>& GetScenes() const;

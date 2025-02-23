@@ -1,17 +1,15 @@
 ﻿#include "ReflectionEvaluatorModule.h"
+
+#include "EngineEntryPoint.h"
 #include "ReflectionEvaluatorModule.generated.h"
 #include "ReflectionEvaluator.h"
 #include "Renderer.h"
-
-#include "CoreModule/Public/CoreModule.h"
-
-
 
 MODULE_IMPL(Engine::ReflectionEvaluatorModule, ReflectionEvaluator)
 
 bool Engine::ReflectionEvaluatorModule::InitializeImpl()
 {
-    CoreModule::GetContext().AddManager(
+    CoreLoop::AddManager(
         CoreLoop::LOOP_TYPE_RENDER,
         &Managers::ReflectionEvaluator::GetInstance);
     
@@ -34,7 +32,7 @@ bool Engine::ReflectionEvaluatorModule::InitializeImpl()
 
 bool Engine::ReflectionEvaluatorModule::ShutdownImpl()
 {
-    CoreModule::GetContext().RemoveManager(CoreLoop::LOOP_TYPE_RENDER, &Managers::ReflectionEvaluator::GetInstance);
+    CoreLoop::RemoveManager(CoreLoop::LOOP_TYPE_RENDER, &Managers::ReflectionEvaluator::GetInstance);
     Managers::Renderer::GetInstance().UnregisterContextPreRenderSetup("BindReflectionMap");
     Managers::Renderer::GetInstance().UnregisterContextPostRenderSetup("UnbindReflectionMap");
     
@@ -44,4 +42,10 @@ bool Engine::ReflectionEvaluatorModule::ShutdownImpl()
 bool Engine::ReflectionEvaluatorModule::DynamicLoadable()
 {
     return true;
+}
+
+const std::vector<std::string> & Engine::ReflectionEvaluatorModule::LoadAfter() const
+{
+    static const std::vector<std::string> load_after = { "RenderPipeline" };
+    return load_after;
 }

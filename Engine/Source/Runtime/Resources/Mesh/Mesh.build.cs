@@ -14,5 +14,6 @@ public class Mesh : EngineCommonProject
 
         conf.AddPublicDependency<Core>(target);
         conf.AddPublicDependency<Boost>(target);
+        conf.AddPublicDependency<CoreRender>(target);
     }
 }

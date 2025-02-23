@@ -111,11 +111,11 @@ float4 Sample(in SamplerState inSampler, in float2 uv, in uint slot)
 {
     float4 outValue = float4(0.f, 0.f, 0.f, 0.f);
 
-    if (slot >= MAX_TEX_PER_MAT)
-    {
-        return outValue;
-    }
-	
+	if (slot >= MAX_TEX_PER_MAT)
+	{
+		return outValue;
+	}
+
 #define SWITCH_OFFSET(NUM) case NUM: \
     outValue = tex[NUM].Sample(inSampler, uv); \
     break;
@@ -138,8 +138,8 @@ float4 Sample(in SamplerState inSampler, in float2 uv, in uint slot)
         SWITCH_OFFSET(13)
         SWITCH_OFFSET(14)
         SWITCH_OFFSET(15)
-        default:
-            break;
+    default:
+        break;
     }
 #undef SWITCH_OFFSET
 	

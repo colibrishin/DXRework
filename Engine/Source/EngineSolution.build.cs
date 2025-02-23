@@ -33,6 +33,8 @@ public class EngineSolution : Solution
 		// Add Projects
         {
             conf.AddProject<Core>(target);
+            conf.AddProject<CoreTaskScheduler>(target);
+            conf.AddProject<CoreModuleManager>(target);
             conf.AddProject<RaycastExtension>(target);
 
             {
@@ -68,17 +70,24 @@ public class EngineSolution : Solution
                 conf.AddProject<SoundManager>(target);
                 conf.AddProject<EngineEntryPoint>(target);
                 conf.AddProject<ProjectionFrustum>(target);
-                //conf.AddProject<RaytracingPipeline>(target);
                 conf.AddProject<ReflectionEvaluator>(target);
                 conf.AddProject<RenderPipeline>(target);
                 conf.AddProject<ShadowManager>(target);
                 conf.AddProject<SoundManager>(target);
+                conf.AddProject<CameraManager>(target);
                 conf.AddProject<Launch>(target);
             }
 
             if (target.LaunchType == ELaunchType.Client || target.LaunchType == ELaunchType.Editor)
             {
                 conf.AddProject<InputManager>(target);
+            }
+
+            if (target.Raytracing == ERaytracing.On)
+            {
+                conf.AddProject<RaytracingShader>(target);
+                conf.AddProject<RaytracingRenderPassTask>(target);
+                conf.AddProject<RaytracingExtension>(target);
             }
 
             {

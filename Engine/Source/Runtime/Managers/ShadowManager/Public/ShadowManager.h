@@ -61,28 +61,22 @@ namespace Engine::Managers
 		void PostUpdate(const float dt) override;
 
 		void Reset();
-		void RegisterLight(Weak<Abstracts::ObjectBase> light);
-		void UnregisterLight(Weak<Abstracts::ObjectBase> light);
 
 		static void EvalShadowVP(const Weak<Objects::Camera>& ptr_cam, const Vector3& light_dir, SBs::LightVPSB& buffer);
 		void BindShadowMaps(const GraphicInterfaceContextPrimitive* context) const;
 		void TransitBackShadowMaps(const GraphicInterfaceContextPrimitive* context) const;
 
-	    StructuredBufferTypeProxy<SBs::LightSB>&   GetLightBuffer() const;
-	    StructuredBufferTypeProxy<SBs::LightVPSB>& GetLightVPBuffer() const;
-	    const std::vector<SBs::LightVPSB>&         GetCurrentSceneLightVP() const;
+        const StructuredBufferTypeProxy<SBs::LightVPSB> &GetLightVPBuffer() const;
+        const std::vector<SBs::LightVPSB> &              GetCurrentSceneLightVP() const;
 
 	private:
 		friend struct SingletonDeleter;
 		~ShadowManager() override;
-
-		void PreSwapScene(Weak<Scene> scene);
-		void PostSwapScene(Weak<Scene> scene);
 		
 		void InitializeViewport();
 		void InitializeShadowBuffer(LocalActorID id);
 
-		void BuildShadowMap(float dt, const Strong<Objects::Light>& light, UINT light_idx) const;
+		void BuildShadowMap(float dt, UINT light_idx) const;
 		void ClearShadowMaps(const GraphicInterfaceContextPrimitive* context);
 
 		static void CreateSubfrusta(
@@ -90,20 +84,16 @@ namespace Engine::Managers
 			Subfrusta&    subfrusta
 		);
 
-		Strong<Resources::Shader> m_shadow_shader_;
-		std::map<LocalActorID, Strong<Resources::ShadowTexture>> m_shadow_texs_;
+        Strong<Resources::Shader>                                m_shadow_shader_;
+        std::vector<Strong<Resources::ShadowTexture>>            m_shadow_texs_;
 
-		// sub part of the view frustum
-		Subfrusta m_subfrusta_[3];
+        // sub part of the view frustum
+        Subfrusta m_subfrusta_[ 3 ];
 
-		// lights from current scene
-		std::map<LocalActorID, Weak<Objects::Light>> m_lights_;
+        StructuredBufferTypeProxy<SBs::LightVPSB> m_light_vp_sb_;
+        std::vector<SBs::LightVPSB>               m_current_scene_light_vp_;
+        Unique<PrimitiveSampler>                  m_shadow_sampler_;
 
-	    std::vector<SBs::LightVPSB> m_current_scene_light_vp_;
-		Unique<StructuredBufferTypeProxy<SBs::LightSB>> m_light_sb_;
-		Unique<StructuredBufferTypeProxy<SBs::LightVPSB>> m_light_vp_sb_;
-        Unique<PrimitiveSampler>                          m_shadow_sampler_;
-
-		Viewport m_viewport_;
+        Viewport m_viewport_;
 	};
 } // namespace Engine::Manager::Graphics

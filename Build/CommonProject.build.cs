@@ -38,11 +38,18 @@ public enum ERenderType
     ForwardOnly = 1 << 1
 }
 
+public enum ERaytracing
+{
+    Off = 1 << 0,
+    On = 1 << 1
+}
+
 public class EngineTarget : Target
 {
     public ELaunchType LaunchType;
     public EGraphicAPI GraphicAPI;
     public ERenderType RenderType;
+    public ERaytracing Raytracing;
 
     public EngineTarget() { }
     public EngineTarget(
@@ -53,6 +60,7 @@ public class EngineTarget : Target
         OutputType outputType = OutputType.Lib,
         EGraphicAPI graphicAPI = EGraphicAPI.D3D12,
         ERenderType renderType = ERenderType.Deferred,
+        ERaytracing raytracing = ERaytracing.On,
         Blob blob = Blob.NoBlob,
         BuildSystem buildSystem = BuildSystem.FastBuild,
         DotNetFramework framework = DotNetFramework.v3_5) 
@@ -61,6 +69,7 @@ public class EngineTarget : Target
         LaunchType = launchType;
         GraphicAPI = graphicAPI;
         RenderType = renderType;
+        Raytracing = raytracing;
     }
 }
 
@@ -230,6 +239,8 @@ public abstract class CommonProject : Project
                 conf.Defines.Add("USE_DX12");
             }
 
+            conf.Defines.Add($"CFG_RAYTRACING={Convert.ToInt32(target.Raytracing == ERaytracing.On)}");
+
             //conf.Defines.Add("SNIFF_DEVICE_REMOVAL");
 
             conf.Defines.Add("CFG_CASCADE_SHADOW_COUNT=3");
@@ -244,11 +255,13 @@ public abstract class CommonProject : Project
             conf.Defines.Add("CFG_SCREEN_NEAR=0.1f");
             conf.Defines.Add("CFG_SCREEN_FAR=1000.f");
             conf.Defines.Add("CFG_FOV=90.f");
-            conf.Defines.Add("CFG_RAYTRACING=0");
             conf.Defines.Add("CFG_LAYER_COUNT=0");
             conf.Defines.Add("CFG_EPSILON=0.0001f");
 
-            conf.Defines.Add($"CFG_RENDERTYPE_{target.RenderType.ToString().ToUpper()}");
+            foreach (ERenderType renderType in Enum.GetValues(typeof(ERenderType)))
+            {
+                conf.Defines.Add($"CFG_RENDERTYPE_{renderType.ToString().ToUpper()}={Convert.ToInt32(target.RenderType == renderType)}");
+            }
 
             conf.Defines.Add("CFG_MAX_DIRECTIONAL_LIGHT=8");
             conf.Defines.Add("CFG_PER_PARAM_BUFFER_SIZE=8");

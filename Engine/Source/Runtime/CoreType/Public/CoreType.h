@@ -21,6 +21,7 @@
 #include <array>
 #include <vector>
 #include <cstddef>
+#include <magic_enum.hpp>
 #include <string_view>
 #include <stdint.h>
 #include <stdexcept>
@@ -43,25 +44,24 @@
 template <typename Enum>
 constexpr auto CStrEnumStrings()
 {
-	constexpr auto enum_val = magic_enum::enum_names<Enum>();
-	std::array<const char*, enum_val.size()> ret{};
-	for (size_t i = 0; i < enum_val.size(); ++i)
-	{
-		ret[i] = enum_val[i].data();
-	}
-	return ret;
+    constexpr auto                            enum_val = magic_enum::enum_names<Enum>();
+    std::array<const char *, enum_val.size()> ret{};
+    for ( size_t i = 0; i < enum_val.size(); ++i )
+    {
+        ret[ i ] = enum_val[ i ].data();
+    }
+    return ret;
 }
 
 template <typename Enum>
-Enum RecastNonlinearEnum(const auto& cstr_array, size_t value)
+Enum RecastNonlinearEnum( const auto &cstr_array, size_t value )
 {
-	if (const auto format_validity = magic_enum::enum_cast<Enum>(cstr_array[value]);
-		format_validity.has_value())
-	{
-		return format_validity.value();
-	}
+    if ( const auto format_validity = magic_enum::enum_cast<Enum>( cstr_array[ value ] ); format_validity.has_value() )
+    {
+        return format_validity.value();
+    }
 
-	return static_cast<Enum>(0);
+    return static_cast<Enum>( 0 );
 }
 
 template<class T, std::size_t... N>
@@ -155,6 +155,70 @@ struct simple_gc_deleter : simple_gc_deleter_impl
 	{
 		delete static_cast<const T*>(ptr);
 	}
+};
+
+class byte_stream
+{
+public:
+    explicit byte_stream()
+        : m_first_(nullptr),
+          m_allocated_size_(0),
+          m_used_size_(0) {}
+
+    ~byte_stream()
+    {
+        delete[] m_first_;
+    }
+
+    void reset()
+    {
+        m_used_size_ = 0;
+    }
+
+    [[nodiscard]] void* data() const
+    {
+        return m_first_;
+    }
+
+    [[nodiscard]] size_t size() const
+    {
+        return m_used_size_;
+    }
+    
+    void push_back(const void* src, const size_t src_size)
+    {
+        if (m_used_size_ + src_size >= m_allocated_size_)
+        {
+            if (m_allocated_size_ == 0)
+            {
+                m_allocated_size_ = src_size * 2;
+            }
+            else
+            {
+                m_allocated_size_ = m_allocated_size_ * 2;
+            }
+            
+            auto new_alloc = new unsigned char[m_allocated_size_];
+            if (m_first_)
+            {
+                std::memcpy(new_alloc, m_first_, m_used_size_);
+                delete[] m_first_;
+                m_first_ = nullptr;
+            }
+            m_first_ = new_alloc;
+        }
+
+        if (m_first_ != nullptr) {
+            std::memcpy(m_first_ + m_used_size_, src, src_size);
+        }
+        m_used_size_ += src_size;
+    }
+
+private:
+    unsigned char* m_first_;
+    
+    size_t m_allocated_size_;
+    size_t m_used_size_;
 };
 
 struct simple_gc_collector 

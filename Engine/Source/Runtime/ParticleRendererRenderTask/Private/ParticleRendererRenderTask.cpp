@@ -10,7 +10,6 @@
 #include "Source/Runtime/Resources/Material/Public/Material.h"
 #include "Source/Runtime/Core/Components/Transform/Public/Transform.h"
 #include "Shape.h"
-
 #include "Source/Runtime/Components/Animator/Public/Animator.h"
 
 namespace Engine
@@ -79,21 +78,21 @@ namespace Engine
                                 }
 
                                 const Strong<Resources::Material>   &locked_mtr    = mtr.lock();
-                                const Strong<Resources::ShaderBase> &locked_shader = locked_mtr->GetShader().lock();
+                                const Strong<Resources::ShaderBase>& locked_shader = locked_mtr->GetShader().lock();
 
-                                if ( locked_shader->GetShaderDomain() != domain )
-                                {
-                                    continue;
-                                }
-
-                                ShaderMap::accessor shader_acc;
+                                if (locked_shader->GetShaderDomain() != domain)
+                        {
+                            continue;
+                        }
+                        
+                        ShaderMap::accessor shader_acc;
                                 if ( !acc->second.find( shader_acc, locked_shader ) )
                                 {
-                                    acc->second.insert( shader_acc, locked_shader );
-                                }
-
-                                if ( const Strong<Resources::Mesh> &locked_mesh = mesh.lock() )
-                                {
+                                    acc->second.insert( shader_acc, locked_shader);
+                        }
+                        
+                        if (const Strong<Resources::Mesh>& locked_mesh = mesh.lock())
+                        {
                                     decltype( shader_acc->second )::accessor mesh_acc;
                                     if ( !shader_acc->second.find( mesh_acc, locked_mesh ) )
                                     {
@@ -153,10 +152,11 @@ namespace Engine
                                         mesh_acc->second.push_back( instance_pair );
                                     }
                                 }
-                            }
-                        }
+                            
                     }
-                } );
+                }
+            }
+        });
     }
 
     void ParticleRendererRenderInstanceTask::Cleanup(RenderMap* render_map, const size_t map_size) 

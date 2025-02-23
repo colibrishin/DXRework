@@ -386,7 +386,7 @@ namespace Engine
 
 	void D3D12GraphicPrimitiveShader::ConvertShader(const Resources::Shader* shader)
 	{
-		m_domain_ = shader->GetDomain();
+		m_domain_ = shader->GetShaderDomain();
 		m_depth_flag_ = shader->IsDepthEnabled();
 		m_depth_test_ = static_cast<D3D12_DEPTH_WRITE_MASK>(shader->GetDepthMode());
 		m_depth_func_ = static_cast<D3D12_COMPARISON_FUNC>(shader->GetDepthFunction());

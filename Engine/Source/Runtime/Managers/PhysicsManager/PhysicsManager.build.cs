@@ -17,6 +17,7 @@ public class PhysicsManager : EngineCommonProject
         conf.AddPublicDependency<Core>(target);
         conf.AddPublicDependency<TBB>(target);
         conf.AddPublicDependency<Boost>(target);
+        conf.AddPrivateDependency<EngineEntryPoint>(target);
 
         conf.Defines.Add("CFG_RESTITUTION_COEFFICIENT=0.666f");
         conf.Defines.Add("CFG_DRAG_COEFFICIENT=0.25f");

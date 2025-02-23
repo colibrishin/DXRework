@@ -13,10 +13,12 @@ public class ImGuiManager : EngineCommonProject
     {
         base.ConfigureAll(conf, target);
         conf.AddPublicDependency<Core>(target);
+        conf.AddPublicDependency<CoreRender>(target);
         conf.AddPublicDependency<ImGui>(target);
         conf.AddPublicDependency<Boost>(target);
         conf.AddPrivateDependency<RenderPipeline>(target);
         
+        conf.AddPrivateDependency<EngineEntryPoint>(target);
         if (target.Platform == Platform.win64 || target.Platform == Platform.win32)
         {
             conf.AddPrivateDependency<WinAPIWrapper>(target);

@@ -25,7 +25,8 @@ public class ShadowManager : EngineCommonProject
         conf.AddPrivateDependency<ShadowTexture>(target);
         conf.AddPrivateDependency<ShadowRenderTarget>(target);
         conf.AddPrivateDependency<ForwardRenderPassTask>(target);
-
+        conf.AddPrivateDependency<EngineEntryPoint>(target);
+        
         conf.TargetCopyFiles.Add
         (
             @"cascade_shadow_stage1.hlsl"

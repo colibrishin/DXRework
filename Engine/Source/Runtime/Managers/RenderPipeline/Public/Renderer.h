@@ -132,7 +132,7 @@ namespace Engine::Managers
 		template <typename... ExcludeRenderTaskTs>
 		struct ExclusionPredicate
 		{
-            static void ResolveDirtyness( const RenderPassTaskUniqueContainer &cont,
+            static void ResolveDirty( const RenderPassTaskUniqueContainer &cont,
                                           std::vector<RenderPassTask *>       &tasks )
 			{
                 tasks.clear();
@@ -158,7 +158,7 @@ namespace Engine::Managers
 		template <typename... IncludeRenderTaskTs>
         struct InclusionPredicate
         {
-            static void ResolveDirtyness( const RenderPassTaskUniqueContainer &cont,
+            static void ResolveDirty( const RenderPassTaskUniqueContainer &cont,
                                           std::vector<RenderPassTask *>       &tasks )
             {
                 tasks.clear();
@@ -195,7 +195,7 @@ namespace Engine::Managers
             static std::once_flag               delegate_flag;
             static const auto                  &func = [ this ]()
                 { 
-                    PredicationT::ResolveDirtyness( m_unique_render_pass_tasks_, borrowed_render_pass_task_ );
+                    PredicationT::ResolveDirty( m_unique_render_pass_tasks_, borrowed_render_pass_task_ );
                 };
 
             std::call_once( delegate_flag, [ this ]()
@@ -231,7 +231,7 @@ namespace Engine::Managers
             static std::once_flag               delegate_flag;
             static const auto                   &func = [ this ]()
                 { 
-                    PredicationT::ResolveDirtyness( m_unique_render_pass_tasks_, render_pass_task_copy );
+                    PredicationT::ResolveDirty( m_unique_render_pass_tasks_, render_pass_task_copy );
                 };
 
             std::call_once( delegate_flag, [ this ]()

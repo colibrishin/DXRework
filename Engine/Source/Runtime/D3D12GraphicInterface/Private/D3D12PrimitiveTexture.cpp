@@ -620,6 +620,11 @@ ID3D12DescriptorHeap* Engine::D3D12PrimitiveTexture::GetUav() const
 	return m_uav_.Get();
 }
 
+uint64_t Engine::D3D12PrimitiveTexture::GetGPUAddress() const
+{
+    return m_dx12_texture_->GetGPUVirtualAddress();
+}
+
 D3D12_RESOURCE_DIMENSION Engine::D3D12PrimitiveTexture::ConvertDimension(const eTexType type)
 {
 	switch (type)

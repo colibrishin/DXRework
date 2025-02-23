@@ -7,7 +7,7 @@
 #include "Source/Runtime/CoreEntity/Public/Renderable.h"
 #include "Source/Runtime/Core/BoundingGetter/Public/BoundingGetter.h"
 #include "Source/Runtime/Core/ConcurrentTypeLibrary/Public/ConcurrentTypeLibrary.h"
-#include "Source/Runtime/Core/TaskScheduler/Public/TaskScheduler.h"
+#include "TaskScheduler.h"
 #include "Source/Runtime/Core/Octree/Public/Octree.hpp"
 #include "Source/Runtime/Core/Delegation/Public/Delegation.hpp"
 #include "SingletonSpinLock/Public/SingletonSpinLock.h"
@@ -327,9 +327,6 @@ namespace Engine
 
 		void synchronize(const Weak<Scene>& ptr_scene);
         void deepCopy( const Weak<Scene> &other );
-
-		EPROPERTY()
-		bool m_b_scene_raytracing_;
 
 		EPROPERTY()
 		LocalActorID m_main_camera_local_id_;

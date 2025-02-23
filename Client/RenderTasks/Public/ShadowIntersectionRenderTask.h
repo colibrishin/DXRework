@@ -51,7 +51,14 @@ private:
         float dt,
         const ShadowIntersectionComponent* component,
         const Engine::Strong<Engine::Layer>& lights) const;
-    
+
+public:
+    void PreRun( const Engine::RenderMap *render_map,
+            const size_t render_map_count,
+            const Engine::ObjectPredication &predication
+            ) override;
+
+private:
     Engine::Viewport m_viewport_ = {
         .topLeftX = 0,
         .topLeftY = 0,

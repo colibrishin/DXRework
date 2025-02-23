@@ -13,28 +13,51 @@ void Engine::Resources::SimpleParticleComputeShader::OnUIUpdate(UIContext* const
     }
 }
 
-void Engine::Resources::SimpleParticleComputeShader::OnUIUpdateParam(
-    UIContext* const parent, const float dt, ParamBase& local_param, InstanceParticles& instances
-)
+void Engine::Resources::SimpleParticleComputeShader::OnUIUpdateParam(UIContext *const   parent,
+                                                                     const float        dt,
+                                                                     ParamBase &        local_param,
+                                                                     InstanceParticles &instances)
 {
-    if (parent)
+    if ( parent )
     {
-        UIInterface& ui = UIInterfaceAccessor::GetInterface();
-        *parent |= ui.NewCheckbox( this, "Scaling", { "Scaling", local_param.GetParam<bool>( param_scaling_active_slot ) } );
-        if ( local_param.GetParam<bool>( param_scaling_active_slot ) )
+        UIInterface &ui = UIInterfaceAccessor::GetInterface();
+        *parent |= ui.NewCheckbox(this, "Scaling",
+                                  { "Scaling", local_param.GetParam<bool>(param_scaling_active_slot), true });
+        if ( local_param.GetParam<bool>(param_scaling_active_slot) )
         {
-            *parent |= ui.NewLabelAndFloat( this, "ScaleMin", { "Scale Min", local_param.GetParam<float>( param_scaling_min_slot ), 0, 0, std::numeric_limits<float>::max(), true } );
-            *parent |= ui.NewLabelAndFloat( this, "ScaleMax", { "Scale Max", local_param.GetParam<float>( param_scaling_max_slot ), 0, 0, std::numeric_limits<float>::max(), true } );   
+            *parent |= ui.NewLabelAndFloat(this, "ScaleMin",
+                                           { "Scale Min",
+                                             local_param.GetParam<float>(param_scaling_min_slot),
+                                             0,
+                                             0,
+                                             std::numeric_limits<float>::max(),
+                                             true });
+            *parent |= ui.NewLabelAndFloat(this, "ScaleMax",
+                                           { "Scale Max",
+                                             local_param.GetParam<float>(param_scaling_max_slot),
+                                             0,
+                                             0,
+                                             std::numeric_limits<float>::max(),
+                                             true });
         }
 
         static Vector3 linear_min, linear_max;
-        *parent |= ui.NewLabelAndVec3( this, "LinearMin", { "Linear Spread Min", &linear_min.x, 0, 0, std::numeric_limits<float>::max(), true } );
-        *parent |= ui.NewLabelAndVec3( this, "LinearMin", { "Linear Spread Max", &linear_max.x, 0, 0, std::numeric_limits<float>::max(), true } );
-        ( *parent |= ui.NewButton( this, "LinearButton", { "Linear Spread" } ) )
-                .SetFunction( [ this, &instances, &local_param ]()
-        {
-           LinearSpread(linear_min, linear_max, instances, local_param); 
-        } );      
+        *parent |= ui.NewLabelAndVec3(this, "LinearMin",
+                                      { "Linear Spread Min",
+                                        &linear_min.x,
+                                        0,
+                                        0,
+                                        std::numeric_limits<float>::max(),
+                                        true });
+        *parent |= ui.NewLabelAndVec3(this, "LinearMin",
+                                      { "Linear Spread Max",
+                                        &linear_max.x,
+                                        0,
+                                        0,
+                                        std::numeric_limits<float>::max(),
+                                        true });
+        (*parent |= ui.NewButton(this, "LinearButton", { "Linear Spread" })).SetFunction(
+            [ this, &instances, &local_param ]() { LinearSpread(linear_min, linear_max, instances, local_param); });
     }
 }
 #endif

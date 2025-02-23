@@ -52,39 +52,35 @@ namespace Engine::Components
 	}
 
 #if WITH_EDITOR
-    void Rigidbody::OnUIUpdate( UIContext *const context, const float dt )
-	{
-		if (context) 
-		{
-			Component::OnUIUpdate(context, dt);
-			UIInterface& ui = UIInterfaceAccessor::GetInterface();
+    void Rigidbody::OnUIUpdate(UIContext *const context, const float dt)
+    {
+        if ( context )
+        {
+            Component::OnUIUpdate(context, dt);
+            UIInterface &ui = UIInterfaceAccessor::GetInterface();
 
-			(*context |= ui.NewCheckbox( this, "GravityOverride", { "Gravity Override", m_bGravityOverride })).SetFunction([&]()
-			{
-				SetGravityOverride(m_bGravityOverride);
-			});
-			(*context |= ui.NewCheckbox( this, "Fixed", { "Fixed", m_bFixed })).SetFunction([&]()
-			{
-				SetFixed(m_bFixed);
-			});
-			(*context |= ui.NewCheckbox( this, "NoAngular", { "No Angular", m_b_no_angular_ })).SetFunction([&]()
-			{
-				SetNoAngular(m_b_no_angular_);
-			});
-			*context |= ui.NewCheckbox( this, "Lerp", { "Lerp", m_b_lerp_ });
+            (*context |= ui.NewCheckbox
+             (this, "GravityOverride", { "Gravity Override", m_bGravityOverride, true })).SetFunction
+                ([ & ]() { SetGravityOverride(m_bGravityOverride); });
+            (*context |= ui.NewCheckbox(this, "Fixed", { "Fixed", m_bFixed, true })).SetFunction
+                ([ & ]() { SetFixed(m_bFixed); });
+            (*context |= ui.NewCheckbox(this, "NoAngular", { "No Angular", m_b_no_angular_, true })).SetFunction
+                ([ & ]() { SetNoAngular(m_b_no_angular_); });
+            *context |= ui.NewCheckbox(this, "Lerp", { "Lerp", m_b_lerp_, true });
 
-			*context |= ui.NewLabelAndFloat( this, "FrictionCoeff", { "Friction Coefficient", m_friction_mu_, 0.01f, 0.f, 0.f, true });
-		}
-	}
+            *context |= ui.NewLabelAndFloat
+                (this, "FrictionCoeff", { "Friction Coefficient", m_friction_mu_, 0.01f, 0.f, 0.f, true });
+        }
+    }
 #endif
 
-	Rigidbody::Rigidbody(const Weak<Engine::Abstracts::ObjectBase>& object)
-		: Component(object),
-		  m_b_no_angular_(false),
-		  m_bGravityOverride(false),
-		  m_bFixed(false),
-		  m_b_lerp_(true),
-		  m_friction_mu_(0.0f) {}
+    Rigidbody::Rigidbody(const Weak<Engine::Abstracts::ObjectBase> &object)
+        : Component(object),
+          m_b_no_angular_(false),
+          m_bGravityOverride(false),
+          m_bFixed(false),
+          m_b_lerp_(true),
+          m_friction_mu_(0.0f) { }
 
 	Rigidbody::Rigidbody(const Rigidbody& other)
 		: Component(other)

@@ -15,15 +15,17 @@ public class D3D12GraphicInterface : EngineCommonProject
         conf.AddPublicDependency<Boost>(target);
         conf.AddPublicDependency<TBB>(target);
         conf.AddPublicDependency<DX12Agility>(target);
-        conf.AddPublicDependency<DirectXTex>(target);
+        conf.AddPublicDependency<Texture>(target);
+        conf.AddPublicDependency<Shape>(target);
+        conf.AddPublicDependency<Mesh>(target);
+        conf.AddPublicDependency<Shader>(target);
+        conf.AddPublicDependency<ComputeShader>(target);
+        conf.AddPublicDependency<CoreRender>(target);
 
+        conf.AddPrivateDependency<DirectXTex>(target);
         conf.AddPrivateDependency<Font>(target);
         conf.AddPrivateDependency<WinAPIWrapper>(target);
-        conf.AddPrivateDependency<Texture>(target);
-        conf.AddPrivateDependency<Shape>(target);
-        conf.AddPrivateDependency<Mesh>(target);
-        conf.AddPrivateDependency<Shader>(target);
-        conf.AddPrivateDependency<ComputeShader>(target);
         conf.AddPrivateDependency<RenderPipeline>(target);
+        conf.AddPrivateDependency<EngineEntryPoint>(target);
     }
 }

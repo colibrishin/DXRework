@@ -46,7 +46,7 @@ namespace Engine::Resources
 		void                     OnSerialized() override;
 
 #if CFG_RAYTRACING
-		const AccelStructBuffer&               GetBLAS() const;
+		AccelStructBuffer& GetBLAS();
 #endif
 		
 		[[nodiscard]] StructuredBufferTypeProxy<Graphics::VertexElement>& GetVertexStructuredBuffer() const;
@@ -78,7 +78,7 @@ namespace Engine::Resources
 		BoundingOrientedBox m_bounding_box_;
 
 		Unique<PrimitiveMesh> m_primitive_mesh_;
-		Unique<StructuredBufferTypeProxy<Graphics::VertexElement>> m_vertex_buffer_structured_;
+	    Unique<StructuredBufferTypeProxy<Graphics::VertexElement>> m_vertex_buffer_structured_;
 
 #if CFG_RAYTRACING
 		AccelStructBuffer m_blas_;

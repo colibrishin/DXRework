@@ -1,16 +1,15 @@
 #include "SoundManagerModule.h"
+
+#include "EngineEntryPoint.h"
 #include "SoundManagerModule.generated.h"
 
 #include "SoundManager.h"
-
-#include "CoreModule/Public/CoreModule.h"
-
 
 MODULE_IMPL(Engine::SoundManagerModule, SoundManager)
 
 bool Engine::SoundManagerModule::InitializeImpl()
 {
-    CoreModule::GetContext().AddManager(
+    CoreLoop::AddManager(
         CoreLoop::LOOP_TYPE_LOGIC,
         &Managers::SoundManager::GetInstance);
     return true;
@@ -18,7 +17,7 @@ bool Engine::SoundManagerModule::InitializeImpl()
 
 bool Engine::SoundManagerModule::ShutdownImpl()
 {
-    CoreModule::GetContext().RemoveManager(
+    CoreLoop::RemoveManager(
         CoreLoop::LOOP_TYPE_LOGIC,
         &Managers::SoundManager::GetInstance);
     return true;

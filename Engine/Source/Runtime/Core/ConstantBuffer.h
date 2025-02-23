@@ -34,12 +34,6 @@ namespace Engine
 		};
 
 		static_assert(sizeof(ParamCB) % sizeof(Vector4) == 0);
-
-		struct ENGINE_CORE_API ViewportCB
-		{
-			RT_CB_T(RAYTRACING_CB_VIEWPORT)
-			Vector2 resolution;
-		};
 	}
 
 	template <typename T>

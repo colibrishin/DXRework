@@ -10,9 +10,11 @@
 #include <directx/d3d12.h>
 #include <wrl/client.h>
 
+#include "DescriptorHandler.hpp"
+
 #include "Source/Runtime/Core/Allocator/Public/Allocator.h"
 #include "Source/Runtime/Core/TypeLibrary/Public/TypeLibrary.h"
-#include "Descriptors.h"
+#include "DescriptorPtrImpl.h"
 
 namespace Engine
 {
@@ -99,7 +101,7 @@ namespace Engine
 			const std::wstring_view debug_name,
 			const bool heap_allocation);
 		void Deallocate(const Weak<CommandPair>& pointer);
-		void Initialize(ID3D12Device2* dev, const Weak<DescriptorHandler>& handler, CommandPairTask* task);
+		void Initialize(ID3D12Device2* dev, const Weak<DescriptorHandlerBase>& handler, CommandPairTask* task);
 
 	private:
 		friend struct CommandPair;
@@ -111,8 +113,8 @@ namespace Engine
 
 		fast_pool_unordered_map<address_value, Strong<CommandPair>> m_pool_{};
 		std::unordered_map<address_value, bool>                     m_allocation_map_{};
-		u_fast_pool_allocator_single<CommandPair>				    m_command_pair_pool_{};
-		Strong<DescriptorHandler>                                   m_heap_handler_{};
+		u_fast_pool_allocator_single<CommandPair>					m_command_pair_pool_{};
+		Strong<DescriptorHandlerBase>                               m_heap_handler_{};
 
 		ComPtr<ID3D12Device2> m_dev_{};
 	};
@@ -160,7 +162,7 @@ namespace Engine
 	public:
 		CommandPairTask() = default;
 
-		void Initialize(ID3D12Device2* dev, const Weak<DescriptorHandler>& heap_handler, const size_t buffer_count);
+		void Initialize(ID3D12Device2* dev, const Weak<DescriptorHandlerBase>& heap_handler, const size_t buffer_count);
 
 		[[nodiscard]] uint64_t GetBufferIndex() const;
 		[[nodiscard]] ID3D12CommandQueue* GetCommandQueue(const D3D12_COMMAND_LIST_TYPE type) const;

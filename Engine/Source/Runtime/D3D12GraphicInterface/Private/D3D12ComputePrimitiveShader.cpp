@@ -41,8 +41,7 @@ namespace Engine
 		// Print the warnings if there were.
 		if (error)
 		{
-			const std::string error_message =
-				static_cast<char*>(error->GetBufferPointer());
+			const std::string error_message = static_cast<char*>(error->GetBufferPointer());
 
 			// Silencing the no entry point error.
 			if (error_message.find("X3501") == std::string::npos)

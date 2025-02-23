@@ -161,7 +161,7 @@ void Engine::ImGuiMenuToken::End()
 
 bool Engine::ImGuiMenuToken::DoImpl(const std::string_view title)
 {
-	const std::string& temp_label = std::string(title) + LabelSuffix(title);
+	const std::string& temp_label = std::string(title) + LabelSuffix( GetIdentifier() );
 	return ImGui::BeginMenu(temp_label.c_str());
 }
 
@@ -169,7 +169,7 @@ void Engine::ImGuiMenuItemToken::End() {}
 
 bool Engine::ImGuiMenuItemToken::DoImpl(const std::string_view label)
 {
-	const std::string& temp_label = std::string(label) + LabelSuffix(label);
+	const std::string& temp_label = std::string(label) + LabelSuffix( GetIdentifier() );
 	return ImGui::MenuItem(temp_label.c_str());
 }
 
@@ -196,7 +196,7 @@ void Engine::ImGuiLabelAndTextToken::End() {}
 
 bool Engine::ImGuiLabelAndTextToken::DoImpl(const std::string_view label, std::string& text, const bool editable)
 {
-	const std::string& temp_label = LabelSuffix(label);
+	const std::string& temp_label = std::string(label) + LabelSuffix( GetIdentifier() );
 	AlignText(label);
 	return ImGui::InputText(temp_label.c_str(), &text, !editable ? ImGuiInputTextFlags_ReadOnly : ImGuiInputTextFlags_None);
 }
@@ -290,11 +290,20 @@ bool Engine::ImGuiLabelAndVec3Token::DoImpl(const std::string_view label, float*
 void Engine::ImGuiCheckboxToken::End()
 {
 }
-bool Engine::ImGuiCheckboxToken::DoImpl(const std::string_view label, bool& flag)
+bool Engine::ImGuiCheckboxToken::DoImpl( const std::string_view label, bool &flag, const bool editable )
 {
-	AlignText(label);
-	const std::string& temp_label = LabelSuffix(label);
-	return ImGui::Checkbox(temp_label.data(), &flag);
+    if ( !editable )
+    {
+        ImGui::BeginDisabled();
+    }
+    AlignText( label );
+    const std::string &temp_label = LabelSuffix( GetIdentifier() );
+    const bool         ret_val    = ImGui::Checkbox( temp_label.data(), &flag );
+    if ( !editable )
+    {
+        ImGui::EndDisabled();
+    }
+    return ret_val;
 }
 
 void Engine::ImGuiComboboxToken::End()

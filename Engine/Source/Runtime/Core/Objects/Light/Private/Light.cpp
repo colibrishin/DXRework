@@ -1,4 +1,7 @@
 #include "../Public/Light.h"
+
+#include <magic_enum.hpp>
+
 #include "Light.generated.h"
 
 #include "Source/Runtime/Core/Components/Transform/Public/Transform.h"

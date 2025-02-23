@@ -14,6 +14,7 @@ public class InputManager : EngineCommonProject
         conf.AddPublicDependency<Core>(target);
         conf.AddPublicDependency<Boost>(target);
 
+        conf.AddPrivateDependency<EngineEntryPoint>(target);
         if (target.Platform == Platform.win64)
         {
             if (target.GraphicAPI == EGraphicAPI.D3D12)

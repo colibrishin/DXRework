@@ -16,6 +16,7 @@ public class ComputeShader : EngineCommonProject
         conf.AddPublicDependency<Boost>(target);
         conf.AddPublicDependency<TBB>(target);
 
+        conf.AddPrivateDependency<CoreRender>(target);
         conf.AddPrivateDependency<RenderPipeline>(target);
     }
 }

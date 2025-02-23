@@ -138,7 +138,7 @@ namespace Engine::Components
             {
                 m_particle_shader_dialog_opened_ = !m_particle_shader_dialog_opened_;
             } );
-            *parent |= ui.NewCheckbox( this, "FollowOwner", { "Follow Owner", m_b_follow_owner_ } );
+            *parent |= ui.NewCheckbox( this, "FollowOwner", { "Follow Owner", m_b_follow_owner_, true } );
             ( *parent |= ui.NewLabelAndInt( this,
                                             "ParticleCount",
                                             {

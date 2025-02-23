@@ -13,5 +13,6 @@ public class SoundManager : EngineCommonProject
         base.ConfigureAll(conf, target);
         conf.AddPublicDependency<Core>(target);
         conf.AddPublicDependency<Boost>(target);
+        conf.AddPrivateDependency<EngineEntryPoint>(target);
     }
 }

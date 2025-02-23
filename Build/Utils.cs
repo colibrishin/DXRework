@@ -50,7 +50,8 @@ public class Utils
             Optimization.Debug | Optimization.Release,
             OutputType.Lib,
             EGraphicAPI.D3D12,
-            ERenderType.Deferred
+            ERenderType.Deferred,
+            ERaytracing.On
         );
     }
 

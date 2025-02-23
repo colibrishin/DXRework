@@ -4,13 +4,15 @@
 #include <algorithm>
 #include <DirectXColors.h>
 
-
-
 #include "SceneManager/Public/SceneManager.h"
 
 #include "Source/Runtime/Core/ResourceManager/Public/ResourceManager.h"
 #include "Source/Runtime/Resources/Texture/Public/Texture.h"
 #include "UIHelpersResourceManager.h"
+
+#if CFG_RAYTRACING
+#include "RaytracingShader.h"
+#endif
 
 namespace Engine::Resources
 {
@@ -34,7 +36,7 @@ namespace Engine::Resources
 			*parent |= ui.NewLabelAndVec4(this, "OverrideColor", {"Override Color", &m_material_sb_.overrideColor.x, 0.01f, 0.1, 1.f, true});
 			*parent |= ui.NewLabelAndVec4(this, "SpecularColor", {"Specular Color", &m_material_sb_.specularColor.x, 0.01f, 0.1, 1.f, true});
 			*parent |= ui.NewLabelAndVec3(this, "ClipPlane", {"Clip Plane", &m_material_sb_.clipPlane.x, 0.01f, 0.f, 0.f, true});
-			*parent |= ui.NewCheckbox(this, "RepeatTexture", {"Repeat Texture", reinterpret_cast<bool&>(m_material_sb_.repeatTexture)});
+			*parent |= ui.NewCheckbox(this, "RepeatTexture", {"Repeat Texture", reinterpret_cast<bool&>(m_material_sb_.repeatTexture), true});
 
             *parent += ui.NewListBox( this, "TexturesListBox", { "Textures", 0, 0 } );
             for ( auto it = m_cached_textures_.begin(); it != m_cached_textures_.end(); ++it )
@@ -78,7 +80,7 @@ namespace Engine::Resources
 
 			{
                 static std::string shader_string = {};
-                if ( const Strong<Shader> &shader = m_cached_shader_.lock() )
+                if ( const Strong<ShaderBase> &shader = m_cached_shader_.lock() )
                 {
                     shader_string = shader->GetName();
                 }
@@ -115,9 +117,13 @@ namespace Engine::Resources
 			if (m_ui_shader_dialog_)
 			{
 				if (Weak<Resource> resource_to_load;
-					UIHelpers::SingleResourceSelectionDialogInclusion<Material, Shader>(GetSharedPtr<Material>(), resource_to_load))
-				{
-					if (const Strong<Shader>& shader = Cast<Shader>(resource_to_load))
+#if CFG_RAYTRACING
+					UIHelpers::SingleResourceSelectionDialogInclusion<Material, Shader, RaytracingShader>(GetSharedPtr<Material>(), resource_to_load))
+#else
+				    UIHelpers::SingleResourceSelectionDialogInclusion<Material, Shader>(GetSharedPtr<Material>(), resource_to_load))
+#endif
+				    {
+					if (const Strong<ShaderBase>& shader = Cast<ShaderBase>(resource_to_load))
 					{
 						SetShader(shader);
 					}
@@ -173,7 +179,7 @@ namespace Engine::Resources
 	{
 		Resource::OnSerialized();
 
-		if (const Strong<Shader>& shader = m_cached_shader_.lock())
+		if (const Strong<ShaderBase>& shader = m_cached_shader_.lock())
 		{
 			Serializer::Serialize(shader->GetName(), shader);
 			m_shader_path_ = shader->GetMetadataPath();
@@ -201,7 +207,7 @@ namespace Engine::Resources
 
 		if (!m_shader_path_.empty())
 		{
-			if (const auto& shader = Shader::GetByMetadataPath(m_shader_path_).lock())
+			if (const auto& shader = ShaderBase::GetByMetadataPath(m_shader_path_).lock())
 			{
 				SetShader(shader);
 			}
@@ -242,7 +248,7 @@ namespace Engine::Resources
 			}
 			
 			m_cached_textures_[slot] = locked;
-			m_material_sb_.texSlot[slot] = true;
+			m_material_sb_.texEnabled[slot] = true;
 
 			if (set_path)
 			{
@@ -262,10 +268,11 @@ namespace Engine::Resources
 		{
 			if (IsLoaded())
 			{
-				std::swap(m_textures_[after], m_textures_[before]);
+				std::swap(m_textures_[before], m_textures_[after]);
 			}
 
 			std::swap(m_cached_textures_[before], m_cached_textures_[after]);
+		    std::swap(m_material_sb_.texEnabled[before], m_material_sb_.texEnabled[after]);
 			std::swap(m_material_sb_.texSlot[before], m_material_sb_.texSlot[after]);
 			std::swap(m_texture_paths_[before], m_texture_paths_[after]);
 		}
@@ -286,9 +293,9 @@ namespace Engine::Resources
 		}
 	}
 
-	void Material::SetShader(const Weak<Shader>& shader)
+	void Material::SetShader(const Weak<ShaderBase>& shader)
 	{
-		if (const Strong<Shader>& locked = shader.lock())
+		if (const Strong<ShaderBase>& locked = shader.lock())
 		{
 			if (IsLoaded())
 			{
@@ -300,8 +307,8 @@ namespace Engine::Resources
 			m_shader_path_ = locked->GetMetadataPath();
 		}
 	}
-
-	const MaterialPrimitive& Material::GetPrimitive() const
+    
+    const MaterialPrimitive& Material::GetPrimitive() const
 	{
 		return m_material_sb_;
 	}
@@ -326,12 +333,12 @@ namespace Engine::Resources
 		return {};
 	}
 
-	Weak<Shader> Material::GetShader() const
+	Weak<ShaderBase> Material::GetShader() const
 	{
 		return m_cached_shader_;
 	}
 
-	Material::Material() : Resource("") {}
+    Material::Material() : Resource("") {}
 
 	void Material::Load_INTERNAL()
 	{
@@ -341,7 +348,7 @@ namespace Engine::Resources
 			m_atlas_->Load();
 		}
 
-		if (const Strong<Shader>& shader = m_cached_shader_.lock())
+		if (const Strong<ShaderBase>& shader = m_cached_shader_.lock())
 		{
 			m_shader_ = shader;
 			m_shader_->Load();

@@ -1,13 +1,10 @@
 #include "../Public/InputManager.h"
 #include "InputInterface.h"
-#include "GraphicInterface.h"
 
 namespace Engine::Managers
 {
 	void InputManager::Initialize()
 	{
-		m_current_mouse_position_  = GetNormalizedMousePosition();
-		m_previous_mouse_position_ = m_current_mouse_position_;
 	}
 
 	void InputManager::PreUpdate(const float dt)

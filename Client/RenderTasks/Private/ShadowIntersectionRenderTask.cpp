@@ -137,7 +137,7 @@ void ShadowIntersectionRenderTask::FirstPass(float dt,
 		    true,
 		    local_param,
 		    {
-		        &Managers::ShadowManager::GetInstance().GetLightBuffer(),
+		        &Managers::RenderPipeline::GetInstance().GetLightSB(),
 		        &Managers::ShadowManager::GetInstance().GetLightVPBuffer()
 		    },
 		    [this, &pivot](const Strong<Abstracts::ObjectBase>& obj)
@@ -177,7 +177,7 @@ void ShadowIntersectionRenderTask::FirstPass(float dt,
             true,
             local_param,
             {
-                &Managers::ShadowManager::GetInstance().GetLightBuffer(),
+                &Managers::RenderPipeline::GetInstance().GetLightSB(),
                 &Managers::ShadowManager::GetInstance().GetLightVPBuffer()
             },
             [this, &pivot](const Strong<Abstracts::ObjectBase>& obj)
@@ -284,7 +284,7 @@ void ShadowIntersectionRenderTask::SecondPass( const float dt,
                   dt,
                   true,
                   local_param,
-                  { &Managers::ShadowManager::GetInstance().GetLightBuffer(),
+                  { &Managers::RenderPipeline::GetInstance().GetLightSB(),
                     &Managers::ShadowManager::GetInstance().GetLightVPBuffer() },
                   [this, &pivot]( const Strong<Abstracts::ObjectBase> &obj )
                   {
@@ -373,3 +373,8 @@ void ShadowIntersectionRenderTask::ThirdPass( const float dt, const ShadowInters
     }
     primitive.commandList->Execute();
 }
+
+void ShadowIntersectionRenderTask::PreRun( const RenderMap *render_map,
+        const size_t render_map_count,
+        const ObjectPredication &predication )
+{}

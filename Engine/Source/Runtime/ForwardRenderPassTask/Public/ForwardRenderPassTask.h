@@ -1,10 +1,10 @@
 #pragma once
 #include <memory>
 
-#include "Source/Runtime/Core/GraphicInterface.h"
+#include "GraphicInterface.h"
 #include "Source/Runtime/Core/ConcurrentTypeLibrary/Public/ConcurrentTypeLibrary.h"
 #include "Source/Runtime/Core/TypeLibrary/Public/TypeLibrary.h"
-#include "Source/Runtime/Managers/RenderPipeline/Public/RenderTask.h"
+#include "RenderTask.h"
 #include "Texture.h"
 
 #include "SingletonSpinLock/Public/SingletonSpinLock.h"
@@ -13,31 +13,6 @@
 
 namespace Engine
 {
-    struct TexturePair
-    {
-        TexturePair() = default;
-
-        TexturePair( const std::array<Strong<Resources::Texture>, g_max_texture_per_material> *textures,
-                     const std::array<Strong<Resources::Texture>, RESERVED_USER_TEX_END - RESERVED_USER_TEX_BEGIN>
-                             *reservedTextures )
-            : textures( textures ),
-              reservedTextures( reservedTextures ),
-              boundTextureCount( std::ranges::count_if(
-                      *textures, []( const Strong<Resources::Texture> &tex ) { return tex != nullptr; } ) )
-        {}
-
-        const std::array<Strong<Resources::Texture>, g_max_texture_per_material>                      *textures;
-        const std::array<Strong<Resources::Texture>, RESERVED_USER_TEX_END - RESERVED_USER_TEX_BEGIN> *reservedTextures;
-
-        size_t GetTextureCount() const
-        {
-            return boundTextureCount;
-        }
-
-    private:
-        size_t boundTextureCount;
-    };
-	
 	ECLASS(virtual)
     struct ENGINE_FORWARDRENDERPASSTASK_API ForwardRenderPassTask : RenderPassTask
 	{
@@ -81,7 +56,7 @@ namespace Engine
                                             const std::unordered_map<std::string_view, ContextSetupFunction> &postrender_predicates,
                                             const aligned_vector<InstancePair>                               &instance_pairs );
 
-		[[nodiscard]] void RecordUsedTexture(
+		void RecordUsedTexture(
 			const GraphicInterfaceContextPrimitive* context, GraphicInterface& gi, const Resources::Texture* tex
 		);
 
@@ -96,7 +71,14 @@ namespace Engine
                                            const aligned_vector<Graphics::SBs::InstanceSB *>    &instances,
                                            const aligned_vector<TexturePair>                    &texture_pairs );
 
-		SpinLockTicket m_gi_ticket_;
+    public:
+        void PreRun( const RenderMap *render_map,
+                const size_t render_map_count,
+                const ObjectPredication &predication
+                ) override;
+
+    private:
+        SpinLockTicket m_gi_ticket_;
 		SpinLockTicket m_local_param_pool_ticket;
 		SpinLockTicket m_instance_pool_ticket;
 		SpinLockTicket m_texture_record_ticket_;
