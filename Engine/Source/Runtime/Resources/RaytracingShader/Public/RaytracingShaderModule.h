@@ -6,6 +6,7 @@
 
 namespace Engine
 {
+    ECLASS( module )
     struct ENGINE_RAYTRACINGSHADER_API RaytracingShaderModule : public IModule
     {
         GENERATE_BODY

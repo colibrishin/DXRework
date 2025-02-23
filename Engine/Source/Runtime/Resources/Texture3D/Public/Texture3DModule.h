@@ -1,5 +1,4 @@
 #pragma once
-
 #include "ModuleManager.h"
 
 #include "Texture3DModule.generated.h"
@@ -7,7 +6,7 @@
 namespace Engine
 {
     ECLASS( module )
-    class ENGINE_TEXTURE3D_API Texture3DModule : public Engine::IModule
+    struct ENGINE_TEXTURE3D_API Texture3DModule : public Engine::IModule
     {
         GENERATE_BODY
         bool InitializeImpl() override;

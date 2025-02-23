@@ -2,6 +2,8 @@
 #include "CoreType.h"
 #include "ModuleManager.h"
 
+#include "InputManagerModule.generated.h"
+
 namespace Engine
 {
     ECLASS( module )
