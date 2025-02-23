@@ -68,11 +68,13 @@ SpacesInContainerLiterals: true
 SpacesInCStyleCastParentheses: true
 SpaceInEmptyBlock: true
 SpacesInSquareBrackets: true
+SpacesInParens: Custom
 SpacesInParensOptions:
   ExceptDoubleParentheses: false
   InConditionalStatements: true
   InEmptyParentheses: false
   Other: true
+SpacesInParentheses: true
 Standard: c++20
 StatementMacros: [ GENERATE_BODY]
 TypenameMacros: [ ECLASS. EENUM, EFUNC, EPROPERTY ]
