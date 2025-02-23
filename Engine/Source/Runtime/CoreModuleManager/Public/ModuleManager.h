@@ -17,6 +17,16 @@
 
 #include "boost/preprocessor/facilities/is_empty.hpp"
 
+#ifdef _UNICODE
+#ifndef UNICODE
+#define UNICODE
+#endif
+#endif
+
+#define WIDEN2(x) L ## x
+#define WIDEN(x) WIDEN2(x)
+#define STRINGIFY(X)      STRINGIFY_IMPL(X)
+#define STRINGIFY_IMPL(X) #X
 #define IS_DLL !BOOST_PP_IS_EMPTY( ENGINE_COREMODULEMANAGER_API )
 
 namespace Engine
@@ -63,7 +73,7 @@ namespace Engine
 
 #if !IS_DLL
 #define MODULE_IMPL( ModuleType, Name )                                                                                \
-    static StaticLinkModuleEntry<ModuleType> ModuleEntry##Name( L"##Name##" );                                         \
+    static StaticLinkModuleEntry<ModuleType>        ModuleEntry##Name(WIDEN(STRINGIFY(Name)));                         \
     extern "C" void                          MODULE_IMPL_##Name()                                                      \
     {}
 #else
@@ -137,7 +147,7 @@ struct StaticLinkModuleEntry
     explicit StaticLinkModuleEntry( const std::wstring_view name )
     {
         Engine::Managers::ModuleManager::RegisterStaticModule( name,
-                                                               &StaticLinkModuleEntry<ModuleType>::InitializeModule );
+                                                               &InitializeModule );
     }
 
     static Engine::IModule *InitializeModule()
