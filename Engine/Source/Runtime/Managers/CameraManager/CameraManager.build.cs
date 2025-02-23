@@ -14,5 +14,6 @@ public class CameraManager : EngineCommonProject
         conf.AddPublicDependency<Core>(target);
         conf.AddPublicDependency<CoreRender>(target);
         conf.AddPublicDependency<Boost>(target);
+        conf.AddPrivateDependency<EngineEntryPoint>(target);
     }
 }

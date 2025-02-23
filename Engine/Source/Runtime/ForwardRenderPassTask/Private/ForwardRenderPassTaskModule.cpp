@@ -15,7 +15,7 @@ namespace Engine
 
         Managers::Renderer::GetInstance().RegisterRenderPass( typename_wstr, new ForwardRenderPassTask() );
 
-#ifdef CFG_RENDERTYPE_FORWARDONLY
+#if CFG_RENDERTYPE_FORWARDONLY
         for ( size_t i = 0; i < SHADER_DOMAIN_MAX; ++i )
         {
             Managers::Renderer::GetInstance().RenderPassWith( typename_wstr.data(), ( eShaderDomain )i );
@@ -29,7 +29,7 @@ namespace Engine
         std::string_view typename_str = ForwardRenderPassTask::StaticTypeName();
         std::wstring     typename_wstr( typename_str.begin(), typename_str.end() );
 
-#ifdef CFG_RENDERTYPE_FORWARDONLY
+#if CFG_RENDERTYPE_FORWARDONLY
         for ( size_t i = 0; i < SHADER_DOMAIN_MAX; ++i )
         {
             Managers::Renderer::GetInstance().RenderPassWithout( typename_wstr.data(), ( eShaderDomain )i );

@@ -29,6 +29,7 @@
 #endif
 
 #include "CoreModule/Public/CoreModule.h"
+#include "EngineEntryPoint.h"
 
 MODULE_IMPL(Engine::D3D12GraphicInterfaceModule, D3D12GraphicInterface)
 
@@ -36,7 +37,7 @@ bool Engine::D3D12GraphicInterfaceModule::InitializeImpl()
 {
 	GraphicInterfaceAccessor::SetGraphicInterface<D3D12GraphicInterface>();
 	
-	CoreModule::GetContext().AddManager(
+	CoreLoop::AddManager(
 		CoreLoop::LOOP_TYPE_RENDER,
 		Managers::ToolkitAPI::GetInstance);
 
@@ -45,7 +46,7 @@ bool Engine::D3D12GraphicInterfaceModule::InitializeImpl()
 
 bool Engine::D3D12GraphicInterfaceModule::ShutdownImpl()
 {
-	CoreModule::GetContext().RemoveManager(
+	CoreLoop::RemoveManager(
 		CoreLoop::LOOP_TYPE_RENDER,
 		Managers::ToolkitAPI::GetInstance);
 

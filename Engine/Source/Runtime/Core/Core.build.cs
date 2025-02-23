@@ -20,6 +20,9 @@ public class Core : EngineCommonProject
         conf.AddPublicDependency<TBB>(target);
         conf.AddPublicDependency<CoreEntity>(target);
         conf.AddPublicDependency<CoreSingleton>(target);
+        conf.AddPublicDependency<CoreTaskScheduler>(target);
+        
         conf.AddPrivateDependency<GCEM>(target);
+        conf.AddPrivateDependency<EngineEntryPoint>(target);
     }
 }

@@ -1,17 +1,15 @@
 ﻿#include "ShadowManagerModule.h"
+
+#include "EngineEntryPoint.h"
 #include "ShadowManagerModule.generated.h"
 
 #include "ShadowManager.h"
-
-#include "CoreModule/Public/CoreModule.h"
-
-
 
 MODULE_IMPL(Engine::ShadowManagerModule, ShadowManager)
 
 bool Engine::ShadowManagerModule::InitializeImpl()
 {
-    CoreModule::GetContext().AddManager(
+    CoreLoop::AddManager(
         CoreLoop::LOOP_TYPE_RENDER,
         &Managers::ShadowManager::GetInstance);
 
@@ -20,7 +18,7 @@ bool Engine::ShadowManagerModule::InitializeImpl()
 
 bool Engine::ShadowManagerModule::ShutdownImpl()
 {
-    CoreModule::GetContext().RemoveManager(
+    CoreLoop::RemoveManager(
         CoreLoop::LOOP_TYPE_RENDER,
         &Managers::ShadowManager::GetInstance);
 

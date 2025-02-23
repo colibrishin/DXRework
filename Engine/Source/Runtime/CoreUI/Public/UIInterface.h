@@ -152,7 +152,7 @@ namespace Engine
     NEW_TOKEN_DECL( ListBox, const std::string_view, float, float )
     NEW_TOKEN_DECL( TreeNode, const std::string_view )
     NEW_TOKEN_DECL( Selectable, const std::string_view, bool& )
-    NEW_TOKEN_DECL( Checkbox, const std::string_view, bool& )
+    NEW_TOKEN_DECL( Checkbox, const std::string_view, bool&, const bool )
     NEW_TOKEN_DECL( Combobox, const std::string_view, int*, const char* const*, const size_t, const bool )
     NEW_TOKEN_DECL( ComboboxUInt8, const std::string_view, uint8_t*, const char* const*, const size_t, const bool )
     NEW_TOKEN_DECL( Text, const std::string_view )

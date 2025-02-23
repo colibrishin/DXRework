@@ -1,7 +1,8 @@
 #include "RenderPipelineModule.h"
+
+#include "EngineEntryPoint.h"
 #include "RenderPipelineModule.generated.h"
 
-#include "CoreModule/Public/CoreModule.h"
 #include "RenderPipeline.h"
 #include "Renderer.h"
 
@@ -9,7 +10,7 @@ MODULE_IMPL(Engine::RenderPipelineModule, RenderPipeline)
 
 bool Engine::RenderPipelineModule::InitializeImpl()
 {
-	CoreModule::GetContext().AddManager(
+	CoreLoop::AddManager(
 		CoreLoop::LOOP_TYPE_RENDER,
 		&Managers::RenderPipeline::GetInstance,
 		&Managers::Renderer::GetInstance);
@@ -18,7 +19,7 @@ bool Engine::RenderPipelineModule::InitializeImpl()
 
 bool Engine::RenderPipelineModule::ShutdownImpl()
 {
-	CoreModule::GetContext().RemoveManager(
+	CoreLoop::RemoveManager(
 		CoreLoop::LOOP_TYPE_RENDER,
 		&Managers::RenderPipeline::GetInstance,
 		&Managers::Renderer::GetInstance);

@@ -55,7 +55,7 @@ bool Engine::ShaderModule::InitializeImpl()
                                                    Resources::Shader::domain_enums.size(),
                                                    true } );
 
-                *context |= ui.NewCheckbox( nullptr, "ShaderDepthEnable", { "Depth Enable", depth_enabled } );
+                *context |= ui.NewCheckbox( nullptr, "ShaderDepthEnable", { "Depth Enable", depth_enabled, true } );
                 *context |= ui.NewComboboxUInt8( nullptr,
                                                  "ShaderDepthMode",
                                                  { "Depth Mode",

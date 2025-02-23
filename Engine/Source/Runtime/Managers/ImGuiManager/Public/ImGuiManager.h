@@ -166,7 +166,7 @@ namespace Engine
         void End() override;
 
     protected:
-        [[nodiscard]] bool DoImpl(const std::string_view, bool&) override;
+        [[nodiscard]] bool DoImpl(const std::string_view, bool&, const bool) override;
     };
 
     struct ENGINE_IMGUIMANAGER_API ImGuiComboboxToken : ComboboxToken

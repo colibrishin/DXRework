@@ -36,7 +36,7 @@ namespace Engine::Resources
 			*parent |= ui.NewLabelAndVec4(this, "OverrideColor", {"Override Color", &m_material_sb_.overrideColor.x, 0.01f, 0.1, 1.f, true});
 			*parent |= ui.NewLabelAndVec4(this, "SpecularColor", {"Specular Color", &m_material_sb_.specularColor.x, 0.01f, 0.1, 1.f, true});
 			*parent |= ui.NewLabelAndVec3(this, "ClipPlane", {"Clip Plane", &m_material_sb_.clipPlane.x, 0.01f, 0.f, 0.f, true});
-			*parent |= ui.NewCheckbox(this, "RepeatTexture", {"Repeat Texture", reinterpret_cast<bool&>(m_material_sb_.repeatTexture)});
+			*parent |= ui.NewCheckbox(this, "RepeatTexture", {"Repeat Texture", reinterpret_cast<bool&>(m_material_sb_.repeatTexture), true});
 
             *parent += ui.NewListBox( this, "TexturesListBox", { "Textures", 0, 0 } );
             for ( auto it = m_cached_textures_.begin(); it != m_cached_textures_.end(); ++it )

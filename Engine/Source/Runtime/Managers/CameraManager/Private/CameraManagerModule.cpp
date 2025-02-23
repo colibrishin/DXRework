@@ -2,13 +2,14 @@
 #include "CameraManagerModule.generated.h"
 
 #include "CameraManager.h"
+#include "EngineEntryPoint.h"
 #include "CoreModule/Public/CoreModule.h"
 
 MODULE_IMPL( Engine::CameraManagerModule, CameraManager )
 
 bool Engine::CameraManagerModule::InitializeImpl()
 {
-    CoreModule::GetContext().AddManager(
+    CoreLoop::AddManager(
         CoreLoop::LOOP_TYPE_LOGIC,
         &Managers::CameraManager::GetInstance);
 
@@ -17,7 +18,7 @@ bool Engine::CameraManagerModule::InitializeImpl()
 
 bool Engine::CameraManagerModule::ShutdownImpl()
 {
-    CoreModule::GetContext().RemoveManager(
+    CoreLoop::RemoveManager(
         CoreLoop::LOOP_TYPE_LOGIC,
         &Managers::CameraManager::GetInstance);
 

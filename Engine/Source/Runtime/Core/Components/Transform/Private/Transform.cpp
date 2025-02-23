@@ -302,10 +302,10 @@ namespace Engine::Components
 				}
 			});
 
-			*context |= ui.NewLabelAndVec3( this, "Scale", {"Scale", &m_scale_.x, 0.1f, 0.f, 0.f, true });
-			*context |= ui.NewCheckbox( this, "AbsSize", {"Absolute Size", m_b_s_absolute_});
-			*context |= ui.NewCheckbox( this, "AbsRot", {"Absolute Rotation",m_b_r_absolute_});
-		}
+            *context |= ui.NewLabelAndVec3(this, "Scale", { "Scale", &m_scale_.x, 0.1f, 0.f, 0.f, true });
+            *context |= ui.NewCheckbox(this, "AbsSize", { "Absolute Size", m_b_s_absolute_, true });
+            *context |= ui.NewCheckbox(this, "AbsRot", { "Absolute Rotation", m_b_r_absolute_, true });
+        }
 	}
 #endif
 

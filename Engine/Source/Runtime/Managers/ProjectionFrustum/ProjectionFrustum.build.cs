@@ -15,5 +15,6 @@ public class ProjectionFrustum : EngineCommonProject
         conf.AddPublicDependency<Core>(target);
         conf.AddPublicDependency<Boost>(target);
         conf.AddPrivateDependency<CoreRender>(target);
+        conf.AddPrivateDependency<EngineEntryPoint>(target);
     }
 }

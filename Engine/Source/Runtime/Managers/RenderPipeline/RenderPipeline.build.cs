@@ -18,5 +18,6 @@ public class RenderPipeline : EngineCommonProject
         conf.AddPublicDependency<Boost>(target);
         conf.AddPublicDependency<TBB>(target);
         conf.AddPublicDependency<CoreRender>(target);
+        conf.AddPrivateDependency<EngineEntryPoint>(target);
     }
 }

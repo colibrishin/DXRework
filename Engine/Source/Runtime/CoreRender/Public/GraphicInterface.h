@@ -1341,7 +1341,10 @@ namespace Engine
 
 	    void UseRaytracing(const bool flag)
 	    {
-	        m_b_raytracing_ = flag;
+	        if (IsRaytracingSupported())
+	        {
+	            m_b_raytracing_ = flag;
+	        }
 	    }
 	    [[nodiscard]] bool ShouldUseRaytracing() const noexcept { return m_b_raytracing_; }
 

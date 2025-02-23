@@ -228,7 +228,7 @@ namespace Engine::Managers
                         context |= ui.NewTableColumn( this, std::format( "Column{}", j ), {} );
                         ( context |= ui.NewCheckbox( this,
                                                      std::format( "Checkbox{}{}", i, j ),
-                                                     { m_layer_name_storage_[ { i, j } ], m_layer_mask_[ i ][ j ] } ) ).
+                                                     { m_layer_name_storage_[ { i, j } ], m_layer_mask_[ i ][ j ], true } ) ).
                                 SetFunction( [this]()
                                 {
                                     if ( const Strong<Scene> &scene = SceneManager::GetInstance().GetActiveScene().

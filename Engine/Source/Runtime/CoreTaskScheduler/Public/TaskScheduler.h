@@ -5,7 +5,8 @@
 #include <numeric>
 #include <queue>
 
-#include "Source/Runtime/CoreSingleton/Public/Singleton.h"
+#include "CoreType.h"
+#include "Singleton.h"
 
 #include "TaskScheduler.generated.h"
 
@@ -13,7 +14,7 @@ namespace Engine
 {
 	using TaskSchedulerFunc = std::function<void(const std::vector<std::any>&, float)>;
 	
-	enum ENGINE_CORE_API eTaskType : uint8_t
+	enum ENGINE_CORETASKSCHEDULER_API eTaskType : uint8_t
 	{
 		TASK_NONE = 0,
 		TASK_TOGGLE_RASTER,
@@ -22,17 +23,13 @@ namespace Engine
 		TASK_ADD_OBJ,
 		TASK_ADD_CHILD,
 		TASK_ADD_COMPONENT,
-		TASK_ADD_SCRIPT,
 
 		TASK_CACHE_COMPONENT,
 		TASK_UNCACHE_COMPONENT,
-		TASK_CACHE_SCRIPT,
-		TASK_UNCACHE_SCRIPT,
 
 		TASK_TF_UPDATE,
 
 		TASK_REM_COMPONENT,
-		TASK_REM_SCRIPT,
 		TASK_REM_CHILD,
 		TASK_REM_OBJ,
 
@@ -51,7 +48,7 @@ namespace Engine
 namespace Engine::Managers
 {
 	ECLASS()
-	class ENGINE_CORE_API TaskScheduler : public Abstracts::Singleton<TaskScheduler>
+	class ENGINE_CORETASKSCHEDULER_API TaskScheduler : public Abstracts::Singleton<TaskScheduler>
 	{
 		GENERATE_BODY
 	public:
@@ -86,11 +83,27 @@ namespace Engine::Managers
 					);
 		}
 
+	    void AddTask(const eTaskType type, const std::vector<std::any>& params)
+		{
+		    m_tasks_[type].push
+                    (
+                     {
+                         type,
+                         {},
+                         params
+                     }
+                    );
+		}
+
+	    void Inject(const eTaskType type, const TaskSchedulerFunc& func);
+	    void Extract(const eTaskType type, const TaskSchedulerFunc& func);
+
 	private:
 		TaskScheduler() = default;
 		friend struct SingletonDeleter;
 		~TaskScheduler() override = default;
 
 		std::map<eTaskType, std::queue<TaskValue>> m_tasks_;
+	    std::map<eTaskType, std::vector<TaskSchedulerFunc>> m_injected_funcs_;
 	};
 } // namespace Engine::Managers

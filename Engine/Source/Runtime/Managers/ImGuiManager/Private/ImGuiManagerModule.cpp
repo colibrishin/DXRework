@@ -1,5 +1,7 @@
 ﻿#include "ImGuiManager.h"
 #include "ImGuiManagerModule.h"
+
+#include "EngineEntryPoint.h"
 #include "ImGuiManagerModule.generated.h"
 
 
@@ -9,7 +11,7 @@ MODULE_IMPL(Engine::ImGuiManagerModule, ImGuiManager)
 
 bool Engine::ImGuiManagerModule::InitializeImpl()
 {
-	CoreModule::GetContext().AddManager(
+	CoreLoop::AddManager(
 		CoreLoop::LOOP_TYPE_RENDER,
 		Managers::ImGuiManager::GetInstance);
 
@@ -18,7 +20,7 @@ bool Engine::ImGuiManagerModule::InitializeImpl()
 
 bool Engine::ImGuiManagerModule::ShutdownImpl()
 {
-	CoreModule::GetContext().RemoveManager(
+	CoreLoop::RemoveManager(
 		CoreLoop::LOOP_TYPE_RENDER,
 		Managers::ImGuiManager::GetInstance);
 

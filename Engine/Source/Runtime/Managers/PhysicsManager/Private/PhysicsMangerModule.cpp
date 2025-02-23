@@ -3,17 +3,15 @@
 
 #include "CollisionDetector.h"
 #include "ConstraintSolver.h"
+#include "EngineEntryPoint.h"
 #include "Graviton.h"
 #include "PhysicsManager.h"
-
-#include "CoreModule/Public/CoreModule.h"
-
 
 MODULE_IMPL(Engine::PhysicsManagerModule, PhysicsManager);
 
 bool Engine::PhysicsManagerModule::InitializeImpl()
 {
-	CoreModule::GetContext().AddManager(
+	CoreLoop::AddManager(
 		CoreLoop::LOOP_TYPE_PHYSICS,
 		&Managers::Graviton::GetInstance,
 		&Managers::CollisionDetector::GetInstance,
@@ -25,7 +23,7 @@ bool Engine::PhysicsManagerModule::InitializeImpl()
 
 bool Engine::PhysicsManagerModule::ShutdownImpl()
 {
-	CoreModule::GetContext().RemoveManager(
+	CoreLoop::RemoveManager(
 		CoreLoop::LOOP_TYPE_PHYSICS,
 		&Managers::Graviton::GetInstance,
 		&Managers::CollisionDetector::GetInstance,

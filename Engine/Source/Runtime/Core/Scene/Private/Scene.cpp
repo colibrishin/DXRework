@@ -11,12 +11,11 @@
 #include "UIInterface.h"
 #endif
 
-#include "Source/Runtime/Core/Layer/Public/Layer.h"
-#include "Source/Runtime/Core/TaskScheduler/Public/TaskScheduler.h"
-#include "Source/Runtime/Core/ObjectBase/Public/ObjectBase.h"
-#include "Source/Runtime/Core/Objects/Camera/Public/Camera.h"
-#include "Source/Runtime/Core/Objects/Light/Public/Light.h"
-#include "Source/Runtime/Core/Components/Transform/Public/Transform.h"
+#include "Layer/Public/Layer.h"
+#include "ObjectBase/Public/ObjectBase.h"
+#include "Objects/Camera/Public/Camera.h"
+#include "Objects/Light/Public/Light.h"
+#include "Components/Transform/Public/Transform.h"
 #include "Components/Collider/Public/Collider.h"
 #include "Objects/Observer/Public/Observer.h"
 
@@ -730,7 +729,6 @@ namespace Engine
 	}
 
 	Scene::Scene() :
-	m_b_scene_raytracing_(false),
 #ifdef PHYSX_ENABLED
 	m_physics_scene_(nullptr),
 #endif
@@ -1040,11 +1038,6 @@ namespace Engine
 	Weak<Abstracts::ObjectBase> Scene::GetMainActor() const
 	{
 		return m_main_actor_;
-	}
-
-    bool Scene::HasRaytracingOn() const
-	{
-	    return m_b_scene_raytracing_;
 	}
 
     Scene::~Scene()

@@ -1,14 +1,93 @@
 #include "../Public/EngineEntryPoint.h"
 
+#include "ModuleManager.h"
+
 #if WITH_EDITOR
 #include "UIInterface.h"
 #endif
 
-#include "CoreModule/Public/CoreModule.h"
-
+SingletonCollection Engine::CoreLoop::m_singleton_accessor_[LOOP_TYPE_MAX] = {};
 bool Engine::Managers::EngineEntryPoint::s_instantiated_ = false;
 std::atomic<bool> Engine::Managers::EngineEntryPoint::s_paused = false;
 std::atomic<float> Engine::Managers::EngineEntryPoint::s_fixed_update_interval = 1 / 30.f;
+
+
+#if WITH_EDITOR
+UPDATE_CALL_TEMPLATE_OneParam(OnUIUpdate, Engine::UIContext* const, parent)
+#endif
+UPDATE_CALL_TEMPLATE(PreUpdate)
+UPDATE_CALL_TEMPLATE(Update)
+UPDATE_CALL_TEMPLATE(PostUpdate)
+UPDATE_CALL_TEMPLATE(FixedUpdate)
+UPDATE_CALL_TEMPLATE(PreRender)
+UPDATE_CALL_TEMPLATE(Render)
+UPDATE_CALL_TEMPLATE(PostRender)
+
+#if WITH_EDITOR
+void Engine::CoreLoop::OnUIUpdate(UIContext* const parent, const float dt)
+{
+    for (const auto& singletons : m_singleton_accessor_)
+    {
+        DoOnUIUpdate(parent, dt, singletons);
+    }
+}
+#endif
+
+void Engine::CoreLoop::PreUpdate(const float dt)
+{
+    for (const auto& singletons : m_singleton_accessor_)
+    {
+        DoPreUpdate(dt, singletons);	
+    }
+}
+
+void Engine::CoreLoop::Update(const float dt)
+{
+    for (const auto& singletons : m_singleton_accessor_)
+    {
+        DoUpdate(dt, singletons);	
+    }
+}
+
+void Engine::CoreLoop::PostUpdate(const float dt)
+{
+    for (const auto& singletons : m_singleton_accessor_)
+    {
+        DoPostUpdate(dt, singletons);	
+    }
+}
+
+void Engine::CoreLoop::FixedUpdate(const float dt)
+{
+    for (const auto& singletons : m_singleton_accessor_)
+    {
+        DoFixedUpdate(dt, singletons);	
+    }
+}
+
+void Engine::CoreLoop::PreRender(const float dt)
+{
+    for (const auto& singletons : m_singleton_accessor_)
+    {
+        DoPreRender(dt, singletons);	
+    }
+}
+
+void Engine::CoreLoop::Render(const float dt)
+{
+    for (const auto& singletons : m_singleton_accessor_)
+    {
+        DoRender(dt, singletons);	
+    }
+}
+
+void Engine::CoreLoop::PostRender(const float dt)
+{
+    for (const auto& singletons : m_singleton_accessor_)
+    {
+        DoPostRender(dt, singletons);	
+    }
+}
 
 namespace Engine::Managers
 {
@@ -55,43 +134,43 @@ namespace Engine::Managers
 #if WITH_EDITOR
 	void EngineEntryPoint::OnUIUpdate(UIContext* const parent, const float dt)
 	{
-		CoreModule::GetContext().OnUIUpdate(parent, dt);
+		CoreLoop::OnUIUpdate(parent, dt);
 	}
 #endif
 
 	void EngineEntryPoint::PreUpdate(const float dt)
 	{
-		CoreModule::GetContext().PreUpdate(dt);
+		CoreLoop::PreUpdate(dt);
 	}
 
 	void EngineEntryPoint::FixedUpdate(const float dt)
 	{
-		CoreModule::GetContext().FixedUpdate(dt);
+		CoreLoop::FixedUpdate(dt);
 	}
 
 	void EngineEntryPoint::Update(const float dt)
 	{
-		CoreModule::GetContext().Update(dt);
+		CoreLoop::Update(dt);
 	}
 
 	void EngineEntryPoint::PreRender(const float dt)
 	{
-		CoreModule::GetContext().PreRender(dt);
+		CoreLoop::PreRender(dt);
 	}
 
 	void EngineEntryPoint::Render(const float dt)
 	{
-		CoreModule::GetContext().Render(dt);
+		CoreLoop::Render(dt);
 	}
 
 	void EngineEntryPoint::PostRender(const float dt)
 	{
-		CoreModule::GetContext().PostRender(dt);
+		CoreLoop::PostRender(dt);
 	}
 
 	void EngineEntryPoint::PostUpdate(const float dt)
 	{
-		CoreModule::GetContext().PostUpdate(dt);
+		CoreLoop::PostUpdate(dt);
 	}
 
 	void EngineEntryPoint::tickInternal()

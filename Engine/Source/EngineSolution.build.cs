@@ -33,6 +33,8 @@ public class EngineSolution : Solution
 		// Add Projects
         {
             conf.AddProject<Core>(target);
+            conf.AddProject<CoreTaskScheduler>(target);
+            conf.AddProject<CoreModuleManager>(target);
             conf.AddProject<RaycastExtension>(target);
 
             {
@@ -85,6 +87,7 @@ public class EngineSolution : Solution
             {
                 conf.AddProject<RaytracingShader>(target);
                 conf.AddProject<RaytracingRenderPassTask>(target);
+                conf.AddProject<RaytracingExtension>(target);
             }
 
             {

@@ -11,7 +11,8 @@ public class EngineEntryPoint : EngineCommonProject
     public override void ConfigureAll(Configuration conf, EngineTarget target)
     {
         base.ConfigureAll(conf, target);
-        conf.AddPublicDependency<Core>(target);
+        conf.AddPublicDependency<CoreSingleton>(target);
         conf.AddPublicDependency<Boost>(target);
+        conf.AddPrivateDependency<CoreModuleManager>(target);
     }
 }

@@ -19,5 +19,6 @@ public class ReflectionEvaluator : EngineCommonProject
         conf.AddPublicDependency<Boost>(target);
         conf.AddPublicDependency<TBB>(target);
         conf.AddPublicDependency<Texture2D>(target);
+        conf.AddPrivateDependency<EngineEntryPoint>(target);
     }
 }

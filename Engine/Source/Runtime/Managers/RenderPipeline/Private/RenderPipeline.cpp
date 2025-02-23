@@ -32,6 +32,11 @@ namespace Engine::Managers
 		m_param_buffer_cb_.Bind(context);
 	}
 
+    void RenderPipeline::SetRaytracing( const bool flag )
+	{
+	    TaskScheduler::GetInstance().AddTask( TASK_TOGGLE_RASTER, {flag, 0.f} );
+	}
+
     const ConstantBufferTypeProxy<CBs::PerspectiveCB>& RenderPipeline::GetPerspectiveCB() const
 	{
 	    return m_wvp_buffer_cb_;
@@ -163,5 +168,20 @@ namespace Engine::Managers
 	}
 
 	void RenderPipeline::PostUpdate(const float dt) {}
+
+#if WITH_EDITOR
+    void RenderPipeline::OnUIUpdate( UIContext * const parent, const float dt )
+    {
+	    UIInterface& ui = UIInterfaceAccessor::GetInterface();
+        if ( UIContext context = ui.NewContext
+                ( ui.NewDialog( this, "RenderPipelineDialog", { "RenderPipeline", m_ui_info_.dialogOpened } ) ) )
+        {
+            (context |= ui.NewCheckbox( this, "RaytracingCheckbox", {"Raytracing", m_b_raytracing_, CFG_RAYTRACING } )).SetFunction( [this]()
+            {
+                SetRaytracing( m_b_raytracing_ );
+            } );
+        }
+    }
+#endif
 
 } // namespace Engine::Manager::Graphics

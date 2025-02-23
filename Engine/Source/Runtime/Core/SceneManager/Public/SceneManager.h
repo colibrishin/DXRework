@@ -1,7 +1,7 @@
 #pragma once
 #include "Source/Runtime/CoreSingleton/Public/Singleton.h"
 #include "Source/Runtime/Core/Delegation/Public/Delegation.hpp"
-#include "Source/Runtime/Core/TaskScheduler/Public/TaskScheduler.h"
+#include "TaskScheduler.h"
 
 #include "UIHelpers.h"
 #include "SceneManager.generated.h"

@@ -4,7 +4,7 @@
 #include <any>
 
 #include "Source/Runtime/Core/Components/Collider/Public/Collider.h"
-#include "Source/Runtime/Core/TaskScheduler/Public/TaskScheduler.h"
+#include "TaskScheduler.h"
 
 #if WITH_EDITOR
 #include "Scene/Public/Scene.h"

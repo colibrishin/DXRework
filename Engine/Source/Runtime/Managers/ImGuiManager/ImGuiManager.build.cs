@@ -18,6 +18,7 @@ public class ImGuiManager : EngineCommonProject
         conf.AddPublicDependency<Boost>(target);
         conf.AddPrivateDependency<RenderPipeline>(target);
         
+        conf.AddPrivateDependency<EngineEntryPoint>(target);
         if (target.Platform == Platform.win64 || target.Platform == Platform.win32)
         {
             conf.AddPrivateDependency<WinAPIWrapper>(target);

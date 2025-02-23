@@ -46,10 +46,17 @@ namespace Engine::Managers
 		void PostRender(const float dt) override;
 		void PostUpdate(const float dt) override;
 
+#if WITH_EDITOR
+	    void OnUIUpdate(UIContext * const parent, const float dt) override;
+#endif
+
 		void SetPerspectiveMatrix(const CBs::PerspectiveCB& matrix);
 	    void UpdateLights(const GraphicInterfaceContextPrimitive* context, const SBs::LightSB* lights, size_t count);
 		void BindConstantBuffers(const GraphicInterfaceContextPrimitive* context) const;
-
+#if CFG_RAYTRACING
+        void SetRaytracing(const bool flag);
+#endif
+	    
         [[nodiscard]] const ConstantBufferTypeProxy<CBs::PerspectiveCB>& GetPerspectiveCB() const;
         [[nodiscard]] const ConstantBufferTypeProxy<CBs::ParamCB>&       GetParamCB() const;
 	    [[nodiscard]] const StructuredBufferTypeProxy<SBs::LightSB>&     GetLightSB() const;
@@ -79,6 +86,7 @@ namespace Engine::Managers
 
 		void InitializeViewport();
 
+	    bool m_b_raytracing_ = false;
 		Viewport m_viewport_;
 
 		ConstantBufferTypeProxy<CBs::PerspectiveCB> m_wvp_buffer_cb_;
