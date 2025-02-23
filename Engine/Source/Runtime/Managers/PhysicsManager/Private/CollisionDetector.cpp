@@ -93,8 +93,8 @@ namespace Engine::Managers
 			std::stack<const Octree*> stack;
 			stack.push(&tree);
 
-			std::vector<std::vector<Weak<Abstracts::ObjectBase>>>                       node_objects;
-			std::map<const Octree*, bool> visited;
+            std::vector<Octree::PoolVector> node_objects;
+            std::map<const Octree*, bool>   visited;
 
 			while (!stack.empty())
 			{
