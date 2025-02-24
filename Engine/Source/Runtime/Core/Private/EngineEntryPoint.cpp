@@ -121,8 +121,8 @@ namespace Engine::Managers
 	void EngineEntryPoint::Initialize()
 	{
 		m_timer = std::make_unique<DX::StepTimer>();
-		ModuleManager::Initialize();
-		ModuleManager::LoadModuleAll();
+		ModuleManager::GetInstance().Initialize();
+		ModuleManager::GetInstance().LoadModuleAll();
 	}
 
 	void EngineEntryPoint::Tick()
@@ -218,6 +218,6 @@ namespace Engine::Managers
 
 	void EngineEntryPoint::SIGTERM()
 	{
-		ModuleManager::Destroy();
+		ModuleManager::GetInstance().Destroy();
 	}
 } // namespace Engine::Manager

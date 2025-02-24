@@ -5,17 +5,6 @@
 #include <Windows.h>
 #endif
 
-#if !IS_DLL
-std::unordered_map<std::wstring, Engine::Managers::ModuleInitializationFunction> Engine::Managers::ModuleManager::m_module_initializer_{};
-#endif
-
-std::recursive_mutex                                     Engine::Managers::ModuleManager::m_read_mutex_;
-std::recursive_mutex                                     Engine::Managers::ModuleManager::m_write_mutex_;
-std::unordered_map<std::wstring, Engine::Managers::ModuleManager::ModuleInfoPtr>
-                                                         Engine::Managers::ModuleManager::m_module_loaded_{};
-std::unordered_map<std::wstring, std::filesystem::path>  Engine::Managers::ModuleManager::m_module_paths_{};
-std::unordered_map<std::wstring, std::set<std::wstring>> Engine::Managers::ModuleManager::m_lazy_modules_{};
-
 namespace Engine::Managers
 {
 	void ModuleManager::TryResolveLazyness(const std::wstring_view name)
@@ -311,7 +300,19 @@ namespace Engine::Managers
 #endif
 	}
 
-	ModuleManager::~ModuleManager()
+    ModuleManager& ModuleManager::GetInstance()
+    {
+        static std::unique_ptr<ModuleManager> instance;
+
+		if (!instance)
+		{
+            instance = std::make_unique<ModuleManager>();
+		}
+
+		return *instance;
+	}
+
+    ModuleManager::~ModuleManager()
 	{
         Destroy();
 	}

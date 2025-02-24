@@ -130,33 +130,34 @@ namespace Engine::Managers
         using ModuleInfoPtr = std::unique_ptr<ModuleInfo>;
         using ModuleMap     = std::unordered_map<std::wstring, ModuleInfoPtr>;
 
-        static void TryResolveLazyness( const std::wstring_view name );
+        void TryResolveLazyness( const std::wstring_view name );
 
     public:
         ModuleManager() = default;
         ~ModuleManager();
 
-        static void        Initialize();
-        static void        Destroy();
-        static ModuleInfo *FindModule( const std::wstring_view name );
-        static IModule    *LoadModule( const std::wstring_view name );
-        static void        AddModule( const std::wstring_view name );
-        static void        RemoveModule( const std::wstring_view name );
-        static void        LoadModuleAll();
+        void        Initialize();
+        void        Destroy();
+        ModuleInfo *FindModule( const std::wstring_view name );
+        IModule    *LoadModule( const std::wstring_view name );
+        void        AddModule( const std::wstring_view name );
+        void        RemoveModule( const std::wstring_view name );
+        void        LoadModuleAll();
+        static ModuleManager& GetInstance();
 
 #if !IS_DLL
-        static void RegisterStaticModule( const std::wstring_view name, const ModuleInitializationFunction &func );
+        void RegisterStaticModule( const std::wstring_view name, const ModuleInitializationFunction &func );
 #endif
 
     private:
-        static std::recursive_mutex                                    m_read_mutex_;
-        static std::recursive_mutex                                    m_write_mutex_;
-        static std::unordered_map<std::wstring, ModuleInfoPtr>         m_module_loaded_;
-        static std::unordered_map<std::wstring, std::filesystem::path> m_module_paths_;
-        static std::unordered_map<std::wstring, std::set<std::wstring>> m_lazy_modules_;
+        std::recursive_mutex                                    m_read_mutex_;
+        std::recursive_mutex                                    m_write_mutex_;
+        std::unordered_map<std::wstring, ModuleInfoPtr>         m_module_loaded_;
+        std::unordered_map<std::wstring, std::filesystem::path> m_module_paths_;
+        std::unordered_map<std::wstring, std::set<std::wstring>> m_lazy_modules_;
 
 #if !IS_DLL
-        static std::unordered_map<std::wstring, ModuleInitializationFunction> m_module_initializer_;     
+        std::unordered_map<std::wstring, ModuleInitializationFunction> m_module_initializer_;     
 #endif
     };
 }
@@ -166,8 +167,8 @@ struct StaticLinkModuleEntry
 {
     explicit StaticLinkModuleEntry( const std::wstring_view name )
     {
-        Engine::Managers::ModuleManager::RegisterStaticModule( name,
-                                                               &InitializeModule );
+        Engine::Managers::ModuleManager::GetInstance().RegisterStaticModule( name,
+                                                                            &InitializeModule );
     }
 
     static Engine::IModule *InitializeModule()
