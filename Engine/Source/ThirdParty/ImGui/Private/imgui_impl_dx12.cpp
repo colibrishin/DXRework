@@ -43,9 +43,9 @@
 
 #include <cstdint>
 
-#include "Source/ThirdParty/imgui.h"
+#include "Source/ThirdParty/ImGui/Public/imgui.h"
 #ifndef IMGUI_DISABLE
-#include "Source/ThirdParty/imgui_impl_dx12.h"
+#include "Source/ThirdParty/ImGui/Public/imgui_impl_dx12.h"
 
 // DirectX
 #include <d3d12.h>

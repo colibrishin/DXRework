@@ -121,7 +121,7 @@ namespace IMGUI_STB_NAMESPACE
 #ifdef IMGUI_STB_RECT_PACK_FILENAME
 #include IMGUI_STB_RECT_PACK_FILENAME
 #else
-#include "Source/ThirdParty/imstb_rectpack.h"
+#include "Source/ThirdParty/ImGui/Public/imstb_rectpack.h"
 #endif
 #endif
 
@@ -145,7 +145,7 @@ namespace IMGUI_STB_NAMESPACE
 #ifdef IMGUI_STB_TRUETYPE_FILENAME
 #include IMGUI_STB_TRUETYPE_FILENAME
 #else
-#include "Source/ThirdParty/imstb_truetype.h"
+#include "Source/ThirdParty/ImGui/Public/imstb_truetype.h"
 #endif
 #endif
 #endif // IMGUI_ENABLE_STB_TRUETYPE

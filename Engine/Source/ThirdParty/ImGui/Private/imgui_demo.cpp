@@ -93,7 +93,7 @@ Index of this file:
 #define _CRT_SECURE_NO_WARNINGS
 #endif
 
-#include "Source/ThirdParty/imgui.h"
+#include "Source/ThirdParty/ImGui/Public/imgui.h"
 #ifndef IMGUI_DISABLE
 
 // System includes
