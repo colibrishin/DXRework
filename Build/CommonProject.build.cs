@@ -154,6 +154,7 @@ public abstract class CommonProject : Project
         conf.ExecuteTargetCopy = true;
         conf.IncludeBlobbedSourceFiles = false;
         conf.BlobPath = $@"{Utils.GetSolutionDir()}/Intermediate/blob/";
+        conf.ExportAdditionalLibrariesEvenForStaticLib = true;
 
         string emptyAPIString = $"ENGINE_{Name.ToUpper()}_API=";
 

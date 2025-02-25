@@ -33,6 +33,8 @@ public class EngineSolution : Solution
             conf.AddProject<WinAPIWrapper>(target);
         }
 
+        conf.AddProject<RenderComponent>(target);
+        conf.AddProject<ShapeRenderComponent>(target);
         conf.AddProject<RaycastExtension>(target);
         conf.AddProject<Animator>(target);
         conf.AddProject<ModelRenderer>(target);

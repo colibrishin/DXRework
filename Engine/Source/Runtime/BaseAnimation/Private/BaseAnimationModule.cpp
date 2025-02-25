@@ -1,7 +1,6 @@
 #include "BaseAnimationModule.h"
 #include "BaseAnimationModule.generated.h"
 
-
 MODULE_IMPL(Engine::BaseAnimationModule, BaseAnimation)
 
 bool Engine::BaseAnimationModule::InitializeImpl()
