@@ -2,7 +2,6 @@ use std::io::Write;
 use std::collections::HashSet;
 use lazy_static::lazy_static;
 use std::sync::Mutex;
-use fs2::FileExt;
 use std::io::BufRead;
 
 lazy_static!{
@@ -242,9 +241,9 @@ fn main()
         {
             Ok(file) =>
             {
-                match file.try_lock_exclusive()
+                match file.try_lock()
                 {
-                    Ok(_) => 
+                    Ok(true) => 
                     {
                         lockfile = file;
 
@@ -280,6 +279,7 @@ fn main()
                             }
                         }
                     },
+                    Ok(false) => continue,
                     Err(_) => continue
                 }
 
