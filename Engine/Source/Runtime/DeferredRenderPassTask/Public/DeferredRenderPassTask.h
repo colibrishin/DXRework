@@ -1,10 +1,10 @@
 #pragma once
 #include <array>
+#include <ranges>
 
 #include "RenderPassTask.h"
+#include "RenderPassTaskFactory.h"
 #include "SingletonSpinLock.h"
-
-#include <ranges>
 
 #include "DeferredRenderPassTask.generated.h"
 
@@ -22,6 +22,40 @@ namespace Engine
         GENERATE_BODY
     public:
         DeferredRenderPassTask();
+
+        DeferredRenderPassTask( const DeferredRenderPassTask& ) = delete;
+        DeferredRenderPassTask& operator=( const DeferredRenderPassTask& ) = delete;
+
+        DeferredRenderPassTask(DeferredRenderPassTask&& other) noexcept
+        : m_gi_ticket_( std::move( other.m_gi_ticket_ ) ),
+          m_local_param_pool_ticket_( std::move( other.m_local_param_pool_ticket_ ) ),
+          m_instance_pool_ticket_( std::move( other.m_instance_pool_ticket_ ) ),
+          m_texture_record_ticket_( std::move( other.m_texture_record_ticket_ ) )
+        {
+            operator=( std::move( other ) );
+        }
+
+        DeferredRenderPassTask& operator=(DeferredRenderPassTask&& other) noexcept
+        {
+            m_gi_ticket_               = std::move( other.m_gi_ticket_ );
+            m_local_param_pool_ticket_ = std::move( other.m_local_param_pool_ticket_ );
+            m_instance_pool_ticket_    = std::move( other.m_instance_pool_ticket_ );
+            m_texture_record_ticket_   = std::move( other.m_texture_record_ticket_ );
+
+            m_local_param_pool_     = std::move( other.m_local_param_pool_ );
+            m_instance_pool_        = std::move( other.m_instance_pool_ );
+            m_heaps_                = std::move( other.m_heaps_ );
+            m_used_shader_textures_ = std::move( other.m_used_shader_textures_ );
+
+            m_light_pass_shader_raw_        = std::move( other.m_light_pass_shader_raw_ );
+            for (size_t i = 0; i < std::size( m_deferred_render_targets_raw_ ); ++i)
+            {
+                m_deferred_render_targets_raw_[i] = std::move( other.m_deferred_render_targets_raw_[i] );                
+            }
+            m_deferred_depth_raw_           = std::move( other.m_deferred_depth_raw_ );
+
+            return *this;
+        }
 
         void Run( float                                                             dt,
                   bool                                                              shader_bypass,
@@ -79,20 +113,19 @@ namespace Engine
                         const std::unordered_map<std::string_view, ContextSetupFunction> &prerender_predicates,
                         const std::unordered_map<std::string_view, ContextSetupFunction> &postrender_predicates );
 
-        [[nodiscard]] void RecordUsedTexture( const GraphicInterfaceContextPrimitive *context,
+        void RecordUsedTexture( const GraphicInterfaceContextPrimitive *context,
                                               GraphicInterface                       &gi,
                                               const Resources::Texture               *tex );
 
     public:
-        void PreRun( const RenderMap *render_map,
-                const size_t render_map_count,
-                const ObjectPredication &predication
-                ) override;
+        void PreRun( const RenderMap*         render_map,
+                     const size_t             render_map_count,
+                     const ObjectPredication& predication ) override;
 
     private:
         SpinLockTicket m_gi_ticket_;
-        SpinLockTicket m_local_param_pool_ticket;
-        SpinLockTicket m_instance_pool_ticket;
+        SpinLockTicket m_local_param_pool_ticket_;
+        SpinLockTicket m_instance_pool_ticket_;
         SpinLockTicket m_texture_record_ticket_;
 
         StructuredBufferMemoryPool<Graphics::SBs::LocalParamSB> m_local_param_pool_{};
@@ -106,13 +139,13 @@ namespace Engine
 
     };
 
-    struct DeferredRenderPassTaskFactory : public RenderPassTaskFactory<DeferredRenderPassTask>
+    struct ENGINE_DEFERREDRENDERPASSTASK_API DeferredRenderPassTaskFactory : public RenderPassTaskFactory<DeferredRenderPassTask>
     {
-        RenderPassTask* New() override;
-
         void SetTexture( const Weak<Resources::Texture2D>& tex, const size_t slot );
         void SetDepthStencil( const Weak<Resources::Texture2D>& tex );
         void SetLightShader( const Weak<Resources::Shader>& shader );
+        
+        RenderPassTask* New() override;
 
     private:
         Strong<Resources::Shader> m_light_pass_shader_{};

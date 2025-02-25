@@ -14,8 +14,8 @@ namespace Engine
 {
 	RaytracingRenderPassTask::RaytracingRenderPassTask()
         : m_gi_ticket_(SingletonSpinLock::GetInstance().Register()),
-          m_local_param_pool_ticket(SingletonSpinLock::GetInstance().Register()),
-          m_instance_pool_ticket(SingletonSpinLock::GetInstance().Register()),
+          m_local_param_pool_ticket_(SingletonSpinLock::GetInstance().Register()),
+          m_instance_pool_ticket_(SingletonSpinLock::GetInstance().Register()),
           m_texture_record_ticket_(SingletonSpinLock::GetInstance().Register()),
           m_heap_ticket_(SingletonSpinLock::GetInstance().Register()),
           m_byte_stream_ticket_(SingletonSpinLock::GetInstance().Register()) {}
@@ -209,7 +209,7 @@ namespace Engine
 		primitive.commandList->SoftReset();
 
 		// Manual release
-		SpinLockToken local_param_token = SingletonSpinLock::GetInstance().Lock(m_local_param_pool_ticket);
+		SpinLockToken local_param_token = SingletonSpinLock::GetInstance().Lock(m_local_param_pool_ticket_);
 		m_local_param_pool_.advance();
 		StructuredBufferTypeProxy<Graphics::SBs::LocalParamSB>& sb = m_local_param_pool_.get();
 		local_param_token.Release();
@@ -234,7 +234,7 @@ namespace Engine
 		}
 		
 		// Manual release
-		auto instance_token = SingletonSpinLock::GetInstance().Lock( m_instance_pool_ticket );
+		auto instance_token = SingletonSpinLock::GetInstance().Lock( m_instance_pool_ticket_ );
 		m_instance_pool_.advance();
 		StructuredBufferTypeProxy<Graphics::SBs::InstanceSB>& instance = m_instance_pool_.get();
 		instance_token.Release();
@@ -360,7 +360,7 @@ namespace Engine
 	        }
 	    }
 	    
-	    m_byte_stream_.insert(m_byte_stream_.end(), std::numeric_limits<uint32_t>::digits, byte_stream{});
+	    m_byte_stream_.resize( m_byte_stream_.size() + std::numeric_limits<uint32_t>::digits );
 	    m_byte_stream_usage_.insert(m_byte_stream_usage_.end(), 1, 0);
 	    m_byte_stream_usage_.back() |= 1 << (std::numeric_limits<uint32_t>::digits - 1);
 	    return m_byte_stream_[(m_byte_stream_usage_.size() - 1) * std::numeric_limits<uint32_t>::digits];

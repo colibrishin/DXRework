@@ -11,8 +11,8 @@ MODULE_IMPL( Engine::DeferredRenderPassTaskModule, DeferredRenderPassTask );
 bool Engine::DeferredRenderPassTaskModule::InitializeImpl()
 {
 #ifdef CFG_RENDERTYPE_DEFERRED
-    DeferredRenderPassTaskFactory* factory = new DeferredRenderPassTaskFactory();
-    const std::string name ( DeferredRenderPassTask::StaticTypeName() );
+    auto               factory = new DeferredRenderPassTaskFactory();
+    const std::string  name ( DeferredRenderPassTask::StaticTypeName() );
     const std::wstring name_wstr( name.begin(), name.end() );
 
     Managers::Renderer::GetInstance().RegisterRenderPass( name_wstr, factory );

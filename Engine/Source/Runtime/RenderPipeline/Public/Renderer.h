@@ -7,6 +7,7 @@
 #include "ConcurrentTypeLibrary.h"
 #include "Singleton.h"
 #include "RenderPassTask.h"
+#include "RenderPassTaskFactory.h"
 #include "RenderInstanceTask.h"
 #include "Delegation.hpp"
 
@@ -80,7 +81,7 @@ namespace Engine::Managers
             }
 
             size_t         use_count       = m_render_pass_tasks_usage_[ domain ][ type ];
-            const size_t   allocated_count = m_render_pass_tasks_[ domain ].size();
+            const size_t   allocated_count = m_render_pass_tasks_[ domain ][ type ].size();
 
             if (use_count == allocated_count)
             {
@@ -157,7 +158,7 @@ namespace Engine::Managers
         struct InclusionPredicate
         {
             static void ResolveDirty( const RenderPassTaskFactoryContainer& cont,
-                                          std::vector<RenderPassTask *>     &factories )
+                                      std::vector<IRenderPassTaskFactory*>& factories )
             {
                 factories.clear();
                 factories.reserve( cont.size() );

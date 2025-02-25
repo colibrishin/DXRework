@@ -12,8 +12,8 @@
 
 Engine::DeferredRenderPassTask::DeferredRenderPassTask()
     : m_gi_ticket_( SingletonSpinLock::GetInstance().Register() ),
-      m_local_param_pool_ticket( SingletonSpinLock::GetInstance().Register() ),
-      m_instance_pool_ticket( SingletonSpinLock::GetInstance().Register() ),
+      m_local_param_pool_ticket_( SingletonSpinLock::GetInstance().Register() ),
+      m_instance_pool_ticket_( SingletonSpinLock::GetInstance().Register() ),
       m_texture_record_ticket_( SingletonSpinLock::GetInstance().Register() )
 {}
 
@@ -243,7 +243,7 @@ inline void Engine::DeferredRenderPassTask::StartPhase_MultiThread(
     primitive.commandList->SoftReset();
 
     // Manual release
-    SpinLockToken local_param_token = SingletonSpinLock::GetInstance().Lock( m_local_param_pool_ticket );
+    SpinLockToken local_param_token = SingletonSpinLock::GetInstance().Lock( m_local_param_pool_ticket_ );
     m_local_param_pool_.advance();
     StructuredBufferTypeProxy<Graphics::SBs::LocalParamSB> &sb = m_local_param_pool_.get();
     local_param_token.Release();
@@ -271,7 +271,7 @@ inline void Engine::DeferredRenderPassTask::StartPhase_MultiThread(
     }
 
     // Manual release
-    auto instance_token = SingletonSpinLock::GetInstance().Lock( m_instance_pool_ticket );
+    auto instance_token = SingletonSpinLock::GetInstance().Lock( m_instance_pool_ticket_ );
     m_instance_pool_.advance();
     StructuredBufferTypeProxy<Graphics::SBs::InstanceSB> &instance = m_instance_pool_.get();
     instance_token.Release();
@@ -586,8 +586,8 @@ void Engine::DeferredRenderPassTask::PreRun( const RenderMap *render_map,
 
 Engine::RenderPassTask* Engine::DeferredRenderPassTaskFactory::New()
 {
-    DeferredRenderPassTask* task =
-            static_cast<DeferredRenderPassTask*>( RenderPassTaskFactory<DeferredRenderPassTask>::New() );
+    auto* task = static_cast<DeferredRenderPassTask*>( RenderPassTaskFactory<DeferredRenderPassTask>::New() );
+
     task->SetDepthStencil( m_deferred_depth_.get() );
     task->SetLightShader( m_light_pass_shader_.get() );
     

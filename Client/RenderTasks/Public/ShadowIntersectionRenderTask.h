@@ -1,5 +1,5 @@
 #pragma once
-#include "RenderTask.h"
+#include "RenderPassTask.h"
 
 #include "ShadowIntersectionRenderTask.generated.h"
 
