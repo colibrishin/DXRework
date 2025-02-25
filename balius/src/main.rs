@@ -179,73 +179,30 @@ fn copy_headers(intermediate_path: &std::path::Path, project_dir: &std::path::Pa
 fn check_git(git_dir: &std::path::Path, intermediate_path: &std::path::Path) 
 {
     println!("Intermediate Path: {}", intermediate_path.display());
-    
-    let init_trap = || 
-        {
-            let mut git_proc = std::process::Command::new(git_dir.join("cmd").join("git.exe"));
-            git_proc.current_dir(intermediate_path).args(["rev-parse", "HEAD"]);
-            loop 
-            {
-                match git_proc.status()
-                {
-                    Ok(status) => 
-                    {
-                        if status.success()
-                        {
-                            break;
-                        }
-                    },
-                    Err(_) => continue
-                }
-            }
-        };
 
-    if !intermediate_path.exists()
+    if !std::fs::exists(&intermediate_path).unwrap()
     {
         println!("Header parser seems to be not initialized...");
-
-        match std::fs::create_dir(&intermediate_path)
-        {
-            Ok(()) => (),
-            Err(_) => 
-            {
-                init_trap();
-            }
-        };
-
+        std::fs::create_dir(&intermediate_path).unwrap();
+        
         let gitignore_data : &[u8] = "target\nHeaderGenerated\\***\n*.generated.h\n".as_bytes();
         let gitignore_path = intermediate_path.join(".gitignore");
 
-        match std::fs::File::create_new(gitignore_path)
-        {
-            Ok(mut file) =>
-            {
-                file.lock_exclusive().expect("Unable to lock the file");
-                file.write(&gitignore_data).expect("Unable to write a gitignore file.");
-                file.unlock().expect("Unable to unlock the file");
+        let mut file = std::fs::File::create_new(gitignore_path).unwrap();
+        file.write(&gitignore_data).expect("Unable to write a gitignore file.");
 
-                let command_to_run = vec![
-                vec!["init"], 
-                vec!["config", "user.name", "header-parser"],
-                vec!["config", "user.email", "fake@localhost"],
-                vec!["add", "."], 
-                vec!["commit", "-m", "\"Init\""]];
-                
-                for command in command_to_run 
-                {
-                    let mut git_proc = std::process::Command::new(git_dir.join("cmd").join("git.exe"));
-                    git_proc.current_dir(intermediate_path).args(command).status().expect("Repository initialization failed");
-                }
-            }
-            Err(_) =>
-            {
-                init_trap();
-            }
-        }; 
-    }
-    else 
-    {
-        init_trap();
+        let command_to_run = vec![
+        vec!["init"], 
+        vec!["config", "user.name", "header-parser"],
+        vec!["config", "user.email", "fake@localhost"],
+        vec!["add", "."], 
+        vec!["commit", "-m", "\"Init\""]];
+        
+        for command in command_to_run 
+        {
+            let mut git_proc = std::process::Command::new(git_dir.join("cmd").join("git.exe"));
+            git_proc.current_dir(intermediate_path).args(command).status().expect("Repository initialization failed");
+        }
     }
 }
 
@@ -304,7 +261,6 @@ fn main()
                                 {
                                     None =>
                                     {
-                                        let string_pid = std::process::id().to_string();
                                         std::fs::remove_file("lock").unwrap();
                                         lockfile.unlock().unwrap();
                                         continue;
