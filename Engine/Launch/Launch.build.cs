@@ -16,6 +16,9 @@ public class Launch : EngineCommonProject
         
         if (target.LaunchType == ELaunchType.Editor)
         {
+            conf.AddPrivateDependency<Boost>(target);
+            conf.AddPrivateDependency<Core>(target);
+
             if (target.Platform == Platform.win64 || target.Platform == Platform.win32) 
             {
                 conf.AddPrivateDependency<WinAPIWrapper>(target);
