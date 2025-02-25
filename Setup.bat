@@ -42,6 +42,7 @@ start /b /wait "" "%TEMP%/rustup-init.exe" "-y" "--default-toolchain nightly"
 )
 
 pushd balius
+rustup toolchain install nightly
 cargo +nightly b -r
 popd
 
