@@ -1,7 +1,7 @@
 #pragma once
 #include <memory>
 
-#include "RenderTask.h"
+#include "RenderPassTask.h"
 #include "GraphicInterface.h"
 #include "ConcurrentTypeLibrary.h"
 #include "TypeLibrary.h"
@@ -24,8 +24,6 @@ namespace Engine
 	{
 		GENERATE_BODY
 		RaytracingRenderPassTask();
-		RaytracingRenderPassTask& operator=(RaytracingRenderPassTask&) = delete;
-		RaytracingRenderPassTask(RaytracingRenderPassTask&) = delete;
 
 	    void PreRun(RenderMap const* render_map, const size_t render_map_count, const ObjectPredication& predication) override;
 		void Run(

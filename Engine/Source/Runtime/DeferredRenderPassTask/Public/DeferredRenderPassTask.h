@@ -1,7 +1,7 @@
 #pragma once
 #include <array>
 
-#include "RenderTask.h"
+#include "RenderPassTask.h"
 #include "SingletonSpinLock.h"
 
 #include <ranges>
@@ -10,16 +10,16 @@
 
 namespace Engine
 {
+    static constexpr size_t                                g_deferred_count  = 4;
+    static constexpr std::array<eFormat, g_deferred_count> g_deferred_format = { TEX_FORMAT_R32G32B32A32_FLOAT,
+                                                                                 TEX_FORMAT_R8G8B8A8_UNORM,
+                                                                                 TEX_FORMAT_R8G8B8A8_UNORM,
+                                                                                 TEX_FORMAT_R32G32B32A32_FLOAT };
+
     ECLASS(virtual)
     struct ENGINE_DEFERREDRENDERPASSTASK_API DeferredRenderPassTask : public RenderPassTask
     {
         GENERATE_BODY
-
-        static constexpr size_t deferred_count = 4;
-        static constexpr std::array<eFormat, deferred_count> deferred_format = {
-            TEX_FORMAT_R32G32B32A32_FLOAT, TEX_FORMAT_R8G8B8A8_UNORM, TEX_FORMAT_R8G8B8A8_UNORM, TEX_FORMAT_R32G32B32A32_FLOAT
-        };
-
     public:
         DeferredRenderPassTask();
 
@@ -35,10 +35,9 @@ namespace Engine
                   const std::unordered_map<std::string_view, ContextSetupFunction> &postrender_predicates ) override;
         
         void Cleanup() override;
-        void SetTexture( const Weak<Resources::Texture2D> &tex, const size_t slot );
-        void SetDepthStencil( const Weak<Resources::Texture2D> &tex );
-        void SetMaterialShader( const Weak<Resources::Shader> &shader );
-        void SetLightShader( const Weak<Resources::Shader> &shader );
+        void SetTexture( Resources::Texture2D* tex, const size_t slot );
+        void SetDepthStencil( Resources::Texture2D* tex );
+        void SetLightShader( Resources::Shader* shader );
 
     private:
         using IntermediateShaderMap = concurrent_fast_pool_map<Resources::ShaderBase *, aligned_vector<InstancePair>>;
@@ -101,11 +100,23 @@ namespace Engine
         tbb::concurrent_vector<Unique<GraphicHeapBase>>         m_heaps_{};
         std::vector<const Resources::Texture *>                 m_used_shader_textures_{};
 
-        Strong<Resources::Shader> m_material_pass_shader_;
-        Strong<Resources::Shader> m_light_pass_shader_;
+        Resources::Shader*  m_light_pass_shader_raw_{};
+        Resources::Texture* m_deferred_render_targets_raw_[ g_deferred_count ]{};
+        Resources::Texture* m_deferred_depth_raw_{};
 
-        Strong<Resources::Texture2D> m_deferred_render_targets_[ deferred_count ]{};
-        Resources::Texture* m_deferred_render_targets_raw_[ deferred_count ]{};
+    };
+
+    struct DeferredRenderPassTaskFactory : public RenderPassTaskFactory<DeferredRenderPassTask>
+    {
+        RenderPassTask* New() override;
+
+        void SetTexture( const Weak<Resources::Texture2D>& tex, const size_t slot );
+        void SetDepthStencil( const Weak<Resources::Texture2D>& tex );
+        void SetLightShader( const Weak<Resources::Shader>& shader );
+
+    private:
+        Strong<Resources::Shader> m_light_pass_shader_{};
+        Strong<Resources::Texture2D> m_deferred_render_targets_[ g_deferred_count ]{};
         Strong<Resources::Texture2D> m_deferred_depth_{};
     };
 }

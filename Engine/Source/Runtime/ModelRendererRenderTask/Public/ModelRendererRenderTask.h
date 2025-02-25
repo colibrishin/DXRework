@@ -1,7 +1,7 @@
 #pragma once
 #include "ModuleManager.h"
 
-#include "RenderTask.h"
+#include "RenderInstanceTask.h"
 #include "Scene.h"
 
 #include "ModelRendererRenderTask.generated.h"

@@ -12,10 +12,13 @@ namespace Engine::Managers
 
 	void Renderer::PreUpdate(const float dt)
 	{
-        for ( const auto &ptr : m_unique_render_pass_tasks_ | std::views::values )
-        {
-            ptr->Cleanup();
-        }
+		for (int i = 0; i < SHADER_DOMAIN_MAX; ++i)
+		{
+            for ( size_t& count : m_render_pass_tasks_usage_[ i ] | std::views::values )
+            {
+                count = 0;
+            }
+		}
 
 		for (const auto& ptr : m_render_instance_tasks_ | std::views::values) 
 		{
@@ -38,11 +41,6 @@ namespace Engine::Managers
 				ptr->Run(scene.get(), m_render_candidates_, SHADER_DOMAIN_MAX);
 			}
 		}
-
-	    for (const auto& ptr : m_unique_render_pass_tasks_ | std::views::values)
-	    {
-	        ptr->PreRun(m_render_candidates_, std::size(m_render_candidates_), {});
-	    }
 	    
 		m_b_ready_ = true;
 	}
@@ -51,16 +49,19 @@ namespace Engine::Managers
 	{
 		for (size_t i = 0; i < SHADER_DOMAIN_MAX; ++i)
 		{
-            RenderPassAssisted( m_render_pass_tasks_[ i ],
-                                dt,
-                                false,
-                                static_cast<eShaderDomain>( i ),
-                                {},
-                                m_additional_sbs_,
-                                {},
-                                {},
-                                {} );
-
+			for (IRenderPassTaskFactory* factory : m_render_pass_tasks_factories_[i] | std::views::values)
+			{
+                RenderPassAssisted( factory,
+                                    dt,
+                                    false,
+                                    static_cast<eShaderDomain>( i ),
+                                    {},
+                                    m_additional_sbs_,
+                                    {},
+                                    {},
+                                    {} );
+			}
+            
 			onRenderDone.Broadcast(static_cast<eShaderDomain>(i));
 		}
 	}
@@ -81,11 +82,11 @@ namespace Engine::Managers
 		}
 	}
 
-	void Renderer::RegisterRenderPass(const std::wstring_view name, RenderPassTask* task )
+	void Renderer::RegisterRenderPass( const std::wstring_view name, IRenderPassTaskFactory* task )
 	{
 		if (task != nullptr)
 		{
-            m_unique_render_pass_tasks_.emplace( name, std::unique_ptr<RenderPassTask>( task ) );
+            m_unique_render_pass_task_factories_.emplace( name, std::unique_ptr<IRenderPassTaskFactory>( task ) );
 		}
     }
 
@@ -96,10 +97,13 @@ namespace Engine::Managers
             return;
 		}
 
-		if ( m_unique_render_pass_tasks_.contains( name.data() ) )
+		if ( m_unique_render_pass_task_factories_.contains( name.data() ) )
 		{
-            m_render_pass_tasks_[ domain ].emplace( name.data(), m_unique_render_pass_tasks_.at( name.data() ).get() );
-            onRenderTaskDirty.Broadcast();
+            m_render_pass_tasks_factories_[ domain ].emplace(
+				name.data(),
+				m_unique_render_pass_task_factories_.at( name.data() ).get() );
+            
+			onRenderTaskDirty.Broadcast();
 		}
 	}
 
@@ -113,13 +117,22 @@ namespace Engine::Managers
 
 	void Renderer::UnregisterRenderPass( const std::wstring_view name )
 	{
-        if ( m_unique_render_pass_tasks_.contains( name.data() ) )
+        if ( m_unique_render_pass_task_factories_.contains( name.data() ) )
 		{
+            IRenderPassTaskFactory* factory = m_unique_render_pass_task_factories_.at( name.data() ).get();
+            HashType                task_type = factory->GetTaskType();
+
 			for ( size_t i = 0; i < SHADER_DOMAIN_MAX; ++i )
 			{
-                m_render_pass_tasks_[ i ].erase( name.data() );
+                m_render_pass_tasks_factories_[ i ].erase( name.data() );
+                
+                for ( RenderPassTask* task : m_render_pass_tasks_[ i ][ task_type ] )
+                {
+                    factory->Release( task );
+                }
 			}
-            m_unique_render_pass_tasks_.erase( name.data() );
+
+            m_unique_render_pass_task_factories_.erase( name.data() );
             onRenderTaskDirty.Broadcast();
 		}
     }
@@ -131,10 +144,19 @@ namespace Engine::Managers
             return;
         }
 
-		if ( m_unique_render_pass_tasks_.contains( name.data() ) && 
-			 m_render_pass_tasks_[ domain ].contains( name.data() ) )
+		if ( m_unique_render_pass_task_factories_.contains( name.data() ) && 
+			 m_render_pass_tasks_factories_[ domain ].contains( name.data() ) )
 		{
-            m_render_pass_tasks_[ domain ].erase( name.data() );
+            IRenderPassTaskFactory* factory = m_unique_render_pass_task_factories_.at( name.data() ).get();
+            HashType                task_type = factory->GetTaskType();
+            m_render_pass_tasks_factories_[ domain ].erase( name.data() );
+
+			for (RenderPassTask* task : m_render_pass_tasks_[domain][task_type])
+			{
+                factory->Release( task );
+			}
+
+            m_render_pass_tasks_[ domain ].erase( task_type );
 		}
 	}
 

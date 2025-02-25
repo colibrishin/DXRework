@@ -4,7 +4,7 @@
 #include "GraphicInterface.h"
 #include "ConcurrentTypeLibrary.h"
 #include "TypeLibrary.h"
-#include "RenderTask.h"
+#include "RenderPassTask.h"
 #include "Texture.h"
 
 #include "SingletonSpinLock.h"
@@ -18,8 +18,6 @@ namespace Engine
 	{
 		GENERATE_BODY
         ForwardRenderPassTask();
-        ForwardRenderPassTask &operator=( ForwardRenderPassTask & ) = delete;
-        ForwardRenderPassTask( ForwardRenderPassTask & )            = delete;
 
 		void Run(
 			float                                                             dt,

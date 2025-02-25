@@ -45,8 +45,8 @@ void Engine::DeferredRenderPassTask::Run(
         const auto &primitive = context.GetPointers();
 
         primitive.commandList->SoftReset();
-        gi.TransitToMultiple( &primitive, m_deferred_render_targets_raw_, deferred_count, BIND_TYPE_RTV );
-        gi.TransitTo( &primitive, m_deferred_depth_.get(), BIND_TYPE_DSV );
+        gi.TransitToMultiple( &primitive, m_deferred_render_targets_raw_, g_deferred_count, BIND_TYPE_RTV );
+        gi.TransitTo( &primitive, m_deferred_depth_raw_, BIND_TYPE_DSV );
         primitive.commandList->FlagReady();
     }
     
@@ -122,7 +122,7 @@ void Engine::DeferredRenderPassTask::Run(
             gi.TransitBackMultiple( &primitive, m_used_shader_textures_.data(), unique_idx, BIND_TYPE_SRV );
             std::ranges::fill( m_used_shader_textures_, nullptr );
         }
-        gi.TransitBack( &primitive, m_deferred_depth_.get(), BIND_TYPE_DSV );
+        gi.TransitBack( &primitive, m_deferred_depth_raw_, BIND_TYPE_DSV );
         primitive.commandList->FlagReady();
     }   
 }
@@ -134,12 +134,12 @@ void Engine::DeferredRenderPassTask::Cleanup()
     const auto       &primitive = context.GetPointers();
     
     primitive.commandList->SoftReset();
-    for ( const Strong<Resources::Texture2D>& tex : m_deferred_render_targets_ )
+    for ( size_t i = 0; i < std::size(m_deferred_render_targets_raw_); ++i )
     {
-        gi.Clear( &primitive, tex.get(), BIND_TYPE_RTV );
+        gi.Clear( &primitive, m_deferred_render_targets_raw_[i], BIND_TYPE_RTV );
     }
 
-    gi.Clear( &primitive, m_deferred_depth_.get(), BIND_TYPE_DSV );
+    gi.Clear( &primitive, m_deferred_depth_raw_, BIND_TYPE_DSV );
     primitive.commandList->FlagReady();
 
     m_local_param_pool_.reset();
@@ -148,40 +148,22 @@ void Engine::DeferredRenderPassTask::Cleanup()
     std::ranges::fill( m_used_shader_textures_, nullptr );
 }
 
-void Engine::DeferredRenderPassTask::SetTexture( const Weak<Resources::Texture2D>& tex, const size_t slot )
+void Engine::DeferredRenderPassTask::SetTexture( Resources::Texture2D* tex, const size_t slot )
 {
-    if ( deferred_count > slot )
+    if ( g_deferred_count > slot )
     {
-        if ( const Strong<Resources::Texture2D>& locked = tex.lock() )
-        {
-            m_deferred_render_targets_[ slot ] = locked;
-            m_deferred_render_targets_raw_[ slot ] = locked.get();
-        }
+        m_deferred_render_targets_raw_[ slot ] = tex;
     }
 }
 
-void Engine::DeferredRenderPassTask::SetDepthStencil( const Weak<Resources::Texture2D> &tex )
+void Engine::DeferredRenderPassTask::SetDepthStencil( Resources::Texture2D* tex )
 {
-    if ( const Strong<Resources::Texture2D>& locked = tex.lock() )
-    {
-        m_deferred_depth_ = locked;
-    }
+    m_deferred_depth_raw_ = tex;
 }
 
-void Engine::DeferredRenderPassTask::SetMaterialShader( const Weak<Resources::Shader> &shader )
+void Engine::DeferredRenderPassTask::SetLightShader( Resources::Shader* shader )
 {
-    if (const Strong<Resources::Shader>& locked = shader.lock())
-    {
-        m_material_pass_shader_ = locked;
-    }
-}
-
-void Engine::DeferredRenderPassTask::SetLightShader( const Weak<Resources::Shader> &shader )
-{
-    if ( const Strong<Resources::Shader> &locked = shader.lock() )
-    {
-        m_light_pass_shader_ = locked;
-    }
+    m_light_pass_shader_raw_ = shader;
 }
 
 inline void Engine::DeferredRenderPassTask::PredicateObject( const ObjectPredication &predicate,
@@ -236,14 +218,14 @@ inline void Engine::DeferredRenderPassTask::StartPhase_MultiThread(
 {
 #if WITH_DEBUG
     const auto &shader_formats = shader->GetRTVFormat();
-    if ( shader_formats.size() < deferred_count )
+    if ( shader_formats.size() < g_deferred_count )
     {
         return;
     }
 
-    for ( size_t i = 0; i < deferred_count; ++i)
+    for ( size_t i = 0; i < g_deferred_count; ++i)
     {
-        if ( shader_formats[ i ] != deferred_format[ i ] )
+        if ( shader_formats[ i ] != g_deferred_format[ i ] )
         {
             return;
         }
@@ -274,7 +256,7 @@ inline void Engine::DeferredRenderPassTask::StartPhase_MultiThread(
     sb.TransitionToSRV( &temp_context );
     sb.CopySRVHeap( &temp_context );
 
-    gi.BindMultiple( &primitive, m_deferred_render_targets_raw_, deferred_count, m_deferred_depth_.get() );
+    gi.BindMultiple( &primitive, m_deferred_render_targets_raw_, g_deferred_count, m_deferred_depth_raw_ );
     Managers::RenderPipeline::GetInstance().BindConstantBuffers( &temp_context );
     gi.SetViewport( &temp_context, Managers::RenderPipeline::GetInstance().GetViewport() );
 
@@ -522,9 +504,9 @@ inline void Engine::DeferredRenderPassTask::LightPass(
     sb.TransitionToSRV( &temp_context );
     sb.CopySRVHeap( &temp_context );
 
-    gi.TransitBackMultiple( &temp_context, m_deferred_render_targets_raw_, deferred_count, BIND_TYPE_RTV );
-    gi.TransitToMultiple( &temp_context, m_deferred_render_targets_raw_, deferred_count, BIND_TYPE_SRV );
-    gi.BindMultiple( &temp_context, m_deferred_render_targets_raw_, BIND_TYPE_SRV, BIND_SLOT_TEX, 0, deferred_count );
+    gi.TransitBackMultiple( &temp_context, m_deferred_render_targets_raw_, g_deferred_count, BIND_TYPE_RTV );
+    gi.TransitToMultiple( &temp_context, m_deferred_render_targets_raw_, g_deferred_count, BIND_TYPE_SRV );
+    gi.BindMultiple( &temp_context, m_deferred_render_targets_raw_, BIND_TYPE_SRV, BIND_SLOT_TEX, 0, g_deferred_count );
     gi.SetDefaultRenderTarget( &temp_context );
 
     Managers::RenderPipeline::GetInstance().BindConstantBuffers( &temp_context );
@@ -551,7 +533,7 @@ inline void Engine::DeferredRenderPassTask::LightPass(
 
     if ( !shader_bypass )
     {
-        gi.BindGraphic( &temp_context, m_light_pass_shader_.get() );
+        gi.BindGraphic( &temp_context, m_light_pass_shader_raw_ );
     }
 
     gi.Draw( &temp_context, nullptr, 1, 0 );
@@ -572,7 +554,7 @@ inline void Engine::DeferredRenderPassTask::LightPass(
     }
 
     sb.TransitionCommon( &temp_context );
-    gi.TransitBackMultiple( &temp_context, m_deferred_render_targets_raw_, deferred_count, BIND_TYPE_SRV );
+    gi.TransitBackMultiple( &temp_context, m_deferred_render_targets_raw_, g_deferred_count, BIND_TYPE_SRV );
     
     temp_context.commandList->FlagReady();
 }
@@ -601,3 +583,42 @@ void Engine::DeferredRenderPassTask::PreRun( const RenderMap *render_map,
         const size_t render_map_count,
         const ObjectPredication &predication)
 {}
+
+Engine::RenderPassTask* Engine::DeferredRenderPassTaskFactory::New()
+{
+    DeferredRenderPassTask* task =
+            static_cast<DeferredRenderPassTask*>( RenderPassTaskFactory<DeferredRenderPassTask>::New() );
+    task->SetDepthStencil( m_deferred_depth_.get() );
+    task->SetLightShader( m_light_pass_shader_.get() );
+    
+    for (size_t i = 0; i < std::size(m_deferred_render_targets_); ++i)
+    {
+        task->SetTexture( m_deferred_render_targets_[ i ].get(), i );
+    }
+
+    return task;
+}
+
+void Engine::DeferredRenderPassTaskFactory::SetTexture( const Weak<Resources::Texture2D>& tex, const size_t slot )
+{
+    if (const Strong<Resources::Texture2D>& locked = tex.lock())
+    {
+        m_deferred_render_targets_[ slot ] = locked;
+    }
+}
+
+void Engine::DeferredRenderPassTaskFactory::SetDepthStencil( const Weak<Resources::Texture2D>& tex )
+{
+    if (const Strong<Resources::Texture2D>& locked = tex.lock())
+    {
+        m_deferred_depth_ = locked;
+    }
+}
+
+void Engine::DeferredRenderPassTaskFactory::SetLightShader( const Weak<Resources::Shader>& shader )
+{
+    if (const Strong<Resources::Shader>& locked = shader.lock())
+    {
+        m_light_pass_shader_ = locked;
+    }
+}
