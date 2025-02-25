@@ -1,9 +1,24 @@
 using System;
 using System.IO;
+using System.Reflection;
 using Sharpmake;
 
 public class Utils
 {
+    public static Solution.Configuration GetInstantiatedSolutionConfiguration(ITarget target, params Solution[] solutions)
+    {
+        Solution.Configuration solutionConfiguration = new Solution.Configuration();
+
+        foreach (Solution solution in solutions)
+        {
+            Type derivedSolutionType = solution.GetType();
+            MethodInfo methodInfo = derivedSolutionType.GetMethod("ConfigureAll");
+            methodInfo.Invoke(solution, new object[] { solutionConfiguration, target });
+        }
+
+        return solutionConfiguration;
+    }
+
     // GenerateSolution.bat 에서 지정됩니다.
     public static string GetEngineDir()
     {
@@ -22,23 +37,34 @@ public class Utils
 
     public static void MakeConfiturationNameDefine(Solution.Configuration conf, EngineTarget target)
     {
-        if (target.Optimization == Optimization.Release) { conf.Name = "Development"; }
+        string outputName = "";
+
+        if (target.Optimization == Optimization.Release) 
+        {
+            outputName = "Development"; 
+        }
+        else
+        {
+            outputName = "Debug";
+        }
 
         // Conf Name
         {
             if (target.LaunchType == ELaunchType.Editor)
             {
-                conf.Name += "Editor";
+                outputName += "Editor";
             }
             else if (target.LaunchType == ELaunchType.Client)
             {
-                conf.Name += "Client";
+                outputName += "Client";
             }
             else if (target.LaunchType == ELaunchType.Server)
             {
-                conf.Name += "Server";
+                outputName += "Server";
             }
         }
+
+        conf.Name = outputName;
     }
 
     public static EngineTarget GetDefinedTarget() 
@@ -53,6 +79,60 @@ public class Utils
             ERenderType.Deferred,
             ERaytracing.On
         );
+    }
+
+    public static void AddDefines(Project.Configuration conf, EngineTarget target)
+    {
+        conf.Defines.Add("NOMINMAX=1");
+        if (target.GraphicAPI == EGraphicAPI.D3D12) 
+        {
+            conf.Defines.Add("USE_DX12");
+        }
+
+        conf.Defines.Add($"CFG_RAYTRACING={Convert.ToInt32(target.Raytracing == ERaytracing.On)}");
+
+        //conf.Defines.Add("SNIFF_DEVICE_REMOVAL");
+
+        conf.Defines.Add("CFG_CASCADE_SHADOW_COUNT=3");
+        conf.Defines.Add("CFG_CASCADE_SHADOW_TEX_WIDTH=500");
+        conf.Defines.Add("CFG_CASCADE_SHADOW_TEX_HEIGHT=500");
+
+        conf.Defines.Add("CFG_WIDTH=1024");
+        conf.Defines.Add("CFG_HEIGHT=768");
+        conf.Defines.Add("CFG_VSYNC=1");
+        conf.Defines.Add("CFG_FULLSCREEN=0");
+        conf.Defines.Add("CFG_FRAME_BUFFER=2");
+        conf.Defines.Add("CFG_SCREEN_NEAR=0.1f");
+        conf.Defines.Add("CFG_SCREEN_FAR=1000.f");
+        conf.Defines.Add("CFG_FOV=90.f");
+        conf.Defines.Add("CFG_LAYER_COUNT=0");
+        conf.Defines.Add("CFG_EPSILON=0.0001f");
+
+        foreach (ERenderType renderType in Enum.GetValues(typeof(ERenderType)))
+        {
+            conf.Defines.Add($"CFG_RENDERTYPE_{renderType.ToString().ToUpper()}={Convert.ToInt32(target.RenderType == renderType)}");
+        }
+
+        conf.Defines.Add("CFG_MAX_DIRECTIONAL_LIGHT=8");
+        conf.Defines.Add("CFG_PER_PARAM_BUFFER_SIZE=8");
+        conf.Defines.Add("CFG_FRAME_LATENCY_TOLERANCE_SECOND=1");
+        conf.Defines.Add("CFG_MAX_CONCURRENT_COMMAND_LIST=(1ULL << 8)");
+
+        conf.Defines.Add("CFG_DEBUG_MAX_MESSAGE=200");
+        conf.Defines.Add("CFG_DEBUG_MESSAGE_Y_MOVEMENT=10");
+        conf.Defines.Add("CFG_DEBUG_MESSAGE_LIFETIME=1.f");
+
+        if (target.LaunchType == ELaunchType.Client || target.LaunchType == ELaunchType.Server)
+        {
+            conf.Defines.Add("CFG_MONOLITH");
+        }
+    }
+
+    public static EngineTarget GetDefinedTargetLaunchTypeFiltered(ELaunchType launchType) 
+    {
+        EngineTarget target = Utils.GetDefinedTarget();
+        target.LaunchType = launchType;
+        return target;
     }
 
     public static void MakeConfiturationNameDefine(Project.Configuration conf, EngineTarget target)

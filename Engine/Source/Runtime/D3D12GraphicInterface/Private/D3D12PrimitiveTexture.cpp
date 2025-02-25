@@ -6,13 +6,13 @@
 #include <directxtk12/WICTextureLoader.h>
 #include <directxtk12/DDSTextureLoader.h>
 
-#include "Source/Runtime/Core/SIMDExtension/Public/SIMDExtension.hpp"
+#include "SIMDExtension.hpp"
 
-#include "Source/Runtime/Resources/Texture/Public/Texture.h"
-#include "Source/Runtime/D3D12GraphicInterface/Public/ThrowIfFailed.h"
+#include "Texture.h"
+#include "ThrowIfFailed.h"
 
-#include "source/runtime/D3D12GraphicInterface/Public/CommandPair.h"
-#include "source/runtime/D3D12GraphicInterface/Public/D3D12GraphicInterface.h"
+#include "CommandPair.h"
+#include "D3D12GraphicInterface.h"
 
 Engine::D3D12PrimitiveTexture::D3D12PrimitiveTexture() = default;
 

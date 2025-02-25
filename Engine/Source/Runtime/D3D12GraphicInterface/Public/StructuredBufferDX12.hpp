@@ -2,7 +2,7 @@
 #include <directx/d3d12.h>
 #include <wrl/client.h>
 
-#include "Source/Runtime/Core/TypeLibrary/Public/TypeLibrary.h"
+#include "TypeLibrary.h"
 
 namespace Engine::Graphics
 {

@@ -4,7 +4,7 @@
 #include <directxtk12/ResourceUploadBatch.h>
 #include <directxtk12/DescriptorHeap.h>
 
-#include "Source/Runtime/Resources/Mesh/Public/Mesh.h"
+#include "Mesh.h"
 
 namespace Engine
 {

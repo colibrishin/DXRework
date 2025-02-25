@@ -1,6 +1,6 @@
 ﻿#pragma once
 #include "RenderComponent.h"
-#include "ComputeShaders/Public/ShadowIntensityComputeShader.h"
+#include "Resources/Public/ShadowIntensityComputeShader.h"
 #include "ShadowManager.h"
 
 #include "ShadowIntersectionComponent.generated.h"

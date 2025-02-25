@@ -3,11 +3,11 @@
 
 #include "RenderTask.h"
 #include "GraphicInterface.h"
-#include "Source/Runtime/Core/ConcurrentTypeLibrary/Public/ConcurrentTypeLibrary.h"
-#include "Source/Runtime/Core/TypeLibrary/Public/TypeLibrary.h"
+#include "ConcurrentTypeLibrary.h"
+#include "TypeLibrary.h"
 #include "Texture.h"
 
-#include "SingletonSpinLock/Public/SingletonSpinLock.h"
+#include "SingletonSpinLock.h"
 
 #include "RaytracingRenderPassTask.generated.h"
 

@@ -1,6 +1,6 @@
 #pragma once
 #include "Client.h"
-#include "Component/Public/Component.h"
+#include "Component.h"
 #include "Verlet.hpp"
 
 #include "FezPlayerComponent.generated.h"

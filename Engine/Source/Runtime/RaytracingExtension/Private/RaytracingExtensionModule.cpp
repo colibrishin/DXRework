@@ -1,5 +1,5 @@
 #if CFG_RAYTRACING
-#include "../Public/RaytracingExtensionModule.h"
+#include "RaytracingExtensionModule.h"
 
 #include "RaytracingExtension.h"
 #include "RaytracingExtensionModule.generated.h"

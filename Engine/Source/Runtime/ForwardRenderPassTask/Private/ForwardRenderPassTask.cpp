@@ -1,4 +1,4 @@
-#include "../Public/ForwardRenderPassTask.h"
+#include "ForwardRenderPassTask.h"
 #include "ForwardRenderPassTask.generated.h"
 
 #include <ranges>
@@ -7,9 +7,9 @@
 #include "RenderPipeline.h"
 #include "Renderer.h"
 
-#include "Source/Runtime/Resources/AtlasAnimationTexture/Public/AtlasAnimationTexture.h"
-#include "Source/Runtime/Resources/Material/Public/Material.h"
-#include "Source/Runtime/Resources/Shape/Public/Shape.h"
+#include "AtlasAnimationTexture.h"
+#include "Material.h"
+#include "Shape.h"
 
 namespace Engine
 {
@@ -103,6 +103,7 @@ namespace Engine
         if ( m_used_shader_textures_.size() > 0 && m_used_shader_textures_[ 0 ] != nullptr )
         {
             gi.TransitBackMultiple( &primitive, m_used_shader_textures_.data(), unique_idx, BIND_TYPE_SRV );
+            std::ranges::fill( m_used_shader_textures_, nullptr );
         }
         primitive.commandList->FlagReady();
 	}

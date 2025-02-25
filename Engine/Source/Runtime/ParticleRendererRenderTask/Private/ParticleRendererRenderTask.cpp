@@ -1,4 +1,4 @@
-#include "../Public/ParticleRendererRenderTask.h"
+#include "ParticleRendererRenderTask.h"
 #include "ParticleRendererRenderTask.generated.h"
 #include <tbb/parallel_for_each.h>
 
@@ -6,11 +6,11 @@
 #include "Renderer.h"
 
 #include "ShapeRenderComponent.h"
-#include "Source/Runtime/Core/ObjectBase/Public/ObjectBase.h"
-#include "Source/Runtime/Resources/Material/Public/Material.h"
-#include "Source/Runtime/Core/Components/Transform/Public/Transform.h"
+#include "ObjectBase.h"
+#include "Material.h"
+#include "Transform.h"
 #include "Shape.h"
-#include "Source/Runtime/Components/Animator/Public/Animator.h"
+#include "Animator.h"
 
 namespace Engine
 {

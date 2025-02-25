@@ -1,14 +1,14 @@
 #include "Components/Public/FezPlayerComponent.h"
 #include "FezPlayerComponent.generated.h"
 
-#include "MathExtension/Public/MathExtension.hpp"
-#include "Components/Rigidbody/Public/Rigidbody.h"
-#include "ObjectBase/Public/ObjectBase.h"
-#include "Components/Transform/Public/Transform.h"
-#include "Objects/Camera/Public/Camera.h"
+#include "MathExtension.hpp"
+#include "Rigidbody.h"
+#include "ObjectBase.h"
+#include "Transform.h"
+#include "Camera.h"
 #include "InputManager.h"
 #include "Components/Public/CubifyComponent.h"
-#include "Components/Collider/Public/Collider.h"
+#include "Collider.h"
 #include "CollisionDetector.h"
 
 using namespace Engine;

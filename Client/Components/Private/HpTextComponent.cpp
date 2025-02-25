@@ -1,8 +1,8 @@
 #include "Components/Public/HpTextComponent.h"
 #include "HpTextComponent.generated.h"
 
-#include "ObjectBase/Public/ObjectBase.h"
-#include "Scene/Public/Scene.h"
+#include "ObjectBase.h"
+#include "Scene.h"
 
 void HpTextComponent::Initialize()
 {

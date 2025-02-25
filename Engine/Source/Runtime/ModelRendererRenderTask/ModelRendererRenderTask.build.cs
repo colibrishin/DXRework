@@ -18,7 +18,6 @@ public class ModelRendererRenderTask : EngineCommonProject
         conf.AddPublicDependency<Boost>(target);
         conf.AddPublicDependency<TBB>(target);
         conf.AddPublicDependency<ShapeRenderComponent>(target);
-        conf.AddPublicDependency<EngineEntryPoint>(target);
 
         conf.AddPrivateDependency<RenderPipeline>(target);
         conf.AddPrivateDependency<Mesh>(target);

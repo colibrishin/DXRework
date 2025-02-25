@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Component/Public/Component.h"
+#include "Component.h"
 
 #include "HitboxComponent.generated.h"
 

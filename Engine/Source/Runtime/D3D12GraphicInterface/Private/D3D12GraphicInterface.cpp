@@ -10,11 +10,11 @@
 #include "ThrowIfFailed.h"
 
 #include "StructuredBufferDX12.hpp"
-#include "Source/Runtime/Managers/WinAPIWrapper/Public/WinAPIWrapper.hpp"
-#include "Source/Runtime/Resources/ComputeShader/Public/ComputeShader.h"
-#include "Source/Runtime/Resources/Mesh/Public/Mesh.h"
-#include "Source/Runtime/Resources/Shape/Public/Shape.h"
-#include "Source/Runtime/Resources/Texture/Public/Texture.h"
+#include "WinAPIWrapper.hpp"
+#include "ComputeShader.h"
+#include "Mesh.h"
+#include "Shape.h"
+#include "Texture.h"
 
 #include "D3D12PrimitiveTexture.h"
 #include "D3D12ComputePrimitiveShader.h"
@@ -28,7 +28,7 @@
 #include "D3D12RaytracingShader.h"
 #endif
 
-#include "CoreModule/Public/CoreModule.h"
+#include "CoreModule.h"
 #include "EngineEntryPoint.h"
 
 MODULE_IMPL(Engine::D3D12GraphicInterfaceModule, D3D12GraphicInterface)

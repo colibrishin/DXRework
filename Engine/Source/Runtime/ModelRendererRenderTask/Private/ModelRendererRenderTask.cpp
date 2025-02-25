@@ -1,4 +1,4 @@
-#include "../Public/ModelRendererRenderTask.h"
+#include "ModelRendererRenderTask.h"
 #include "ModelRendererRenderTask.generated.h"
 #include <tbb/parallel_for_each.h>
 #include <tbb/concurrent_vector.h>
@@ -9,8 +9,8 @@
 #include "Renderer.h"
 
 #include "ShapeRenderComponent.h"
-#include "ObjectBase/Public/ObjectBase.h"
-#include "Components/Transform/Public/Transform.h"
+#include "ObjectBase.h"
+#include "Transform.h"
 #include "Animator.h"
 #include "AtlasAnimationTexture.h"
 #include "Shape.h"

@@ -6,7 +6,7 @@
 #include "DescriptorPtrImpl.h"
 #include "ThrowIfFailed.h"
 
-#include "SIMDExtension/Public/SIMDExtension.hpp"
+#include "SIMDExtension.hpp"
 
 void Engine::Graphics::D3D12StructuredBufferTypeless::Clear()
 {

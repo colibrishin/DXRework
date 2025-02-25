@@ -11,8 +11,7 @@ public class RaytracingExtension : EngineCommonProject
     public override void ConfigureAll(Configuration conf, EngineTarget target)
     {
         base.ConfigureAll(conf, target);
-        conf.AddPublicDependency<CoreTaskScheduler>(target);
-        conf.AddPublicDependency<CoreRender>(target);
+        conf.AddPublicDependency<Core>(target);
         conf.AddPublicDependency<Boost>(target);
 
         conf.AddPrivateDependency<RenderPipeline>(target);

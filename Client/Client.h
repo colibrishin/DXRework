@@ -1,5 +1,5 @@
 #pragma once
-#include "TypeLibrary/Public/TypeLibrary.h"
+#include "TypeLibrary.h"
 
 EENUM()
 enum ENGINE_CLIENT_API eCharacterState 

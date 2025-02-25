@@ -17,9 +17,9 @@ public class ParticleRendererRenderTask : EngineCommonProject
         conf.AddPublicDependency<Core>(target);
         conf.AddPublicDependency<Boost>(target);
         conf.AddPublicDependency<TBB>(target);
-        conf.AddPublicDependency<EngineEntryPoint>(target);
         conf.AddPublicDependency<ShapeRenderComponent>(target);
 
+        conf.AddPrivateDependency<RenderPipeline>(target);
         conf.AddPrivateDependency<Mesh>(target);
         conf.AddPrivateDependency<Shader>(target);
         conf.AddPrivateDependency<Material>(target);

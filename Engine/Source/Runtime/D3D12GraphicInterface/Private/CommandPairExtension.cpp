@@ -1,1 +1,1 @@
-#include "../Public/CommandPairExtension.hpp"
+#include "CommandPairExtension.hpp"

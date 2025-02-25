@@ -5,7 +5,7 @@
 #include "imgui.h"
 #include "imgui_stdlib.h"
 
-#include "../../../Runtime/TypeLibrary/Public/TypeLibrary.h"
+#include "../../../Runtime/TypeLibrary.h"
 
 namespace Engine::Helpers
 {

@@ -2,9 +2,9 @@
 #include <directx/d3d12.h>
 #include <directx/d3dx12.h>
 
-#include "Allocator/Public/Allocator.h"
+#include "Allocator.h"
 
-#include "TypeLibrary/Public/TypeLibrary.h"
+#include "TypeLibrary.h"
 
 namespace Engine
 {

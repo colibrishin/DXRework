@@ -1,12 +1,12 @@
 #pragma once
 #include <directx/d3d12.h>
 #include <directx/d3dx12.h>
-#include "Source/Runtime/Core/TypeLibrary/Public/TypeLibrary.h"
+#include "TypeLibrary.h"
 
 #include "GraphicInterface.h"
 #include "ThrowIfFailed.h"
 
-#include "SIMDExtension/Public/SIMDExtension.hpp"
+#include "SIMDExtension.hpp"
 
 namespace Engine
 {

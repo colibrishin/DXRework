@@ -2,7 +2,7 @@
 #include "ModuleManager.h"
 
 #include "RenderTask.h"
-#include "Source/Runtime/Core/Scene/Public/Scene.h"
+#include "Scene.h"
 
 #include "ModelRendererRenderTask.generated.h"
 

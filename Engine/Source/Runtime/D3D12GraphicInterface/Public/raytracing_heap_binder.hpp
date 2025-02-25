@@ -4,7 +4,7 @@
 
 #include "CommandPair.h"
 #include "Texture.h"
-#include "TypeLibrary/Public/TypeLibrary.h"
+#include "TypeLibrary.h"
 
 namespace Engine
 {

@@ -120,6 +120,7 @@ void Engine::DeferredRenderPassTask::Run(
         if ( m_used_shader_textures_.size() > 0 && m_used_shader_textures_[ 0 ] != nullptr )
         {
             gi.TransitBackMultiple( &primitive, m_used_shader_textures_.data(), unique_idx, BIND_TYPE_SRV );
+            std::ranges::fill( m_used_shader_textures_, nullptr );
         }
         gi.TransitBack( &primitive, m_deferred_depth_.get(), BIND_TYPE_DSV );
         primitive.commandList->FlagReady();

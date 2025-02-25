@@ -1,10 +1,10 @@
-#include "../Public/D3D12ComputePrimitiveShader.h"
+#include "D3D12ComputePrimitiveShader.h"
 #include <ranges>
 #include <d3dcompiler.h>
 
-#include "Source/Runtime/Managers/RenderPipeline/Public/RenderPipeline.h"
-#include "Source/Runtime/D3D12GraphicInterface/Public/ThrowIfFailed.h"
-#include "source/runtime/D3D12GraphicInterface/public/CommandPair.h"
+#include "RenderPipeline.h"
+#include "ThrowIfFailed.h"
+#include "CommandPair.h"
 
 std::vector<std::tuple<Engine::eShaderType, std::string, std::string>> Engine::D3D12ComputePrimitiveShader::s_main_version =
 		{

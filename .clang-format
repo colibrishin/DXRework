@@ -3,7 +3,7 @@ Language: Cpp
 BasedOnStyle: LLVM
 IndentWidth: 4
 AccessModifierOffset: -4
-AlignArrayOfStructures: Right
+AlignArrayOfStructures: Left
 AlignConsecutiveAssignments: true
 AlignConsecutiveBitFields: true
 AlignConsecutiveDeclarations: true
@@ -11,7 +11,6 @@ AlignConsecutiveMacros: true
 AlignEscapedNewlines: Right
 AlignOperands: true
 AlignTrailingComments: true
-AllowShortBlocksOnASingleLine: true
 AllowShortBlocksOnASingleLine: false
 AllowShortFunctionsOnASingleLine: false
 AllowShortIfStatementsOnASingleLine: false
@@ -54,7 +53,6 @@ IncludeCategories:
 IncludeIsMainRegex: '([-_](test|unittest))?$'
 IndentCaseLabels: true
 IndentCaseBlocks: true
-IndentWidth: 4
 InsertNewlineAtEOF: true
 MacroBlockBegin: ''
 MacroBlockEnd: ''
@@ -68,14 +66,15 @@ SpacesInAngles: false
 SpacesInConditionalStatement: true
 SpacesInContainerLiterals: true
 SpacesInCStyleCastParentheses: true
-SpacesInLineCommentPrefix: true
 SpaceInEmptyBlock: true
 SpacesInSquareBrackets: true
+SpacesInParens: Custom
 SpacesInParensOptions:
   ExceptDoubleParentheses: false
   InConditionalStatements: true
-  InEmptyParentheses: true
+  InEmptyParentheses: false
   Other: true
+SpacesInParentheses: true
 Standard: c++20
 StatementMacros: [ GENERATE_BODY]
 TypenameMacros: [ ECLASS. EENUM, EFUNC, EPROPERTY ]
