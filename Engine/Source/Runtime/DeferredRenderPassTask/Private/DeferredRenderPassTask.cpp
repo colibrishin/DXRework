@@ -29,11 +29,6 @@ void Engine::DeferredRenderPassTask::Run(
         const std::unordered_map<std::string_view, ContextSetupFunction> &prerender_predicates,
         const std::unordered_map<std::string_view, ContextSetupFunction> &postrender_predicates )
 {
-    for ( auto &tex : m_used_shader_textures_ )
-    {
-        tex = nullptr;
-    }
-
     if ( domain_map->empty() )
     {
         return;
@@ -115,7 +110,7 @@ void Engine::DeferredRenderPassTask::Run(
 
         primitive.commandList->SoftReset();
         const auto  &range         = std::ranges::unique( m_used_shader_textures_ );
-        const size_t indeterminate = std::distance( m_used_shader_textures_.begin(), range.begin() );
+        const size_t indeterminate = std::distance( range.begin(), range.end() );
         const size_t unique_idx    = m_used_shader_textures_.size() - indeterminate;
         if ( m_used_shader_textures_.size() > 0 && m_used_shader_textures_[ 0 ] != nullptr )
         {
