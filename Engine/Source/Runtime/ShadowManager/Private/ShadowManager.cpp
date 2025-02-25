@@ -11,7 +11,6 @@
 #include "RenderPipeline.h"
 #include "Renderer.h"
 #include "Shader.h"
-#include "ShadowRenderTarget.h"
 #include "ShadowTexture.h"
 #include "ForwardRenderPassTask.h"
 

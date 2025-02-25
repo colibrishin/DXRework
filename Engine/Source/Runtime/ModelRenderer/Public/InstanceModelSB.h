@@ -1,3 +1,4 @@
+#pragma once
 #include "StructuredBuffer.h"
 #include "InstanceModelSB.generated.h"
 

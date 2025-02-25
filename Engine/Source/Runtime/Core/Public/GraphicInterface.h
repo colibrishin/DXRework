@@ -1,4 +1,6 @@
 #pragma once
+#include <array>
+
 #include <boost/serialization/access.hpp>
 #include "ConstantBuffer.h"
 #include "RenderType.h"
@@ -355,7 +357,7 @@ namespace Engine
 		friend class boost::serialization::access;
 
 		template <typename Archive>
-		void serialize(Archive& ar, const unsigned int version)
+		void serialize(Archive& ar, const unsigned int /*version*/)
 		{
 			ar& MipSlice;
 		}
@@ -768,6 +770,7 @@ namespace Engine
 		void* m_texture_ = nullptr;
 	};
 
+#if CFG_RAYTRACING
     enum ENGINE_CORE_API eRaytracingShaderType
     {
         RAY_SHADER_GEN,
@@ -784,6 +787,7 @@ namespace Engine
         RAY_SHADER_REC_MISS,
         RAY_SHADER_REC_MAX
     };
+#endif
     
     namespace Resources
     {
@@ -820,15 +824,41 @@ namespace Engine
         void* m_sampler_ = nullptr;
     };
     
+#if CFG_RAYTRACING
     struct ENGINE_CORE_API RaytracingPrimitiveShader : PrimitiveShaderBase
     {
     public:
         ~RaytracingPrimitiveShader() override = default;
-        virtual void        Generate(const Resources::RaytracingShader* shader, void* pipeline_signature) = 0;
-        [[nodiscard]] virtual void*       GetShaderRecord(const size_t idx) const = 0;
-        virtual void        UpdateShaderRecords(eRaytracingShaderRecordType type, const byte_stream& records) = 0;
+        virtual void                Generate( const Resources::RaytracingShader* shader, void* pipeline_signature ) = 0;
+        [[nodiscard]] virtual void* GetShaderRecord( const size_t idx ) const                                       = 0;
+        virtual void UpdateShaderRecords( eRaytracingShaderRecordType type, const byte_stream& records )            = 0;
+        
+		const std::array<bool, RAY_SHADER_MAX>& GetHasExport() const
+		{
+            return m_export_flags_;
+		}
+		const std::array<size_t, RAY_SHADER_REC_MAX>& GetShaderRecordSizes() const
+		{
+            return m_shader_record_sizes_;
+		}
+
+	protected:
+		void SetExports(const std::array<bool, RAY_SHADER_MAX>& exports)
+		{
+            m_export_flags_ = exports;
+		}
+
+		void SetShaderRecordSizes(const std::array<size_t, RAY_SHADER_REC_MAX>& shader_record_sizes)
+		{
+            m_shader_record_sizes_ = shader_record_sizes;
+		}
+
+	private:
+        std::array<bool, RAY_SHADER_MAX>      m_export_flags_        = {};
+        std::array<size_t, RAY_SHADER_REC_MAX> m_shader_record_sizes_ = {};
     };
-    
+#endif
+
 	struct ENGINE_CORE_API GraphicPrimitiveShader : PrimitiveShaderBase
 	{
 	public:
@@ -1663,24 +1693,24 @@ namespace Engine
 namespace boost::serialization
 {
 	template <typename Archive>
-	void serialize(Archive& ar, Engine::AccelStructSrvDescription& x, const unsigned int version)
+	void serialize(Archive& ar, Engine::AccelStructSrvDescription& x, const unsigned int /*version*/)
 	{
 		ar& x.Location;
 	}
 
 	template <typename Archive>
-	void serialize(Archive& ar, Engine::Tex2dMsArraySrvDescription& x, const unsigned int version)
+	void serialize(Archive& ar, Engine::Tex2dMsArraySrvDescription& x, const unsigned int /*version*/)
 	{
 		ar& x.FirstArraySlice;
 		ar& x.ArraySize;
 	}
 
 	template <typename Archive>
-	void serialize(Archive& ar, Engine::Tex2dMsSrvDescription& x, const unsigned int version) {}
+	void serialize(Archive& ar, Engine::Tex2dMsSrvDescription& x, const unsigned int /*version*/) {}
 
 
 	template <typename Archive>
-	void serialize(Archive& ar, Engine::TexCubeArraySrvDescription& x, const unsigned int version)
+	void serialize(Archive& ar, Engine::TexCubeArraySrvDescription& x, const unsigned int /*version*/)
 	{
 		ar& x.MostDetailedMip;
 		ar& x.MipLevels;
@@ -1690,7 +1720,7 @@ namespace boost::serialization
 	}
 
 	template <typename Archive>
-	void serialize(Archive& ar, Engine::TexCubeSrvDescription& x, const unsigned int version)
+	void serialize(Archive& ar, Engine::TexCubeSrvDescription& x, const unsigned int /*version*/)
 	{
 		ar& x.MostDetailedMip;
 		ar& x.MipLevels;
@@ -1698,7 +1728,7 @@ namespace boost::serialization
 	}
 
 	template <typename Archive>
-	void serialize(Archive& ar, Engine::Tex3dSrvDescription& x, const unsigned int version)
+	void serialize(Archive& ar, Engine::Tex3dSrvDescription& x, const unsigned int /*version*/)
 	{
 		ar& x.MostDetailedMip;
 		ar& x.MipLevels;
@@ -1706,7 +1736,7 @@ namespace boost::serialization
 	}
 
 	template <typename Archive>
-	void serialize(Archive& ar, Engine::Tex2dArraySrvDescription& x, const unsigned int version)
+	void serialize(Archive& ar, Engine::Tex2dArraySrvDescription& x, const unsigned int /*version*/)
 	{
 		ar& x.MostDetailedMip;
 		ar& x.MipLevels;
@@ -1717,7 +1747,7 @@ namespace boost::serialization
 	}
 
 	template <typename Archive>
-	void serialize(Archive& ar, Engine::Tex2dSrvDescription& x, const unsigned int version)
+	void serialize(Archive& ar, Engine::Tex2dSrvDescription& x, const unsigned int /*version*/)
 	{
 		ar& x.MostDetailedMip;
 		ar& x.MipLevels;
@@ -1726,7 +1756,7 @@ namespace boost::serialization
 	}
 
 	template <typename Archive>
-	void serialize(Archive& ar, Engine::Tex1dArraySrvDescription& x, const unsigned int version)
+	void serialize(Archive& ar, Engine::Tex1dArraySrvDescription& x, const unsigned int /*version*/)
 	{
 		ar& x.MostDetailedMip;
 		ar& x.MipLevels;
@@ -1736,7 +1766,7 @@ namespace boost::serialization
 	}
 
 	template <typename Archive>
-	void serialize(Archive& ar, Engine::Tex1dSrvDescription& x, const unsigned int version)
+	void serialize(Archive& ar, Engine::Tex1dSrvDescription& x, const unsigned int /*version*/)
 	{
 		ar& x.MostDetailedMip;
 		ar& x.MipLevels;
@@ -1744,7 +1774,7 @@ namespace boost::serialization
 	}
 
 	template <typename Archive>
-	void serialize(Archive& ar, Engine::BufferSrvDescription& x, const unsigned int version)
+	void serialize(Archive& ar, Engine::BufferSrvDescription& x, const unsigned int /*version*/)
 	{
 		ar& x.FirstElement;
 		ar& x.NumElements;
@@ -1753,31 +1783,17 @@ namespace boost::serialization
 	}
 
 	template <typename Archive>
-	void serialize(Archive& ar, Engine::Tex2dMsArrayDsvDescription& x, const unsigned int version)
+	void serialize(Archive& ar, Engine::Tex2dMsArrayDsvDescription& x, const unsigned int /*version*/)
 	{
 		ar& x.FirstArraySlice;
 		ar& x.ArraySize;
 	}
 
 	template <typename Archive>
-	void serialize(Archive& ar, Engine::Tex2dMsDsvDescription& x, const unsigned int version) {}
+	void serialize(Archive& ar, Engine::Tex2dMsDsvDescription& x, const unsigned int /*version*/) {}
 
 	template <typename Archive>
-	void serialize(Archive& ar, Engine::Tex2dArrayDsvDescription& x, const unsigned int version)
-	{
-		ar& x.MipSlice;
-		ar& x.FirstArraySlice;
-		ar& x.ArraySize;
-	}
-
-	template <typename Archive>
-	void serialize(Archive& ar, Engine::Tex2dDsvDescription& x, const unsigned int version)
-	{
-		ar& x.MipSlice;
-	}
-
-	template <typename Archive>
-	void serialize(Archive& ar, Engine::Tex1dArrayDsvDescription& x, const unsigned int version)
+	void serialize(Archive& ar, Engine::Tex2dArrayDsvDescription& x, const unsigned int /*version*/)
 	{
 		ar& x.MipSlice;
 		ar& x.FirstArraySlice;
@@ -1785,13 +1801,27 @@ namespace boost::serialization
 	}
 
 	template <typename Archive>
-	void serialize(Archive& ar, Engine::Tex1dDsvDescription& x, const unsigned int version)
+	void serialize(Archive& ar, Engine::Tex2dDsvDescription& x, const unsigned int /*version*/)
 	{
 		ar& x.MipSlice;
 	}
 
 	template <typename Archive>
-	void serialize(Archive& ar, Engine::Tex3dRtvDescription& x, const unsigned int version)
+	void serialize(Archive& ar, Engine::Tex1dArrayDsvDescription& x, const unsigned int /*version*/)
+	{
+		ar& x.MipSlice;
+		ar& x.FirstArraySlice;
+		ar& x.ArraySize;
+	}
+
+	template <typename Archive>
+	void serialize(Archive& ar, Engine::Tex1dDsvDescription& x, const unsigned int /*version*/)
+	{
+		ar& x.MipSlice;
+	}
+
+	template <typename Archive>
+	void serialize(Archive& ar, Engine::Tex3dRtvDescription& x, const unsigned int /*version*/)
 	{
 		ar& x.MipSlice;
 		ar& x.FirstWSlice;
@@ -1799,14 +1829,14 @@ namespace boost::serialization
 	}
 
 	template <typename Archive>
-	void serialize(Archive& ar, Engine::Tex2dMsArrayRtvDescription& x, const unsigned int version)
+	void serialize(Archive& ar, Engine::Tex2dMsArrayRtvDescription& x, const unsigned int /*version*/)
 	{
 		ar& x.FirstArraySlice;
 		ar& x.ArraySize;
 	}
 
 	template <typename Archive>
-	void serialize(Archive& ar, Engine::Tex2dArrayRtvDescription& x, const unsigned int version)
+	void serialize(Archive& ar, Engine::Tex2dArrayRtvDescription& x, const unsigned int /*version*/)
 	{
 		ar& x.MipSlice;
 		ar& x.FirstArraySlice;
@@ -1815,17 +1845,17 @@ namespace boost::serialization
 	}
 
 	template <typename Archive>
-	void serialize(Archive& ar, Engine::Tex2dMsRtvDescription& x, const unsigned int version) {}
+	void serialize(Archive& ar, Engine::Tex2dMsRtvDescription& x, const unsigned int /*version*/) {}
 
 	template <typename Archive>
-	void serialize(Archive& ar, Engine::Tex2dRtvDescription& x, const unsigned int version)
+	void serialize(Archive& ar, Engine::Tex2dRtvDescription& x, const unsigned int /*version*/)
 	{
 		ar& x.MipSlice;
 		ar& x.PlaneSlice;
 	}
 
 	template <typename Archive>
-	void serialize(Archive& ar, Engine::Tex1dArrayRtvDescription& x, const unsigned int version)
+	void serialize(Archive& ar, Engine::Tex1dArrayRtvDescription& x, const unsigned int /*version*/)
 	{
 		ar& x.MipSlice;
 		ar& x.FirstArraySlice;
@@ -1833,20 +1863,20 @@ namespace boost::serialization
 	}
 
 	template <typename Archive>
-	void serialize(Archive& ar, Engine::Tex1dRtvDescription& x, const unsigned int version)
+	void serialize(Archive& ar, Engine::Tex1dRtvDescription& x, const unsigned int /*version*/)
 	{
 		ar& x.MipSlice;
 	}
 
 	template <typename Archive>
-	void serialize(Archive& ar, Engine::BufferRtvDescription& x, const unsigned int version)
+	void serialize(Archive& ar, Engine::BufferRtvDescription& x, const unsigned int /*version*/)
 	{
 		ar& x.FirstElement;
 		ar& x.NumElements;
 	}
 
 	template <typename Archive>
-	void serialize(Archive& ar, Engine::Tex3dUAVDescription& x, const unsigned int version)
+	void serialize(Archive& ar, Engine::Tex3dUAVDescription& x, const unsigned int /*version*/)
 	{
 		ar& x.MipSlice;
 		ar& x.FirstWSlice;
@@ -1854,17 +1884,17 @@ namespace boost::serialization
 	}
 
 	template <typename Archive>
-	void serialize(Archive& ar, Engine::Tex2dMsArrayUAVDescription& x, const unsigned int version)
+	void serialize(Archive& ar, Engine::Tex2dMsArrayUAVDescription& x, const unsigned int /*version*/)
 	{
 		ar& x.FirstArraySlice;
 		ar& x.ArraySize;
 	}
 
 	template <typename Archive>
-	void serialize(Archive& ar, Engine::Tex2dMsUAVDescription& x, const unsigned int version) {}
+	void serialize(Archive& ar, Engine::Tex2dMsUAVDescription& x, const unsigned int /*version*/) {}
 
 	template <typename Archive>
-	void serialize(Archive& ar, Engine::Tex2dArrayUAVDescription& x, const unsigned int version)
+	void serialize(Archive& ar, Engine::Tex2dArrayUAVDescription& x, const unsigned int /*version*/)
 	{
 		ar& x.MipSlice;
 		ar& x.FirstArraySlice;
@@ -1873,14 +1903,14 @@ namespace boost::serialization
 	}
 
 	template <typename Archive>
-	void serialize(Archive& ar, Engine::Tex2dUAVDescription& x, const unsigned int version)
+	void serialize(Archive& ar, Engine::Tex2dUAVDescription& x, const unsigned int /*version*/)
 	{
 		ar& x.MipSlice;
 		ar& x.PlaneSlice;
 	}
 
 	template <typename Archive>
-	void serialize(Archive& ar, Engine::Tex1dArrayUAVDescription& x, const unsigned int version)
+	void serialize(Archive& ar, Engine::Tex1dArrayUAVDescription& x, const unsigned int /*version*/)
 	{
 		ar& x.MipSlice;
 		ar& x.FirstArraySlice;
@@ -1888,7 +1918,7 @@ namespace boost::serialization
 	}
 
 	template <typename Archive>
-	void serialize(Archive& ar, Engine::BufferUAVDescription& x, const unsigned int version)
+	void serialize(Archive& ar, Engine::BufferUAVDescription& x, const unsigned int /*version*/)
 	{
 		ar& x.FirstElement;
 		ar& x.NumElements;
@@ -1898,14 +1928,14 @@ namespace boost::serialization
 	}
 
 	template <typename Archive>
-	void serialize(Archive& ar, Engine::SamplerDescription& x, const unsigned int version) 
+	void serialize(Archive& ar, Engine::SamplerDescription& x, const unsigned int /*version*/) 
 	{
 		ar& x.Count;
 		ar& x.Quality;
 	}
 
 	template <typename Archive>
-	void serialize(Archive& ar, Engine::UAVDescription& x, const unsigned int version)
+	void serialize(Archive& ar, Engine::UAVDescription& x, const unsigned int /*version*/)
 	{
 		ar& x.Format;
 		ar& x.ViewDimension;
@@ -1943,7 +1973,7 @@ namespace boost::serialization
 	}
 
 	template <typename Archive>
-	void serialize(Archive& ar, Engine::DsvDescription& x, const unsigned int version)
+	void serialize(Archive& ar, Engine::DsvDescription& x, const unsigned int /*version*/)
 	{
 		ar& x.Format;
 		ar& x.ViewDimension;
@@ -1976,7 +2006,7 @@ namespace boost::serialization
 	}
 
 	template <typename Archive>
-	void serialize(Archive& ar, Engine::RtvDescription& x, const unsigned int version) 
+	void serialize(Archive& ar, Engine::RtvDescription& x, const unsigned int /*version*/) 
 	{
 		ar& x.Format;
 		ar& x.ViewDimension;
@@ -2014,7 +2044,7 @@ namespace boost::serialization
 	}
 
 	template <typename Archive>
-	void serialize(Archive& ar, Engine::SrvDescription& x, const unsigned int version)
+	void serialize(Archive& ar, Engine::SrvDescription& x, const unsigned int /*version*/)
 	{
 		ar& x.Format;
 		ar& x.ViewDimension;
@@ -2062,7 +2092,7 @@ namespace boost::serialization
 	}
 
 	template <typename Archive>
-	void serialize(Archive& ar, Engine::GenericTextureDescription& x, const unsigned int version) 
+	void serialize(Archive& ar, Engine::GenericTextureDescription& x, const unsigned int /*version*/) 
 	{
 		ar& x.Dimension;
 		ar& x.Alignment;

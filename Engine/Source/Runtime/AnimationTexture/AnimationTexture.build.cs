@@ -6,7 +6,9 @@ using Sharpmake;
 [Generate]
 public class AnimationTexture : EngineCommonProject
 {
-    public AnimationTexture() { }
+    public AnimationTexture() 
+    {
+    }
 
     public override void ConfigureAll(Configuration conf, EngineTarget target)
     {

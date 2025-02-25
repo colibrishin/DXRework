@@ -958,9 +958,11 @@ public:
 		    return {TypeNameStorage.data() + dist, length - 1};
 	    }
 
+#pragma warning(disable : 4702)
 	    constexpr auto dist = std::distance(it, std::rend(TypeNameStorage));
 	    constexpr auto length = TypeNameStorage.size() - dist;
 	    return {TypeNameStorage.data() + dist, length - 1};
+#pragma warning(default: 4702)
     }
 
     static constexpr std::string_view full_name()
@@ -973,10 +975,9 @@ public:
 		    return {TypeNameStorage.data() + dist, TypeNameStorage.size() - dist - 1};
 	    }
 
-#pragma warning( push )
-#pragma warning( disable : 4702)
+#pragma warning( disable : 4702 )
     	return {TypeNameStorage.data(), TypeNameStorage.size() - 1};
-#pragma warning( pop ) 
+#pragma warning( default : 4702 ) 
     }
 };
 

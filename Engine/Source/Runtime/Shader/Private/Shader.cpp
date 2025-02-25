@@ -327,9 +327,10 @@ namespace Engine::Resources
 			} 
 		}
     }
-    PrimitiveShaderBase &Shader::GetPrimitive() const
+#endif
+
+    PrimitiveShaderBase& Shader::GetPrimitive() const
     {
         return *m_primitive_;
     }
-#endif
 } // namespace Engine::Graphic

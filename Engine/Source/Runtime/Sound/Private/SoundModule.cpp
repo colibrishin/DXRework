@@ -43,3 +43,9 @@ bool Engine::SoundModule::DynamicLoadable()
 {
     return true;
 }
+
+const std::vector<std::string>& Engine::SoundModule::LoadAfter() const
+{
+    static const std::vector<std::string> load_after = { "SoundManager" };
+    return load_after;
+}

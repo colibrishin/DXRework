@@ -18,7 +18,7 @@ public class Shader : EngineCommonProject
 
         conf.AddPublicDependency<Core>(target);
         conf.AddPublicDependency<Boost>(target);
-        conf.AddPublicDependency<RenderPipeline>(target);
+        conf.AddPrivateDependency<RenderPipeline>(target);
 
         conf.TargetCopyFiles.Add
         (

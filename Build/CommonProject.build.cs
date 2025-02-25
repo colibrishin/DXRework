@@ -1,5 +1,8 @@
 using System;
+using System.IO;
 using System.Collections;
+using System.Diagnostics;
+using System.Reflection;
 using Microsoft.Win32;
 using Sharpmake;
 
@@ -88,6 +91,42 @@ public abstract class EngineCommonProject : CommonProject
 
 public abstract class CommonProject : Project
 {
+    private static FileInfo GetSharpmakeFilePathImpl()
+    {
+        StackTrace stackTrace = new StackTrace(true);
+
+        for (int i = 0; i < stackTrace.FrameCount - 1; ++i)
+        {
+            StackFrame stackFrame = stackTrace.GetFrame(i);
+            MethodBase method = stackFrame.GetMethod();
+            if (method.DeclaringType == typeof(CommonProject))
+            {
+                int iteration = 1;
+                while (true)
+                {
+                    stackFrame = stackTrace.GetFrame(i + iteration);
+                    method = stackFrame.GetMethod();
+
+                    if (!method.DeclaringType.IsSubclassOf(typeof(Project)))
+                    {
+                        stackFrame = stackTrace.GetFrame(i + iteration - 1);
+                        method = stackFrame.GetMethod();
+                        break;
+                    }
+                    ++iteration;
+                }
+                return new FileInfo(stackFrame.GetFileName());
+            }
+        }
+        throw new Error("Unable to find the file stacktrace"); 
+    }
+
+    private static string GetSharpmakeFilePath()
+    {
+        FileInfo fileInfo = GetSharpmakeFilePathImpl();
+        return fileInfo.Directory.ToString();
+    }
+
     protected CommonProject(bool bAddTarget = true) : base(typeof(EngineTarget))
     {
         Name = GetType().Name;
@@ -95,8 +134,8 @@ public abstract class CommonProject : Project
         IsFileNameToLower = false;
         IsTargetFileNameToLower = false;
         StripFastBuildSourceFiles = false;
+        SourceRootPath = GetSharpmakeFilePath();
 
-        SourceRootPath = @"[project.RootPath]";
         SourceFilesExtensions.Add(".cs");
         //SourceFilesCompileExtensions.Add(".ixx");
 
@@ -114,6 +153,7 @@ public abstract class CommonProject : Project
         conf.DumpDependencyGraph = true;
         conf.ExecuteTargetCopy = true;
         conf.IncludeBlobbedSourceFiles = false;
+        conf.BlobPath = $@"{Utils.GetSolutionDir()}/Intermediate/blob/";
 
         string emptyAPIString = $"ENGINE_{Name.ToUpper()}_API=";
 
@@ -157,7 +197,6 @@ public abstract class CommonProject : Project
         // Exceptions
         conf.Options.Add(Options.Vc.Compiler.Exceptions.Enable);
 
-        conf.Options.Add(Options.Vc.Linker.LinkLibraryDependencies.Enable);
         conf.Options.Add(Options.Vc.CodeAnalysis.ClangTidyCodeAnalysis.Enable);
 
         // Debug
@@ -198,21 +237,19 @@ public abstract class CommonProject : Project
         //    //conf.ForceSymbolReferences.Add("IMPLEMENT_MODULE_" + conf.Project.Name);
         //}
 
+        if (target.Optimization == Optimization.Debug)
         {
-            if (target.Optimization == Optimization.Debug)
-            {
-                conf.Options.Add(Options.Vc.Compiler.RuntimeLibrary.MultiThreadedDebugDLL);
-                conf.AdditionalLinkerOptions.Add("/NODEFAULTLIB:libcmt.lib");
-                conf.AdditionalLinkerOptions.Add("/NODEFAULTLIB:msvcrt.lib");
-                conf.AdditionalLinkerOptions.Add("/NODEFAULTLIB:libcmtd.lib");
-            }
-            else
-            {
-                conf.Options.Add(Options.Vc.Compiler.RuntimeLibrary.MultiThreadedDLL);
-                conf.AdditionalLinkerOptions.Add("/NODEFAULTLIB:libcmt.lib");
-                conf.AdditionalLinkerOptions.Add("/NODEFAULTLIB:libcmtd.lib");
-                conf.AdditionalLinkerOptions.Add("/NODEFAULTLIB:msvcrtd.lib");
-            }
+            conf.Options.Add(Options.Vc.Compiler.RuntimeLibrary.MultiThreadedDebugDLL);
+            conf.AdditionalLinkerOptions.Add("/NODEFAULTLIB:libcmt.lib");
+            conf.AdditionalLinkerOptions.Add("/NODEFAULTLIB:msvcrt.lib");
+            conf.AdditionalLinkerOptions.Add("/NODEFAULTLIB:libcmtd.lib");
+        }
+        else
+        {
+            conf.Options.Add(Options.Vc.Compiler.RuntimeLibrary.MultiThreadedDLL);
+            conf.AdditionalLinkerOptions.Add("/NODEFAULTLIB:libcmt.lib");
+            conf.AdditionalLinkerOptions.Add("/NODEFAULTLIB:libcmtd.lib");
+            conf.AdditionalLinkerOptions.Add("/NODEFAULTLIB:msvcrtd.lib");
         }
         
         string EngineDir = Utils.GetEngineDir();
@@ -233,46 +270,7 @@ public abstract class CommonProject : Project
         conf.EventCustomPrebuildExecute.Add(@"[project.Name]-headerparser", Exec);
         conf.CustomProperties.Add("CustomOptimizationProperty", $"Custom-{target.Optimization}");
 
-        {
-            conf.Defines.Add("NOMINMAX=1");
-            if (target.GraphicAPI == EGraphicAPI.D3D12) 
-            {
-                conf.Defines.Add("USE_DX12");
-            }
-
-            conf.Defines.Add($"CFG_RAYTRACING={Convert.ToInt32(target.Raytracing == ERaytracing.On)}");
-
-            //conf.Defines.Add("SNIFF_DEVICE_REMOVAL");
-
-            conf.Defines.Add("CFG_CASCADE_SHADOW_COUNT=3");
-            conf.Defines.Add("CFG_CASCADE_SHADOW_TEX_WIDTH=500");
-            conf.Defines.Add("CFG_CASCADE_SHADOW_TEX_HEIGHT=500");
-
-            conf.Defines.Add("CFG_WIDTH=1024");
-            conf.Defines.Add("CFG_HEIGHT=768");
-            conf.Defines.Add("CFG_VSYNC=1");
-            conf.Defines.Add("CFG_FULLSCREEN=0");
-            conf.Defines.Add("CFG_FRAME_BUFFER=2");
-            conf.Defines.Add("CFG_SCREEN_NEAR=0.1f");
-            conf.Defines.Add("CFG_SCREEN_FAR=1000.f");
-            conf.Defines.Add("CFG_FOV=90.f");
-            conf.Defines.Add("CFG_LAYER_COUNT=0");
-            conf.Defines.Add("CFG_EPSILON=0.0001f");
-
-            foreach (ERenderType renderType in Enum.GetValues(typeof(ERenderType)))
-            {
-                conf.Defines.Add($"CFG_RENDERTYPE_{renderType.ToString().ToUpper()}={Convert.ToInt32(target.RenderType == renderType)}");
-            }
-
-            conf.Defines.Add("CFG_MAX_DIRECTIONAL_LIGHT=8");
-            conf.Defines.Add("CFG_PER_PARAM_BUFFER_SIZE=8");
-            conf.Defines.Add("CFG_FRAME_LATENCY_TOLERANCE_SECOND=1");
-            conf.Defines.Add("CFG_MAX_CONCURRENT_COMMAND_LIST=(1ULL << 8)");
-
-            conf.Defines.Add("CFG_DEBUG_MAX_MESSAGE=200");
-            conf.Defines.Add("CFG_DEBUG_MESSAGE_Y_MOVEMENT=10");
-            conf.Defines.Add("CFG_DEBUG_MESSAGE_LIFETIME=1.f");
-        }
+        Utils.AddDefines(conf, target);
 
         if (target.GraphicAPI == EGraphicAPI.D3D12)
         {

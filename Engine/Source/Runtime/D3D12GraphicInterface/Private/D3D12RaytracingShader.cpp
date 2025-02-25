@@ -3,6 +3,7 @@
 #include <directx-dxc/dxcapi.h>
 #include <directx-dxc/d3d12shader.h>
 
+#include "SIMDExtension.hpp"
 #include "RaytracingShader.h"
 #include "ThrowIfFailed.h"
 
@@ -146,6 +147,8 @@ namespace Engine
         {
             local_root_export->AddExport(shader->GetHitGroupName().data());
         }
+
+        SetExports( shader->GetHasExport() );
 
 		// Pipeline config, Recursion depth
 		const auto& pipeline_config = raytracing_pipeline_desc.CreateSubobject<
@@ -315,7 +318,7 @@ namespace Engine
             export_targets[RAY_SHADER_MISS]
         };
         
-        m_shader_record_sizes_ = shader->GetShaderRecordSizes();
+        SetShaderRecordSizes(shader->GetShaderRecordSizes());
 
         const auto& shader_record_sizes = shader->GetShaderRecordSizes();
         const auto& upload_heap         = CD3DX12_HEAP_PROPERTIES( D3D12_HEAP_TYPE_UPLOAD );
@@ -337,7 +340,7 @@ namespace Engine
                         nullptr,
                         IID_PPV_ARGS( m_shader_tables_[i].GetAddressOf() ) ) );
                 
-                m_allocated_shader_record_size_[i] = m_shader_record_sizes_[i];
+                m_allocated_shader_record_size_[i] = GetShaderRecordSizes()[i];
 
                 const wchar_t* key;
                 switch (i)

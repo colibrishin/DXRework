@@ -32,8 +32,6 @@ namespace Engine
 
         std::wstring_view m_hit_group_name_{};
         ComPtr<ID3D12Resource> m_shader_tables_[RAY_SHADER_REC_MAX];
-
-        std::array<size_t, RAY_SHADER_REC_MAX> m_shader_record_sizes_{};
         
         size_t m_allocated_shader_record_size_[RAY_SHADER_REC_MAX]{};
     };

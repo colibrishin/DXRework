@@ -22,5 +22,10 @@ public class PhysicsManager : EngineCommonProject
         conf.Defines.Add("CFG_DRAG_COEFFICIENT=0.25f");
         conf.Defines.Add("CFG_SPECULATION_ENABLED=1");
         conf.Defines.Add("CFG_SPECULATION_BISECTION_MAX_ITERATION=(1 << 7)");
+
+        conf.ExportDefines.Add("CFG_RESTITUTION_COEFFICIENT=0.666f");
+        conf.ExportDefines.Add("CFG_DRAG_COEFFICIENT=0.25f");
+        conf.ExportDefines.Add("CFG_SPECULATION_ENABLED=1");
+        conf.ExportDefines.Add("CFG_SPECULATION_BISECTION_MAX_ITERATION=(1 << 7)");
     }
 }

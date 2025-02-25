@@ -101,7 +101,9 @@ namespace Engine::Abstracts
 				return boost::static_pointer_cast<T>(comp);
 			}
 
+#pragma warning(disable: 4702)
 			return {};
+#pragma warning(default: 4702)
 		}
 
 		template <typename T> requires (std::is_base_of_v<Component, T> && !std::is_same_v<Component, T>)

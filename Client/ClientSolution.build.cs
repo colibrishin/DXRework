@@ -3,7 +3,7 @@ using System.IO;
 using Sharpmake;
 
 [module: Include("%EngineDir%/Build/CommonProject.build.cs")]
-[module: Include("%EngineDir%/Engine/Source/EngineSolution.build.cs")]
+[module: Include("%EngineDir%/Engine/Source/Runtime/**/**.build.cs")]
 
 [Generate]
 public class ClientProject : CommonProject
@@ -52,7 +52,7 @@ public class ClientProject : CommonProject
 }
 
 [Generate]
-public class ClientSolution : EngineSolution
+public class ClientSolution : Solution
 {
     public ClientSolution()
     {
@@ -61,10 +61,11 @@ public class ClientSolution : EngineSolution
         FastBuildAllProjectType = typeof(FastBuildAllOverrideProject);
     }
 
-    public override void ConfigureAll(Configuration conf, EngineTarget target)
+    [Configure]
+    public virtual void ConfigureAll(Configuration conf, EngineTarget target)
     {
-        base.ConfigureAll(conf, target);
-
+        Utils.MakeConfiturationNameDefine(conf, target);
+        
         conf.SolutionPath = Utils.GetSolutionDir() + @"\Intermediate\ProjectFiles";
         string ProjectFilesDir = Utils.GetSolutionDir() + @"\Intermediate\ProjectFiles";
         Environment.SetEnvironmentVariable("ProjectFilesDir", ProjectFilesDir);
