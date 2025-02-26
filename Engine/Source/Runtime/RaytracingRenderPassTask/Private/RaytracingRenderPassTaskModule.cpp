@@ -13,9 +13,11 @@ namespace Engine
 	{
 	    const std::string_view& type_name = RaytracingRenderPassTask::StaticTypeName();
         const std::wstring type_name_wstr( type_name.begin(), type_name.end() );
+        
 	    
 #if CFG_RAYTRACING
-	    Managers::Renderer::GetInstance().RegisterRenderPass( type_name_wstr, new RaytracingRenderPassTask() );
+        Managers::Renderer::GetInstance().RegisterRenderPass( type_name_wstr,
+                                                              new RenderPassTaskFactory<RaytracingRenderPassTask>() );
 #endif
 	    return true;
 	}

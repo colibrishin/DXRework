@@ -1514,6 +1514,20 @@ namespace Engine
 		StructuredBufferMemoryPool (const StructuredBufferMemoryPool&) = delete;
 		StructuredBufferMemoryPool& operator=(const StructuredBufferMemoryPool&) = delete;
 
+		StructuredBufferMemoryPool(StructuredBufferMemoryPool&& other) noexcept
+		{
+            operator=( std::move( other ) );
+		}
+
+		StructuredBufferMemoryPool& operator=(StructuredBufferMemoryPool&& other) noexcept
+		{
+			m_resource_       = std::move( other.m_resource_ );
+            m_allocated_size_ = std::move( other.m_allocated_size_ );
+            m_used_size_      = std::move( other.m_used_size_ );
+            m_read_offset_    = std::move( other.m_read_offset_ );
+            return *this;
+		}
+
 		void    resize(const size_t size)
 		{
 			Update(nullptr, size);
@@ -1606,10 +1620,10 @@ namespace Engine
 			primitive.commandList->FlagReady();
 		}
 
-		std::vector<StructuredBufferTypeProxy<T>> m_resource_{};
-		size_t                                        m_allocated_size_{};
-		size_t                                        m_used_size_{};
-		size_t                                        m_read_offset_{};
+        std::vector<StructuredBufferTypeProxy<T> > m_resource_{};
+        size_t                                     m_allocated_size_{};
+        size_t                                     m_used_size_{};
+        size_t                                     m_read_offset_{};
 	};
 
 	class ENGINE_CORE_API GraphicMemoryPool

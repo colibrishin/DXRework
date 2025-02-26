@@ -6,7 +6,9 @@
 #include "Allocator.h"
 #include "ConcurrentTypeLibrary.h"
 #include "Singleton.h"
-#include "RenderTask.h"
+#include "RenderPassTask.h"
+#include "RenderPassTaskFactory.h"
+#include "RenderInstanceTask.h"
 #include "Delegation.hpp"
 
 #include "Renderer.generated.h"
@@ -38,7 +40,7 @@ namespace Engine::Managers
 		void Initialize() override;
 		
 		void RegisterRenderInstance(const std::wstring_view name, RenderInstanceTask* task);
-        void RegisterRenderPass( const std::wstring_view name, RenderPassTask *task );
+        void RegisterRenderPass( const std::wstring_view name, IRenderPassTaskFactory *task );
         void RenderPassWith( const std::wstring_view name, const eShaderDomain domain );
 
         void UnregisterRenderInstance( const std::wstring_view name );
@@ -53,13 +55,14 @@ namespace Engine::Managers
 		void RegisterContextPostRenderSetup(const std::string_view name, const ContextSetupFunction& postrender_func);
 		void UnregisterContextPostRenderSetup(const std::string_view name);
 
-		using RenderPassTaskUniqueContainer = std::unordered_map<std::wstring, Unique<RenderPassTask>>;
-		using RenderPassTaskBorrowedContainer = std::unordered_map<std::wstring, RenderPassTask*>;
+		using RenderPassTaskFactoryContainer = std::unordered_map<std::wstring, Unique<IRenderPassTaskFactory>>;
+		using RenderPassTaskBorrowedContainer = std::unordered_map<std::wstring, IRenderPassTaskFactory*>;
+        using RenderPassTaskInstantiatedContainer = std::unordered_map<HashType, std::vector<RenderPassTask*>>;
+        using RenderPassTaskUsageContainer = std::unordered_map<HashType, size_t>;
 
     private:
-        template <typename Cont>
-        void RenderPass( 
-                const Cont                                                       &container,
+        void RenderPass(
+                IRenderPassTaskFactory                                           *factory,
                 float                                                             dt,
                 bool                                                              shader_bypass,
                 eShaderDomain                                                     domain,
@@ -69,44 +72,40 @@ namespace Engine::Managers
                 const ContextSetupFunction                                       &prerender_predicate,
                 const ContextSetupFunction                                       &postrender_predicate,
                 const std::unordered_map<std::string_view, ContextSetupFunction> &prerender_funcs,
-                const std::unordered_map<std::string_view, ContextSetupFunction> &postrender_funcs ) const
+                const std::unordered_map<std::string_view, ContextSetupFunction> &postrender_funcs )
         {
-            if constexpr ( is_val_cont_v<Cont, RenderPassTask*> )
+            const HashType type            = factory->GetTaskType();
+            if (!m_render_pass_tasks_usage_[domain].contains(type))
             {
-                for ( const auto &task : container )
-                {
-                    task->Run( dt,
-                               shader_bypass,
-                               &m_render_candidates_[ domain ],
-                               additional_sbs,
-                               local_param_sb,
-                               predication,
-                               prerender_predicate,
-                               postrender_predicate,
-                               prerender_funcs,
-                               postrender_funcs );
-                }   
+                m_render_pass_tasks_usage_[ domain ].emplace( type, 0 );
             }
-            else if constexpr ( is_key_val_cont_v<Cont, RenderPassTask *> )
+
+            size_t         use_count       = m_render_pass_tasks_usage_[ domain ][ type ];
+            const size_t   allocated_count = m_render_pass_tasks_[ domain ][ type ].size();
+
+            if (use_count == allocated_count)
             {
-                for ( const auto &task : container | std::views::values )
-                {
-                    task->Run( dt,
-                               shader_bypass,
-                               &m_render_candidates_[ domain ],
-                               additional_sbs,
-                               local_param_sb,
-                               predication,
-                               prerender_predicate,
-                               postrender_predicate,
-                               prerender_funcs,
-                               postrender_funcs );
-                }
+                m_render_pass_tasks_[ domain ][ type ].emplace_back( factory->New() );
             }
+
+            RenderPassTask* task = m_render_pass_tasks_[ domain ][ type ].at( use_count );
+
+            task->Cleanup();
+            task->PreRun( m_render_candidates_, m_render_candidates_->size(), predication );
+            task->Run( dt,
+                       shader_bypass,
+                       &m_render_candidates_[ domain ],
+                       additional_sbs,
+                       local_param_sb,
+                       predication,
+                       prerender_predicate,
+                       postrender_predicate,
+                       prerender_funcs,
+                       postrender_funcs );
+            use_count++;
         }
 
-        template <typename Cont>
-        void RenderPassAssisted( const Cont                        &container,
+        void RenderPassAssisted( IRenderPassTaskFactory             *factory,
                                  float                              dt,
                                  bool                               shader_bypass,
                                  eShaderDomain                      domain,
@@ -114,9 +113,9 @@ namespace Engine::Managers
                                  const aligned_vector<const StructuredBufferDecorator *> &additional_sbs,
                                  const ObjectPredication                                 &predication,
                                  const ContextSetupFunction                              &prerender_predicate,
-                                 const ContextSetupFunction                              &postrender_predicate ) const
+                                 const ContextSetupFunction                              &postrender_predicate )
         {
-            RenderPass( container,
+            RenderPass( factory,
                         dt,
                         shader_bypass,
                         domain,
@@ -132,24 +131,24 @@ namespace Engine::Managers
 		template <typename... ExcludeRenderTaskTs>
 		struct ExclusionPredicate
 		{
-            static void ResolveDirty( const RenderPassTaskUniqueContainer &cont,
-                                          std::vector<RenderPassTask *>       &tasks )
-			{
-                tasks.clear();
-                tasks.reserve( cont.size() );
+            static void ResolveDirty( const RenderPassTaskFactoryContainer &cont,
+                                      std::vector<IRenderPassTaskFactory*> &factories )
+            {
+                factories.clear();
+                factories.reserve( cont.size() );
 
-                for ( const auto &task : cont | std::views::values )
+                for ( const Unique<IRenderPassTaskFactory> &factory : cont | std::views::values )
                 {
-                    if ( bool check[] = { task->GetTypeHash() == ExcludeRenderTaskTs::StaticTypeHash() ... };
+                    if ( bool check[] = { factory->GetTaskType() == ExcludeRenderTaskTs::StaticTypeHash()... };
                          std::any_of(
                                  std::begin( check ), std::end( check ), []( const bool b ) { return b == true; } ) )
                     {
                         continue;
                     }
 
-                    if ( task != nullptr )
+                    if ( factory != nullptr )
                     {
-                        tasks.emplace_back( task.get() );
+                        factories.emplace_back( factory.get() );
                     }
                 }
 			}
@@ -158,19 +157,19 @@ namespace Engine::Managers
 		template <typename... IncludeRenderTaskTs>
         struct InclusionPredicate
         {
-            static void ResolveDirty( const RenderPassTaskUniqueContainer &cont,
-                                          std::vector<RenderPassTask *>       &tasks )
+            static void ResolveDirty( const RenderPassTaskFactoryContainer& cont,
+                                      std::vector<IRenderPassTaskFactory*>& factories )
             {
-                tasks.clear();
-                tasks.reserve( cont.size() );
+                factories.clear();
+                factories.reserve( cont.size() );
 
-                for ( const auto &task : cont | std::views::values )
+                for ( const Unique<IRenderPassTaskFactory>& factory : cont | std::views::values )
                 {
-                    if ( bool check[] = { task->GetTypeHash() == IncludeRenderTaskTs::StaticTypeHash() ... };
+                    if ( bool check[] = { factory->GetTaskType() == IncludeRenderTaskTs::StaticTypeHash()... };
                          std::any_of(
                                  std::begin( check ), std::end( check ), []( const bool b ) { return b == true; } ) )
                     {
-                        tasks.emplace_back( task.get() );
+                        factories.emplace_back( factory.get() );
                     }
                 }
             }
@@ -191,30 +190,33 @@ namespace Engine::Managers
             const std::unordered_map<std::string_view, ContextSetupFunction>& postrender_funcs
         )
 	    {
-	        static std::vector<RenderPassTask*> borrowed_render_pass_task_;
-            static std::once_flag               delegate_flag;
-            static const auto                  &func = [ this ]()
-                { 
-                    PredicationT::ResolveDirty( m_unique_render_pass_tasks_, borrowed_render_pass_task_ );
-                };
+            static std::vector<IRenderPassTaskFactory*> borrowed_factories_;
+            static std::once_flag                       delegate_flag;
 
-            std::call_once( delegate_flag, [ this ]()
+            static const auto& func = [ this ]()
+            { PredicationT::ResolveDirty( m_unique_render_pass_task_factories_, borrowed_factories_ ); };
+
+            std::call_once( delegate_flag,
+                            [ this ]()
+                            {
+                                func();
+                                onRenderTaskDirty.Listen( func );
+                            } );
+
+            for (IRenderPassTaskFactory* factory : borrowed_factories_)
             {
-                func();
-                onRenderTaskDirty.Listen( func );
-            } );
-
-            RenderPass( borrowed_render_pass_task_,
-                        dt,
-                        shader_bypass,
-                        Domain,
-                        local_param_sb,
-                        additional_sbs,
-                        predication,
-                        prerender_predicate,
-                        postrender_predicate,
-                        prerender_funcs,
-                        postrender_funcs );
+                RenderPass( factory,
+                            dt,
+                            shader_bypass,
+                            Domain,
+                            local_param_sb,
+                            additional_sbs,
+                            predication,
+                            prerender_predicate,
+                            postrender_predicate,
+                            prerender_funcs,
+                            postrender_funcs );
+            }
 	    }
 
 	    template <typename PredicationT, eShaderDomain Domain>
@@ -227,28 +229,31 @@ namespace Engine::Managers
                                           ContextSetupFunction &postrender_predicate
         )
 	    {
-            static std::vector<RenderPassTask *> render_pass_task_copy;
-            static std::once_flag               delegate_flag;
-            static const auto                   &func = [ this ]()
-                { 
-                    PredicationT::ResolveDirty( m_unique_render_pass_tasks_, render_pass_task_copy );
-                };
+            static std::vector<IRenderPassTaskFactory*> borrowed_factories_;
+            static std::once_flag                       delegate_flag;
 
-            std::call_once( delegate_flag, [ this ]()
+            static const auto& func = [ this ]()
+            { PredicationT::ResolveDirty( m_unique_render_pass_task_factories_, borrowed_factories_ ); };
+
+            std::call_once( delegate_flag,
+                            [ this ]()
+                            {
+                                func();
+                                onRenderTaskDirty.Listen( func );
+                            } );
+
+            for ( IRenderPassTaskFactory* factory : borrowed_factories_ )
             {
-                func();
-                onRenderTaskDirty.Listen( func );
-            } );
-
-            RenderPassAssisted( render_pass_task_copy,
-                                dt,
-                                shader_bypass,
-                                Domain,
-                                local_param_sb,
-                                additional_sbs,
-                                predication,
-                                prerender_predicate,
-                                postrender_predicate );
+                RenderPassAssisted( factory,
+                                    dt,
+                                    shader_bypass,
+                                    Domain,
+                                    local_param_sb,
+                                    additional_sbs,
+                                    predication,
+                                    prerender_predicate,
+                                    postrender_predicate );
+            }
 	    }
 
 		template <eShaderDomain Domain, typename... RenderTaskTs>
@@ -357,10 +362,13 @@ namespace Engine::Managers
 
 	    bool m_b_task_dirty_ = false;
 	    
-		std::unordered_map<std::wstring, Unique<RenderInstanceTask>> m_render_instance_tasks_;
-        RenderPassTaskUniqueContainer                                m_unique_render_pass_tasks_;
-        RenderPassTaskBorrowedContainer                              m_render_pass_tasks_[ SHADER_DOMAIN_MAX ];
+		std::unordered_map<std::wstring, Unique<RenderInstanceTask>>  m_render_instance_tasks_;
+        RenderPassTaskFactoryContainer                                m_unique_render_pass_task_factories_;
+        RenderPassTaskBorrowedContainer                               m_render_pass_tasks_factories_[ SHADER_DOMAIN_MAX ];
         
+        RenderPassTaskInstantiatedContainer m_render_pass_tasks_[ SHADER_DOMAIN_MAX ];
+        RenderPassTaskUsageContainer        m_render_pass_tasks_usage_[ SHADER_DOMAIN_MAX ];
+
 		RenderMap m_render_candidates_[SHADER_DOMAIN_MAX];
 	};
 }

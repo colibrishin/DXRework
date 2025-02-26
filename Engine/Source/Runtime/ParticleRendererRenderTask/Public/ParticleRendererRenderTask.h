@@ -1,5 +1,5 @@
 #pragma once
-#include "RenderTask.h"
+#include "RenderInstanceTask.h"
 
 #include "SingletonSpinLock.h"
 

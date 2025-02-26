@@ -15,8 +15,8 @@ namespace Engine
 {
 	ForwardRenderPassTask::ForwardRenderPassTask()
 		: m_gi_ticket_(SingletonSpinLock::GetInstance().Register()),
-		  m_local_param_pool_ticket(SingletonSpinLock::GetInstance().Register()),
-		  m_instance_pool_ticket(SingletonSpinLock::GetInstance().Register()),
+		  m_local_param_pool_ticket_(SingletonSpinLock::GetInstance().Register()),
+		  m_instance_pool_ticket_(SingletonSpinLock::GetInstance().Register()),
 		  m_texture_record_ticket_(SingletonSpinLock::GetInstance().Register()) {}
 
 	void ForwardRenderPassTask::Run(
@@ -32,11 +32,6 @@ namespace Engine
 		const std::unordered_map<std::string_view, ContextSetupFunction>& postrender_predicates
 	)
 	{
-		for (auto& tex : m_used_shader_textures_)
-		{
-			tex = nullptr;
-		}
-		
 		if (domain_map->empty())
 		{
 			return;
@@ -98,7 +93,7 @@ namespace Engine
 		
 		primitive.commandList->SoftReset();
         const auto  &range         = std::ranges::unique( m_used_shader_textures_ );
-        const size_t indeterminate = std::distance( m_used_shader_textures_.begin(), range.begin() );
+        const size_t indeterminate = std::distance( range.begin(), range.end() );
         const size_t unique_idx    = m_used_shader_textures_.size() - indeterminate;
         if ( m_used_shader_textures_.size() > 0 && m_used_shader_textures_[ 0 ] != nullptr )
         {
@@ -178,7 +173,7 @@ namespace Engine
 		primitive.commandList->SoftReset();
 
 		// Manual release
-		SpinLockToken local_param_token = SingletonSpinLock::GetInstance().Lock(m_local_param_pool_ticket);
+		SpinLockToken local_param_token = SingletonSpinLock::GetInstance().Lock(m_local_param_pool_ticket_);
 		m_local_param_pool_.advance();
 		StructuredBufferTypeProxy<Graphics::SBs::LocalParamSB>& sb = m_local_param_pool_.get();
 		local_param_token.Release();
@@ -206,7 +201,7 @@ namespace Engine
 		}
 		
 		// Manual release
-		auto instance_token = SingletonSpinLock::GetInstance().Lock(m_instance_pool_ticket);
+		auto instance_token = SingletonSpinLock::GetInstance().Lock(m_instance_pool_ticket_);
 		m_instance_pool_.advance();
 		StructuredBufferTypeProxy<Graphics::SBs::InstanceSB>& instance = m_instance_pool_.get();
 		instance_token.Release();

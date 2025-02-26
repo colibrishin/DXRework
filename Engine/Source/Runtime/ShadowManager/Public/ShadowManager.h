@@ -1,6 +1,5 @@
 #pragma once
-
-#include "RenderTask.h"
+#include "GraphicInterface.h"
 #include "Allocator.h"
 #include "StructuredBuffer.h"
 #include "Singleton.h"

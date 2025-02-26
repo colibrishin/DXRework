@@ -51,19 +51,33 @@ namespace Engine
 
 	struct SpinLockTicket
 	{
-		const size_t idx;
-
 		~SpinLockTicket()
 		{
-			if (idx != -1) 
+			if (m_idx_ != -1) 
 			{
-				SingletonSpinLock::GetInstance().Unregister(idx);
+				SingletonSpinLock::GetInstance().Unregister(m_idx_);
 			}
 		}
 
+	    SpinLockTicket(const SpinLockTicket&) = delete;
+		SpinLockTicket& operator=(const SpinLockTicket&) = delete;
+
+		SpinLockTicket(SpinLockTicket&& other) noexcept
+        {
+            operator=( std::move( other ) );
+		}
+
+		SpinLockTicket& operator=(SpinLockTicket&& other) noexcept
+        {
+		    m_idx_ = other.m_idx_;
+            other.m_idx_ = -1;
+			return *this;
+		}
+
 	private:
-		SpinLockTicket(const size_t idx) : idx(idx) {}
+        explicit SpinLockTicket(const size_t idx) : m_idx_(idx) {}
 		friend class SingletonSpinLock;
+		size_t m_idx_;
 	};
 
 	struct SpinLockToken
@@ -75,6 +89,19 @@ namespace Engine
 
 		SpinLockToken(const SpinLockToken&) = delete;
 		SpinLockToken& operator=(const SpinLockToken&) = delete;
+
+		SpinLockToken(SpinLockToken&& other) noexcept
+        {
+            m_idx_ = other.m_idx_;
+            other.m_idx_ = -1;
+		}
+
+		SpinLockToken& operator=(SpinLockToken&& other) noexcept
+        {
+		    m_idx_ = other.m_idx_;
+            other.m_idx_ = -1;
+			return *this;
+		}
 
 		explicit SpinLockToken(size_t idx) :
 		m_idx_(idx) {}

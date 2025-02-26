@@ -11,32 +11,31 @@ MODULE_IMPL( Engine::DeferredRenderPassTaskModule, DeferredRenderPassTask );
 bool Engine::DeferredRenderPassTaskModule::InitializeImpl()
 {
 #ifdef CFG_RENDERTYPE_DEFERRED
-    DeferredRenderPassTask *task = new DeferredRenderPassTask();
-
-    const std::string name ( DeferredRenderPassTask::StaticTypeName() );
+    auto               factory = new DeferredRenderPassTaskFactory();
+    const std::string  name ( DeferredRenderPassTask::StaticTypeName() );
     const std::wstring name_wstr( name.begin(), name.end() );
 
-    Managers::Renderer::GetInstance().RegisterRenderPass( name_wstr, task );
+    Managers::Renderer::GetInstance().RegisterRenderPass( name_wstr, factory );
     Managers::Renderer::GetInstance().RenderPassWith( name_wstr, SHADER_DOMAIN_OPAQUE );
 
-    task->SetMaterialShader( Resources::Shader::Create( "DeferredMaterialPass",
-                                                        "deferred_default_firstpass.hlsl",
-                                                        SHADER_DOMAIN_OPAQUE,
-                                                        true,
-                                                        SHADER_DEPTH_TEST_ALL,
-                                                        SHADER_DEPTH_LESS,
-                                                        SHADER_SAMPLER_CLAMP,
-                                                        SHADER_SAMPLER_LESS_EQUAL,
-                                                        SAMPLER_FILTER_MIN_MAG_MIP_POINT,
-                                                        SHADER_RASTERIZER_CULL_BACK,
-                                                        SHADER_RASTERIZER_FILL_SOLID,
-                                                        std::vector{ TEX_FORMAT_R32G32B32A32_FLOAT,
-                                                                     TEX_FORMAT_R8G8B8A8_UNORM,
-                                                                     TEX_FORMAT_R8G8B8A8_UNORM,
-                                                                     TEX_FORMAT_R32G32B32A32_FLOAT },
-                                                        TEX_FORMAT_D32_FLOAT ) );
+    Resources::Shader::Create( "DeferredMaterialPass",
+                               "deferred_default_firstpass.hlsl",
+                               SHADER_DOMAIN_OPAQUE,
+                               true,
+                               SHADER_DEPTH_TEST_ALL,
+                               SHADER_DEPTH_LESS,
+                               SHADER_SAMPLER_CLAMP,
+                               SHADER_SAMPLER_LESS_EQUAL,
+                               SAMPLER_FILTER_MIN_MAG_MIP_POINT,
+                               SHADER_RASTERIZER_CULL_BACK,
+                               SHADER_RASTERIZER_FILL_SOLID,
+                               std::vector{ TEX_FORMAT_R32G32B32A32_FLOAT,
+                                            TEX_FORMAT_R8G8B8A8_UNORM,
+                                            TEX_FORMAT_R8G8B8A8_UNORM,
+                                            TEX_FORMAT_R32G32B32A32_FLOAT },
+                               TEX_FORMAT_D32_FLOAT );
 
-    task->SetLightShader( Resources::Shader::Create( "DeferredLightPass",
+    factory->SetLightShader( Resources::Shader::Create( "DeferredLightPass",
                                                      "deferred_secondpass.hlsl",
                                                      SHADER_DOMAIN_OPAQUE,
                                                      true,
@@ -49,7 +48,7 @@ bool Engine::DeferredRenderPassTaskModule::InitializeImpl()
                                                      SHADER_RASTERIZER_FILL_SOLID,
                                                      GetDefaultRTVFormat() ) );
 
-    task->SetTexture(
+    factory->SetTexture(
             Resources::Texture2D::Create( "DeferredA",
                                           "",
                                           GenericTextureDescription{ .Dimension        = TEX_TYPE_2D,
@@ -66,7 +65,7 @@ bool Engine::DeferredRenderPassTaskModule::InitializeImpl()
                                                                      .AsRTV            = true } ),
             0 );
 
-    task->SetTexture(
+    factory->SetTexture(
             Resources::Texture2D::Create( "DeferredB",
                                           "",
                                           GenericTextureDescription{ .Dimension        = TEX_TYPE_2D,
@@ -83,7 +82,7 @@ bool Engine::DeferredRenderPassTaskModule::InitializeImpl()
                                                                      .AsRTV            = true } ),
             1 );
 
-    task->SetTexture(
+    factory->SetTexture(
             Resources::Texture2D::Create( "DeferredC",
                                           "",
                                           GenericTextureDescription{ .Dimension        = TEX_TYPE_2D,
@@ -100,7 +99,7 @@ bool Engine::DeferredRenderPassTaskModule::InitializeImpl()
                                                                      .AsRTV            = true } ),
             2 );
 
-    task->SetTexture(
+    factory->SetTexture(
             Resources::Texture2D::Create( "DeferredD",
                                           "",
                                           GenericTextureDescription{ .Dimension        = TEX_TYPE_2D,
@@ -117,7 +116,7 @@ bool Engine::DeferredRenderPassTaskModule::InitializeImpl()
                                                                      .AsRTV            = true } ),
             3 );
 
-    task->SetDepthStencil(
+    factory->SetDepthStencil(
             Resources::Texture2D::Create( "DeferredDepth",
                                           "",
                                           GenericTextureDescription{ .Dimension        = TEX_TYPE_2D,

@@ -29,7 +29,7 @@ Engine::SpinLockTicket Engine::SingletonSpinLock::Register()
 Engine::SpinLockToken Engine::SingletonSpinLock::Lock(const SpinLockTicket& ticket)
 {
 	SelfLock();
-	if (!m_spin_locks_.contains(ticket.idx))
+	if (!m_spin_locks_.contains(ticket.m_idx_))
 	{
 		return SpinLockToken{(size_t)-1};
 	}
@@ -41,10 +41,10 @@ Engine::SpinLockToken Engine::SingletonSpinLock::Lock(const SpinLockTicket& tick
 		bool success = false;
 		SelfLock();
 		bool expected = false;
-		success = m_spin_locks_[ticket.idx]->compare_exchange_strong(expected, true);
+		success = m_spin_locks_[ticket.m_idx_]->compare_exchange_strong(expected, true);
 		SelfUnlock();
 
-		if (success) return SpinLockToken{ticket.idx};
+		if (success) return SpinLockToken{ticket.m_idx_};
 	}
 }
 

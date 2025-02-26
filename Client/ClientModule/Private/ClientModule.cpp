@@ -8,7 +8,7 @@ MODULE_IMPL( ClientModule, Client )
 bool ClientModule::InitializeImpl()
 {
     Engine::Managers::Renderer::GetInstance().RegisterRenderPass( L"ShadowIntersectionRenderTask",
-        new ShadowIntersectionRenderTask() );
+        new Engine::RenderPassTaskFactory<ShadowIntersectionRenderTask>() );
     
     return IClientModule::InitializeImpl();
 }

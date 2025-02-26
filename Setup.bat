@@ -38,11 +38,13 @@ echo [Build balius]
 where cargo
 IF errorlevel 1 (
 bitsadmin /transfer rustdownload /download /priority FOREGROUND "https://static.rust-lang.org/rustup/dist/x86_64-pc-windows-msvc/rustup-init.exe" "%TEMP%\rustup-init.exe"
-start /b /wait "" "%TEMP%/rustup-init.exe" "-y"
-) ELSE (
+start /b /wait "" "%TEMP%/rustup-init.exe" "-y" "--default-toolchain" "nightly"
+)
+
 pushd balius
-cargo b -r
-popd)
+rustup toolchain install nightly
+cargo +nightly b -r
+popd
 
 IF EXIST "%PROGRAMFILES%\Microsoft Visual Studio\2022\Community" (
     SET "VSPath=%PROGRAMFILES%\Microsoft Visual Studio\2022\Community"

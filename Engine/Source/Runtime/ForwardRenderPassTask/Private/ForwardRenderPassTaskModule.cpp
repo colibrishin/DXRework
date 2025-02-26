@@ -13,7 +13,7 @@ namespace Engine
         std::string_view typename_str = ForwardRenderPassTask::StaticTypeName();
         std::wstring     typename_wstr( typename_str.begin(), typename_str.end() );
 
-        Managers::Renderer::GetInstance().RegisterRenderPass( typename_wstr, new ForwardRenderPassTask() );
+        Managers::Renderer::GetInstance().RegisterRenderPass( typename_wstr, new RenderPassTaskFactory<ForwardRenderPassTask>() );
 
 #if CFG_RENDERTYPE_FORWARDONLY
         for ( size_t i = 0; i < SHADER_DOMAIN_MAX; ++i )

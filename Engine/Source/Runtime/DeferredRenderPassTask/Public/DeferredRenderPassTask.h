@@ -1,27 +1,61 @@
 #pragma once
 #include <array>
-
-#include "RenderTask.h"
-#include "SingletonSpinLock.h"
-
 #include <ranges>
+
+#include "RenderPassTask.h"
+#include "RenderPassTaskFactory.h"
+#include "SingletonSpinLock.h"
 
 #include "DeferredRenderPassTask.generated.h"
 
 namespace Engine
 {
+    static constexpr size_t                                g_deferred_count  = 4;
+    static constexpr std::array<eFormat, g_deferred_count> g_deferred_format = { TEX_FORMAT_R32G32B32A32_FLOAT,
+                                                                                 TEX_FORMAT_R8G8B8A8_UNORM,
+                                                                                 TEX_FORMAT_R8G8B8A8_UNORM,
+                                                                                 TEX_FORMAT_R32G32B32A32_FLOAT };
+
     ECLASS(virtual)
     struct ENGINE_DEFERREDRENDERPASSTASK_API DeferredRenderPassTask : public RenderPassTask
     {
         GENERATE_BODY
-
-        static constexpr size_t deferred_count = 4;
-        static constexpr std::array<eFormat, deferred_count> deferred_format = {
-            TEX_FORMAT_R32G32B32A32_FLOAT, TEX_FORMAT_R8G8B8A8_UNORM, TEX_FORMAT_R8G8B8A8_UNORM, TEX_FORMAT_R32G32B32A32_FLOAT
-        };
-
     public:
         DeferredRenderPassTask();
+
+        DeferredRenderPassTask( const DeferredRenderPassTask& ) = delete;
+        DeferredRenderPassTask& operator=( const DeferredRenderPassTask& ) = delete;
+
+        DeferredRenderPassTask(DeferredRenderPassTask&& other) noexcept
+        : m_gi_ticket_( std::move( other.m_gi_ticket_ ) ),
+          m_local_param_pool_ticket_( std::move( other.m_local_param_pool_ticket_ ) ),
+          m_instance_pool_ticket_( std::move( other.m_instance_pool_ticket_ ) ),
+          m_texture_record_ticket_( std::move( other.m_texture_record_ticket_ ) )
+        {
+            operator=( std::move( other ) );
+        }
+
+        DeferredRenderPassTask& operator=(DeferredRenderPassTask&& other) noexcept
+        {
+            m_gi_ticket_               = std::move( other.m_gi_ticket_ );
+            m_local_param_pool_ticket_ = std::move( other.m_local_param_pool_ticket_ );
+            m_instance_pool_ticket_    = std::move( other.m_instance_pool_ticket_ );
+            m_texture_record_ticket_   = std::move( other.m_texture_record_ticket_ );
+
+            m_local_param_pool_     = std::move( other.m_local_param_pool_ );
+            m_instance_pool_        = std::move( other.m_instance_pool_ );
+            m_heaps_                = std::move( other.m_heaps_ );
+            m_used_shader_textures_ = std::move( other.m_used_shader_textures_ );
+
+            m_light_pass_shader_raw_        = std::move( other.m_light_pass_shader_raw_ );
+            for (size_t i = 0; i < std::size( m_deferred_render_targets_raw_ ); ++i)
+            {
+                m_deferred_render_targets_raw_[i] = std::move( other.m_deferred_render_targets_raw_[i] );                
+            }
+            m_deferred_depth_raw_           = std::move( other.m_deferred_depth_raw_ );
+
+            return *this;
+        }
 
         void Run( float                                                             dt,
                   bool                                                              shader_bypass,
@@ -35,10 +69,9 @@ namespace Engine
                   const std::unordered_map<std::string_view, ContextSetupFunction> &postrender_predicates ) override;
         
         void Cleanup() override;
-        void SetTexture( const Weak<Resources::Texture2D> &tex, const size_t slot );
-        void SetDepthStencil( const Weak<Resources::Texture2D> &tex );
-        void SetMaterialShader( const Weak<Resources::Shader> &shader );
-        void SetLightShader( const Weak<Resources::Shader> &shader );
+        void SetTexture( Resources::Texture2D* tex, const size_t slot );
+        void SetDepthStencil( Resources::Texture2D* tex );
+        void SetLightShader( Resources::Shader* shader );
 
     private:
         using IntermediateShaderMap = concurrent_fast_pool_map<Resources::ShaderBase *, aligned_vector<InstancePair>>;
@@ -80,20 +113,19 @@ namespace Engine
                         const std::unordered_map<std::string_view, ContextSetupFunction> &prerender_predicates,
                         const std::unordered_map<std::string_view, ContextSetupFunction> &postrender_predicates );
 
-        [[nodiscard]] void RecordUsedTexture( const GraphicInterfaceContextPrimitive *context,
+        void RecordUsedTexture( const GraphicInterfaceContextPrimitive *context,
                                               GraphicInterface                       &gi,
                                               const Resources::Texture               *tex );
 
     public:
-        void PreRun( const RenderMap *render_map,
-                const size_t render_map_count,
-                const ObjectPredication &predication
-                ) override;
+        void PreRun( const RenderMap*         render_map,
+                     const size_t             render_map_count,
+                     const ObjectPredication& predication ) override;
 
     private:
         SpinLockTicket m_gi_ticket_;
-        SpinLockTicket m_local_param_pool_ticket;
-        SpinLockTicket m_instance_pool_ticket;
+        SpinLockTicket m_local_param_pool_ticket_;
+        SpinLockTicket m_instance_pool_ticket_;
         SpinLockTicket m_texture_record_ticket_;
 
         StructuredBufferMemoryPool<Graphics::SBs::LocalParamSB> m_local_param_pool_{};
@@ -101,11 +133,23 @@ namespace Engine
         tbb::concurrent_vector<Unique<GraphicHeapBase>>         m_heaps_{};
         std::vector<const Resources::Texture *>                 m_used_shader_textures_{};
 
-        Strong<Resources::Shader> m_material_pass_shader_;
-        Strong<Resources::Shader> m_light_pass_shader_;
+        Resources::Shader*  m_light_pass_shader_raw_{};
+        Resources::Texture* m_deferred_render_targets_raw_[ g_deferred_count ]{};
+        Resources::Texture* m_deferred_depth_raw_{};
 
-        Strong<Resources::Texture2D> m_deferred_render_targets_[ deferred_count ]{};
-        Resources::Texture* m_deferred_render_targets_raw_[ deferred_count ]{};
+    };
+
+    struct ENGINE_DEFERREDRENDERPASSTASK_API DeferredRenderPassTaskFactory : public RenderPassTaskFactory<DeferredRenderPassTask>
+    {
+        void SetTexture( const Weak<Resources::Texture2D>& tex, const size_t slot );
+        void SetDepthStencil( const Weak<Resources::Texture2D>& tex );
+        void SetLightShader( const Weak<Resources::Shader>& shader );
+        
+        RenderPassTask* New() override;
+
+    private:
+        Strong<Resources::Shader> m_light_pass_shader_{};
+        Strong<Resources::Texture2D> m_deferred_render_targets_[ g_deferred_count ]{};
         Strong<Resources::Texture2D> m_deferred_depth_{};
     };
 }

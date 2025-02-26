@@ -170,6 +170,19 @@ public:
         delete[] m_first_;
     }
 
+	byte_stream(byte_stream&& other) noexcept
+    {
+        operator=( std::move( other ) );
+    }
+
+	byte_stream& operator=(byte_stream&& other) noexcept
+    {
+        m_first_          = std::move( other.m_first_ );
+        m_allocated_size_ = std::move( m_allocated_size_ );
+        m_used_size_      = std::move( m_used_size_ );
+        return *this;
+    }
+
     void reset()
     {
         m_used_size_ = 0;

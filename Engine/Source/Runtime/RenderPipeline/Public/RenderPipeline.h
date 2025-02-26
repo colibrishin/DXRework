@@ -2,7 +2,8 @@
 #include <memory>
 #include "ConstantBuffer.h"
 #include "Singleton.h"
-#include "RenderTask.h"
+#include "RenderInstanceTask.h"
+#include "RenderPassTask.h"
 
 #include "ModuleManager.h"
 
