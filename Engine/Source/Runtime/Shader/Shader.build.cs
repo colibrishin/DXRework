@@ -36,7 +36,8 @@ public class Shader : EngineCommonProject
             @"specular_tex.hlsl",
             @"type.hlsli",
             @"utility.hlsli",
-            @"vs_default.hlsl"
+            @"vs_default.hlsl",
+            @"pbr.hlsli"
         );
     }
 }
