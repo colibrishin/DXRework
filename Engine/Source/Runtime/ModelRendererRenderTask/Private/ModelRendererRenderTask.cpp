@@ -1,68 +1,67 @@
 #include "ModelRendererRenderTask.h"
-#include "ModelRendererRenderTask.generated.h"
-#include <tbb/parallel_for_each.h>
 #include <tbb/concurrent_vector.h>
+#include <tbb/parallel_for_each.h>
+#include "ModelRendererRenderTask.generated.h"
 
 #include "InstanceModelSB.h"
 #include "ModelRenderer.h"
 #include "RenderPipeline.h"
 #include "Renderer.h"
 
-#include "ShapeRenderComponent.h"
-#include "ObjectBase.h"
-#include "Transform.h"
 #include "Animator.h"
 #include "AtlasAnimationTexture.h"
+#include "ObjectBase.h"
 #include "Shape.h"
+#include "ShapeRenderComponent.h"
+#include "Transform.h"
 
-MODULE_IMPL(Engine::ModelRendererRenderInstanceTaskModule, ModelRendererRenderInstanceTask)
+MODULE_IMPL( Engine::ModelRendererRenderInstanceTaskModule, ModelRendererRenderInstanceTask )
 
-namespace Engine 
+namespace Engine
 {
-	bool ModelRendererRenderInstanceTaskModule::InitializeImpl()
-	{
-		Managers::Renderer::GetInstance().RegisterRenderInstance(L"ModelRendererRenderInstanceTask", new ModelRendererRenderInstanceTask());
+    bool ModelRendererRenderInstanceTaskModule::InitializeImpl()
+    {
+        Managers::Renderer::GetInstance().RegisterRenderInstance( L"ModelRendererRenderInstanceTask",
+                                                                  new ModelRendererRenderInstanceTask() );
 
         return true;
-	}
+    }
 
-	bool ModelRendererRenderInstanceTaskModule::ShutdownImpl()
-	{
-        Managers::Renderer::GetInstance().UnregisterRenderInstance(L"ModelRendererRenderInstanceTask");
+    bool ModelRendererRenderInstanceTaskModule::ShutdownImpl()
+    {
+        Managers::Renderer::GetInstance().UnregisterRenderInstance( L"ModelRendererRenderInstanceTask" );
 
         return true;
-	}
+    }
 
-	bool ModelRendererRenderInstanceTaskModule::DynamicLoadable()
-	{
-		return true;
-	}
+    bool ModelRendererRenderInstanceTaskModule::DynamicLoadable()
+    {
+        return true;
+    }
 
     ModelRendererRenderInstanceTask::ModelRendererRenderInstanceTask()
-        : m_instance_ticket_(SingletonSpinLock::GetInstance().Register()) {}
+        : m_instance_ticket_( SingletonSpinLock::GetInstance().Register() )
+    { }
 
     ModelRendererRenderInstanceTask::~ModelRendererRenderInstanceTask()
     {
-        for (auto* ptr : m_instance_generated_)
+        for ( auto* ptr : m_instance_generated_ )
         {
-            m_instance_allocator_.destroy(ptr);
-            m_instance_allocator_.deallocate(ptr);
+            m_instance_allocator_.destroy( ptr );
+            m_instance_allocator_.deallocate( ptr );
         }
     }
 
-    void ModelRendererRenderInstanceTask::Run(
-            Scene const* scene, 
-            RenderMap* render_map,
-            const size_t map_size) 
+    void ModelRendererRenderInstanceTask::Run( Scene const* scene, RenderMap* render_map, const size_t map_size )
     {
-        const auto                   &mrs = scene->GetCachedComponentsConcurrent<Components::ModelRenderer>();
+        const auto& mrs = scene->GetCachedComponentsConcurrent<Components::ModelRenderer>();
 
         tbb::parallel_for_each(
                 mrs.begin(),
                 mrs.end(),
-                [ & ]( const Weak<Abstracts::Component> &comp )
+                [ & ]( const Weak<Abstracts::Component>& comp )
                 {
-                    if ( const Strong<Abstracts::Component> &raw_component = comp.lock() )
+                    if ( const Strong<Abstracts::Component>& raw_component = comp.lock() )
                     {
                         // get model renderer, continue if it is disabled
                         if ( !raw_component->GetActive() )
@@ -70,9 +69,9 @@ namespace Engine
                             return;
                         }
 
-                        const Strong<Components::ModelRenderer> &mr =
+                        const Strong<Components::ModelRenderer>& mr =
                                 raw_component->GetSharedPtr<Components::ModelRenderer>();
-                        const Strong<Abstracts::ObjectBase> &obj   = raw_component->GetOwner().lock();
+                        const Strong<Abstracts::ObjectBase>& obj   = raw_component->GetOwner().lock();
                         const Strong<Resources::Shape>       shape = mr->GetShape().lock();
                         const Strong<Components::Transform>  tr    = obj->GetComponent<Components::Transform>().lock();
 
@@ -86,7 +85,7 @@ namespace Engine
                         for ( size_t i = 0; i < map_size; ++i )
                         {
                             const auto domain     = static_cast<eShaderDomain>( i );
-                            auto      &domain_map = render_map[ domain ];
+                            auto&      domain_map = render_map[ domain ];
 
                             RenderMap::accessor acc;
                             if ( !domain_map.find( acc, Components::ModelRenderer::StaticTypeHash() ) )
@@ -94,31 +93,31 @@ namespace Engine
                                 domain_map.insert( acc, Components::ModelRenderer::StaticTypeHash() );
                             }
 
-                            for ( const auto &[ mesh, mtr ] : shape->GetMeshes() )
+                            for ( const auto& [ mesh, mtr ] : shape->GetMeshes() )
                             {
                                 if ( mesh.expired() || mtr.expired() )
                                 {
                                     continue;
                                 }
 
-                                const Strong<Resources::Material>   &locked_mtr    = mtr.lock();
+                                const Strong<Resources::Material>&   locked_mtr    = mtr.lock();
                                 const Strong<Resources::ShaderBase>& locked_shader = locked_mtr->GetShader().lock();
 
-                                if (locked_shader->GetShaderDomain() != domain)
-                        {
-                            continue;
-                        }
+                                if ( locked_shader->GetShaderDomain() != domain )
+                                {
+                                    continue;
+                                }
 
                                 ShaderMap::accessor mesh_acc;
-                        if (!acc->second.find(mesh_acc, locked_shader))
-                        {
-                            acc->second.insert(mesh_acc, locked_shader);
-                        }
-                       
-                        if (const Strong<Resources::Mesh>& locked_mesh = mesh.lock())
-                        {
-                            decltype(mesh_acc->second)::accessor shader_acc;
-                            if (!mesh_acc->second.find(shader_acc, locked_mesh ) )
+                                if ( !acc->second.find( mesh_acc, locked_shader ) )
+                                {
+                                    acc->second.insert( mesh_acc, locked_shader );
+                                }
+
+                                if ( const Strong<Resources::Mesh>& locked_mesh = mesh.lock() )
+                                {
+                                    decltype( mesh_acc->second )::accessor shader_acc;
+                                    if ( !mesh_acc->second.find( shader_acc, locked_mesh ) )
                                     {
                                         mesh_acc->second.insert( shader_acc, locked_mesh );
                                     }
@@ -132,7 +131,7 @@ namespace Engine
                                     // Copy the material primitive and animator primitive if it exists.
                                     locked_mtr->GetPrimitive().Apply( *instance_pair.instance );
 
-                                    if ( const Strong<Components::Animator> &anim =
+                                    if ( const Strong<Components::Animator>& anim =
                                                  obj->GetComponent<Components::Animator>().lock() )
                                     {
                                         anim->GetPrimitive().Apply( *instance_pair.instance );
@@ -143,13 +142,13 @@ namespace Engine
                                           ++it )
                                     {
                                         const size_t idx = std::distance( locked_mtr->GetTextures().begin(), it );
-                                        if ( const Strong<Resources::Texture> &locked = it->lock() )
+                                        if ( const Strong<Resources::Texture>& locked = it->lock() )
                                         {
                                             instance_pair.textures[ idx ] = locked;
                                         }
                                     }
 
-                                    if ( const Strong<Resources::AnimationTexture> &anims =
+                                    if ( const Strong<Resources::AnimationTexture>& anims =
                                                  shape->GetAnimations().lock() )
                                     {
                                         instance_pair
@@ -157,7 +156,7 @@ namespace Engine
                                                 anims;
                                     }
 
-                                    if ( const Strong<Resources::AtlasAnimationTexture> &atlas =
+                                    if ( const Strong<Resources::AtlasAnimationTexture>& atlas =
                                                  locked_mtr->GetAtlasTexture().lock() )
                                     {
                                         instance_pair
@@ -173,34 +172,34 @@ namespace Engine
                 } );
     }
 
-    void ModelRendererRenderInstanceTask::Cleanup(RenderMap* render_map, const size_t map_size)
+    void ModelRendererRenderInstanceTask::Cleanup( RenderMap* render_map, const size_t map_size )
     {
-        for (size_t i = 0; i < map_size; ++i)
+        for ( size_t i = 0; i < map_size; ++i )
         {
-            auto& domain_map = render_map[i];
-            domain_map.erase(Components::ModelRenderer::StaticTypeHash());
+            auto& domain_map = render_map[ i ];
+            domain_map.erase( Components::ModelRenderer::StaticTypeHash() );
         }
 
         m_used_count_ = 0;
     }
 
     Graphics::SBs::InstanceSB* ModelRendererRenderInstanceTask::GetInstance()
-	{
-	    SpinLockToken token = SingletonSpinLock::GetInstance().Lock(m_instance_ticket_);
-       
-        if (m_allocation_count_ > m_used_count_)
+    {
+        SpinLockToken token = SingletonSpinLock::GetInstance().Lock( m_instance_ticket_ );
+
+        if ( m_allocation_count_ > m_used_count_ )
         {
-            return m_instance_generated_[m_used_count_++];
+            return m_instance_generated_[ m_used_count_++ ];
         }
 
         Graphics::SBs::InstanceSB* generated = m_instance_allocator_.allocate();
-        
-        std::memset(generated, 0, sizeof(decltype(*generated)));
-        m_instance_allocator_.construct(generated);
-        m_instance_generated_.push_back(generated);
-        
+
+        std::memset( generated, 0, sizeof( decltype( *generated ) ) );
+        m_instance_allocator_.construct( generated );
+        m_instance_generated_.push_back( generated );
+
         ++m_allocation_count_;
         ++m_used_count_;
         return generated;
     }
-}
+} // namespace Engine

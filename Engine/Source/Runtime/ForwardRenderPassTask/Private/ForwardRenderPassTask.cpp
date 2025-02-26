@@ -94,7 +94,11 @@ namespace Engine
 		primitive.commandList->SoftReset();
         const auto  &range         = std::ranges::unique( m_used_shader_textures_ );
         const size_t indeterminate = std::distance( range.begin(), range.end() );
-        const size_t unique_idx    = m_used_shader_textures_.size() - indeterminate;
+        const size_t unique_idx    = m_used_shader_textures_.size() - indeterminate -
+                                  ( ( m_used_shader_textures_.size() > 0 && indeterminate == 0 &&
+                                      m_used_shader_textures_.back() == nullptr ) ?
+                                            1 :
+                                            0 );
         if ( m_used_shader_textures_.size() > 0 && m_used_shader_textures_[ 0 ] != nullptr )
         {
             gi.TransitBackMultiple( &primitive, m_used_shader_textures_.data(), unique_idx, BIND_TYPE_SRV );
