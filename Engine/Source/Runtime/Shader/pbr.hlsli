@@ -70,6 +70,7 @@ float3 ACES_Tonemap(float3 color)
     return saturate((color * (a * color + b)) / (color * (c * color + d) + e));
 }
 
+/*
 // Diffuse irradiance
 // 확산 조도
 float3 Diffuse_IBL(in float3 N)
@@ -114,21 +115,19 @@ float3 Specular_IBL(in float3 N, in float3 V, in float lodBias)
     float3 Color = RadianceTexture.SampleLevel(IBLSampler, Dir, mip);
     return ACES_Tonemap(Color);
 }
-
+*/
 
 float3 PBRLight(
-    in float3 eyePos,
+    in float3 eyeDir,
     in float3 surfaceNormal,
-    in float3 worldPosition,
-    in float3 albedo, 
-    in float roughness, 
-    in float metallic, 
-    in float ambientOcclusion)
+    in float4 worldPosition,
+    in float3 albedo,
+    in float  specularPower,
+    in float  roughness, 
+    in float  metallic, 
+    in float  ambientOcclusion)
 {
-    // 비금속 재질의 고정된 반사율 값
-    static const float kSpecularCoefficient = 0.04;
-
-    const float NdotV = saturate(dot(surfaceNormal, eyePos));
+    const float angSurfEye = saturate(dot(surfaceNormal, eyeDir));
 
     roughness = max(roughness, 0.0001f);
     // Burley 러프니스 바이어스
@@ -136,31 +135,31 @@ float3 PBRLight(
 
     // 기본 색상 블렌딩
     const float3 c_diff = lerp(albedo, float3(0, 0, 0), metallic) * ambientOcclusion;
-    const float3 c_spec = lerp(kSpecularCoefficient, albedo, metallic) * ambientOcclusion;
-
+    const float3 c_spec = lerp(specularPower, albedo, metallic) * ambientOcclusion;
     // 출력 색상 초기화
     float3 acc_color = 0;
     
     float shadowFactor[MAX_NUM_LIGHTS];
-    GetShadowFactor(float4(worldPosition, 1.f), worldPosition.z, shadowFactor);
-
+    const float4 wvp = mul(mul(worldPosition, g_camView), g_camProj);
+    GetShadowFactor(worldPosition, wvp.z, shadowFactor);
+    
     for (int i = 0; i < PARAM_NUM_LIGHT; ++i)
     {
         // 빛 벡터 (빛 쪽으로)
         const float4 worldLight = GetTranslation(bufLight[i].world);
-        const float3 lightDir = normalize(worldLight.xyz - worldPosition);
+        const float3 lightDir = normalize(worldLight.xyz - worldPosition.xyz);
 
         // 반각 벡터
-        const float3 H = normalize(lightDir + eyePos);
+        const float3 average = normalize(lightDir + eyeDir);
 
         // 내적 값 계산
         const float angSurfLight = saturate(dot(surfaceNormal, lightDir));
-        const float angLightEye = saturate(dot(lightDir, H));
-        const float angSurfEye = saturate(dot(surfaceNormal, H));
+        const float angLightAvg = saturate(dot(lightDir, average));
+        const float angSurfAvg = saturate(dot(surfaceNormal, average));
 
         // 확산 및 스펙큘러 요소
-        float diffuse_factor = Diffuse_Burley(angSurfLight, angSurfEye, angLightEye, roughness);
-        float3 specular = Specular_BRDF(alpha, c_spec, angSurfEye, angSurfLight, angLightEye, angSurfEye);
+        float diffuse_factor = Diffuse_Burley(angSurfLight, angSurfEye, angLightAvg, roughness);
+        float3 specular = Specular_BRDF(alpha, c_spec, angSurfEye, angSurfLight, angLightAvg, angSurfAvg);
 
         const float4 shadow = LerpShadow(shadowFactor[i]);
         
@@ -168,6 +167,7 @@ float3 PBRLight(
         acc_color += shadow.rgb * (angSurfLight * bufLight[i].color.rgb * (((c_diff * diffuse_factor) + specular)));
     }
 
+    /*
     // 확산 조도 추가
     // 의미: 이 부분은 표면에 모든 방향에서 들어오는 빛의 총합을 계산합니다.
     // 실환경적 비유: 햇빛이 창문을 통해 들어오고, 방의 벽, 바닥, 천장을 균일하게 밝히는 것을 상상해보세요. 
@@ -216,6 +216,7 @@ float3 PBRLight(
 
     float3 specular_env = Specular_IBL(surfaceNormal, eyePos, roughness);
     acc_color += c_spec * specular_env;
+    */
 
     return acc_color;
 }
