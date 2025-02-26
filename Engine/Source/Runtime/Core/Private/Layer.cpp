@@ -375,7 +375,12 @@ namespace Engine
 			result.emplace_back(obj);
 		}
 		return result;
-	}
+    }
+
+    LayerSizeType Layer::GetLayerType() const
+    {
+        return m_layer_type_;
+    }
 
     void Layer::clear()
 	{
