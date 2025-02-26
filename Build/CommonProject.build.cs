@@ -265,7 +265,7 @@ public abstract class CommonProject : Project
             true,
             true
         );
-        Exec.FastBuildAlwaysShowOutput = false;
+        Exec.FastBuildAlwaysShowOutput = true;
         Exec.FastBuildExecAlways = true;
 
         conf.EventCustomPrebuildExecute.Add(@"[project.Name]-headerparser", Exec);

@@ -8,17 +8,23 @@ lazy_static!{
     static ref target_files: Mutex<HashSet<String>> = Mutex::new(HashSet::new());
 }
 
-fn write_target_file(intermediate_path: &std::path::Path)
+fn write_target_file(intermediate_path: &std::path::Path) -> Result<(), Box<dyn std::error::Error>>
 {
     let target_file_path = intermediate_path.join("target");
-    let mut file = std::fs::File::create(&target_file_path).expect("Unable to create a target file");
-    for header_file in target_files.lock().unwrap().iter()
+    let mut file = std::fs::File::options().create(true).write(true).truncate(true).open(&target_file_path)?;
+    file.lock()?;
+
+    let set = target_files.lock()?;
+    for header_file in set.iter()
     {
-        writeln!(file, "{}", &header_file).expect("Unable to write a target file");
+        writeln!(file, "{}", &header_file)?;
     }
+
+    file.unlock()?;
+    Ok(())
 }
 
-fn commit_git(git_dir: &std::path::Path, intermediate_path: &std::path::Path) 
+fn commit_git(git_dir: &std::path::Path, intermediate_path: &std::path::Path) -> Result<(), std::io::Error>
 {
     let command_to_run = vec![
         vec!["add", "."], 
@@ -27,50 +33,34 @@ fn commit_git(git_dir: &std::path::Path, intermediate_path: &std::path::Path)
     for command in command_to_run 
     {
         let mut git_proc = std::process::Command::new(git_dir.join("cmd").join("git.exe"));
-        git_proc.current_dir(intermediate_path).args(command).status().expect("commit failed");
+        git_proc.current_dir(intermediate_path).args(command).output()?;
     }
+    Ok(())
 }
 
-fn run_headerparser(engine_dir: &std::path::Path, intermediate_path: &std::path::Path, configuration: &String)
+fn run_headerparser(engine_dir: &std::path::Path, intermediate_path: &std::path::Path, configuration: &String) -> Result<(), std::io::Error>
 {
     let parser_path = engine_dir.join("Programs").join("header-parser").join("Release").join("header-parser.exe");
     let target_file = intermediate_path.join("target");
 
     let mut parser = std::process::Command::new(&parser_path);
-    let _output = parser.current_dir(&intermediate_path).arg(&target_file).arg("-e EENUM").arg("-c ECLASS").arg("-p EPROPERTY").arg("-f EFUNC").arg("-m GENERATE_BODY").arg(format!("-b {}", configuration)).output().expect("Unable to spawn the process");
-    
-    match std::str::from_utf8(&_output.stdout)
-    {
-        Ok(out) => 
-        {
-            println!("{}", out);
-        },
-        Err(_) => {}
-    }
-
-    match std::str::from_utf8(&_output.stderr) 
-    {
-        Ok(out) =>
-        {
-            println!("{}", out);
-        },
-        Err(_) => {}
-    }
+    let _output = parser.current_dir(&intermediate_path).arg(&target_file).arg("-e EENUM").arg("-c ECLASS").arg("-p EPROPERTY").arg("-f EFUNC").arg("-m GENERATE_BODY").arg(format!("-b {}", configuration)).output()?;
+    Ok(())
 }
 
-fn diff_git(git_dir: &std::path::Path, intermediate_path: &std::path::Path) 
+fn diff_git(git_dir: &std::path::Path, intermediate_path: &std::path::Path) -> Result<(), Box<dyn std::error::Error>>
 {
     let mut git_proc = std::process::Command::new(git_dir.join("cmd").join("git.exe"));
-    let status_return = git_proc.current_dir(intermediate_path).args(["status", "--porcelain", "-uall"]).output().expect("git status failed");
+    let status_return = git_proc.current_dir(intermediate_path).args(["status", "--porcelain", "-uall"]).output()?;
 
     // no diff
     if status_return.stdout.is_empty()
     {
         println!("Git reports no diff");
-        return;
+        return Ok(());
     }
 
-    let stdout_str = String::from_utf8(status_return.stdout).expect("Unknown character input found");
+    let stdout_str = String::from_utf8(status_return.stdout)?;
     let lines : Vec<&str> = stdout_str.split("\n").collect();
     for line in lines 
     {
@@ -81,21 +71,24 @@ fn diff_git(git_dir: &std::path::Path, intermediate_path: &std::path::Path)
         let windows_style = line.replace("/","\\");
         let path = windows_style.split(" ").last().expect("panic: target file empty");
         println!("Git diff found: {}", path);
-        target_files.lock().unwrap().insert(path.to_string());
+        let mut set = target_files.lock()?;
+        set.insert(path.to_string());
     }
+
+    Ok(())
 }
 
-fn copy_headers(intermediate_path: &std::path::Path, project_dir: &std::path::Path)
+fn copy_headers(intermediate_path: &std::path::Path, project_dir: &std::path::Path) -> Result<(), Box<dyn std::error::Error>>
 {
     if project_dir.is_dir()
     {
-        for entry in std::fs::read_dir(&project_dir).expect("Unable to read a project folder.")
+        for entry in std::fs::read_dir(&project_dir)?
         {
-            let next_path = entry.expect("Not a valid path").path();
+            let next_path = entry?.path();
             
             if next_path.is_dir()
             {
-                copy_headers(&intermediate_path, &next_path);
+                copy_headers(&intermediate_path, &next_path)?;
             }
 
             if next_path.is_file()
@@ -106,89 +99,114 @@ fn copy_headers(intermediate_path: &std::path::Path, project_dir: &std::path::Pa
                     None => continue
                 };
 
-                let target_intermediate = std::path::Path::new(next_path.parent().expect("Parent path does not exists"));
+                let target_intermediate = std::path::Path::new(next_path.parent().ok_or("parent does not exists")?);
                 let mut project_root_path = std::path::Path::new("");
                 
                 'ancestor_find: for ancestor in target_intermediate.ancestors() 
                 {
-                    for entry in std::fs::read_dir(&ancestor).expect("Unable to find the parent folder")
+                    for entry in std::fs::read_dir(&ancestor)?
                     {
-                        let build_cs_candidate = entry.expect("Not a valid path").path();
+                        let build_cs_candidate = entry?.path();
 
-                        if build_cs_candidate.is_file() && build_cs_candidate.file_name().expect("File name not found").to_str().expect("Unable to cast to string").ends_with("build.cs")
+                        if build_cs_candidate.is_file()
                         {
-                            project_root_path = ancestor;
-                            break 'ancestor_find;
+                            let filename = match build_cs_candidate.file_name()
+                            {
+                                Some(x) => x,
+                                None => continue,
+                            };
+                            
+                            if filename.to_str().ok_or("Unable to cast filename to string")?.ends_with("build.cs") 
+                            {
+                                project_root_path = ancestor;
+                                break 'ancestor_find;
+                            }
                         }
                     }
                 }
 
-                let project_name = project_root_path.iter().nth(project_root_path.iter().count() - 1).expect("Unable to parse the project name");
-                let sub_directory_and_filename = next_path.strip_prefix(project_root_path.parent().expect("Drive root reached")).expect("Project path is not compatible with header file path");
+                let project_name = project_root_path.iter().nth(project_root_path.iter().count() - 1).ok_or("project root path is far ahead of root directory")?;
+                let sub_directory_and_filename = next_path.strip_prefix(project_root_path.parent().ok_or("parent does not exists")?)?;
+                let sub_directory_and_filename_str = sub_directory_and_filename.to_str().ok_or("unable to cast subdirectory filename to string")?;
                 
                 if extension == "h"
                 {
                     let dest = intermediate_path.join(sub_directory_and_filename.with_extension("h"));
+                    let dest_parent = dest.parent().ok_or("destination parent does not exists")?;
 
                     println!("Candidate header: {}", sub_directory_and_filename.display());
 
-                    if !dest.parent().expect("Unable to get the parent path").exists()
+                    if !dest_parent.exists()
                     {
                         println!("Create a new folder for project...");
-                        std::fs::create_dir_all(dest.parent().expect("Unable to get the parent path")).expect("Unable to create a parent path");
+                        std::fs::create_dir_all(dest_parent)?;
                     }
 
-                    std::fs::copy(&next_path, &dest).expect("Unable to copy the header file");
+                    std::fs::copy(&next_path, &dest)?;
 
+                    let generated_filename_with_extension = sub_directory_and_filename.with_extension("generated.h");
+                    let generated_filename = generated_filename_with_extension.file_name().ok_or("unable to cast filename to string")?;
                     let generated_header = intermediate_path
                         .join("HeaderGenerated")
                         .join(&project_name)
-                        .join(sub_directory_and_filename.with_extension("generated.h").file_name().unwrap());
+                        .join(&generated_filename);
 
                     if !generated_header.exists()
                     {
                         println!("{}", generated_header.display());
                         println!("Header does not generated before, force regenerate...");
-                        target_files.lock().unwrap().insert(sub_directory_and_filename.to_str().expect("Unable to translate to path").to_string());
+                        let mut set = target_files.lock()?;
+                        set.insert(sub_directory_and_filename_str.to_string());
                     }
                 }
                 
                 if extension == "dep"
                 {
+                    let next_path_filename = match next_path.file_name()
+                    {
+                        Some(filename) => filename,
+                        None => continue,
+                    };
+
                     let dependency_dst = intermediate_path
                         .join(&project_name)
-                        .join(next_path.file_name().unwrap());
+                        .join(next_path_filename);
+                    let dependency_dst_parent = dependency_dst.parent().ok_or("unable to get the parent path for dependency")?;
 
-                    if !dependency_dst.parent().expect("Unable to get the parent path").exists()
+                    if !dependency_dst_parent.exists()
                     {
                         println!("Create a new folder for project...");
-                        std::fs::create_dir_all(dependency_dst.parent().expect("Unable to get the parent path")).expect("Unable to create a parent path");
+                        std::fs::create_dir_all(dependency_dst_parent)?;
                     }
 
                     if !dependency_dst.exists()
                     {
-                        std::fs::copy(&next_path, &dependency_dst).expect("Unable to copy the dependency file");
+                        std::fs::copy(&next_path, &dependency_dst)?;
                     }
                 }
             }
         }
     }
+
+    Ok(())
 }
 
-fn check_git(git_dir: &std::path::Path, intermediate_path: &std::path::Path) 
+fn check_git(git_dir: &std::path::Path, intermediate_path: &std::path::Path) -> Result<(), std::io::Error>
 {
     println!("Intermediate Path: {}", intermediate_path.display());
 
-    if !std::fs::exists(&intermediate_path).unwrap()
+    if !std::fs::exists(&intermediate_path)?
     {
         println!("Header parser seems to be not initialized...");
-        std::fs::create_dir(&intermediate_path).unwrap();
+        std::fs::create_dir(&intermediate_path)?;
         
         let gitignore_data : &[u8] = "target\nHeaderGenerated\\***\n*.generated.h\n".as_bytes();
         let gitignore_path = intermediate_path.join(".gitignore");
 
-        let mut file = std::fs::File::create_new(gitignore_path).unwrap();
-        file.write(&gitignore_data).expect("Unable to write a gitignore file.");
+        let mut file = std::fs::File::create_new(gitignore_path)?;
+        file.lock()?;
+        file.write(&gitignore_data)?;
+        file.unlock()?;
 
         let command_to_run = vec![
         vec!["init"], 
@@ -200,9 +218,89 @@ fn check_git(git_dir: &std::path::Path, intermediate_path: &std::path::Path)
         for command in command_to_run 
         {
             let mut git_proc = std::process::Command::new(git_dir.join("cmd").join("git.exe"));
-            git_proc.current_dir(intermediate_path).args(command).status().expect("Repository initialization failed");
+            git_proc.current_dir(intermediate_path).args(command).output()?;
         }
     }
+
+    Ok(())
+}
+
+fn acquire_lock() -> Result<std::fs::File, std::io::Error>
+{
+    let mut lockfile = std::fs::File::options().read(true).append(true).create(true).open("lock")?;
+    
+    'retry: loop 
+    {
+        match lockfile.try_lock()
+        {
+            Ok(true) => 
+            {
+                let mut reader = std::io::BufReader::new(&lockfile);
+                let mut pid = String::new();
+                reader.read_line(&mut pid)?;
+            
+                let sys = sysinfo::System::new_all();
+                match pid.parse::<usize>()
+                {
+                    Ok(parse_pid) =>
+                    {
+                        match sys.process(sysinfo::Pid::from(parse_pid))
+                        {
+                            None =>
+                            {
+                                let string_pid = std::process::id().to_string();
+                                lockfile.write_all(string_pid.as_bytes())?;
+                                break 'retry;
+                            },
+                            Some(_) => 
+                            {
+                                lockfile.unlock()?;
+                                continue;
+                            }
+                        }
+                    },
+                    Err(_) =>
+                    {
+                        if pid.is_empty()
+                        {
+                            let string_pid = std::process::id().to_string();
+                            lockfile.write_all(string_pid.as_bytes())?;
+                            break 'retry;
+                        }
+
+                        lockfile.unlock()?;
+                        continue;
+                    }
+                }
+            },
+            Ok(false) => continue,
+            Err(_) => panic!("unable to acquire a lock file")
+        }
+    }
+
+    println!("Lock acquired");
+    return Ok(lockfile);
+}
+
+fn prepare_and_commit(engine_dir: &std::path::Path, project_dir: &std::path::Path, git_dir: &std::path::Path, intermediate_path: &std::path::Path, configuration: &String) -> Result<(), Box<dyn std::error::Error>>
+{
+    println!("Check git repository");
+    check_git(&git_dir, &intermediate_path)?;
+    println!("Copy new headers");
+    copy_headers(&intermediate_path, &project_dir)?;
+    println!("Check diff with git");
+    diff_git(&git_dir, &intermediate_path)?;
+    println!("Commit diff to git");
+    commit_git(&git_dir, &intermediate_path)?;
+
+    if !target_files.lock()?.is_empty()
+    {
+        println!("Write target file");
+        write_target_file(&intermediate_path)?;
+        println!("Starts header parser");
+        run_headerparser(&engine_dir, &intermediate_path, &configuration)?;
+    }
+    Ok(())
 }
 
 fn main() 
@@ -233,71 +331,21 @@ fn main()
     }
 
     let intermediate_path = engine_dir.join("Intermediate").join("HeaderParser");
-
-    let mut lockfile;
-    loop 
+    
+    println!("Acquiring lock");
+    let lockfile = match acquire_lock()
     {
-        match std::fs::File::options().read(true).append(true).create(true).open("lock")
+        Ok(file) => file,
+        Err(_) => panic!("Unable to lock the file"),
+    };
+
+    match prepare_and_commit(&engine_dir, &project_dir, &git_dir, &intermediate_path, &configuration)
+    {
+        Ok(_) => lockfile.unlock().unwrap(),
+        Err(_) =>
         {
-            Ok(file) =>
-            {
-                match file.try_lock()
-                {
-                    Ok(true) => 
-                    {
-                        lockfile = file;
-
-                        let mut reader = std::io::BufReader::new(&lockfile);
-                        let mut pid = String::new();
-                        reader.read_line(&mut pid).expect("Unable to read a file");
-                    
-                        let sys = sysinfo::System::new_all();
-                        match pid.parse::<usize>()
-                        {
-                            Ok(parse_pid) =>
-                            {
-                                match sys.process(sysinfo::Pid::from(parse_pid))
-                                {
-                                    None =>
-                                    {
-                                        std::fs::remove_file("lock").unwrap();
-                                        lockfile.unlock().unwrap();
-                                        continue;
-                                    },
-                                    Some(_) => continue
-                                }
-                            },
-                            Err(_) =>
-                            {
-                                if pid.is_empty()
-                                {
-                                    let string_pid = std::process::id().to_string();
-                                    lockfile.write_all(string_pid.as_bytes()).expect("Unable to write a lock file");
-                                    break;
-                                }
-                                continue;
-                            }
-                        }
-                    },
-                    Ok(false) => continue,
-                    Err(_) => continue
-                }
-
-            },
-            Err(_) => continue
+            eprintln!("Unable to process the headers");
+            lockfile.unlock().unwrap();
         }
     }
-
-    check_git(&git_dir, &intermediate_path);
-    copy_headers(&intermediate_path, &project_dir);
-    diff_git(&git_dir, &intermediate_path);
-    commit_git(&git_dir, &intermediate_path);
-
-    if !target_files.lock().unwrap().is_empty()
-    {
-        write_target_file(&intermediate_path);
-        run_headerparser(&engine_dir, &intermediate_path, &configuration);
-    }
-
-    lockfile.unlock().unwrap();
 }

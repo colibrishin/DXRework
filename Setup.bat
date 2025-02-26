@@ -38,7 +38,7 @@ echo [Build balius]
 where cargo
 IF errorlevel 1 (
 bitsadmin /transfer rustdownload /download /priority FOREGROUND "https://static.rust-lang.org/rustup/dist/x86_64-pc-windows-msvc/rustup-init.exe" "%TEMP%\rustup-init.exe"
-start /b /wait "" "%TEMP%/rustup-init.exe" "-y" "--default-toolchain nightly"
+start /b /wait "" "%TEMP%/rustup-init.exe" "-y" "--default-toolchain" "nightly"
 )
 
 pushd balius
