@@ -14,15 +14,24 @@ DeferredOutput ps_main(PixelInputType input)
     DeferredOutput output;
     float4 worldNormal = float4(input.normal, 1.f);
     float4 baseColor = input.color;
+    float specular = INST_SPECULAR(bufInstance, input.instanceId);
     float metallic = 0.f;
     float roughness = 0.f;
-    float ao = 0.f;
+    float ao = 1.f;
+    
+    if (INST_REPEAT_TEX(bufInstance, input.instanceId) == true)
+    {
+        const float2 scaleWiseTex = input.tex * input.scale.xy;
+        const float2 repeatTex = frac(scaleWiseTex);
+        input.tex = repeatTex;
+    }
     
     if (INST_TEX_SLOT0_ENABLE(bufInstance, input.instanceId) == true)
     {
         const float3 localNormal = BiasX2(Sample(PSSampler, input.tex, INST_TEX_SLOT0(bufInstance, input.instanceId)).rgb);
         worldNormal = float4(PeturbNormal(localNormal, input.worldPosition.xyz, input.normal, input.tex), 1.f);
     }
+    
     if (INST_TEX_SLOT1_ENABLE(bufInstance, input.instanceId) == true)
     {
         baseColor = Sample(PSSampler, input.tex, INST_TEX_SLOT1(bufInstance, input.instanceId));
@@ -37,7 +46,7 @@ DeferredOutput ps_main(PixelInputType input)
 
     output.A = worldNormal;
     output.B = baseColor;
-    output.C = float4(metallic, roughness, ao, 1.f);
+    output.C = float4(metallic, roughness, ao, specular);
     output.D = input.worldPosition;
     return output;
 }

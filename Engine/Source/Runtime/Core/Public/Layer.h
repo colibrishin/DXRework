@@ -42,6 +42,7 @@ namespace Engine
 
 		ConcurrentWeakObjVec GetGameObjectsConcurrent() const;
 		WeakObjVec           GetGameObjects() const;
+        LayerSizeType        GetLayerType() const;
 
 		void clear();
 

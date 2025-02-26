@@ -77,9 +77,9 @@ PixelInputType vs_main(VertexInputType input, uint instanceId : SV_InstanceID)
 	output.viewDirection = cam_position.xyz - output.worldPosition.xyz;
 	output.viewDirection = normalize(output.viewDirection);
 
-	output.normal   = mul(output.normal, (float3x3)world);
-	output.tangent  = mul(output.tangent, (float3x3)world);
-	output.binormal = mul(output.binormal, (float3x3)world);
+    output.normal = mul(float4(output.normal, 1.f), world);
+    output.tangent = mul(float4(output.tangent, 1.f), world);
+    output.binormal = mul(float4(output.binormal, 1.f), world);
 
 	matrix reflectionWorld = mul(g_camReflectView, g_camProj);
 	reflectionWorld        = mul(world, reflectionWorld);

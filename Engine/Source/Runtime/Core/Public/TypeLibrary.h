@@ -217,11 +217,7 @@ namespace Engine::Graphics
 			}
 			else if constexpr (std::is_same_v<T, Matrix>)
 			{
-				const auto row0 = const_cast<float*>(&param.m[0][0]);
-				const auto row2 = const_cast<float*>(&param.m[2][0]);
-
-				_mm256_store_ps(m_param[slot].m[0], _mm256_load_ps(row0));
-				_mm256_store_ps(m_param[slot].m[2], _mm256_load_ps(row2));
+                m_param[ slot ] = param;
 			}
 			else
 			{
@@ -306,7 +302,7 @@ namespace Engine::Graphics
 		template <typename T> requires (std::is_same_v<float, T> || std::is_same_v<int, T> || std::is_same_v<Vector4, T> || std::is_same_v<Matrix, T>)
 		T* EvaluateAddress(const size_t slot)
 		{
-			auto cast_address = reinterpret_cast<char*>(this);
+            auto cast_address = reinterpret_cast<char*>( &f_param[ 0 ] );
 			
 			if constexpr (std::is_same_v<float, T>)
 			{

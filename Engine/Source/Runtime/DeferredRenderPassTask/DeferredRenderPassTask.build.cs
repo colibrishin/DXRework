@@ -31,9 +31,9 @@ public class DeferredRenderPassTask : EngineCommonProject
 
         conf.TargetCopyFiles.Add
         (
-            @"deferred_default_firstpass.hlsl", 
-            @"deferred_secondpass.hlsl",
-            @"pbr.hlsli"
+            @"deferred_default_firstpass.hlsl",
+            @"deferred_pbr_secondpass.hlsl",
+            @"deferred_secondpass.hlsl"
         );
     }
 }

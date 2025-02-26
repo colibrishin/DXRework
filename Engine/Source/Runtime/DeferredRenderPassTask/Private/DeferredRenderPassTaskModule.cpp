@@ -35,18 +35,31 @@ bool Engine::DeferredRenderPassTaskModule::InitializeImpl()
                                             TEX_FORMAT_R32G32B32A32_FLOAT },
                                TEX_FORMAT_D32_FLOAT );
 
-    factory->SetLightShader( Resources::Shader::Create( "DeferredLightPass",
-                                                     "deferred_secondpass.hlsl",
-                                                     SHADER_DOMAIN_OPAQUE,
-                                                     true,
-                                                     SHADER_DEPTH_TEST_ALL,
-                                                     SHADER_DEPTH_LESS,
-                                                     SHADER_SAMPLER_CLAMP,
-                                                     SHADER_SAMPLER_LESS_EQUAL,
-                                                     SAMPLER_FILTER_MIN_MAG_MIP_POINT,
-                                                     SHADER_RASTERIZER_CULL_BACK,
-                                                     SHADER_RASTERIZER_FILL_SOLID,
-                                                     GetDefaultRTVFormat() ) );
+    Resources::Shader::Create( "DeferredLightPass",
+                               "deferred_secondpass.hlsl",
+                               SHADER_DOMAIN_OPAQUE,
+                               true,
+                               SHADER_DEPTH_TEST_ALL,
+                               SHADER_DEPTH_LESS,
+                               SHADER_SAMPLER_CLAMP,
+                               SHADER_SAMPLER_LESS_EQUAL,
+                               SAMPLER_FILTER_MIN_MAG_MIP_POINT,
+                               SHADER_RASTERIZER_CULL_BACK,
+                               SHADER_RASTERIZER_FILL_SOLID,
+                               GetDefaultRTVFormat() );
+
+    factory->SetLightShader( Resources::Shader::Create( "DeferredLightPBRPass",
+                                                        "deferred_pbr_secondpass.hlsl",
+                                                        SHADER_DOMAIN_OPAQUE,
+                                                        true,
+                                                        SHADER_DEPTH_TEST_ALL,
+                                                        SHADER_DEPTH_LESS,
+                                                        SHADER_SAMPLER_CLAMP,
+                                                        SHADER_SAMPLER_LESS_EQUAL,
+                                                        SAMPLER_FILTER_MIN_MAG_MIP_POINT,
+                                                        SHADER_RASTERIZER_CULL_BACK,
+                                                        SHADER_RASTERIZER_FILL_SOLID,
+                                                        GetDefaultRTVFormat() ) );
 
     factory->SetTexture(
             Resources::Texture2D::Create( "DeferredA",

@@ -325,7 +325,7 @@ namespace Engine
 
 	void Scene::synchronize(const Weak<Scene>& ptr_scene)
 	{
-		if (const auto scene = ptr_scene.lock())
+		if (const Strong<Scene>& scene = ptr_scene.lock())
 		{
 #ifdef PHYSX_ENABLED
 			CleanupPhysX();
@@ -335,7 +335,6 @@ namespace Engine
 			SpinLockToken ct = SingletonSpinLock::GetInstance().Lock(scene->m_component_lock_);
 
 			m_main_camera_local_id_ = scene->m_main_camera_local_id_;
-			m_layers_               = scene->m_layers_;
 			m_main_actor_local_id_  = scene->m_main_actor_local_id_;
 
 			m_object_position_tree_.Clear();
@@ -346,8 +345,9 @@ namespace Engine
 			m_concurrent_cached_objects_.clear();
 			m_assigned_actor_ids_.clear();
 
-			for (const auto& layer : m_layers_)
+			for (auto it = scene->m_layers_.begin(); it != scene->m_layers_.end(); ++it)
 			{
+                const Strong<Layer>& layer = m_layers_.emplace_back( std::move( *it ) );
 				for (const auto& obj : layer->GetGameObjects())
 				{
 					if (const auto locked = obj.lock())
