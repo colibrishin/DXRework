@@ -1,7 +1,7 @@
 #pragma once
 #include <memory>
 
-#include "GraphicInterface.h"
+#include "IGraphicAPI.h"
 #include "RenderType.h"
 #include "TypeLibrary.h"
 

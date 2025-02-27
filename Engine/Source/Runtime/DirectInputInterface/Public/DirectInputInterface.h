@@ -6,13 +6,13 @@
 #include <directxtk12/Keyboard.h>
 #include <bit>
 
-#include "InputInterface.h"
+#include "IInputAPI.h"
 #include "DirectInputInterface.generated.h"
 
 namespace Engine 
 {
 	ECLASS()
-	struct ENGINE_DIRECTINPUTINTERFACE_API DirectInputInterface : public InputInterface
+	struct ENGINE_DIRECTINPUTINTERFACE_API DirectInputInterface : public IInputAPI
 	{
 		// InputInterface을(를) 통해 상속됨
 		void Initialize() override;

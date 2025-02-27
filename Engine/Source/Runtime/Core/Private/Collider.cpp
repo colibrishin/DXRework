@@ -11,7 +11,7 @@
 #endif
 
 #if WITH_EDITOR
-#include "UIInterface.h"
+#include "IUIAPI.h"
 #endif
 
 #ifdef PHYSX_ENABLED
@@ -107,7 +107,7 @@ namespace Engine::Components
 		{
 			Component::OnUIUpdate(context, dt);
 
-			UIInterface& ui = UIInterfaceAccessor::GetInterface();
+			IUIAPI& ui = s_uia.GetInterface();
 			(*context |= ui.NewCombobox( this, "Collider Type", { "Collider Type", reinterpret_cast<int*>(&m_type_), Engine::s_stock_shape_names, std::size(Engine::s_stock_shape_names), true })).SetFunction([&]()
 			{
 				SetType(m_type_);

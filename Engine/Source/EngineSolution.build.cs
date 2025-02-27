@@ -27,6 +27,7 @@ public class EngineSolution : Solution
         Environment.SetEnvironmentVariable("ProjectFilesDir", ProjectFilesDir);
 		
         conf.AddProject<Core>(target);
+        conf.AddProject<BoostSocketWrapper>(target);
 
         if (target.Platform == Platform.win64 || target.Platform == Platform.win32)
         {

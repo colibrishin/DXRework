@@ -19,7 +19,7 @@ ShadowIntensityComputeShader::ShadowIntensityComputeShader() : ComputeShader( ""
     SetThread( { 32, 32, 1 } );
 }
 
-void ShadowIntensityComputeShader::preDispatch( const GraphicInterfaceContextPrimitive *context,
+void ShadowIntensityComputeShader::preDispatch( const IGraphicContext *context,
                                                 Graphics::SBs::LocalParamSB &param,
                                                 const float dt)
 {
@@ -33,13 +33,13 @@ void ShadowIntensityComputeShader::preDispatch( const GraphicInterfaceContextPri
     table->CopyUAVHeap(context);
     table->TransitionToUAV(context);
 
-    GraphicInterface& gi = GraphicInterfaceAccessor::GetInterface();
+    IGraphicAPI& gi = s_ga.GetInterface();
     gi.Bind( context, m_intersection_texture_.get(), BIND_TYPE_SRV, BIND_SLOT_TEX, 0 );
     gi.Bind( context, m_position_texture_.get(), BIND_TYPE_SRV, BIND_SLOT_TEX, 1 );
     param.SetParam(target_light_slot, static_cast<int>(m_target_light_));
 }
 
-void ShadowIntensityComputeShader::postDispatch( const GraphicInterfaceContextPrimitive *context,
+void ShadowIntensityComputeShader::postDispatch( const IGraphicContext *context,
         Graphics::SBs::LocalParamSB &param,
         const float dt)
 {
@@ -51,7 +51,7 @@ void ShadowIntensityComputeShader::postDispatch( const GraphicInterfaceContextPr
     const auto& table = m_light_table_ptr_.lock();
     table->TransitionCommon(context);
 
-    GraphicInterface& gi = GraphicInterfaceAccessor::GetInterface();
+    IGraphicAPI& gi = s_ga.GetInterface();
     gi.TransitBack( context, m_intersection_texture_.get(), BIND_TYPE_SRV );
     gi.TransitBack( context, m_position_texture_.get(), BIND_TYPE_SRV );
 

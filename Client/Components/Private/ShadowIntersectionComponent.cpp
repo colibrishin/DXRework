@@ -50,7 +50,7 @@ void ShadowIntersectionComponent::Initialize()
         ++idx;
 	}
 
-    GraphicInterface& gi = GraphicInterfaceAccessor::GetInterface();
+    IGraphicAPI& gi = s_ga.GetInterface();
 	m_sb_light_table_ = boost::make_shared<decltype(m_sb_light_table_)::element_type>(gi.GetStructuredBuffer<LightTableSB>());
 
 	const auto& context = gi.GetNewContext(0, false, L"Shadow Intersection");

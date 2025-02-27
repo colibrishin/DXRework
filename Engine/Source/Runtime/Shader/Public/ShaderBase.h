@@ -1,7 +1,7 @@
 #pragma once
 #include "Resource.h"
 #include "ResourceManager.h"
-#include "GraphicInterface.h"
+#include "IGraphicAPI.h"
 
 #include "ShaderBase.generated.h"
 
@@ -19,7 +19,7 @@ namespace Engine::Resources
 
         [[nodiscard]] eShaderDomain GetShaderDomain() const;
 
-        [[nodiscard]] virtual PrimitiveShaderBase &GetPrimitive() const = 0;
+        [[nodiscard]] virtual IShaderBase &GetPrimitive() const = 0;
 
     protected:
         ShaderBase();

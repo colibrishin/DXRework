@@ -56,7 +56,7 @@ namespace Engine::Resources
 		{
             Resource::OnUIUpdate( parent, dt );
 
-            UIInterface &ui = UIInterfaceAccessor::GetInterface();
+            IUIAPI &ui = s_uia.GetInterface();
             *parent += ui.NewListBox( this, "MeshList", { "Mesh List", 0, 0 } );
             *parent |= ui.NewDragAndDropTarget( this,
                                                 "DragAndDropTargetResource",
@@ -85,7 +85,7 @@ namespace Engine::Resources
 
                 if ( mesh->m_ui_info_.dialogOpened )
                 {
-                    if ( UIContext context = UIInterface::NewContext( ui.NewDialog(
+                    if ( UIContext context = IUIAPI::NewContext( ui.NewDialog(
                             this,
                             std::format( "Mesh{}Dialog", i ),
                             { mesh->m_ui_info_.label, mesh->m_ui_info_.dialogOpened } ) ) )

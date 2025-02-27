@@ -2,7 +2,7 @@
 #include <memory>
 
 #include "ConcurrentTypeLibrary.h"
-#include "GraphicInterface.h"
+#include "IGraphicAPI.h"
 #include "RenderPassTask.h"
 #include "RenderPassTaskFactory.h"
 #include "SingletonSpinLock.h"
@@ -76,8 +76,8 @@ namespace Engine
                                             const std::unordered_map<std::string_view, ContextSetupFunction> &postrender_predicates,
                                             const aligned_vector<InstancePair>                               &instance_pairs );
 
-		void RecordUsedTexture( const GraphicInterfaceContextPrimitive* context,
-                                GraphicInterface&                       gi,
+		void RecordUsedTexture( const IGraphicContext* context,
+                                IGraphicAPI&                       gi,
                                 const Resources::Texture*               tex );
 
 
@@ -87,7 +87,7 @@ namespace Engine
                                            StructuredBufferTypeProxy<Graphics::SBs::InstanceSB> &instance_buffer,
                                            const Resources::Shader                              *shader,
                                            const Resources::Mesh                                *mesh,
-                                           const GraphicInterfaceContextPrimitive               *context,
+                                           const IGraphicContext               *context,
                                            const aligned_vector<Graphics::SBs::InstanceSB *>    &instances,
                                            const aligned_vector<TexturePair>                    &texture_pairs );
 
@@ -104,7 +104,7 @@ namespace Engine
 
 		StructuredBufferMemoryPool<Graphics::SBs::LocalParamSB> m_local_param_pool_{};
 		StructuredBufferMemoryPool<Graphics::SBs::InstanceSB> m_instance_pool_{};
-		tbb::concurrent_vector<Unique<GraphicHeapBase>> m_heaps_{};
+		tbb::concurrent_vector<Unique<IHeapBase>> m_heaps_{};
 		std::vector<const Resources::Texture*> m_used_shader_textures_{};
 	};
 

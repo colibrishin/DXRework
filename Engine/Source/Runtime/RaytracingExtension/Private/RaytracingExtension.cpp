@@ -2,7 +2,7 @@
 #include "RaytracingExtension.h"
 #include "RaytracingExtension.generated.h"
 
-#include "GraphicInterface.h"
+#include "IGraphicAPI.h"
 #include "RaytracingRenderPassTask.h"
 #include "Renderer.h"
 
@@ -33,7 +33,7 @@ void Engine::RaytracingExtension::SetRaytracing( const bool flag )
     const std::string_view& fd_type_name = ForwardRenderPassTask::StaticTypeName();
     const std::wstring fd_type_name_wstr(fd_type_name.begin(), fd_type_name.end());
     
-    RaytracingExtensionInterface& rgi = GraphicInterfaceAccessor::GetRaytracingInterface();
+    IRaytracingExtension& rgi = s_ga.GetRaytracingInterface();
     rgi.UseRaytracing( flag );
 
     RenderPass(flag)( rt_type_name_wstr, SHADER_DOMAIN_OPAQUE );

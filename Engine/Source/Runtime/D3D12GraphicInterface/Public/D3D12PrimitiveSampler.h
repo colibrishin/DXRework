@@ -1,10 +1,10 @@
 #pragma once
 #include <directx/d3d12.h>
-#include "GraphicInterface.h"
+#include "IGraphicAPI.h"
 
 namespace Engine
 {
-    struct D3D12PrimitiveSampler : public PrimitiveSampler
+    struct D3D12PrimitiveSampler : public ISampler
     {
         void Generate( eShaderSamplerAddress addr, eShaderSamplerFunction function, eSamplerFilter filter ) override;
         virtual bool IsValid() override;

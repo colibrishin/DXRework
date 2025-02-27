@@ -12,7 +12,7 @@ namespace Engine
         L"miss_main"
     };
     
-    class ENGINE_D3D12GRAPHICINTERFACE_API D3D12RaytracingShader : public RaytracingPrimitiveShader
+    class ENGINE_D3D12GRAPHICINTERFACE_API D3D12RaytracingShader : public IRaytracingShader
     {
     public:
         void                Generate(const Resources::RaytracingShader* shader, void* pipeline_signature) override;

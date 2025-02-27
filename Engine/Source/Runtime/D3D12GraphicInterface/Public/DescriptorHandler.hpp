@@ -3,7 +3,7 @@
 #include <wrl/client.h>
 
 
-#include "GraphicInterface.h"
+#include "IGraphicAPI.h"
 
 #include "DescriptorPtrImpl.h"
 #include "SIMDExtension.hpp"
@@ -65,12 +65,12 @@ namespace Engine
             const D3D12_CPU_DESCRIPTOR_HANDLE& begin, const D3D12_CPU_DESCRIPTOR_HANDLE& uav, UINT slot
         ) const = 0;
         virtual void BindGraphic(
-            const GraphicInterfaceContextPrimitive* context, ID3D12DescriptorHeap*                   buffer_heap,
+            const IGraphicContext* context, ID3D12DescriptorHeap*                   buffer_heap,
             ID3D12DescriptorHeap*                   sampler_heap, const D3D12_GPU_DESCRIPTOR_HANDLE& buffer_handle,
             const D3D12_GPU_DESCRIPTOR_HANDLE&      sampler_handle
         ) const = 0;
         virtual void BindCompute(
-            const GraphicInterfaceContextPrimitive* context, ID3D12DescriptorHeap*                   buffer_heap,
+            const IGraphicContext* context, ID3D12DescriptorHeap*                   buffer_heap,
             ID3D12DescriptorHeap*                   sampler_heap, const D3D12_GPU_DESCRIPTOR_HANDLE& buffer_handle,
             const D3D12_GPU_DESCRIPTOR_HANDLE&      sampler_handle
         ) const = 0;
@@ -261,7 +261,7 @@ namespace Engine
         ) const override { m_heap_binder_.SetUnorderedAccess(m_dev_.Get(), begin, uav, slot, m_buffer_size_); }
 
         void BindGraphic(
-            const GraphicInterfaceContextPrimitive* context, ID3D12DescriptorHeap*                   buffer_heap,
+            const IGraphicContext* context, ID3D12DescriptorHeap*                   buffer_heap,
             ID3D12DescriptorHeap*                   sampler_heap, const D3D12_GPU_DESCRIPTOR_HANDLE& buffer_handle,
             const D3D12_GPU_DESCRIPTOR_HANDLE&      sampler_handle
         ) const override
@@ -274,7 +274,7 @@ namespace Engine
         }
 
         void BindCompute(
-            const GraphicInterfaceContextPrimitive* context, ID3D12DescriptorHeap*                   buffer_heap,
+            const IGraphicContext* context, ID3D12DescriptorHeap*                   buffer_heap,
             ID3D12DescriptorHeap*                   sampler_heap, const D3D12_GPU_DESCRIPTOR_HANDLE& buffer_handle,
             const D3D12_GPU_DESCRIPTOR_HANDLE&      sampler_handle
         ) const override

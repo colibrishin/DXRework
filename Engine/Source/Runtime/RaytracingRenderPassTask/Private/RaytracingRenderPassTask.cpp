@@ -22,9 +22,9 @@ namespace Engine
 
     void RaytracingRenderPassTask::PreRun(RenderMap const* render_map, const size_t render_map_count, const ObjectPredication& predication)
 	{
-	    GraphicInterface& gi = GraphicInterfaceAccessor::GetInterface();
+	    IGraphicAPI& gi = s_ga.GetInterface();
 
-        if ( RaytracingExtensionInterface& rgi = GraphicInterfaceAccessor::GetRaytracingInterface();
+        if ( IRaytracingExtension& rgi = s_ga.GetRaytracingInterface();
              rgi.ShouldUseRaytracing() )
 	    {
 	        const auto& context = gi.GetNewContext(0, false, L"Building Top Level Acceleration Buffer");
@@ -60,7 +60,7 @@ namespace Engine
 			return;
 		}
 
-        if ( RaytracingExtensionInterface& rgi = GraphicInterfaceAccessor::GetRaytracingInterface();
+        if ( IRaytracingExtension& rgi = s_ga.GetRaytracingInterface();
              rgi.ShouldUseRaytracing() )
 		{
 		    // Filter the instances by the predicate
@@ -103,7 +103,7 @@ namespace Engine
                     );
             }
 
-		    auto& gi = GraphicInterfaceAccessor::GetInterface();
+		    auto& gi = s_ga.GetInterface();
 		    auto context = gi.GetNewContext(0, false, L"Lazy Shader Resource Texture Transition Back");
 		    auto primitive = context.GetPointers();
 		    
@@ -127,7 +127,7 @@ namespace Engine
 
 	void RaytracingRenderPassTask::Cleanup()
 	{
-        if ( RaytracingExtensionInterface& rgi = GraphicInterfaceAccessor::GetRaytracingInterface();
+        if ( IRaytracingExtension& rgi = s_ga.GetRaytracingInterface();
              rgi.ShouldUseRaytracing() )
 	    {
 	        m_local_param_pool_.reset();
@@ -196,15 +196,15 @@ namespace Engine
 		const aligned_vector<InstancePair>&                               instance_pairs
 	)
 	{
-        GraphicInterface& gi = GraphicInterfaceAccessor::GetInterface();
-	    RaytracingExtensionInterface& rgi = GraphicInterfaceAccessor::GetRaytracingInterface();
+        IGraphicAPI& gi = s_ga.GetInterface();
+	    IRaytracingExtension& rgi = s_ga.GetRaytracingInterface();
 
         // Manual release
         SpinLockToken                            gi_token     = SingletonSpinLock::GetInstance().Lock(m_gi_ticket_);
-        const GraphicInterfaceContextReturnType& context      = gi.GetNewContext(0, false, L"Raytracing Render Pass");
+        const IGraphicContextImpl& context      = gi.GetNewContext(0, false, L"Raytracing Render Pass");
 	    gi_token.Release();
 		
-		const GraphicInterfaceContextPrimitive& primitive = context.GetPointers();
+		const IGraphicContext& primitive = context.GetPointers();
 		primitive.commandList->SoftReset();
 
 		// Manual release
@@ -213,7 +213,7 @@ namespace Engine
 		StructuredBufferTypeProxy<Graphics::SBs::LocalParamSB>& sb = m_local_param_pool_.get();
 		local_param_token.Release();
 
-		const GraphicInterfaceContextPrimitive temp_context
+		const IGraphicContext temp_context
 		{
 			.commandList = primitive.commandList,
 			.heap = nullptr
@@ -270,7 +270,7 @@ namespace Engine
 	            const auto& heap = m_local_heaps_.emplace_back(rgi.GetRaytracingHeap()).get();
 	            token.Release();
 
-	            const GraphicInterfaceContextPrimitive local_sig_context
+	            const IGraphicContext local_sig_context
                     {
                         .commandList = primitive.commandList,
                         .heap = heap
@@ -327,7 +327,7 @@ namespace Engine
 	}
 
 	void RaytracingRenderPassTask::RecordUsedTexture(
-		const GraphicInterfaceContextPrimitive* context, GraphicInterface& gi, const Strong<Resources::Texture>& tex
+		const IGraphicContext* context, IGraphicAPI& gi, const Strong<Resources::Texture>& tex
 	)
 	{
 		auto tt = SingletonSpinLock::GetInstance().Lock(m_texture_record_ticket_);
@@ -372,11 +372,11 @@ namespace Engine
 		StructuredBufferTypeProxy<Graphics::SBs::InstanceSB>& instance_buffer,
 		const Resources::RaytracingShader*                    shader,
 		const byte_stream&                                    hit_records,
-		const GraphicInterfaceContextPrimitive*               context,
+		const IGraphicContext*               context,
 		const aligned_vector<Graphics::SBs::InstanceSB*>&     instances)
 	{
 		CheckSize<UINT>(instance_count, L"Warning: Renderer will take a lot of amount of instance buffers!");
-		RaytracingExtensionInterface& rgi = GraphicInterfaceAccessor::GetRaytracingInterface();
+		IRaytracingExtension& rgi = s_ga.GetRaytracingInterface();
 
 	    instance_buffer.SetDataPointerContainer(context, static_cast<UINT>(instance_count), instances.data());
 	    instance_buffer.TransitionToSRV(context);

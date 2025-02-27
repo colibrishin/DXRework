@@ -1,13 +1,13 @@
 ﻿#pragma once
 #include "D3D12ComputePrimitiveShader.h"
-#include "GraphicInterface.h"
+#include "IGraphicAPI.h"
 
 #include "D3D12GraphicResourcePrimitive.generated.h"
 
 namespace Engine
 {
     ECLASS( internal )
-    struct D3D12GraphicResourcePrimitive : public GraphicResourcePrimitive 
+    struct D3D12GraphicResourcePrimitive : public IGraphicResource 
     {
         GENERATE_BODY
 

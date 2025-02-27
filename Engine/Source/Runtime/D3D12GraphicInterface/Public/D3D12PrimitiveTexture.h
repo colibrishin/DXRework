@@ -5,7 +5,7 @@
 
 namespace Engine 
 {
-	struct ENGINE_D3D12GRAPHICINTERFACE_API D3D12PrimitiveTexture : public PrimitiveTexture
+	struct ENGINE_D3D12GRAPHICINTERFACE_API D3D12PrimitiveTexture : public ITexture
 	{
 		D3D12PrimitiveTexture();
 		void Generate(Resources::Texture* texture) override;
@@ -16,7 +16,7 @@ namespace Engine
 			void* data_ptr, const size_t width, const size_t height, const size_t stride, const size_t depth
 		) override;
 		void Map(
-			PrimitiveTexture* src, const UINT src_width, const UINT src_height, const size_t src_idx, const UINT dst_x,
+			ITexture* src, const UINT src_width, const UINT src_height, const size_t src_idx, const UINT dst_x,
 			const UINT        dst_y, const size_t dst_idx
 		) override;
 		

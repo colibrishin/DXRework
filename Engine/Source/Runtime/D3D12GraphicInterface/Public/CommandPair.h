@@ -21,7 +21,7 @@ namespace Engine
 	struct CommandPairPool;
 	struct CommandPairTask;
 
-	struct ENGINE_D3D12GRAPHICINTERFACE_API CommandPair final : public CommandListBase
+	struct ENGINE_D3D12GRAPHICINTERFACE_API CommandPair final : public ICommandList
 	{
 	public:
 		explicit CommandPair

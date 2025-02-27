@@ -7,33 +7,33 @@ namespace Engine
 	typedef UINT SoundChannelID;
 	constexpr size_t g_max_sound_channel = 32;
 
-	struct SoundPrimitive;
+	struct ISound;
 
-	struct ENGINE_CORE_API SoundInterface
+	struct ENGINE_CORE_API ISoundAPI
 	{
-		virtual ~SoundInterface() = default;
+		virtual ~ISoundAPI() = default;
 
 		virtual void Initialize() = 0;
 		virtual void Shutdown() = 0;
 		virtual void Update() = 0;
-		virtual SoundPrimitive* NewSound( const std::filesystem::path& path ) = 0;
-		virtual void ReleaseSound( SoundPrimitive* primitive ) = 0;
+		virtual ISound* NewSound( const std::filesystem::path& path ) = 0;
+		virtual void ReleaseSound( ISound* primitive ) = 0;
 		virtual void UpdatePosition( const SoundChannelID id, const Vector3& position ) = 0;
 		virtual void UpdatePosition( const SoundChannelID id, const Vector3& position, const Vector3& velocity ) = 0;
-		virtual bool PlaySound( const SoundPrimitive* sound, const Vector3& position, const Vector3& velocity, bool loop, SoundChannelID& id ) = 0;
+		virtual bool PlaySound( const ISound* sound, const Vector3& position, const Vector3& velocity, bool loop, SoundChannelID& id ) = 0;
 		virtual bool StopSound( const SoundChannelID id ) = 0;
-		virtual void StopLoop( const SoundPrimitive* sound, const SoundChannelID id ) = 0;
+		virtual void StopLoop( const ISound* sound, const SoundChannelID id ) = 0;
 	};
 
-	struct ENGINE_CORE_API SoundInterfaceAccessor
+	struct ENGINE_CORE_API ISoundAPIAccessor
 	{
-		static SoundInterface& GetInterface()
+		ISoundAPI& GetInterface()
 		{
 			return *s_interface_;
 		}
 
 		template <typename T>
-		static void SetInterface()
+		void SetInterface()
 		{
 			if (!s_interface_)
 			{
@@ -42,9 +42,9 @@ namespace Engine
 			}
 		}
 
-		static void Shutdown()
+		void Shutdown()
 		{
-			if (!s_interface_)
+			if (s_interface_)
 			{
 				s_interface_->Shutdown();
 				s_interface_ = nullptr;
@@ -52,12 +52,14 @@ namespace Engine
 		}
 
 	private:
-		static Unique<SoundInterface> s_interface_;
+		Unique<ISoundAPI> s_interface_;
 	};
 
-	struct ENGINE_CORE_API SoundPrimitive
+	static ISoundAPIAccessor s_sa;
+
+	struct ENGINE_CORE_API ISound
 	{
-		virtual ~SoundPrimitive() {}
+		virtual ~ISound() {}
 
 		virtual void SetMinDistance( float value ) = 0;
 		virtual void SetMaxDistance( float value ) = 0;

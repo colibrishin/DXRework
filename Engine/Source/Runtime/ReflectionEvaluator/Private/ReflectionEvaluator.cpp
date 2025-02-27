@@ -41,21 +41,21 @@ namespace Engine::Managers
 			&ReflectionEvaluator::CheckRender);
 	}
 
-	void ReflectionEvaluator::BindReflectionMap(const GraphicInterfaceContextPrimitive* context)
+	void ReflectionEvaluator::BindReflectionMap(const IGraphicContext* context)
 	{
-		GraphicInterfaceAccessor::GetInterface().Bind(context, m_copy_.get(), BIND_TYPE_SRV, RESERVED_TEX_RENDERED, 0);
+		s_ga.GetInterface().Bind(context, m_copy_.get(), BIND_TYPE_SRV, RESERVED_TEX_RENDERED, 0);
 	}
 
-	void ReflectionEvaluator::UnbindReflectionMap(const GraphicInterfaceContextPrimitive* context)
+	void ReflectionEvaluator::UnbindReflectionMap(const IGraphicContext* context)
 	{
-		GraphicInterfaceAccessor::GetInterface().TransitBack(context, m_copy_.get(), BIND_TYPE_SRV);
+		s_ga.GetInterface().TransitBack(context, m_copy_.get(), BIND_TYPE_SRV);
 	}
 
 	void ReflectionEvaluator::CheckRender(const eShaderDomain shaderDomain)
 	{
 		if (shaderDomain == SHADER_DOMAIN_OPAQUE)
 		{
-			GraphicInterface& gi = GraphicInterfaceAccessor::GetInterface();
+			IGraphicAPI& gi = s_ga.GetInterface();
 			const auto& context = gi.GetNewContext(0, false, L"Opaque render target copy");
 			const auto& primitive = context.GetPointers();
 			primitive.commandList->SoftReset();

@@ -85,7 +85,7 @@ namespace Engine
 			throw std::runtime_error("Vertex shader is not found");
 		}
 
-		const auto& dev = static_cast<ID3D12Device2*>(GraphicInterfaceAccessor::GetInterface().GetNativeInterface());
+		const auto& dev = static_cast<ID3D12Device2*>(s_ga.GetInterface().GetNativeInterface());
 
 		D3D12_DEPTH_STENCIL_DESC dsd;
 		dsd.DepthEnable                  = m_depth_flag_;
@@ -374,13 +374,13 @@ namespace Engine
 
 	void D3D12GraphicPrimitiveShader::SetNativeSampler(void* sampler)
 	{
-		GraphicPrimitiveShader::SetNativeSampler(sampler);
+		IGraphicShader::SetNativeSampler(sampler);
 		m_sampler_descriptor_heap_ = static_cast<ID3D12DescriptorHeap*>(sampler);
 	}
 
 	void D3D12GraphicPrimitiveShader::SetNativeShader(void* shader)
 	{
-		GraphicPrimitiveShader::SetNativeShader(shader);
+		IGraphicShader::SetNativeShader(shader);
 		m_pipeline_state_ = static_cast<ID3D12PipelineState*>(shader);
 	}
 

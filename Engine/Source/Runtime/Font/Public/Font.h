@@ -1,7 +1,7 @@
 #pragma once
 #include "Resource.h"
 #include "ResourceManager.h"
-#include "GraphicInterface.h"
+#include "IGraphicAPI.h"
 
 #include "Font.generated.h"
 
@@ -24,7 +24,7 @@ namespace Engine::Resources
         void FixedUpdate(const float dt) override;
         void OnSerialized() override;
         void OnDeserialized() override;
-        PrimitiveFont& GetPrimitive() const;
+        IFont& GetPrimitive() const;
 
     private:
         friend struct ConstructorAccess;
@@ -32,6 +32,6 @@ namespace Engine::Resources
         void Load_INTERNAL() override;
         void Unload_INTERNAL() override;
 
-        Unique<PrimitiveFont> m_primitive_;
+        Unique<IFont> m_primitive_;
     };
 }

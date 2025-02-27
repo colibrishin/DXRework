@@ -3,7 +3,7 @@
 #include "ModuleManager.h"
 
 #if WITH_EDITOR
-#include "UIInterface.h"
+#include "IUIAPI.h"
 #endif
 
 SingletonCollection Engine::CoreLoop::m_singleton_accessor_[LOOP_TYPE_MAX] = {};
@@ -186,9 +186,9 @@ namespace Engine::Managers
 		}
 
 #if WITH_EDITOR
-		if (UIInterfaceAccessor::IsValid())
+		if (s_uia.IsValid())
 		{
-			UIInterfaceAccessor::NewFrame();
+			s_uia.NewFrame();
 		}
 #endif
 		
@@ -199,7 +199,7 @@ namespace Engine::Managers
 		}
 
 #if WITH_EDITOR
-		if (UIInterfaceAccessor::IsValid())
+		if (s_uia.IsValid())
 		{
 			OnUIUpdate(nullptr, dt);
 		}

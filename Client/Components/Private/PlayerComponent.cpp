@@ -12,7 +12,7 @@
 #include "InputManager.h"
 #include "SceneManager.h"
 #include "CollisionDetector.h"
-#include "InputInterface.h"
+#include "IInputAPI.h"
 
 #include "Transform.h"
 #include "Collider.h"

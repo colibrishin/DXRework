@@ -62,7 +62,7 @@ namespace Engine
   SERIALIZER_ACCESS_IMPL2(API, NAMESPACE_TYPE, __VA_ARGS__)
 
 #if WITH_EDITOR
-#include <UIInterface.h>
+#include "IUIAPI.h"
 #endif
 
 namespace Engine::Abstracts

@@ -1,6 +1,6 @@
 #pragma once
 #include <array>
-#include "GraphicInterface.h"
+#include "IGraphicAPI.h"
 #include "ResourceManager.h"
 
 #include "ComputeShader.generated.h"
@@ -18,9 +18,9 @@ namespace Engine::Resources
 		ComputeShader& operator=(const ComputeShader& other);
 
 		[[nodiscard]] std::array<uint32_t, 3> GetThread() const;
-		void Dispatch(const GraphicInterfaceContextPrimitive* context, const UINT group_count[ 3 ], Graphics::SBs::LocalParamSB& param, const float dt);
+		void Dispatch(const IGraphicContext* context, const UINT group_count[ 3 ], Graphics::SBs::LocalParamSB& param, const float dt);
 
-		[[nodiscard]] ComputePrimitiveShader& GetComputePrimitiveShader() const;
+		[[nodiscard]] IComputeShader& GetComputePrimitiveShader() const;
 
 #if WITH_EDITOR
 		void OnUIUpdate(UIContext* const parent, const float dt) override;
@@ -30,8 +30,8 @@ namespace Engine::Resources
 		ComputeShader( const std::filesystem::path& path );
         void SetThread( const std::array<uint32_t, 3> &thread );
 
-		virtual void preDispatch(const GraphicInterfaceContextPrimitive* context, Graphics::SBs::LocalParamSB& param, const float dt) = 0;
-		virtual void postDispatch(const GraphicInterfaceContextPrimitive* context, Graphics::SBs::LocalParamSB& param, const float dt) = 0;
+		virtual void preDispatch(const IGraphicContext* context, Graphics::SBs::LocalParamSB& param, const float dt) = 0;
+		virtual void postDispatch(const IGraphicContext* context, Graphics::SBs::LocalParamSB& param, const float dt) = 0;
 
 		virtual void loadDerived() = 0;
 		virtual void unloadDerived() = 0;
@@ -55,6 +55,6 @@ namespace Engine::Resources
 		EPROPERTY()
         std::array<uint32_t, 3> m_thread_ = { 1, 1, 1 };
 
-		Unique<ComputePrimitiveShader> m_primitive_shader_;
+		Unique<IComputeShader> m_primitive_shader_;
 	};
 } // namespace Engine::Resources

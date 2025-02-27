@@ -75,7 +75,7 @@ namespace Engine::Resources
 
 	void Texture::Load_INTERNAL()
 	{
-		m_primitive_texture_ = Unique<PrimitiveTexture>(GraphicInterfaceAccessor::GetInterface().GetNewPrimitiveTexture());
+		m_primitive_texture_ = Unique<ITexture>(s_ga.GetInterface().GetNewPrimitiveTexture());
 
 		if (!GetPath().empty())
 		{
@@ -98,7 +98,7 @@ namespace Engine::Resources
 		}
 	}
 
-	PrimitiveTexture* Texture::GetPrimitiveTexture() const
+	ITexture* Texture::GetPrimitiveTexture() const
 	{
 		return m_primitive_texture_.get();
 	}

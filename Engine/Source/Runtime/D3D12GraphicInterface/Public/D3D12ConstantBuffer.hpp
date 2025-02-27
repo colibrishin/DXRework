@@ -6,7 +6,7 @@
 
 namespace Engine::Graphics
 {
-	class D3D12ConstantBufferTypeless : public ConstantBufferTypeless
+	class D3D12ConstantBufferTypeless : public IConstantBuffer
 	{
 	public:
 		~D3D12ConstantBufferTypeless() override;
@@ -19,7 +19,7 @@ namespace Engine::Graphics
 		void                Create(const void* src_data, const size_t stride) override;
 		void                SetData(const void* src_data, const size_t stride) override;
 		[[nodiscard]] void* GetData() const override;
-		void                Bind(const GraphicInterfaceContextPrimitive* context, const size_t slot) override
+		void                Bind(const IGraphicContext* context, const size_t slot) override
 		{
 			Bind(static_cast<CommandPair*>(context->commandList), static_cast<DescriptorPtrImpl*>(context->heap), slot);
 		}
@@ -36,7 +36,7 @@ namespace Engine::Graphics
 			return m_cpu_cbv_heap_->GetCPUDescriptorHandleForHeapStart();
 		}
 
-	    virtual void Flush(const GraphicInterfaceContextPrimitive* context) override
+	    virtual void Flush(const IGraphicContext* context) override
 		{
 		    Flush(static_cast<CommandPair*>(context->commandList), static_cast<DescriptorPtrImpl*>(context->heap));
 		}

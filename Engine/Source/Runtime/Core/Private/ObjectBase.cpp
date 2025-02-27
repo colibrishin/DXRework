@@ -562,11 +562,11 @@ namespace Engine::Abstracts
 	{
 		if (parent)
 		{
-			UIInterface& ui = UIInterfaceAccessor::GetInterface();
+			IUIAPI& ui = s_uia.GetInterface();
 
             if ( m_ui_info_.dialogOpened )
             {
-                if ( UIContext context = UIInterface::NewContext(
+                if ( UIContext context = IUIAPI::NewContext(
                         ui.NewDialog( this, "ObjectBaseDialog", { GetName(), m_ui_info_.dialogOpened } ) ) )
                 {
                     Actor::OnUIUpdate( &context, dt );
@@ -590,7 +590,7 @@ namespace Engine::Abstracts
 
                     if ( m_b_add_component_dialog_opened_ )
                     {
-                        if ( UIContext add_com_context = UIInterface::NewContext( ui.NewDialog( this,
+                        if ( UIContext add_com_context = IUIAPI::NewContext( ui.NewDialog( this,
                             "AddComponentDialog",
                             { "Add Component dialog", m_b_add_component_dialog_opened_ } ) ) )
                         {
@@ -660,7 +660,7 @@ namespace Engine::Abstracts
                     {
                         if ( component->m_ui_info_.dialogOpened )
                         {
-                            if ( UIContext context = UIInterface::NewContext( ui.NewDialog(
+                            if ( UIContext context = IUIAPI::NewContext( ui.NewDialog(
                                     this,
                                     std::format( "ComponentDialog{}", idx ),
                                     { component->m_ui_info_.label, component->m_ui_info_.dialogOpened } ) ) )
@@ -684,7 +684,7 @@ namespace Engine::Abstracts
 
                         if ( m_b_child_add_dialog_ )
                         {
-                            if ( UIContext child_select_context = UIInterface::NewContext(
+                            if ( UIContext child_select_context = IUIAPI::NewContext(
                                     ui.NewDialog( this,
                                                   "AddNewChildButton",
                                                   { "Add New Child", m_b_child_add_dialog_ } ) ) )

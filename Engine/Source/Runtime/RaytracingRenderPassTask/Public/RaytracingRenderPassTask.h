@@ -2,7 +2,7 @@
 #include <memory>
 
 #include "ConcurrentTypeLibrary.h"
-#include "GraphicInterface.h"
+#include "IGraphicAPI.h"
 #include "RenderPassTask.h"
 #include "RenderPassTaskFactory.h"
 #include "SingletonSpinLock.h"
@@ -87,8 +87,8 @@ namespace Engine
                                 const std::unordered_map<std::string_view, ContextSetupFunction>& postrender_predicates,
                                 const aligned_vector<InstancePair>&                               instance_pairs );
 	    
-		void RecordUsedTexture( const GraphicInterfaceContextPrimitive* context,
-                                GraphicInterface&                       gi,
+		void RecordUsedTexture( const IGraphicContext* context,
+                                IGraphicAPI&                       gi,
                                 const Strong<Resources::Texture>&       tex );
 
         byte_stream& GetByteStream();
@@ -99,7 +99,7 @@ namespace Engine
                                                StructuredBufferTypeProxy<Graphics::SBs::InstanceSB>& instance_buffer,
                                                const Resources::RaytracingShader*                    shader,
                                                const byte_stream&                                    hit_records,
-                                               const GraphicInterfaceContextPrimitive*               context,
+                                               const IGraphicContext*               context,
                                                const aligned_vector<Graphics::SBs::InstanceSB*>&     instances );
 
 		SpinLockTicket                                          m_gi_ticket_;
@@ -109,7 +109,7 @@ namespace Engine
         SpinLockTicket                                          m_heap_ticket_;
         SpinLockTicket                                          m_byte_stream_ticket_;
         AccelStructBuffer                                       m_top_level_acceleration_buffer_{};
-        std::vector<Unique<GraphicHeapBase>>                    m_local_heaps_{};
+        std::vector<Unique<IHeapBase>>                    m_local_heaps_{};
         std::vector<byte_stream>                                m_byte_stream_{};
         std::vector<uint32_t>                                   m_byte_stream_usage_{};
         StructuredBufferMemoryPool<Graphics::SBs::LocalParamSB> m_local_param_pool_{};

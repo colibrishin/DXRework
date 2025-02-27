@@ -1,11 +1,11 @@
 #include "SoundManager.h"
-#include "SoundInterface.h"
+#include "ISoundAPI.h"
 
 namespace Engine::Managers
 {
 	SoundManager::~SoundManager()
 	{
-		SoundInterfaceAccessor::GetInterface().Shutdown();
+		s_sa.Shutdown();
 	}
 
 	void SoundManager::Initialize() {}
@@ -24,6 +24,6 @@ namespace Engine::Managers
 
 	void SoundManager::PostUpdate(const float dt)
 	{
-		SoundInterfaceAccessor::GetInterface().Update();
+		s_sa.GetInterface().Update();
 	}
 } // namespace Engine::Manager::Graphics

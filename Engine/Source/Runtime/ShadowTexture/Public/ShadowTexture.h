@@ -69,7 +69,7 @@ namespace Engine::Resources
 		UINT   GetHeight() const override;
 		UINT64 GetWidth() const override;
 
-		void Clear(const GraphicInterfaceContextPrimitive* context) const;
+		void Clear(const IGraphicContext* context) const;
 
 	protected:
 		void Unload_INTERNAL() override;

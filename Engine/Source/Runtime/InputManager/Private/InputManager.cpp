@@ -1,5 +1,5 @@
 #include "InputManager.h"
-#include "InputInterface.h"
+#include "IInputAPI.h"
 
 namespace Engine::Managers
 {
@@ -30,7 +30,7 @@ namespace Engine::Managers
 
 	bool InputManager::HasScrollChanged(int& value) const
 	{
-		InputInterface& ii = InputInterfaceAccessor::GetInterface();
+		IInputAPI& ii = s_iia.GetInterface();
 
 		if (ii.HasScrollWheelChanged())
 		{
@@ -57,7 +57,7 @@ namespace Engine::Managers
 
 	Vector2 InputManager::GetNormalizedMousePosition()
 	{
-		InputInterface& ii = InputInterfaceAccessor::GetInterface();
+		IInputAPI& ii = s_iia.GetInterface();
 
 		const Vector2 actual_mouse_position{
 			static_cast<float>(ii.GetMouseX()),

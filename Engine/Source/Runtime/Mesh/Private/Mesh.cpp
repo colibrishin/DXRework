@@ -32,7 +32,7 @@ namespace Engine::Resources
 		return m_indices_;
 	}
 
-	PrimitiveMesh* Mesh::GetPrimitive() const
+	IMesh* Mesh::GetPrimitive() const
 	{
 		return m_primitive_mesh_.get();
 	}
@@ -236,8 +236,8 @@ namespace Engine::Resources
 				 sizeof(Vector3)
 				);
 
-	    m_vertex_buffer_structured_ = std::make_unique<decltype(m_vertex_buffer_structured_)::element_type>(GraphicInterfaceAccessor::GetInterface().GetStructuredBuffer<Graphics::VertexElement>());
-		m_primitive_mesh_ = Unique<PrimitiveMesh>(GraphicInterfaceAccessor::GetInterface().GetNewPrimitiveMesh());
+	    m_vertex_buffer_structured_ = std::make_unique<decltype(m_vertex_buffer_structured_)::element_type>(s_ga.GetInterface().GetStructuredBuffer<Graphics::VertexElement>());
+		m_primitive_mesh_ = Unique<IMesh>(s_ga.GetInterface().GetNewPrimitiveMesh());
 		m_primitive_mesh_->Generate(this);
 	}
 

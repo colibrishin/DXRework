@@ -403,7 +403,7 @@ void CubifyComponent::OnUIUpdate(Engine::UIContext* const parent, const float dt
 	if (parent)
 	{
 		Component::OnUIUpdate(parent, dt);
-		UIInterface& ui = UIInterfaceAccessor::GetInterface();
+		IUIAPI& ui = s_uia.GetInterface();
 
 		(*parent |= ui.NewLabelAndVec3(this, "CubeDimension", { "Cube Dimension", &m_cube_dimension_.x, 0.1f, 0.1f, FLT_MAX, true })).SetFunction([]()
 			{

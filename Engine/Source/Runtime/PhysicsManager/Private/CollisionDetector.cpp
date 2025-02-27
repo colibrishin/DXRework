@@ -213,8 +213,8 @@ namespace Engine::Managers
 #if WITH_EDITOR
 	void CollisionDetector::OnUIUpdate(UIContext* const parent, const float dt)
 	{
-        UIInterface &ui = UIInterfaceAccessor::GetInterface();
-        if ( UIContext context = UIInterface::NewContext(
+        IUIAPI &ui = s_uia.GetInterface();
+        if ( UIContext context = IUIAPI::NewContext(
                 ui.NewDialog( this, "CollisionDetectorDialog", { m_ui_info_.label, m_ui_info_.dialogOpened } ) ) )
         {
             if ( const Strong<Scene> &scene = SceneManager::GetInstance().GetActiveScene().lock() )

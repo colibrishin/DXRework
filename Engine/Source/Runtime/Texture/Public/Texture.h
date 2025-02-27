@@ -1,6 +1,6 @@
 #pragma once
 
-#include "GraphicInterface.h"
+#include "IGraphicAPI.h"
 
 #include "Resource.h"
 #include "ResourceManager.h"
@@ -32,7 +32,7 @@ namespace Engine::Resources
 
 		[[nodiscard]] eTexType GetPrimitiveTextureType() const;
 		[[nodiscard]] const GenericTextureDescription& GetDescription() const;
-		[[nodiscard]] PrimitiveTexture* GetPrimitiveTexture() const;
+		[[nodiscard]] ITexture* GetPrimitiveTexture() const;
 
 		bool IsHotload() const;
 
@@ -49,7 +49,7 @@ namespace Engine::Resources
 		void UpdateDescription(const GenericTextureDescription& description);
 		
 	private:
-		friend struct Engine::PrimitiveTexture;
+		friend struct Engine::ITexture;
 		
 		Texture();
 
@@ -57,6 +57,6 @@ namespace Engine::Resources
 		GenericTextureDescription m_desc_;
 		EPROPERTY()
 		eTexType m_type_;
-		std::unique_ptr<PrimitiveTexture> m_primitive_texture_;
+		std::unique_ptr<ITexture> m_primitive_texture_;
 	};
 } // namespace Engine::Resources

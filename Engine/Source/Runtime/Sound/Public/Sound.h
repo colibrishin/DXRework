@@ -1,7 +1,7 @@
 #pragma once
 #include "Resource.h"
 #include "ResourceManager.h"
-#include "SoundInterface.h"
+#include "ISoundAPI.h"
 
 #include "Sound.generated.h"
 
@@ -44,13 +44,13 @@ namespace Engine::Resources
 
 		struct SoundDeleter 
 		{
-			void operator()(SoundPrimitive* ptr) const
+			void operator()(ISound* ptr) const
 			{
-				SoundInterfaceAccessor::GetInterface().ReleaseSound( ptr );
+				s_sa.GetInterface().ReleaseSound( ptr );
 			}
 		};
 
-		Unique<SoundPrimitive, SoundDeleter> m_primitive_;
+		Unique<ISound, SoundDeleter> m_primitive_;
 
 		EPROPERTY()
 		UINT m_roll_off_ = 0;

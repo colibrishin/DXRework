@@ -1,9 +1,9 @@
 ﻿#pragma once
 #if WITH_EDITOR
-#include "GraphicInterface.h"
+#include "IGraphicAPI.h"
 #include "Singleton.h"
 
-#include "UIInterface.h"
+#include "IUIAPI.h"
 
 #include "ImGuiManager.generated.h"
 
@@ -303,7 +303,7 @@ namespace Engine
 		return Generate<ImGui##Name##Token>(context, name, arguments); \
     }
 
-    struct ENGINE_IMGUIMANAGER_API ImGuiUIInterface final : UIInterface
+    struct ENGINE_IMGUIMANAGER_API ImGuiUIInterface final : IUIAPI
     {
         IMGUI_INLINE_GETTER_DECL(MainMenuBar)
         IMGUI_INLINE_GETTER_DECL(Menu)
@@ -364,7 +364,7 @@ namespace Engine::Managers
         ~ImGuiManager() override;
 
         // ImGui Graphics
-        Unique<GraphicHeapBase> m_imgui_descriptor_;
+        Unique<IHeapBase> m_imgui_descriptor_;
     };
 } // namespace Engine::Managers
 #endif

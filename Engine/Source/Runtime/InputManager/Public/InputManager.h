@@ -12,7 +12,7 @@
 #endif
 
 #include "TypeLibrary.h"
-#include "InputInterface.h"
+#include "IInputAPI.h"
 
 #include "InputManager.generated.h"
 
@@ -37,21 +37,21 @@ namespace Engine::Managers
 		template <typename Enum>
 		bool IsKeyDown(const Enum key) const
 		{
-			InputInterface& ii = InputInterfaceAccessor::GetInterface();
+			IInputAPI& ii = s_iia.GetInterface();
 			return ii.IsKeyDown(key);
 		}
 
 		template <typename Enum>
 		bool IsKeyPressed(const Enum key) const
 		{
-			InputInterface& ii = InputInterfaceAccessor::GetInterface();
+			IInputAPI& ii = s_iia.GetInterface();
 			return ii.IsKeyPressed(key);
 		}
 
 		template <typename Enum>
 		bool IsKeyReleased(const Enum key) const
 		{
-			InputInterface& ii = InputInterfaceAccessor::GetInterface();
+			IInputAPI& ii = s_iia.GetInterface();
 			return ii.IsKeyReleased(key);
 		}
 

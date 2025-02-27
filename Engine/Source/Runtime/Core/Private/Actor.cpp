@@ -2,7 +2,7 @@
 #include "Actor.generated.h"
 
 #if WITH_EDITOR
-#include "UIInterface.h"
+#include "IUIAPI.h"
 #endif
 
 #include "Layer.h"
@@ -40,7 +40,7 @@ namespace Engine::Abstracts
 		{
 			Renderable::OnUIUpdate(parent, dt);
 
-			UIInterface& ui = UIInterfaceAccessor::GetInterface();
+			IUIAPI& ui = s_uia.GetInterface();
 
 			if (const Strong<Scene>& scene = GetScene().lock())
 			{

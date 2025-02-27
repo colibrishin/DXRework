@@ -8,7 +8,7 @@
 
 namespace Engine
 {
-	struct ENGINE_D3D12GRAPHICINTERFACE_API D3D12PrimitiveFont : public PrimitiveFont
+	struct ENGINE_D3D12GRAPHICINTERFACE_API D3D12PrimitiveFont : public IFont
 	{
 		D3D12PrimitiveFont() = default;
 		void Generate(const Resources::Font* font) override;

@@ -5,11 +5,12 @@
 
 #include <directxtk12/BufferHelpers.h>
 
-#include "GraphicInterface.h"
+#include "IGraphicAPI.h"
 #include "VertexElement.h"
 #include "SIMDExtension.hpp"
 #include "ThrowIfFailed.h"
 #include "CommandPair.h"
+#include "D3D12GraphicMemoryPool.h"
 #include "D3D12GraphicResourcePrimitive.h"
 
 namespace Engine
@@ -20,9 +21,9 @@ namespace Engine
 
 		const std::wstring vertex_name = std::wstring(generic_name.begin(), generic_name.end()) + L"VertexBuffer";
 
-		const GraphicInterfaceContextReturnType& context = GraphicInterfaceAccessor::GetInterface().GetNewContext(D3D12_COMMAND_LIST_TYPE_DIRECT, false, L"Mesh Load Command Pair");
-    	const GraphicInterfaceContextPrimitive& primitive = context.GetPointers();
-    	const auto& dev = static_cast<ID3D12Device2*>(GraphicInterfaceAccessor::GetInterface().GetNativeInterface());
+		const IGraphicContextImpl& context = s_ga.GetInterface().GetNewContext(D3D12_COMMAND_LIST_TYPE_DIRECT, false, L"Mesh Load Command Pair");
+    	const IGraphicContext& primitive = context.GetPointers();
+    	const auto& dev = static_cast<ID3D12Device2*>(s_ga.GetInterface().GetNativeInterface());
 		const auto& cmd = static_cast<CommandPair*>(primitive.commandList);
     	
 		primitive.commandList->SoftReset();
@@ -147,7 +148,7 @@ namespace Engine
 		SetNativeIndexBuffer(&m_index_buffer_view_);
 
 #if CFG_RAYTRACING
-	    RaytracingExtensionInterface& rgi    = GraphicInterfaceAccessor::GetRaytracingInterface();
+	    IRaytracingExtension& rgi    = s_ga.GetRaytracingInterface();
         auto                          rt_dev = static_cast<ID3D12Device5*>(rgi.GetRaytracingNativeInterface());
 		AccelStructBuffer&            blas   = mesh->GetBLAS();
 		

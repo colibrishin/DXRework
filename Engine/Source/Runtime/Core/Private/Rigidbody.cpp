@@ -57,7 +57,7 @@ namespace Engine::Components
         if ( context )
         {
             Component::OnUIUpdate(context, dt);
-            UIInterface &ui = UIInterfaceAccessor::GetInterface();
+            IUIAPI &ui = s_uia.GetInterface();
 
             (*context |= ui.NewCheckbox
              (this, "GravityOverride", { "Gravity Override", m_bGravityOverride, true })).SetFunction

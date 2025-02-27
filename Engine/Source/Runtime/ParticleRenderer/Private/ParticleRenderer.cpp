@@ -45,7 +45,7 @@ namespace Engine::Components
 		SetCount( 1 );
 		SetDuration( 1.f );
 		SetSize( 1.f );
-		GraphicInterface& gi = GraphicInterfaceAccessor::GetInterface();
+		IGraphicAPI& gi = s_ga.GetInterface();
 		m_sb_buffer_ = std::make_unique<decltype(m_sb_buffer_)::element_type>( gi.GetStructuredBuffer<Graphics::SBs::InstanceParticleSB>() );
 	}
 
@@ -53,9 +53,9 @@ namespace Engine::Components
 	{
 		if (m_cs_ && GetShape().lock())
 		{
-			GraphicInterface& gi = GraphicInterfaceAccessor::GetInterface();
-			const GraphicInterfaceContextReturnType& context = gi.GetNewContext(0, true, L"Particle Renderer Update");
-			const GraphicInterfaceContextPrimitive& primitive = context.GetPointers();
+			IGraphicAPI& gi = s_ga.GetInterface();
+			const IGraphicContextImpl& context = gi.GetNewContext(0, true, L"Particle Renderer Update");
+			const IGraphicContext& primitive = context.GetPointers();
 			
 			CheckSize<UINT>(m_instances_.size(), L"Warning: Particle instance size is too much for structured buffer!");
 
@@ -75,8 +75,8 @@ namespace Engine::Components
 			m_sb_buffer_->TransitionCommon(&primitive);
 			primitive.commandList->Execute();
 
-			const GraphicInterfaceContextReturnType& copy_context = gi.GetNewContext(0, true, L"Particle Renderer Update");
-			const GraphicInterfaceContextPrimitive& copy_primitive = copy_context.GetPointers();
+			const IGraphicContextImpl& copy_context = gi.GetNewContext(0, true, L"Particle Renderer Update");
+			const IGraphicContext& copy_primitive = copy_context.GetPointers();
 			m_sb_buffer_->GetData(&copy_primitive, static_cast<UINT>(m_instances_.size()), m_instances_.data());
 			
 			// Remove inactive particles.
@@ -126,7 +126,7 @@ namespace Engine::Components
         {
             Base::OnUIUpdate( parent, dt );
 
-            UIInterface &ui = UIInterfaceAccessor::GetInterface();
+            IUIAPI &ui = s_uia.GetInterface();
 
             static std::string shader_name{};
             if ( const Strong<Resources::ParticleComputeShader> &shader = m_cached_cs_.lock() )

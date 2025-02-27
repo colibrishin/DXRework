@@ -35,7 +35,7 @@ MODULE_IMPL(Engine::D3D12GraphicInterfaceModule, D3D12GraphicInterface)
 
 bool Engine::D3D12GraphicInterfaceModule::InitializeImpl()
 {
-	GraphicInterfaceAccessor::SetGraphicInterface<D3D12GraphicInterface>();
+	s_ga.SetGraphicInterface<D3D12GraphicInterface>();
 	
 	CoreLoop::AddManager(
 		CoreLoop::LOOP_TYPE_RENDER,
@@ -50,7 +50,7 @@ bool Engine::D3D12GraphicInterfaceModule::ShutdownImpl()
 		CoreLoop::LOOP_TYPE_RENDER,
 		Managers::ToolkitAPI::GetInstance);
 
-	auto& gi = GraphicInterfaceAccessor::GetInterface();
+	auto& gi = s_ga.GetInterface();
 	gi.Shutdown();
 
 	return true;
@@ -94,7 +94,7 @@ void Engine::D3D12GraphicInterface::Initialize()
 	DetachCommandThread();
 
 #if CFG_RAYTRACING
-    if (auto& rgi = static_cast<RaytracingExtensionInterface&>(*this);
+    if (auto& rgi = static_cast<IRaytracingExtension&>(*this);
         rgi.IsRaytracingSupported())
     {
         rgi.InitializeRaytracing();
@@ -200,7 +200,7 @@ void Engine::D3D12GraphicInterface::InitializeRaytracing()
 
 void                                    Engine::D3D12GraphicInterface::ShutdownRaytracing() { }
 
-Engine::Unique<Engine::GraphicHeapBase> Engine::D3D12GraphicInterface::GetRaytracingHeap()
+Engine::Unique<Engine::IHeapBase> Engine::D3D12GraphicInterface::GetRaytracingHeap()
 {
     return m_raytracing_heap_handler_->Acquire();
 }
@@ -216,7 +216,7 @@ void* Engine::D3D12GraphicInterface::GetRaytracingNativePipeline()
 }
 
 bool Engine::D3D12GraphicInterface::BuildTopLevelAccelerationBuffer(
-    const GraphicInterfaceContextPrimitive* context,
+    const IGraphicContext* context,
     RenderMap const* render_map,
     const size_t render_map_size,
     AccelStructBuffer& out_tlas_buffer,
@@ -339,7 +339,7 @@ bool Engine::D3D12GraphicInterface::BuildTopLevelAccelerationBuffer(
 }
 
 void Engine::D3D12GraphicInterface::DispatchRay(
-    const GraphicInterfaceContextPrimitive* context,
+    const IGraphicContext* context,
     const Resources::RaytracingShader* shader,
     const StructuredBufferTypeProxy<Graphics::SBs::LightSB>& light,
     const StructuredBufferTypeProxy<Graphics::SBs::InstanceSB>& instances,
@@ -387,7 +387,7 @@ void Engine::D3D12GraphicInterface::DispatchRay(
         RAYTRACING_GLOBAL_SLOT_PARAM,
         param.GetGPUAddress());
 
-    auto& shader_primitive = static_cast<RaytracingPrimitiveShader&>(shader->GetPrimitive());
+    auto& shader_primitive = static_cast<IRaytracingShader&>(shader->GetPrimitive());
     shader_primitive.UpdateShaderRecords(RAY_SHADER_REC_HIT, hit_records);
     
     D3D12_DISPATCH_RAYS_DESC ray_desc{};
@@ -442,7 +442,7 @@ void Engine::D3D12GraphicInterface::DispatchRay(
     cmd->GetList4()->DispatchRays(&ray_desc);
 }
 
-void Engine::D3D12GraphicInterface::CopyRaytracingToRenderTarget(const GraphicInterfaceContextPrimitive* context)
+void Engine::D3D12GraphicInterface::CopyRaytracingToRenderTarget(const IGraphicContext* context)
 {
     const auto& cmd = static_cast<CommandPair*>(context->commandList);
     
@@ -581,46 +581,46 @@ void Engine::D3D12GraphicInterface::InitializeOutputBuffer()
 }
 #endif
 
-Engine::PrimitiveTexture* Engine::D3D12GraphicInterface::GetNewPrimitiveTexture()
+Engine::ITexture* Engine::D3D12GraphicInterface::GetNewPrimitiveTexture()
 {
 	return new D3D12PrimitiveTexture();
 }
 
-Engine::PrimitiveMesh* Engine::D3D12GraphicInterface::GetNewPrimitiveMesh()
+Engine::IMesh* Engine::D3D12GraphicInterface::GetNewPrimitiveMesh()
 {
 	return new D3D12PrimitiveMesh();
 }
 
-Engine::GraphicPrimitiveShader* Engine::D3D12GraphicInterface::GetNewGraphicPrimitiveShader()
+Engine::IGraphicShader* Engine::D3D12GraphicInterface::GetNewGraphicPrimitiveShader()
 {
 	return new D3D12GraphicPrimitiveShader();
 }
 
-Engine::ComputePrimitiveShader* Engine::D3D12GraphicInterface::GetNewComputePrimitiveShader()
+Engine::IComputeShader* Engine::D3D12GraphicInterface::GetNewComputePrimitiveShader()
 {
 	return new D3D12ComputePrimitiveShader();
 }
 
-Engine::PrimitiveFont* Engine::D3D12GraphicInterface::GetNewPrimitiveFont()
+Engine::IFont* Engine::D3D12GraphicInterface::GetNewPrimitiveFont()
 {
 	return new D3D12PrimitiveFont();
 }
 
-Engine::PrimitiveSampler *Engine::D3D12GraphicInterface::GetNewPrimitiveSampler()
+Engine::ISampler *Engine::D3D12GraphicInterface::GetNewPrimitiveSampler()
 {
     return new D3D12PrimitiveSampler();
 }
 
 #if CFG_RAYTRACING
-Engine::RaytracingPrimitiveShader* Engine::D3D12GraphicInterface::GetNewRaytracingShader()
+Engine::IRaytracingShader* Engine::D3D12GraphicInterface::GetNewRaytracingShader()
 {
     return new D3D12RaytracingShader();
 }
 #endif
 
-Engine::GraphicInterfaceContextReturnType Engine::D3D12GraphicInterface::GetNewContext(const int8_t type, bool heap_allocation, const std::wstring_view debug_name)
+Engine::IGraphicContextImpl Engine::D3D12GraphicInterface::GetNewContext(const int8_t type, bool heap_allocation, const std::wstring_view debug_name)
 {
-    GraphicInterfaceContextReturnType context
+    IGraphicContextImpl context
     {
         m_command_pair_task_.Acquire(static_cast<D3D12_COMMAND_LIST_TYPE>(type), false, debug_name),
 		heap_allocation ? m_heap_handler_->Acquire() : nullptr
@@ -634,7 +634,7 @@ Engine::CommandPairTask& Engine::D3D12GraphicInterface::GetCommandTask()
 	return m_command_pair_task_;
 }
 
-void Engine::D3D12GraphicInterface::SetViewport(const GraphicInterfaceContextPrimitive* context, const Viewport& viewport)
+void Engine::D3D12GraphicInterface::SetViewport(const IGraphicContext* context, const Viewport& viewport)
 {
     auto cmd = reinterpret_cast<CommandPair*>(context->commandList);
     const D3D12_VIEWPORT& native_viewport = reinterpret_cast<const D3D12_VIEWPORT&>(viewport);
@@ -651,7 +651,7 @@ void Engine::D3D12GraphicInterface::SetViewport(const GraphicInterfaceContextPri
     cmd->GetList()->RSSetScissorRects(1, &scissor_rect);
 }
 
-void Engine::D3D12GraphicInterface::SetDefaultRenderTarget(const GraphicInterfaceContextPrimitive* context)
+void Engine::D3D12GraphicInterface::SetDefaultRenderTarget(const IGraphicContext* context)
 {
 	const auto cmd = reinterpret_cast<CommandPair*>(context->commandList);
 	const auto& rtv_handle = CD3DX12_CPU_DESCRIPTOR_HANDLE
@@ -666,19 +666,19 @@ void Engine::D3D12GraphicInterface::SetDefaultRenderTarget(const GraphicInterfac
 	cmd->GetList()->OMSetRenderTargets(1, &rtv_handle, false, &dsv_handle);
 }
 
-void Engine::D3D12GraphicInterface::SetDefaultGraphicPipeline(const GraphicInterfaceContextPrimitive* context)
+void Engine::D3D12GraphicInterface::SetDefaultGraphicPipeline(const IGraphicContext* context)
 {
 	auto cmd = reinterpret_cast<CommandPair*>(context->commandList);
 	cmd->GetList()->SetGraphicsRootSignature(m_pipeline_root_signature_.Get());
 }
 
-void Engine::D3D12GraphicInterface::SetDefaultComputePipeline(const GraphicInterfaceContextPrimitive* context)
+void Engine::D3D12GraphicInterface::SetDefaultComputePipeline(const IGraphicContext* context)
 {
 	auto cmd = reinterpret_cast<CommandPair*>(context->commandList);
 	cmd->GetList()->SetComputeRootSignature(m_pipeline_root_signature_.Get());
 }
 
-void Engine::D3D12GraphicInterface::Draw(const GraphicInterfaceContextPrimitive* context, const Resources::Mesh* mesh, const UINT instance_count, const UINT instance_offset)
+void Engine::D3D12GraphicInterface::Draw(const IGraphicContext* context, const Resources::Mesh* mesh, const UINT instance_count, const UINT instance_offset)
 {
 	const auto cmd = reinterpret_cast<CommandPair*>(context->commandList);
     UINT       index_count = 0;
@@ -701,13 +701,13 @@ void Engine::D3D12GraphicInterface::Draw(const GraphicInterfaceContextPrimitive*
 }
 
 void Engine::D3D12GraphicInterface::Dispatch(
-	const GraphicInterfaceContextPrimitive* context, const Resources::ComputeShader* shader,
+	const IGraphicContext* context, const Resources::ComputeShader* shader,
 	const Graphics::SBs::LocalParamSB& local_param, const UINT group_count[3]
 )
 {
 	if (!m_local_param_)
 	{
-		GraphicInterface& gi = GraphicInterfaceAccessor::GetInterface(); 	
+		IGraphicAPI& gi = s_ga.GetInterface(); 	
 		m_local_param_ = gi.GetStructuredBuffer<Graphics::SBs::LocalParamSB>();
 	}
 
@@ -726,7 +726,7 @@ void Engine::D3D12GraphicInterface::Dispatch(
 	m_local_param_.TransitionCommon(context);
 }
 
-void Engine::D3D12GraphicInterface::BindGraphic(const GraphicInterfaceContextPrimitive* context, const Resources::Shader* shader)
+void Engine::D3D12GraphicInterface::BindGraphic(const IGraphicContext* context, const Resources::Shader* shader)
 {
 	const auto cmd = static_cast<const CommandPair*>(context->commandList);
 	const auto heap = static_cast<DescriptorPtrImpl*>(context->heap);
@@ -738,7 +738,7 @@ void Engine::D3D12GraphicInterface::BindGraphic(const GraphicInterfaceContextPri
 }
 
 void Engine::D3D12GraphicInterface::BindCompute(
-	const GraphicInterfaceContextPrimitive* context, const Resources::ComputeShader* shader
+	const IGraphicContext* context, const Resources::ComputeShader* shader
 )
 {
 	const auto cmd = static_cast<const CommandPair*>(context->commandList);
@@ -746,7 +746,7 @@ void Engine::D3D12GraphicInterface::BindCompute(
 }
 
 void Engine::D3D12GraphicInterface::Transit(
-	const GraphicInterfaceContextPrimitive* context, const Resources::Texture* tex, const D3D12_RESOURCE_STATES before,
+	const IGraphicContext* context, const Resources::Texture* tex, const D3D12_RESOURCE_STATES before,
 	const D3D12_RESOURCE_STATES after
 )
 {
@@ -765,7 +765,7 @@ void Engine::D3D12GraphicInterface::Transit(
 }
 
 void Engine::D3D12GraphicInterface::TransitTo(
-	const GraphicInterfaceContextPrimitive* context, const Resources::Texture* tex, const eBindType bind_type
+	const IGraphicContext* context, const Resources::Texture* tex, const eBindType bind_type
 )
 {
 	switch (bind_type)
@@ -798,7 +798,7 @@ void Engine::D3D12GraphicInterface::TransitTo(
 }
 
 void Engine::D3D12GraphicInterface::TransitBack(
-	const GraphicInterfaceContextPrimitive* context, const Resources::Texture* tex, const eBindType bind_type
+	const IGraphicContext* context, const Resources::Texture* tex, const eBindType bind_type
 )
 {
 	switch (bind_type)
@@ -832,7 +832,7 @@ void Engine::D3D12GraphicInterface::TransitBack(
 }
 
 void Engine::D3D12GraphicInterface::TransitMultiple(
-	const GraphicInterfaceContextPrimitive* context, const Resources::Texture* const* texes, const size_t count,
+	const IGraphicContext* context, const Resources::Texture* const* texes, const size_t count,
 	D3D12_RESOURCE_STATES before, D3D12_RESOURCE_STATES after
 )
 {
@@ -865,7 +865,7 @@ void Engine::D3D12GraphicInterface::TransitMultiple(
 }
 
 void Engine::D3D12GraphicInterface::TransitToMultiple(
-	const GraphicInterfaceContextPrimitive* context, const Resources::Texture* const* texes, const size_t count,
+	const IGraphicContext* context, const Resources::Texture* const* texes, const size_t count,
 	const eBindType bind_type
 )
 {
@@ -892,7 +892,7 @@ void Engine::D3D12GraphicInterface::TransitToMultiple(
 }
 
 void Engine::D3D12GraphicInterface::TransitBackMultiple(
-	const GraphicInterfaceContextPrimitive* context, const Resources::Texture* const* texes, const size_t count,
+	const IGraphicContext* context, const Resources::Texture* const* texes, const size_t count,
 	const eBindType bind_type
 )
 {
@@ -918,7 +918,7 @@ void Engine::D3D12GraphicInterface::TransitBackMultiple(
 	}
 }
 
-void Engine::D3D12GraphicInterface::Bind(const GraphicInterfaceContextPrimitive* context, const Resources::Texture* tex, const eBindType bind_type, const UINT slot, const UINT offset)
+void Engine::D3D12GraphicInterface::Bind(const IGraphicContext* context, const Resources::Texture* tex, const eBindType bind_type, const UINT slot, const UINT offset)
 {
 	const D3D12PrimitiveTexture* primitive = reinterpret_cast<D3D12PrimitiveTexture*>(tex->GetPrimitiveTexture());
 	auto                         cmd       = static_cast<CommandPair*>(context->commandList);
@@ -978,7 +978,7 @@ void Engine::D3D12GraphicInterface::Bind(const GraphicInterfaceContextPrimitive*
 }
 
 void Engine::D3D12GraphicInterface::BindMultiple(
-			const GraphicInterfaceContextPrimitive* context, const Resources::Texture* const* rtvs, const size_t rtv_count,
+			const IGraphicContext* context, const Resources::Texture* const* rtvs, const size_t rtv_count,
 			Resources::Texture* dsv
 		)
 {
@@ -1009,7 +1009,7 @@ void Engine::D3D12GraphicInterface::BindMultiple(
 }
 
 void Engine::D3D12GraphicInterface::BindMultiple(
-	const GraphicInterfaceContextPrimitive* context,
+	const IGraphicContext* context,
 	const Resources::Texture* const* textures,
 	const eBindType bind_type,
 	const UINT slot,
@@ -1020,7 +1020,7 @@ void Engine::D3D12GraphicInterface::BindMultiple(
 	heap->SetShaderResources(textures, count, slot + offset);
 }
 
-void Engine::D3D12GraphicInterface::Clear(const GraphicInterfaceContextPrimitive* context, const Resources::Texture* tex, const eBindType clear_type)
+void Engine::D3D12GraphicInterface::Clear(const IGraphicContext* context, const Resources::Texture* tex, const eBindType clear_type)
 {
 	const auto primitive   = static_cast<D3D12PrimitiveTexture*>(tex->GetPrimitiveTexture());
 	const auto resource = static_cast<ID3D12Resource*>(primitive->GetNativeTexture());
@@ -1115,7 +1115,7 @@ void Engine::D3D12GraphicInterface::ClearRenderTarget()
 	cmd->FlagReady();
 }
 
-void Engine::D3D12GraphicInterface::CopyRenderTarget(const GraphicInterfaceContextPrimitive* context, const Resources::Texture* tex)
+void Engine::D3D12GraphicInterface::CopyRenderTarget(const IGraphicContext* context, const Resources::Texture* tex)
 {
 	auto cmd = reinterpret_cast<CommandPair*>(context->commandList);
 	auto* resource = static_cast<ID3D12Resource*>(tex->GetPrimitiveTexture()->GetNativeTexture());
@@ -1155,12 +1155,12 @@ void Engine::D3D12GraphicInterface::CopyRenderTarget(const GraphicInterfaceConte
 	cmd->GetList()->ResourceBarrier(1, &dst_transition_back);
 }
 
-Engine::StructuredBufferTypeless* Engine::D3D12GraphicInterface::GetNativeStructuredBuffer()
+Engine::IStructuredBuffer* Engine::D3D12GraphicInterface::GetNativeStructuredBuffer()
 {
 	return new Graphics::D3D12StructuredBufferTypeless();
 }
 
-Engine::ConstantBufferTypeless* Engine::D3D12GraphicInterface::GetNativeConstantBuffer()
+Engine::IConstantBuffer* Engine::D3D12GraphicInterface::GetNativeConstantBuffer()
 {
 	return new Graphics::D3D12ConstantBufferTypeless();
 }
@@ -1511,12 +1511,12 @@ Matrix Engine::D3D12GraphicInterface::GetOrthogonalMatrix()
 	return m_ortho_matrix_;
 }
 
-Engine::Strong<Engine::CommandListBase> Engine::D3D12GraphicInterface::GetCommandList(const int8_t type, const std::wstring_view debug_name)
+Engine::Strong<Engine::ICommandList> Engine::D3D12GraphicInterface::GetCommandList(const int8_t type, const std::wstring_view debug_name)
 {
 	return m_command_pair_task_.Acquire(static_cast<D3D12_COMMAND_LIST_TYPE>(type), false, debug_name).lock();
 }
 
-Engine::Unique<Engine::GraphicHeapBase> Engine::D3D12GraphicInterface::GetHeap()
+Engine::Unique<Engine::IHeapBase> Engine::D3D12GraphicInterface::GetHeap()
 {
 	return std::move(m_heap_handler_->Acquire());
 }

@@ -63,11 +63,11 @@ public:
 protected:
     ShadowIntensityComputeShader( const std::filesystem::path &path );
     ShadowIntensityComputeShader();
-    void preDispatch( const Engine::GraphicInterfaceContextPrimitive *context,
+    void preDispatch( const Engine::IGraphicContext *context,
                       Engine::Graphics::SBs::LocalParamSB &           param,
                       const float                                     dt
             ) override;
-    void postDispatch( const Engine::GraphicInterfaceContextPrimitive *context,
+    void postDispatch( const Engine::IGraphicContext *context,
                        Engine::Graphics::SBs::LocalParamSB &           param,
                        const float                                     dt
             ) override;

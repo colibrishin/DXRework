@@ -28,7 +28,7 @@ namespace Engine::Managers
 				 PRIMITIVE_TOPOLOGY_TRIANGLELIST, PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE,
 				 SAMPLER_SHADOW);
 
-		GraphicInterface& gi = GraphicInterfaceAccessor::GetInterface();
+		IGraphicAPI& gi = s_ga.GetInterface();
 	    m_light_vp_sb_ = gi.GetStructuredBuffer<SBs::LightVPSB>();
 
 		InitializeViewport();
@@ -41,7 +41,7 @@ namespace Engine::Managers
 
 		Renderer::GetInstance().RegisterStructuredBuffer(&m_light_vp_sb_);
 
-		Renderer::GetInstance().RegisterContextPreRenderSetup("Shadow Manager", [](const GraphicInterfaceContextPrimitive* context)
+		Renderer::GetInstance().RegisterContextPreRenderSetup("Shadow Manager", [](const IGraphicContext* context)
 		{
 			GetInstance().BindShadowMaps(context);
 		});
@@ -116,7 +116,7 @@ namespace Engine::Managers
             GetLightVP( scene, m_current_scene_light_vp_ );
 
             {
-                GraphicInterface &gi        = GraphicInterfaceAccessor::GetInterface();
+                IGraphicAPI &gi        = s_ga.GetInterface();
                 const auto &      context   = gi.GetNewContext( 0, false, L"Light Structured Buffer Transition" );
                 const auto &      primitive = context.GetPointers();
                 primitive.commandList->SoftReset();
@@ -161,7 +161,7 @@ namespace Engine::Managers
         SBs::LocalParamSB local_param{};
         local_param.SetParam( 0, static_cast<int>( light_idx ) );
 
-        GraphicInterface &gi = GraphicInterfaceAccessor::GetInterface();
+        IGraphicAPI &gi = s_ga.GetInterface();
         {
             const auto context   = gi.GetNewContext( 0, false, L"Shadow Map Transition" );
             const auto primitive = context.GetPointers();
@@ -183,7 +183,7 @@ namespace Engine::Managers
 
 				 return true;
 			 },
-			 [&gi, this, &light_idx](const GraphicInterfaceContextPrimitive* context)
+			 [&gi, this, &light_idx](const IGraphicContext* context)
 			 {
                  gi.SetViewport( context, m_viewport_ );
                  gi.BindGraphic( context, m_shadow_shader_.get() );
@@ -329,9 +329,9 @@ namespace Engine::Managers
 		}
 	}
 
-	void ShadowManager::BindShadowMaps(const GraphicInterfaceContextPrimitive* context) const
+	void ShadowManager::BindShadowMaps(const IGraphicContext* context) const
 	{
-		GraphicInterface& gi = GraphicInterfaceAccessor::GetInterface();
+		IGraphicAPI& gi = s_ga.GetInterface();
 		std::vector<Resources::Texture*> textures;
 
         for ( const auto &tex : m_shadow_texs_ )
@@ -345,9 +345,9 @@ namespace Engine::Managers
 		context->heap->SetSampler( m_shadow_sampler_.get(), SAMPLER_SHADOW );
 	}
 
-	void ShadowManager::TransitBackShadowMaps(const GraphicInterfaceContextPrimitive* context) const
+	void ShadowManager::TransitBackShadowMaps(const IGraphicContext* context) const
 	{
-        GraphicInterface &                gi = GraphicInterfaceAccessor::GetInterface();
+        IGraphicAPI &                gi = s_ga.GetInterface();
         std::vector<Resources::Texture *> textures;
 
         for ( const auto &tex : m_shadow_texs_ )
@@ -394,9 +394,9 @@ namespace Engine::Managers
 		};
 	}
 
-	void ShadowManager::ClearShadowMaps(const GraphicInterfaceContextPrimitive* context)
+	void ShadowManager::ClearShadowMaps(const IGraphicContext* context)
 	{
-		GraphicInterface& gi = GraphicInterfaceAccessor::GetInterface();
+		IGraphicAPI& gi = s_ga.GetInterface();
 
         for ( auto &tex : m_shadow_texs_ )
         {

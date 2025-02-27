@@ -2,7 +2,7 @@
 #include "Layer.generated.h"
 
 #if WITH_EDITOR
-#include "UIInterface.h"
+#include "IUIAPI.h"
 #endif
 
 #include "SingletonSpinLock.h"
@@ -187,7 +187,7 @@ namespace Engine
 	{
 		if (parent)
 		{
-			UIInterface& ui = UIInterfaceAccessor::GetInterface();
+			IUIAPI& ui = s_uia.GetInterface();
 			*parent += ui.NewTreeNode( this, "Objects", { GetName() } );
             *parent |= ui.NewDragAndDropTarget( this, "ObjectDragAndDrop",
                     { "OBJECT",

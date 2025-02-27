@@ -39,7 +39,7 @@ void Engine::FMODSoundInterface::Update()
 	m_audio_engine_->update();
 }
 
-Engine::SoundPrimitive* Engine::FMODSoundInterface::NewSound(const std::filesystem::path& path)
+Engine::ISound* Engine::FMODSoundInterface::NewSound(const std::filesystem::path& path)
 {
 	Engine::FMODSoundPrimitive* new_sound = m_instanced_primitives_.emplace_back(m_primitive_allocator_.allocate());
 	m_primitive_allocator_.construct(new_sound);
@@ -56,7 +56,7 @@ Engine::SoundPrimitive* Engine::FMODSoundInterface::NewSound(const std::filesyst
 	return nullptr;
 }
 
-void Engine::FMODSoundInterface::ReleaseSound(SoundPrimitive* primitive)
+void Engine::FMODSoundInterface::ReleaseSound(ISound* primitive)
 {
 	if ( auto* ptr = static_cast<FMODSoundPrimitive*>(primitive ) )
 	{
@@ -84,7 +84,7 @@ void Engine::FMODSoundInterface::UpdatePosition(const SoundChannelID id, const V
 	}
 }
 
-bool Engine::FMODSoundInterface::PlaySound(const SoundPrimitive* sound, const Vector3& position, const Vector3& velocity, bool loop, SoundChannelID& id)
+bool Engine::FMODSoundInterface::PlaySound(const ISound* sound, const Vector3& position, const Vector3& velocity, bool loop, SoundChannelID& id)
 {
 	if ( auto* primitive = static_cast<const FMODSoundPrimitive*>( sound ) )
 	{
@@ -124,7 +124,7 @@ bool Engine::FMODSoundInterface::StopSound(const SoundChannelID id)
 	return false;
 }
 
-void Engine::FMODSoundInterface::StopLoop(const SoundPrimitive* sound, const SoundChannelID id)
+void Engine::FMODSoundInterface::StopLoop(const ISound* sound, const SoundChannelID id)
 {
 	if ( auto* primitive = static_cast<const FMODSoundPrimitive*>(sound) )
 	{
