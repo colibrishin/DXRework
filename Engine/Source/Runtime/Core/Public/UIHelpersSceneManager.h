@@ -23,7 +23,7 @@ namespace Engine::UIHelpers
                          TypeSelectionMap<Abstracts::ObjectBase> &selection_map,
                          bool &                                   window ) const
         {
-            IUIAPI &ui = s_uia.GetInterface();
+            IUIAPI &ui = g_ui_accessor.GetInterface();
 
             for ( auto it = container.begin(); it != container.end(); ++it )
             {

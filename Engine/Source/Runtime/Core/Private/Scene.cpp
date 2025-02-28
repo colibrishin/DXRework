@@ -814,7 +814,7 @@ namespace Engine
 #if WITH_EDITOR
     void Scene::OnUIUpdate( UIContext *const parent, const float dt )
     {
-        IUIAPI &ui = s_uia.GetInterface();
+        IUIAPI &ui = g_ui_accessor.GetInterface();
 
         if ( UIContext context = IUIAPI::NewContext(
                 ui.NewDialog( this, "SceneDialog", { m_ui_info_.label, m_ui_info_.dialogOpened } ) ) )

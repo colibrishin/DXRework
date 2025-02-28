@@ -12,7 +12,7 @@ namespace Engine::Resources
 {
 	void ComputeShader::Dispatch(const IGraphicContext* context, const UINT group_count[3], Graphics::SBs::LocalParamSB& param, const float dt)
 	{
-		IGraphicAPI& gi = s_ga.GetInterface();
+		IGraphicAPI& gi = g_graphic_accessor.GetInterface();
 		preDispatch( context, param, dt );
 		gi.Dispatch(context, this, param, group_count);
 		postDispatch( context, param, dt );
@@ -29,7 +29,7 @@ namespace Engine::Resources
         if ( parent )
         {
             Resource::OnUIUpdate( parent, dt );
-            IUIAPI &ui = s_uia.GetInterface();
+            IUIAPI &ui = g_ui_accessor.GetInterface();
             *parent |= ui.NewLabelAndUInt( this,
                                            "ThreadGroupX",
                                            { "Thread Group X", m_thread_[ 0 ], 0, 0, 255, true } );
@@ -88,8 +88,8 @@ namespace Engine::Resources
 
 	void ComputeShader::Load_INTERNAL()
 	{
-		m_primitive_shader_ = Unique<IComputeShader>(s_ga.GetInterface().GetNewComputePrimitiveShader());
-		m_primitive_shader_->Generate(this, s_ga.GetInterface().GetNativePipeline());
+		m_primitive_shader_ = Unique<IComputeShader>(g_graphic_accessor.GetInterface().GetNewComputePrimitiveShader());
+		m_primitive_shader_->Generate(this, g_graphic_accessor.GetInterface().GetNativePipeline());
 		
 		loadDerived();
 	}

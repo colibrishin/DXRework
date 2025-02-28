@@ -22,7 +22,7 @@ bool Engine::ImGuiManagerModule::ShutdownImpl()
 	CoreLoop::RemoveManager(
 		CoreLoop::LOOP_TYPE_RENDER,
 		Managers::ImGuiManager::GetInstance);
-    s_iia.Shutdown();
+    g_input_accessor.Shutdown();
 	return true;
 }
 

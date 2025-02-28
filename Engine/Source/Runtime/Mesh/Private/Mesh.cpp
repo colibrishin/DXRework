@@ -236,8 +236,8 @@ namespace Engine::Resources
 				 sizeof(Vector3)
 				);
 
-	    m_vertex_buffer_structured_ = std::make_unique<decltype(m_vertex_buffer_structured_)::element_type>(s_ga.GetInterface().GetStructuredBuffer<Graphics::VertexElement>());
-		m_primitive_mesh_ = Unique<IMesh>(s_ga.GetInterface().GetNewPrimitiveMesh());
+	    m_vertex_buffer_structured_ = std::make_unique<decltype(m_vertex_buffer_structured_)::element_type>(g_graphic_accessor.GetInterface().GetStructuredBuffer<Graphics::VertexElement>());
+		m_primitive_mesh_ = Unique<IMesh>(g_graphic_accessor.GetInterface().GetNewPrimitiveMesh());
 		m_primitive_mesh_->Generate(this);
 	}
 

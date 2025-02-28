@@ -5,7 +5,9 @@
 #include "Shape.h"
 #include "ModelRenderer.h"
 #include "Animator.h"
+#if CLIENT || WITH_EDITOR
 #include "BoneAnimation.h"
+#endif
 #include "Collider.h"
 #include "Transform.h"
 #include "Rigidbody.h"
@@ -78,6 +80,7 @@ Engine::Weak<Engine::Abstracts::ObjectBase> PlayerHitboxComponent::GetHead() con
 
 void PlayerHitboxComponent::updateHitBox() const 
 {
+#if CLIENT || WITH_EDITOR
     const auto obj = GetOwner().lock();
     const auto cl  = obj->GetComponent<Engine::Components::Collider>().lock();
     const auto mr  = obj->GetComponent<Engine::Components::ModelRenderer>().lock();
@@ -166,6 +169,7 @@ void PlayerHitboxComponent::updateHitBox() const
         Engine::BoundingOrientedBox::CreateFromBoundingBox(new_obb, bb);
         cl->SetBoundingBox(new_obb);
     }
+#endif
 }
 
 void PlayerHitboxComponent::onCollisionEnter(const Engine::Weak<Engine::Components::Collider>& other)

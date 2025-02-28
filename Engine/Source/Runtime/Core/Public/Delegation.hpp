@@ -84,7 +84,7 @@ public:
 		m_listener_.emplace(bucket_type{ {}, reinterpret_cast<address_type>(&function) }, function);
 	}
 
-	void Listen(const std::function<void()>& func)
+	void Listen(const std::function<void(Args...)>& func)
 	{
 		m_listener_.emplace(bucket_type{ {}, reinterpret_cast<address_type>(func.target<void(*)(Args...)>()) }, func);
 	}
@@ -124,6 +124,16 @@ public:
 			m_listener_.erase(key);
 		}
 	}
+
+	void Remove( const std::function<void( Args... )>& func )
+    {
+        const bucket_type key { {}, reinterpret_cast<address_type>( func.target<void ( * )( Args... )>() ) };
+        
+		if ( m_listener_.contains( key ) )
+		{
+            m_listener_.erase( key );
+		}
+    }
 
 	void Remove(void(*function)(Args...))
 	{

@@ -187,7 +187,7 @@ namespace Engine
 	{
 		if (parent)
 		{
-			IUIAPI& ui = s_uia.GetInterface();
+			IUIAPI& ui = g_ui_accessor.GetInterface();
 			*parent += ui.NewTreeNode( this, "Objects", { GetName() } );
             *parent |= ui.NewDragAndDropTarget( this, "ObjectDragAndDrop",
                     { "OBJECT",

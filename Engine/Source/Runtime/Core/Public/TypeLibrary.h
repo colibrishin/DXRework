@@ -387,6 +387,7 @@ namespace Engine
 
 	using IDType = uint32_t;
 	using GlobalEntityID = IDType;
+    using NetID = IDType;
 
 	namespace Abstracts
 	{

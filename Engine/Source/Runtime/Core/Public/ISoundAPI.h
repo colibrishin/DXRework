@@ -55,7 +55,7 @@ namespace Engine
 		Unique<ISoundAPI> s_interface_;
 	};
 
-	static ISoundAPIAccessor s_sa;
+	extern ENGINE_CORE_API ISoundAPIAccessor g_sound_accessor;
 
 	struct ENGINE_CORE_API ISound
 	{

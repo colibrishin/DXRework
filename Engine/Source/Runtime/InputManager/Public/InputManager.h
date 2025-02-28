@@ -2,7 +2,6 @@
 #include "Singleton.h"
 
 #if PLATFORM == Windows
-#define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
 #endif
 
@@ -37,21 +36,21 @@ namespace Engine::Managers
 		template <typename Enum>
 		bool IsKeyDown(const Enum key) const
 		{
-			IInputAPI& ii = s_iia.GetInterface();
+			IInputAPI& ii = g_input_accessor.GetInterface();
 			return ii.IsKeyDown(key);
 		}
 
 		template <typename Enum>
 		bool IsKeyPressed(const Enum key) const
 		{
-			IInputAPI& ii = s_iia.GetInterface();
+			IInputAPI& ii = g_input_accessor.GetInterface();
 			return ii.IsKeyPressed(key);
 		}
 
 		template <typename Enum>
 		bool IsKeyReleased(const Enum key) const
 		{
-			IInputAPI& ii = s_iia.GetInterface();
+			IInputAPI& ii = g_input_accessor.GetInterface();
 			return ii.IsKeyReleased(key);
 		}
 

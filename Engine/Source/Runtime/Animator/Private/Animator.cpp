@@ -8,10 +8,12 @@
 
 #include "ModelRenderer.h"
 
+#if CLIENT || WITH_EDITOR
 #include "AtlasAnimation.h"
 #include "BaseAnimation.h"
 #include "BoneAnimation.h"
 #include "Material.h"
+#endif
 
 namespace Engine::Components
 {
@@ -25,6 +27,7 @@ namespace Engine::Components
 
 	void Animator::Update(const float dt)
 	{
+#if CLIENT || WITH_EDITOR
 		if (!GetActive())
 		{
 			return;
@@ -87,6 +90,7 @@ namespace Engine::Components
 			m_primitive_.animationDuration = duration;
 			m_primitive_.currentFrame = m_current_frame_;
 		}
+#endif
 	}
 
 	void Animator::FixedUpdate(const float dt) {}

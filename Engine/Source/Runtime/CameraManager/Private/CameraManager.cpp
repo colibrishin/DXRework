@@ -61,7 +61,7 @@ namespace Engine::Managers
 					}
 					else
 					{
-						camera->m_projection_matrix_ = s_ga.GetInterface().GetProjectionMatrix();
+						camera->m_projection_matrix_ = g_graphic_accessor.GetInterface().GetProjectionMatrix();
 					}
 
 					const auto invView = camera->m_view_matrix_.Invert();

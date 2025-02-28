@@ -94,7 +94,7 @@ namespace Engine::Objects
 
             if ( m_ui_info_.dialogOpened )
             {
-                IUIAPI &         ui              = s_uia.GetInterface();
+                IUIAPI &         ui              = g_ui_accessor.GetInterface();
                 static constexpr auto light_type_enum = CStrEnumStrings<eLightType>();
 
                 if ( const UIContext context = IUIAPI::NewContext(

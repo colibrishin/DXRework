@@ -45,7 +45,7 @@ Engine::IFont& Engine::Resources::Font::GetPrimitive() const
 
 void Engine::Resources::Font::Load_INTERNAL()
 {
-	IGraphicAPI& gi = s_ga.GetInterface();
+	IGraphicAPI& gi = g_graphic_accessor.GetInterface();
 	m_primitive_ = Unique<decltype(m_primitive_)::element_type>(gi.GetNewPrimitiveFont());
 	if (m_primitive_)
 	{

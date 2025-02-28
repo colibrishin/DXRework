@@ -9,13 +9,13 @@ MODULE_IMPL(Engine::FMODSoundInterfaceModule, FMODSoundInterface)
 
 bool Engine::FMODSoundInterfaceModule::InitializeImpl()
 {
-    s_sa.SetInterface<FMODSoundInterface>();
+    g_sound_accessor.SetInterface<FMODSoundInterface>();
     return true;
 }
 
 bool Engine::FMODSoundInterfaceModule::ShutdownImpl()
 {
-    s_sa.Shutdown();
+    g_sound_accessor.Shutdown();
     return true;
 }
 

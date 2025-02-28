@@ -64,7 +64,7 @@ namespace Engine::Managers
 
 	void RenderPipeline::ConstantBufferGuard()
 	{
-		IGraphicAPI& gi = s_ga.GetInterface();
+		IGraphicAPI& gi = g_graphic_accessor.GetInterface();
 
 		if (!m_wvp_buffer_cb_)
 		{
@@ -83,7 +83,7 @@ namespace Engine::Managers
 	{
 	    if (!m_light_buffer_sb_)
 	    {
-	        IGraphicAPI& gi = s_ga.GetInterface();
+	        IGraphicAPI& gi = g_graphic_accessor.GetInterface();
 	        m_light_buffer_sb_ = gi.GetStructuredBuffer<SBs::LightSB>();
 	    }
 	}
@@ -104,7 +104,7 @@ namespace Engine::Managers
 	{
 		InitializeViewport();
 	    
-	    IGraphicAPI& gi = s_ga.GetInterface();
+	    IGraphicAPI& gi = g_graphic_accessor.GetInterface();
 	    m_light_buffer_sb_ = gi.GetStructuredBuffer<SBs::LightSB>();
 
 	    Renderer::GetInstance().RegisterStructuredBuffer(&m_light_buffer_sb_);
@@ -114,7 +114,7 @@ namespace Engine::Managers
 
 	void RenderPipeline::PreRender(const float dt)
 	{
-		IGraphicAPI& gi = s_ga.GetInterface();
+		IGraphicAPI& gi = g_graphic_accessor.GetInterface();
 		gi.ClearRenderTarget();
 
 		if (const Strong<Scene>& scene = SceneManager::GetInstance().GetActiveScene().lock())
@@ -163,8 +163,8 @@ namespace Engine::Managers
 
 	void RenderPipeline::PostRender(const float dt)
 	{
-		s_ga.GetInterface().Present();
-		s_ga.GetInterface().WaitForNextFrame();
+		g_graphic_accessor.GetInterface().Present();
+		g_graphic_accessor.GetInterface().WaitForNextFrame();
 	}
 
 	void RenderPipeline::PostUpdate(const float dt) {}
@@ -172,7 +172,7 @@ namespace Engine::Managers
 #if WITH_EDITOR
     void RenderPipeline::OnUIUpdate( UIContext * const parent, const float dt )
     {
-	    IUIAPI& ui = s_uia.GetInterface();
+	    IUIAPI& ui = g_ui_accessor.GetInterface();
         if ( UIContext context = ui.NewContext
                 ( ui.NewDialog( this, "RenderPipelineDialog", { "RenderPipeline", m_ui_info_.dialogOpened } ) ) )
         {

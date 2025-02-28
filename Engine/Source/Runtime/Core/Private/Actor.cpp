@@ -40,7 +40,7 @@ namespace Engine::Abstracts
 		{
 			Renderable::OnUIUpdate(parent, dt);
 
-			IUIAPI& ui = s_uia.GetInterface();
+			IUIAPI& ui = g_ui_accessor.GetInterface();
 
 			if (const Strong<Scene>& scene = GetScene().lock())
 			{

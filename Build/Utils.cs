@@ -83,6 +83,11 @@ public class Utils
 
     public static void AddDefines(Project.Configuration conf, EngineTarget target)
     {
+        if (target.Platform == Platform.win64 || target.Platform == Platform.win32)
+        {
+            conf.Defines.Add("WIN32_LEAN_AND_MEAN");
+        }
+
         conf.Defines.Add("NOMINMAX=1");
         if (target.GraphicAPI == EGraphicAPI.D3D12) 
         {

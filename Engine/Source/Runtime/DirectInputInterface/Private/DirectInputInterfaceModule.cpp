@@ -8,13 +8,13 @@ MODULE_IMPL( Engine::DirectInputInterfaceModule, DirectInputInterface )
 
 bool Engine::DirectInputInterfaceModule::InitializeImpl()
 {
-    s_iia.SetInterface<DirectInputInterface>();
+    g_input_accessor.SetInterface<DirectInputInterface>();
     return true;
 }
 
 bool Engine::DirectInputInterfaceModule::ShutdownImpl()
 {
-    s_iia.Shutdown();
+    g_input_accessor.Shutdown();
     return true;
 }
 

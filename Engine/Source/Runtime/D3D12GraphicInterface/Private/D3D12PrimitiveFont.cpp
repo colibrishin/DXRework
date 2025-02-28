@@ -5,7 +5,7 @@
 
 void Engine::D3D12PrimitiveFont::Generate(const Resources::Font* font)
 {
-	IGraphicAPI& gi = s_ga.GetInterface();
+	IGraphicAPI& gi = g_graphic_accessor.GetInterface();
 	D3D12GraphicInterface& dgi = static_cast<D3D12GraphicInterface&>(gi);
 	ID3D12Device* dev = static_cast<ID3D12Device*>(gi.GetNativeInterface());
 

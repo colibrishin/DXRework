@@ -28,7 +28,7 @@ namespace Engine::Managers
 				 PRIMITIVE_TOPOLOGY_TRIANGLELIST, PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE,
 				 SAMPLER_SHADOW);
 
-		IGraphicAPI& gi = s_ga.GetInterface();
+		IGraphicAPI& gi = g_graphic_accessor.GetInterface();
 	    m_light_vp_sb_ = gi.GetStructuredBuffer<SBs::LightVPSB>();
 
 		InitializeViewport();
@@ -116,7 +116,7 @@ namespace Engine::Managers
             GetLightVP( scene, m_current_scene_light_vp_ );
 
             {
-                IGraphicAPI &gi        = s_ga.GetInterface();
+                IGraphicAPI &gi        = g_graphic_accessor.GetInterface();
                 const auto &      context   = gi.GetNewContext( 0, false, L"Light Structured Buffer Transition" );
                 const auto &      primitive = context.GetPointers();
                 primitive.commandList->SoftReset();
@@ -161,7 +161,7 @@ namespace Engine::Managers
         SBs::LocalParamSB local_param{};
         local_param.SetParam( 0, static_cast<int>( light_idx ) );
 
-        IGraphicAPI &gi = s_ga.GetInterface();
+        IGraphicAPI &gi = g_graphic_accessor.GetInterface();
         {
             const auto context   = gi.GetNewContext( 0, false, L"Shadow Map Transition" );
             const auto primitive = context.GetPointers();
@@ -331,7 +331,7 @@ namespace Engine::Managers
 
 	void ShadowManager::BindShadowMaps(const IGraphicContext* context) const
 	{
-		IGraphicAPI& gi = s_ga.GetInterface();
+		IGraphicAPI& gi = g_graphic_accessor.GetInterface();
 		std::vector<Resources::Texture*> textures;
 
         for ( const auto &tex : m_shadow_texs_ )
@@ -347,7 +347,7 @@ namespace Engine::Managers
 
 	void ShadowManager::TransitBackShadowMaps(const IGraphicContext* context) const
 	{
-        IGraphicAPI &                gi = s_ga.GetInterface();
+        IGraphicAPI &                gi = g_graphic_accessor.GetInterface();
         std::vector<Resources::Texture *> textures;
 
         for ( const auto &tex : m_shadow_texs_ )
@@ -396,7 +396,7 @@ namespace Engine::Managers
 
 	void ShadowManager::ClearShadowMaps(const IGraphicContext* context)
 	{
-		IGraphicAPI& gi = s_ga.GetInterface();
+		IGraphicAPI& gi = g_graphic_accessor.GetInterface();
 
         for ( auto &tex : m_shadow_texs_ )
         {

@@ -1,6 +1,10 @@
 #include "EngineEntryPoint.h"
 
+#include <exception>
+#include <Windows.h>
+
 #include "ModuleManager.h"
+#include "INetworkAPI.h"
 
 #if WITH_EDITOR
 #include "IUIAPI.h"
@@ -100,7 +104,7 @@ namespace Engine::Managers
 		}
 
 		s_instantiated_ = true;
-		std::set_terminate(SIGTERM);
+        std::set_terminate( handleSIGTERM );
 	}
 
 	float EngineEntryPoint::GetDeltaTime() const
@@ -115,7 +119,7 @@ namespace Engine::Managers
 
 	EngineEntryPoint::~EngineEntryPoint()
 	{
-		SIGTERM();
+		handleSIGTERM();
 	}
 
 	void EngineEntryPoint::Initialize()
@@ -186,9 +190,9 @@ namespace Engine::Managers
 		}
 
 #if WITH_EDITOR
-		if (s_uia.IsValid())
+		if (g_ui_accessor.IsValid())
 		{
-			s_uia.NewFrame();
+			g_ui_accessor.NewFrame();
 		}
 #endif
 		
@@ -199,11 +203,16 @@ namespace Engine::Managers
 		}
 
 #if WITH_EDITOR
-		if (s_uia.IsValid())
+		if (g_ui_accessor.IsValid())
 		{
 			OnUIUpdate(nullptr, dt);
 		}
 #endif
+
+		if ( g_network_accessor.IsValid() )
+		{
+            g_network_accessor.GetMessageTask().Poll();
+		}
 		
 		PreUpdate(dt);
 		Update(dt);
@@ -216,7 +225,7 @@ namespace Engine::Managers
 		elapsed += dt;
 	}
 
-	void EngineEntryPoint::SIGTERM()
+	void EngineEntryPoint::handleSIGTERM()
 	{
 		ModuleManager::GetInstance().Destroy();
 	}

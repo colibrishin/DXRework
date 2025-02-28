@@ -4,7 +4,7 @@
 #include <thread>
 #include "CoreType.h"
 #include "TypeLibrary.h"
-#include "INetworkAPI.h"
+#include "NetworkType.h"
 #include "SIMDExtension.hpp"
 
 #include "NetworkTask.generated.h"
@@ -16,13 +16,15 @@ namespace Engine
     {
         GENERATE_BODY
         virtual ~INetworkTask()                                                                   = default;
-        virtual void Consume( Unique<NetMessage>&& message )                                         = 0;
-        virtual bool Convert( const RawNetMessage& message, Unique<NetMessage>& out_message ) const     = 0;
-        virtual bool Convert( const Unique<NetMessage>& message, RawNetMessage& out_raw_message ) const = 0;
+        virtual void Consume( NetMessageDescription&& desc, Unique<NetMessage>&& message )                                      = 0;
+        virtual bool Convert( const RawNetMessage& message, Unique<NetMessage>& out_mssgae )      = 0;
+        virtual bool Validate( const RawNetMessage& message ) const = 0;
         virtual void Cleanup()                                                                    = 0;
     };
 
     template <typename T>
+        requires std::is_base_of_v<NetMessage, T> && !std::is_same_v<NetMessage, T> &&
+                 !std::is_polymorphic_v<T>
     struct NetworkTaskTypeProxy : INetworkTask
     {
         using message_type      = T;
@@ -33,28 +35,26 @@ namespace Engine
             return sizeof( T );
         }
 
-        bool Convert( const RawNetMessage& message, Unique<NetMessage>& out_message ) const override
+        [[nodiscard]] bool Validate( const RawNetMessage& message ) const override
         {
-            if ( GetMessageSize() + 1 != message.rawData.size() )
+            if ( GetMessageSize() != message.size_without_header() )
             {
+                // todo: validate the message (e.g., MD5)
                 return false;
             }
 
-            // todo: validate the message (e.g., MD5)
-            out_message = Unique<T>( reinterpret_cast<const T&>( *message.rawData.data() ) );
             return true;
         }
 
-        bool Convert( const Unique<NetMessage>& message, RawNetMessage& out_raw_message ) const override
+        [[nodiscard]] bool Convert(const RawNetMessage& message, Unique<NetMessage>& out_message) override
         {
-            if ( message->targetTask != message_type::StaticTypeHash() )
+            if (Validate(message))
             {
-                return false;
+                out_message = Unique<T>( new T( reinterpret_cast<const T&>( *message.data_without_header() ) ) );
+                return true;
             }
 
-            // todo: validate the message (e.g., MD5)
-            out_raw_message = RawNetMessage( reinterpret_cast<message_type&>( *message ) );
-            return true;
+            return false;
         }
     };
 }

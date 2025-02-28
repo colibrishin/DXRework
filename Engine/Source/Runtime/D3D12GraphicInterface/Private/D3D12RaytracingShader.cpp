@@ -11,7 +11,7 @@ namespace Engine
 {
     void D3D12RaytracingShader::Generate(const Resources::RaytracingShader* shader, void* pipeline_signature)
     {
-        IRaytracingExtension& rgi = s_ga.GetRaytracingInterface();
+        IRaytracingExtension& rgi = g_graphic_accessor.GetRaytracingInterface();
         const auto& dev = static_cast<ID3D12Device5*>(rgi.GetRaytracingNativeInterface());
         const auto& raytracing_root_pipeline = static_cast<ID3D12RootSignature*>(pipeline_signature);
 
@@ -207,7 +207,7 @@ namespace Engine
 
     void D3D12RaytracingShader::UpdateShaderRecords(const eRaytracingShaderRecordType type, const byte_stream& records)
     {
-        IGraphicAPI& gi = s_ga.GetInterface();
+        IGraphicAPI& gi = g_graphic_accessor.GetInterface();
         auto* dev = static_cast<ID3D12Device2*>(gi.GetNativeInterface());
         
         auto& hit_record = m_shader_tables_[type];

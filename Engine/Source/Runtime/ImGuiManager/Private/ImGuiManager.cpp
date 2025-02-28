@@ -30,10 +30,10 @@ namespace Engine::Managers
 	void ImGuiManager::Initialize()
 	{
 #if WITH_EDITOR
-		s_uia.SetInterface<ImGuiUIInterface>();
+		g_ui_accessor.SetInterface<ImGuiUIInterface>();
 		WinAPI::WinAPIWrapper::RegisterHandler("ImGuiManager", ImGui_ImplWin32_WndProcHandler);
 		
-		m_imgui_descriptor_ = s_ga.GetInterface().GetHeap();
+		m_imgui_descriptor_ = g_graphic_accessor.GetInterface().GetHeap();
 
 		IMGUI_CHECKVERSION();
 		ImGui::CreateContext();
@@ -51,7 +51,7 @@ namespace Engine::Managers
 		
 		ImGui_ImplDX12_Init
 				(
-				 static_cast<ID3D12Device2*>(s_ga.GetInterface().GetNativeInterface()),
+				 static_cast<ID3D12Device2*>(g_graphic_accessor.GetInterface().GetNativeInterface()),
 				 CFG_FRAME_BUFFER,
 				 DXGI_FORMAT_R8G8B8A8_UNORM,
 				 static_cast<ID3D12DescriptorHeap*>(m_imgui_descriptor_->GetNativeHeap()),
@@ -77,7 +77,7 @@ namespace Engine::Managers
 #if WITH_EDITOR
 		ImGui::Render();
 
-		IGraphicAPI& gi = s_ga.GetInterface();
+		IGraphicAPI& gi = g_graphic_accessor.GetInterface();
 		const IGraphicContextImpl& context = gi.GetNewContext(0, false, L"ImGui Rendering");
 		const IGraphicContext& primitive = context.GetPointers();
 

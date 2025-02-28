@@ -3,16 +3,18 @@
 #include "BoostSocketWrapperModule.h"
 #include "BoostSocketWrapperModule.generated.h"
 
+MODULE_IMPL(Engine::BoostSocketWrapperModule, BoostSocketWrapper);
+
 namespace Engine
 {
     bool Engine::BoostSocketWrapperModule::InitializeImpl()
     {
-        s_nia.SetInterface<BoostSocketWrapper>();
+        g_network_accessor.SetInterface<BoostSocketWrapper>();
         return true;
     }
     bool BoostSocketWrapperModule::ShutdownImpl()
     {
-        s_nia.Shutdown();
+        g_network_accessor.Shutdown();
         return true;
     }
     bool BoostSocketWrapperModule::DynamicLoadable()

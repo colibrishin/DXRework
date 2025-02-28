@@ -272,7 +272,7 @@ namespace Engine::Components
 	{
 		if (context) 
 		{
-			IUIAPI& ui = s_uia.GetInterface();
+			IUIAPI& ui = g_ui_accessor.GetInterface();
 
 			Component::OnUIUpdate(context, dt);
 			(*context |= ui.NewLabelAndVec3( this, "Position", { "Position", &m_position_.x, 0.1f, 0.f, 0.f, true })).SetFunction([&]()

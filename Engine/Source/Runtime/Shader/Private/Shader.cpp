@@ -8,8 +8,8 @@ namespace Engine::Resources
 {
 	void Shader::Load_INTERNAL()
 	{
-		m_primitive_ = Unique<IGraphicShader>(s_ga.GetInterface().GetNewGraphicPrimitiveShader());
-		m_primitive_->Generate(this, s_ga.GetInterface().GetNativePipeline());
+		m_primitive_ = Unique<IGraphicShader>(g_graphic_accessor.GetInterface().GetNewGraphicPrimitiveShader());
+		m_primitive_->Generate(this, g_graphic_accessor.GetInterface().GetNativePipeline());
 	}
 
 	Shader::Shader(
@@ -105,7 +105,7 @@ namespace Engine::Resources
 	(*parent |= ui.NewCombobox( this, std::format("{}Combobox", NAME), { NAME, &##THIS_VAR##selected_, ENUM_ARR##.data(), ENUM_ARR##.size(), true } )).SetFunction( [this]() {\
 		(THIS_VAR) = RecastNonlinearEnum<##ENUM_TYPE##>( ENUM_ARR, THIS_VAR##selected_ ); });
 
-            IUIAPI &ui = s_uia.GetInterface();
+            IUIAPI &ui = g_ui_accessor.GetInterface();
             ENUM_COMBOBOX( "Shader Domain", m_domain_, eShaderDomain, domain_enums );
             *parent |= ui.NewCheckbox( this, "DepthEnabled", { "Depth Enabled", m_depth_enabled_, true } );
             ENUM_COMBOBOX( "Depth Mode", m_depth_mode_, eShaderDepthMode, depth_mode_enums );

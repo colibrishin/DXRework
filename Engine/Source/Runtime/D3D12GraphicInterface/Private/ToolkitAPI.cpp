@@ -14,7 +14,7 @@ namespace Engine::Managers
 
 	void ToolkitAPI::Initialize()
 	{
-		auto& gi = reinterpret_cast<D3D12GraphicInterface&>(s_ga.GetInterface());
+		auto& gi = reinterpret_cast<D3D12GraphicInterface&>(g_graphic_accessor.GetInterface());
 		auto dev = static_cast<ID3D12Device2*>(gi.GetNativeInterface());
 		
 		m_descriptor_heap_ = std::make_unique<DirectX::DescriptorHeap>(dev, 1);
@@ -66,7 +66,7 @@ namespace Engine::Managers
 		m_sprite_batch_->SetViewport(reinterpret_cast<const D3D12_VIEWPORT&>(RenderPipeline::GetInstance().GetViewport()));
 
 		ID3D12DescriptorHeap*                    heaps[]     = {m_descriptor_heap_->Heap(), m_states_->Heap()};
-		auto&                                    gi          = reinterpret_cast<D3D12GraphicInterface&>(s_ga.GetInterface());
+		auto&                                    gi          = reinterpret_cast<D3D12GraphicInterface&>(g_graphic_accessor.GetInterface());
 		const IGraphicContextImpl& s_context   = gi.GetNewContext(D3D12_COMMAND_LIST_TYPE_DIRECT, false, L"Toolkit Render");
 		const IGraphicContext&  s_primitive = s_context.GetPointers();
 		const auto                               s_cmd       = static_cast<CommandPair*>(s_primitive.commandList);

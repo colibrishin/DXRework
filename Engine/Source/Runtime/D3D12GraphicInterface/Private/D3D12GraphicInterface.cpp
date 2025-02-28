@@ -35,7 +35,7 @@ MODULE_IMPL(Engine::D3D12GraphicInterfaceModule, D3D12GraphicInterface)
 
 bool Engine::D3D12GraphicInterfaceModule::InitializeImpl()
 {
-	s_ga.SetGraphicInterface<D3D12GraphicInterface>();
+	g_graphic_accessor.SetGraphicInterface<D3D12GraphicInterface>();
 	
 	CoreLoop::AddManager(
 		CoreLoop::LOOP_TYPE_RENDER,
@@ -50,7 +50,7 @@ bool Engine::D3D12GraphicInterfaceModule::ShutdownImpl()
 		CoreLoop::LOOP_TYPE_RENDER,
 		Managers::ToolkitAPI::GetInstance);
 
-	auto& gi = s_ga.GetInterface();
+	auto& gi = g_graphic_accessor.GetInterface();
 	gi.Shutdown();
 
 	return true;
@@ -707,7 +707,7 @@ void Engine::D3D12GraphicInterface::Dispatch(
 {
 	if (!m_local_param_)
 	{
-		IGraphicAPI& gi = s_ga.GetInterface(); 	
+		IGraphicAPI& gi = g_graphic_accessor.GetInterface(); 	
 		m_local_param_ = gi.GetStructuredBuffer<Graphics::SBs::LocalParamSB>();
 	}
 

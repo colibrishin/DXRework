@@ -87,7 +87,7 @@ namespace Engine
 			}
 		}
 
-		auto& gi = s_ga.GetInterface();
+		auto& gi = g_graphic_accessor.GetInterface();
 		auto context = gi.GetNewContext(0, false, L"Lazy Shader Resource Texture Transition Back");
 		auto primitive = context.GetPointers();
 		
@@ -166,7 +166,7 @@ namespace Engine
             const aligned_vector<InstancePair>                               &instance_pairs
 	)
 	{
-		IGraphicAPI& gi = s_ga.GetInterface();
+		IGraphicAPI& gi = g_graphic_accessor.GetInterface();
 
 		// Manual release
 		SpinLockToken gi_token = SingletonSpinLock::GetInstance().Lock(m_gi_ticket_);
@@ -287,7 +287,7 @@ namespace Engine
 
 		// Manual release
 		auto token = SingletonSpinLock::GetInstance().Lock(m_gi_ticket_);
-		IGraphicAPI& gi = s_ga.GetInterface();
+		IGraphicAPI& gi = g_graphic_accessor.GetInterface();
 		token.Release();
 
 		if (!shader_bypass)

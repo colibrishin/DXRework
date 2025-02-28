@@ -1505,7 +1505,7 @@ namespace Engine
 		Unique<IGraphicAPIBase> m_graphic_;
 	};
 
-	static IGraphicAPIAccessor s_ga;
+	extern ENGINE_CORE_API IGraphicAPIAccessor g_graphic_accessor;
 
 	template <typename T>
 	class StructuredBufferMemoryPool
@@ -1583,7 +1583,7 @@ namespace Engine
 				size_t      end_it = m_resource_.size();
 				m_resource_.resize(count);
 
-				IGraphicAPI& gi = s_ga.GetInterface();
+				IGraphicAPI& gi = g_graphic_accessor.GetInterface();
 				const IGraphicContextImpl& context = gi.GetNewContext(0, false, L"Structured Buffer Memory pool resizing");
 				const IGraphicContext& primitive = context.GetPointers();
 
@@ -1608,7 +1608,7 @@ namespace Engine
 				throw std::logic_error("Memory pool is not allocated enough size");
 			}
 
-			IGraphicAPI& gi = s_ga.GetInterface();
+			IGraphicAPI& gi = g_graphic_accessor.GetInterface();
 			const IGraphicContextImpl& context = gi.GetNewContext(0, false, L"Structured Buffer Memory pool copy");
 			const IGraphicContext& primitive = context.GetPointers();
 

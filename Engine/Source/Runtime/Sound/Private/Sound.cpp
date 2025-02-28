@@ -30,7 +30,7 @@ void Engine::Resources::Sound::Update(const float dt)
 		
 		if ( const Strong<Components::Transform>& locked = transform.lock() )
 		{
-			ISoundAPI &si = s_sa.GetInterface();
+			ISoundAPI &si = g_sound_accessor.GetInterface();
 			si.UpdatePosition( id, locked->GetWorldPosition());
 			++it;
 		}
@@ -59,7 +59,7 @@ void Engine::Resources::Sound::Play(const Weak<Components::Transform>& transform
 	{
 		if ( const Strong<Components::Transform>& locked = transform.lock() )
 		{
-			ISoundAPI &si = s_sa.GetInterface();
+			ISoundAPI &si = g_sound_accessor.GetInterface();
 			
 			if ( SoundChannelID assigned_id = 0; 
 				si.PlaySound( m_primitive_.get(), locked->GetWorldPosition(), velocity, loop, assigned_id ) )
@@ -81,7 +81,7 @@ void Engine::Resources::Sound::Stop(const Weak<Components::Transform>& transform
 	{
 		if ( const Strong<Components::Transform>& locked = transform.lock() )
 		{
-			ISoundAPI &si = s_sa.GetInterface();
+			ISoundAPI &si = g_sound_accessor.GetInterface();
 			
 			if ( si.StopSound( m_assigned_ids_.at(transform) ) )
 			{
@@ -97,7 +97,7 @@ void Engine::Resources::Sound::StopLoop(const Weak<Components::Transform>& trans
 	{
 		if (const Strong<Components::Transform>& locked = transform.lock())
 		{
-			ISoundAPI &si = s_sa.GetInterface();
+			ISoundAPI &si = g_sound_accessor.GetInterface();
 			si.StopLoop( m_primitive_.get(), m_assigned_ids_.at( transform ) );
 		}
 	}
@@ -109,7 +109,7 @@ void Engine::Resources::Sound::UpdatePositionAndVelocity(const Weak<Components::
 	{
 		if (const Strong<Components::Transform>& locked = transform.lock())
 		{
-			ISoundAPI &si = s_sa.GetInterface();
+			ISoundAPI &si = g_sound_accessor.GetInterface();
 			si.UpdatePosition( m_assigned_ids_.at(transform), locked->GetWorldPosition(), velocity );
 		}
 	}
@@ -139,7 +139,7 @@ void Engine::Resources::Sound::SetMaxDistance(const float max_distance)
 
 void Engine::Resources::Sound::Load_INTERNAL()
 {
-	ISoundAPI &si = s_sa.GetInterface();
+	ISoundAPI &si = g_sound_accessor.GetInterface();
 	m_primitive_ = Unique<decltype(m_primitive_)::element_type, SoundDeleter>( si.NewSound( GetPath() ) );
 
 	if (m_primitive_)

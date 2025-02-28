@@ -34,7 +34,7 @@ namespace Engine::Components
             RenderComponent::OnUIUpdate( parent, dt );
 
             static std::string empty_string;
-            IUIAPI &      ui = s_uia.GetInterface();
+            IUIAPI &      ui = g_ui_accessor.GetInterface();
             *parent |= ui.NewLabelAndText( this,
                                            "Shape",
                                            { "Shape",

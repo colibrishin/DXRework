@@ -34,7 +34,7 @@ void Engine::DeferredRenderPassTask::Run(
         return;
     }
 
-    IGraphicAPI &gi= s_ga.GetInterface();
+    IGraphicAPI &gi= g_graphic_accessor.GetInterface();
     {
         const auto &context   = gi.GetNewContext( 0, false, L"Clear Deferred Textures" );
         const auto &primitive = context.GetPointers();
@@ -128,7 +128,7 @@ void Engine::DeferredRenderPassTask::Run(
 
 void Engine::DeferredRenderPassTask::Cleanup()
 {
-    IGraphicAPI &gi = s_ga.GetInterface();
+    IGraphicAPI &gi = g_graphic_accessor.GetInterface();
     const auto       &context = gi.GetNewContext( 0, false, L"Clear Deferred Textures" );
     const auto       &primitive = context.GetPointers();
     
@@ -231,7 +231,7 @@ inline void Engine::DeferredRenderPassTask::StartPhase_MultiThread(
     }
 #endif
 
-    IGraphicAPI &gi = s_ga.GetInterface();
+    IGraphicAPI &gi = g_graphic_accessor.GetInterface();
 
     // Manual release
     SpinLockToken                            gi_token = SingletonSpinLock::GetInstance().Lock( m_gi_ticket_ );
@@ -334,7 +334,7 @@ inline void Engine::DeferredRenderPassTask::MaterialPass_Multithread(
 
     // Manual release
     auto              token = SingletonSpinLock::GetInstance().Lock( m_gi_ticket_ );
-    IGraphicAPI &gi    = s_ga.GetInterface();
+    IGraphicAPI &gi    = g_graphic_accessor.GetInterface();
     token.Release();
 
     if ( !shader_bypass )
@@ -487,7 +487,7 @@ inline void Engine::DeferredRenderPassTask::LightPass(
         const std::unordered_map<std::string_view, ContextSetupFunction> &prerender_predicates,
         const std::unordered_map<std::string_view, ContextSetupFunction> &postrender_predicates )
 {
-    IGraphicAPI &gi = s_ga.GetInterface();
+    IGraphicAPI &gi = g_graphic_accessor.GetInterface();
     const IGraphicContextImpl &context  = std::move( gi.GetNewContext( 0, false, L"Render Pass" ) );
     const IGraphicContext &primitive = context.GetPointers();
     primitive.commandList->SoftReset();

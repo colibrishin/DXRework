@@ -30,7 +30,7 @@ namespace Engine::Managers
 
 	bool InputManager::HasScrollChanged(int& value) const
 	{
-		IInputAPI& ii = s_iia.GetInterface();
+		IInputAPI& ii = g_input_accessor.GetInterface();
 
 		if (ii.HasScrollWheelChanged())
 		{
@@ -57,7 +57,7 @@ namespace Engine::Managers
 
 	Vector2 InputManager::GetNormalizedMousePosition()
 	{
-		IInputAPI& ii = s_iia.GetInterface();
+		IInputAPI& ii = g_input_accessor.GetInterface();
 
 		const Vector2 actual_mouse_position{
 			static_cast<float>(ii.GetMouseX()),

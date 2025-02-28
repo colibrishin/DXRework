@@ -12,7 +12,7 @@ void Engine::Graphics::D3D12ConstantBufferTypeless::Create(const void* src_data,
 	m_stride_ = stride;
 	m_alignment_ = (stride + 255) & ~255;
 
-	IGraphicAPI&                        gi      = s_ga.GetInterface();
+	IGraphicAPI&                        gi      = g_graphic_accessor.GetInterface();
 	const auto                               dev     = static_cast<ID3D12Device2*>(gi.GetNativeInterface());
 	const IGraphicContextImpl& context = gi.GetNewContext
 			(D3D12_COMMAND_LIST_TYPE_DIRECT, false, L"D3D12ConstantBuffer Initialization");

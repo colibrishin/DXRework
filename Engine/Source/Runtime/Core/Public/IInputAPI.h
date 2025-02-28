@@ -503,5 +503,5 @@ namespace Engine
 		Unique<IInputAPI> s_interface_;
 	};
 
-	static IInputAPIAccessor s_iia;
+	extern ENGINE_CORE_API IInputAPIAccessor g_input_accessor;
 }

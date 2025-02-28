@@ -56,7 +56,7 @@ namespace Engine::Resources
 		{
             Resource::OnUIUpdate( parent, dt );
 
-            IUIAPI &ui = s_uia.GetInterface();
+            IUIAPI &ui = g_ui_accessor.GetInterface();
             *parent += ui.NewListBox( this, "MeshList", { "Mesh List", 0, 0 } );
             *parent |= ui.NewDragAndDropTarget( this,
                                                 "DragAndDropTargetResource",

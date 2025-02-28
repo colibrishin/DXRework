@@ -46,7 +46,7 @@ namespace Engine::Resources
 		{
 			void operator()(ISound* ptr) const
 			{
-				s_sa.GetInterface().ReleaseSound( ptr );
+				g_sound_accessor.GetInterface().ReleaseSound( ptr );
 			}
 		};
 

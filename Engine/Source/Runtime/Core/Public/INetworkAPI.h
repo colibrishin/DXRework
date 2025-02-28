@@ -1,59 +1,48 @@
 #pragma once
-#include <vector>
 #include "Allocator.h"
 #include "CoreType.h"
 #include "SIMDExtension.hpp"
 #include "TypeLibrary.h"
+#include "NetworkType.h"
+#include "NetworkMessageTask.h"
 
 #include "INetworkAPI.generated.h"
 
-namespace Engine 
+namespace Engine
 {
-    struct NetworkMessageTask;
-
-#pragma pack( push, 1 )
-    struct ENGINE_CORE_API NetMessage
-    {
-        unsigned char  sender[ 32 ]{};
-        unsigned short txport{};
-        unsigned char  receiver[ 32 ]{};
-        unsigned short rxport{};
-        HashType       targetTask{};
-    };
-#pragma pack( pop )
-
-    struct ENGINE_CORE_API RawNetMessage
-    {
-        std::vector<unsigned char, u_pool_allocator_single<unsigned char>> rawData{};
-
-        RawNetMessage()
-        {
-            rawData.emplace_back( '\0' );
-        }
-
-        template <typename T>
-            requires std::is_base_of_v<NetMessage, T> && !std::is_same_v<NetMessage, T>
-        explicit RawNetMessage( const T& msg )
-        {
-            rawData.resize( sizeof( T ) );
-            SIMDExtension::_mm256_memcpy( rawData.data(), &msg, sizeof( T ) );
-            rawData.emplace_back( '\0' );
-        }
-    };
-
     ECLASS( virtual, abstract )
     struct ENGINE_CORE_API INetworkAPI
     {
         GENERATE_BODY
 
-        virtual ~INetworkAPI() = default;
+        virtual      ~INetworkAPI()    = default;
         virtual void Initialize() = 0;
-        virtual void Shutdown()   = 0;
+        virtual void Shutdown()        = 0;
 
-        virtual bool                Listen( const unsigned short port )                             = 0;
-        virtual bool                Connect( const std::string_view ip, const unsigned short port ) = 0;
-        virtual void                Send( const RawNetMessage& message )                               = 0;
-        virtual NetworkMessageTask& GetMessageTask()                                                = 0;
+        virtual bool Open( const eNetSendType type )            = 0;
+        virtual bool Bind( const eNetSendType type, const uint16_t port ) = 0;
+
+        virtual bool Listen( const eNetSendType type, const NetHost* const host ) = 0;
+        virtual bool Listen( const eNetSendType type )       = 0;
+        virtual bool Connect( const std::string_view ip, const unsigned short port )                         = 0;
+        template <typename T>
+            requires std::is_base_of_v<NetMessage, T> && !std::is_same_v<NetMessage, T> &&
+                     !std::is_polymorphic_v<T>
+        void Send( const eNetSendType type, NetMessageDescription&& send_desc, T&& message )
+        {
+            NetMessageSendType<T> packed_msg;
+            if ( NetMessageDescription desc    = std::move( send_desc );
+                ResolveTask( packed_msg.header ) )
+            {
+                packed_msg.body = std::forward<T>( message );
+                RawNetMessage msg( packed_msg );
+                sendImpl( type, std::move( desc ), std::move( msg ) );
+            }
+        }
+
+    protected:
+        INetworkTask* ResolveTask( const NetMessageHeaderType& header ) const;
+        virtual void  sendImpl( const eNetSendType type, NetMessageDescription&& desc, RawNetMessage&& message ) = 0;
     };
 
     struct ENGINE_CORE_API INetworkAPIAccessor
@@ -69,7 +58,14 @@ namespace Engine
             if ( !m_interface_ )
             {
                 m_interface_ = std::make_unique<T>();
+                m_interface_->Initialize();
+                m_message_task_.Initialize();
             }
+        }
+
+        NetworkMessageTask& GetMessageTask()
+        {
+            return m_message_task_;
         }
 
         void Shutdown()
@@ -81,9 +77,15 @@ namespace Engine
             }
         }
 
+        bool IsValid() const
+        {
+            return m_interface_.get();
+        }
+
     private:
+        NetworkMessageTask  m_message_task_;
         Unique<INetworkAPI> m_interface_ = nullptr;
     };
 
-    static INetworkAPIAccessor s_nia;
+    extern ENGINE_CORE_API INetworkAPIAccessor g_network_accessor;
 }

@@ -253,7 +253,7 @@ void Engine::Graphics::D3D12StructuredBufferTypeless::GetData(const IGraphicCont
 
 void Engine::Graphics::D3D12StructuredBufferTypeless::InitializeSRV(UINT size, const size_t stride)
 {
-	const auto dev = static_cast<ID3D12Device2*>(s_ga.GetInterface().GetNativeInterface());
+	const auto dev = static_cast<ID3D12Device2*>(g_graphic_accessor.GetInterface().GetNativeInterface());
 
 	constexpr D3D12_DESCRIPTOR_HEAP_DESC srv_heap_desc
 	{
@@ -296,7 +296,7 @@ void Engine::Graphics::D3D12StructuredBufferTypeless::InitializeSRV(UINT size, c
 
 void Engine::Graphics::D3D12StructuredBufferTypeless::InitializeUAV(UINT size, const size_t stride)
 {
-	const auto dev = static_cast<ID3D12Device2*>(s_ga.GetInterface().GetNativeInterface());
+	const auto dev = static_cast<ID3D12Device2*>(g_graphic_accessor.GetInterface().GetNativeInterface());
 	
 	constexpr D3D12_DESCRIPTOR_HEAP_DESC uav_heap_desc
 	{
@@ -337,7 +337,7 @@ void Engine::Graphics::D3D12StructuredBufferTypeless::InitializeMainBuffer(UINT 
 {
 	const auto& default_heap = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
 	auto        buffer_desc = CD3DX12_RESOURCE_DESC::Buffer(stride * size);
-	const auto  dev         = static_cast<ID3D12Device2*>(s_ga.GetInterface().GetNativeInterface());
+	const auto  dev         = static_cast<ID3D12Device2*>(g_graphic_accessor.GetInterface().GetNativeInterface());
 
 	if (m_uav_)
 	{
@@ -366,7 +366,7 @@ void Engine::Graphics::D3D12StructuredBufferTypeless::InitializeUploadBuffer(con
 {
 	const auto& upload_heap = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
 	const auto& buffer_desc = CD3DX12_RESOURCE_DESC::Buffer(stride * size);
-	const auto  dev         = static_cast<ID3D12Device2*>(s_ga.GetInterface().GetNativeInterface());
+	const auto  dev         = static_cast<ID3D12Device2*>(g_graphic_accessor.GetInterface().GetNativeInterface());
 	const auto  cmd         = static_cast<CommandPair*>(context->commandList);
 	
 	DX::ThrowIfFailed
@@ -414,7 +414,7 @@ void Engine::Graphics::D3D12StructuredBufferTypeless::InitializeReadBuffer(UINT 
 {
 	const auto& readback_heap = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_READBACK);
 	const auto& buffer_desc = CD3DX12_RESOURCE_DESC::Buffer(stride * size);
-	const auto  dev         = static_cast<ID3D12Device2*>(s_ga.GetInterface().GetNativeInterface());
+	const auto  dev         = static_cast<ID3D12Device2*>(g_graphic_accessor.GetInterface().GetNativeInterface());
 
 	DX::ThrowIfFailed
 	(

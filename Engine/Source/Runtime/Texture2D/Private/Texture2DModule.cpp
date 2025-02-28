@@ -23,7 +23,7 @@ bool Engine::Texture2DModule::InitializeImpl()
 
 	Managers::ResourceManager::GetInstance().RegisterNewResource(Engine::Resources::Texture2D::StaticTypeName(), [](bool& managing_flag)
 	{
-		IUIAPI& ui = s_uia.GetInterface();
+		IUIAPI& ui = g_ui_accessor.GetInterface();
 		static GenericTextureDescription desc{};
 		static constexpr auto tex_format_cstr = []()
 		{

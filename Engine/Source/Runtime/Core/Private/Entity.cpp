@@ -62,7 +62,7 @@ void Engine::Abstracts::Entity::OnUIUpdate( UIContext *const parent, const float
 {
     if ( parent )
     {
-        IUIAPI &ui = s_uia.GetInterface();
+        IUIAPI &ui = g_ui_accessor.GetInterface();
 
         ( *parent |= ui.NewLabelAndText( this, "EntityName", { "Name", m_name_, true } ) ).SetFunction( [&]()
         {

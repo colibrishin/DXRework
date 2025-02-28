@@ -35,7 +35,7 @@ void Engine::Components::TextRenderer::OnUIUpdate(UIContext* const parent, const
     {
         RenderComponent::OnUIUpdate(parent, dt);
         {
-            IUIAPI&       ui = s_uia.GetInterface();
+            IUIAPI&       ui = g_ui_accessor.GetInterface();
             static std::string font_name;
             if (m_loaded_font_)
             {

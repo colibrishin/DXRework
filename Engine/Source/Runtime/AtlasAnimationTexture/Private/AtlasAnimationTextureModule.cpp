@@ -42,7 +42,7 @@ bool Engine::AtlasAnimationTextureModule::InitializeImpl()
 
             const auto& ui_callback = [](UIContext* const context)
                 {
-                    IUIAPI& ui = s_uia.GetInterface();
+                    IUIAPI& ui = g_ui_accessor.GetInterface();
                     constexpr const char* expected_tex_extensions[] = { ".png", ".jpg", ".bmp" ".dds" };
 
                     *context |= ui.NewLabelAndText(nullptr, "AtlasName", { "Atlas Name", sub_atlas_name_buffer, true });

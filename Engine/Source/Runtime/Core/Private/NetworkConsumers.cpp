@@ -2,23 +2,29 @@
 #include "NetworkConsumers.generated.h"
 #include "INetworkAPI.h"
 
-Engine::INetworkTask* Engine::NetworkConsumers::GetConsumer( const RawNetMessage& message ) const
+Engine::NetworkConsumers::NetworkConsumers()
+{
+}
+
+Engine::INetworkTask* Engine::NetworkConsumers::GetConsumer( const NetMessageHeaderType& header ) const
 {
     std::lock_guard l( m_mutex_ );
-    const NetMessage&  msg = reinterpret_cast<const NetMessage&>( *message.rawData.data() );
-
-    if ( m_network_consumers_.contains( msg.targetTask ) )
+    if ( const auto& it = std::ranges::find_if( m_network_consumers_,
+                                                [ &header ]( const auto& task )
+                                                {
+                                                    return header.targetTask == task.first->v;
+                                                } );
+        it != m_network_consumers_.end() )
     {
-        return m_network_consumers_.at( msg.targetTask ).get();
+        return it->second.get();
     }
 
     return nullptr;
 }
 
-Engine::INetworkTask* Engine::NetworkConsumers::GetConsumer( HashType hash ) const
+Engine::INetworkTask* Engine::NetworkConsumers::GetConsumer( const HashType hash ) const
 {
-    std::lock_guard l( m_mutex_ );
-    if ( m_network_consumers_.contains( hash ) )
+    if ( std::lock_guard l( m_mutex_ ); m_network_consumers_.contains( hash ) )
     {
         return m_network_consumers_.at( hash ).get();
     }
@@ -28,8 +34,7 @@ Engine::INetworkTask* Engine::NetworkConsumers::GetConsumer( HashType hash ) con
 
 void Engine::NetworkConsumers::AddConsumer( INetworkTask* task )
 {
-    std::lock_guard l( m_mutex_ );
-    if ( !m_network_consumers_.contains( task->GetTypeHash() ) )
+    if ( std::lock_guard l( m_mutex_ ); !m_network_consumers_.contains( task->GetTypeHash() ) )
     {
         m_network_consumers_.emplace( task->GetTypeHash(), task );
     }

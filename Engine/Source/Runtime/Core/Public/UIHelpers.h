@@ -29,7 +29,7 @@ namespace Engine::UIHelpers
         const UICleanupCallbackSignature&          cleanup_callback
     )
     {
-        IUIAPI& ui = s_uia.GetInterface();
+        IUIAPI& ui = g_ui_accessor.GetInterface();
 
         static bool        pressed = false;
         static std::string name{};
@@ -176,7 +176,7 @@ namespace Engine::UIHelpers
         bool                       window = true;
         static TypeSelectionMap<U> selection{};
 
-        IUIAPI &ui = s_uia.GetInterface();
+        IUIAPI &ui = g_ui_accessor.GetInterface();
 
         static ContIterator      iterator{};
         static const std::string dialog_id    = std::format( "Single{}SelectionDialog", U::StaticTypeName() );
@@ -228,7 +228,7 @@ namespace Engine::UIHelpers
         bool                       window = true;
         static TypeSelectionMap<U> selection{};
 
-        IUIAPI &ui = s_uia.GetInterface();
+        IUIAPI &ui = g_ui_accessor.GetInterface();
 
         static ContIterator      iterator{};
         static const std::string dialog_id    = std::format( "Multiple{}SelectionDialog", U::StaticTypeName() );

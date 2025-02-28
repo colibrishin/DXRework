@@ -6,7 +6,11 @@
 #include "ObjectBase.h"
 #include "Transform.h"
 #include "Camera.h"
+
+#if CLIENT || WITH_EDITOR
 #include "InputManager.h"
+#endif
+
 #include "Components/Public/CubifyComponent.h"
 #include "Collider.h"
 #include "CollisionDetector.h"
@@ -304,6 +308,7 @@ void FezPlayerComponent::MoveCameraToChild() const
 
 void FezPlayerComponent::UpdateMove()
 {
+#if CLIENT || WITH_EDITOR
 	if (GetOwner().expired())
 	{
 		return;
@@ -349,6 +354,7 @@ void FezPlayerComponent::UpdateMove()
 	{
 		m_state_ = CHAR_STATE_WALK;
 	}
+#endif
 }
 
 void FezPlayerComponent::UpdateRotate(float dt)
@@ -423,6 +429,7 @@ void FezPlayerComponent::UpdateRotate(float dt)
 		return;
 	}
 
+#if CLIENT || WITH_EDITOR
 	// CW
 	if (Managers::InputManager::GetInstance().IsKeyPressed(Keyboard::Q))
 	{
@@ -436,6 +443,7 @@ void FezPlayerComponent::UpdateRotate(float dt)
 		m_rotation_count_ = (m_rotation_count_ + 1) % 4;
 		rotating = true;
 	}
+#endif
 
 	// If the player starts rotating, then set the player's state to rotate.
 	// Make the player full stop.
@@ -661,11 +669,13 @@ void FezPlayerComponent::UpdateInitialJump()
 	const auto& up = tr->Up();
 	const auto& scene = owner->GetScene().lock();
 
+#if CLIENT || WITH_EDITOR
 	// Discrete key check for initial jump. Continuous key check for jump will be done in jump state.
 	if (Managers::InputManager::GetInstance().IsKeyPressed(Keyboard::Space))
 	{
 		DoInitialJump(rb, up);
 	}
+#endif
 }
 
 void FezPlayerComponent::UpdateJump()
@@ -691,6 +701,7 @@ void FezPlayerComponent::UpdateJump()
 	const auto& up = tr->Up();
 	const auto& scene = owner->GetScene().lock();
 
+#if CLIENT || WITH_EDITOR
 	if (Managers::InputManager::GetInstance().IsKeyPressed(Keyboard::W) ||
 		Managers::InputManager::GetInstance().IsKeyPressed(Keyboard::Space))
 	{
@@ -707,6 +718,7 @@ void FezPlayerComponent::UpdateJump()
 		m_state_ = CHAR_STATE_FALL;
 		ApplyCollision();
 	}
+#endif
 }
 
 void FezPlayerComponent::UpdateFall()
@@ -766,6 +778,7 @@ void FezPlayerComponent::UpdateInitialVault()
 
 	const auto& scene = owner->GetScene().lock();
 
+#if CLIENT || WITH_EDITOR
 	// Check state change just in case, whether the other check succeeds before vault check.
 	if (Managers::InputManager::GetInstance().IsKeyPressed(Keyboard::S) &&
 		(m_state_ == CHAR_STATE_IDLE || m_state_ == CHAR_STATE_WALK))
@@ -819,6 +832,7 @@ void FezPlayerComponent::UpdateInitialVault()
 			}
 		}
 	}
+#endif
 }
 
 void FezPlayerComponent::UpdateVault()
@@ -860,6 +874,7 @@ void FezPlayerComponent::UpdateVault()
 		ApplyLerp();
 	}
 
+#if CLIENT || WITH_EDITOR
 	// Moving while in vault state.
 	if (Managers::InputManager::GetInstance().IsKeyDown(Keyboard::D))
 	{
@@ -938,6 +953,7 @@ void FezPlayerComponent::UpdateVault()
 
 		m_state_ = CHAR_STATE_FALL;
 	}
+#endif
 }
 
 void FezPlayerComponent::DoInitialJump(const Engine::Strong<Engine::Components::Rigidbody>& rb, const Vector3& up)
@@ -1056,7 +1072,7 @@ void FezPlayerComponent::OnUIUpdate(Engine::UIContext* const parent, const float
 	{
 		static constexpr auto state_enum = CStrEnumStrings<eCharacterState>();
 		Component::OnUIUpdate(parent, dt);
-		IUIAPI& ui = s_uia.GetInterface();
+		IUIAPI& ui = g_ui_accessor.GetInterface();
         *parent |= ui.NewCombobox( this,
                                    "PreviousState",
                                    { "Previous State",

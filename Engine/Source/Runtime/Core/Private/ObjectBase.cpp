@@ -562,7 +562,7 @@ namespace Engine::Abstracts
 	{
 		if (parent)
 		{
-			IUIAPI& ui = s_uia.GetInterface();
+			IUIAPI& ui = g_ui_accessor.GetInterface();
 
             if ( m_ui_info_.dialogOpened )
             {

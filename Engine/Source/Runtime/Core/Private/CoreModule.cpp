@@ -45,8 +45,8 @@ bool Engine::CoreModule::ShutdownImpl()
 #endif
 	
 #if WITH_EDITOR
-	s_uia.Shutdown();
-    s_iia.Shutdown();
+	g_ui_accessor.Shutdown();
+    g_input_accessor.Shutdown();
 #endif
 	return true;
 }

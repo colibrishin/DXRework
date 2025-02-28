@@ -5,7 +5,7 @@ namespace Engine::Managers
 {
 	SoundManager::~SoundManager()
 	{
-		s_sa.Shutdown();
+		g_sound_accessor.Shutdown();
 	}
 
 	void SoundManager::Initialize() {}
@@ -24,6 +24,6 @@ namespace Engine::Managers
 
 	void SoundManager::PostUpdate(const float dt)
 	{
-		s_sa.GetInterface().Update();
+		g_sound_accessor.GetInterface().Update();
 	}
 } // namespace Engine::Manager::Graphics

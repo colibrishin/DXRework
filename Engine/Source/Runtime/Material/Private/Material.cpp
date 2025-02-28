@@ -27,7 +27,7 @@ namespace Engine::Resources
 		{
 			Resource::OnUIUpdate(parent, dt);
 
-			IUIAPI& ui = s_uia.GetInterface();
+			IUIAPI& ui = g_ui_accessor.GetInterface();
 
 			*parent |= ui.NewLabelAndFloat(this, "SpecularPower", {"Specular Power", m_material_sb_.specularPower, 0.1f, 0.f, std::numeric_limits<float>::max(), true});
 			*parent |= ui.NewLabelAndFloat(this, "ReflectionScale", {"Reflection Scale", m_material_sb_.reflectionScale, 0.1f, 0.f, std::numeric_limits<float>::max(), true});

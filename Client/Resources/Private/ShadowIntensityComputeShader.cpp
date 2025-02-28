@@ -33,7 +33,7 @@ void ShadowIntensityComputeShader::preDispatch( const IGraphicContext *context,
     table->CopyUAVHeap(context);
     table->TransitionToUAV(context);
 
-    IGraphicAPI& gi = s_ga.GetInterface();
+    IGraphicAPI& gi = g_graphic_accessor.GetInterface();
     gi.Bind( context, m_intersection_texture_.get(), BIND_TYPE_SRV, BIND_SLOT_TEX, 0 );
     gi.Bind( context, m_position_texture_.get(), BIND_TYPE_SRV, BIND_SLOT_TEX, 1 );
     param.SetParam(target_light_slot, static_cast<int>(m_target_light_));
@@ -51,7 +51,7 @@ void ShadowIntensityComputeShader::postDispatch( const IGraphicContext *context,
     const auto& table = m_light_table_ptr_.lock();
     table->TransitionCommon(context);
 
-    IGraphicAPI& gi = s_ga.GetInterface();
+    IGraphicAPI& gi = g_graphic_accessor.GetInterface();
     gi.TransitBack( context, m_intersection_texture_.get(), BIND_TYPE_SRV );
     gi.TransitBack( context, m_position_texture_.get(), BIND_TYPE_SRV );
 

@@ -22,9 +22,9 @@ namespace Engine
 
     void RaytracingRenderPassTask::PreRun(RenderMap const* render_map, const size_t render_map_count, const ObjectPredication& predication)
 	{
-	    IGraphicAPI& gi = s_ga.GetInterface();
+	    IGraphicAPI& gi = g_graphic_accessor.GetInterface();
 
-        if ( IRaytracingExtension& rgi = s_ga.GetRaytracingInterface();
+        if ( IRaytracingExtension& rgi = g_graphic_accessor.GetRaytracingInterface();
              rgi.ShouldUseRaytracing() )
 	    {
 	        const auto& context = gi.GetNewContext(0, false, L"Building Top Level Acceleration Buffer");
@@ -60,7 +60,7 @@ namespace Engine
 			return;
 		}
 
-        if ( IRaytracingExtension& rgi = s_ga.GetRaytracingInterface();
+        if ( IRaytracingExtension& rgi = g_graphic_accessor.GetRaytracingInterface();
              rgi.ShouldUseRaytracing() )
 		{
 		    // Filter the instances by the predicate
@@ -103,7 +103,7 @@ namespace Engine
                     );
             }
 
-		    auto& gi = s_ga.GetInterface();
+		    auto& gi = g_graphic_accessor.GetInterface();
 		    auto context = gi.GetNewContext(0, false, L"Lazy Shader Resource Texture Transition Back");
 		    auto primitive = context.GetPointers();
 		    
@@ -127,7 +127,7 @@ namespace Engine
 
 	void RaytracingRenderPassTask::Cleanup()
 	{
-        if ( IRaytracingExtension& rgi = s_ga.GetRaytracingInterface();
+        if ( IRaytracingExtension& rgi = g_graphic_accessor.GetRaytracingInterface();
              rgi.ShouldUseRaytracing() )
 	    {
 	        m_local_param_pool_.reset();
@@ -196,8 +196,8 @@ namespace Engine
 		const aligned_vector<InstancePair>&                               instance_pairs
 	)
 	{
-        IGraphicAPI& gi = s_ga.GetInterface();
-	    IRaytracingExtension& rgi = s_ga.GetRaytracingInterface();
+        IGraphicAPI& gi = g_graphic_accessor.GetInterface();
+	    IRaytracingExtension& rgi = g_graphic_accessor.GetRaytracingInterface();
 
         // Manual release
         SpinLockToken                            gi_token     = SingletonSpinLock::GetInstance().Lock(m_gi_ticket_);
@@ -376,7 +376,7 @@ namespace Engine
 		const aligned_vector<Graphics::SBs::InstanceSB*>&     instances)
 	{
 		CheckSize<UINT>(instance_count, L"Warning: Renderer will take a lot of amount of instance buffers!");
-		IRaytracingExtension& rgi = s_ga.GetRaytracingInterface();
+		IRaytracingExtension& rgi = g_graphic_accessor.GetRaytracingInterface();
 
 	    instance_buffer.SetDataPointerContainer(context, static_cast<UINT>(instance_count), instances.data());
 	    instance_buffer.TransitionToSRV(context);

@@ -5,7 +5,7 @@ void Engine::D3D12PrimitiveSampler::Generate( eShaderSamplerAddress  addr,
                                               eShaderSamplerFunction function,
                                               eSamplerFilter         filter )
 {
-    IGraphicAPI &gi = s_ga.GetInterface();
+    IGraphicAPI &gi = g_graphic_accessor.GetInterface();
     ID3D12Device* dev = static_cast<ID3D12Device*>(gi.GetNativeInterface());
 
     constexpr D3D12_DESCRIPTOR_HEAP_DESC desc{

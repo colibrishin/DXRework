@@ -50,7 +50,7 @@ namespace Engine::Abstracts
         if ( parent )
         {
             Entity::OnUIUpdate( parent, dt );
-            IUIAPI &ui = s_uia.GetInterface();
+            IUIAPI &ui = g_ui_accessor.GetInterface();
             *parent |= ui.NewLabelAndPath( this, "RawPath", { "Raw Path", m_path_ } );
             ( *parent |= ui.NewButton( this, "CloneButton", { "Clone" } ) )
                     .SetFunction(

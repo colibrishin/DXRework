@@ -402,5 +402,5 @@ namespace Engine
         std::unique_ptr<IUIAPI> m_ui_interface_;
     };
 
-    static IUIAPIAccessor s_uia;
+    extern ENGINE_CORE_API IUIAPIAccessor g_ui_accessor;
 }

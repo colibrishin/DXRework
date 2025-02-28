@@ -45,7 +45,7 @@ namespace Engine::Components
 		SetCount( 1 );
 		SetDuration( 1.f );
 		SetSize( 1.f );
-		IGraphicAPI& gi = s_ga.GetInterface();
+		IGraphicAPI& gi = g_graphic_accessor.GetInterface();
 		m_sb_buffer_ = std::make_unique<decltype(m_sb_buffer_)::element_type>( gi.GetStructuredBuffer<Graphics::SBs::InstanceParticleSB>() );
 	}
 
@@ -53,7 +53,7 @@ namespace Engine::Components
 	{
 		if (m_cs_ && GetShape().lock())
 		{
-			IGraphicAPI& gi = s_ga.GetInterface();
+			IGraphicAPI& gi = g_graphic_accessor.GetInterface();
 			const IGraphicContextImpl& context = gi.GetNewContext(0, true, L"Particle Renderer Update");
 			const IGraphicContext& primitive = context.GetPointers();
 			
@@ -126,7 +126,7 @@ namespace Engine::Components
         {
             Base::OnUIUpdate( parent, dt );
 
-            IUIAPI &ui = s_uia.GetInterface();
+            IUIAPI &ui = g_ui_accessor.GetInterface();
 
             static std::string shader_name{};
             if ( const Strong<Resources::ParticleComputeShader> &shader = m_cached_cs_.lock() )

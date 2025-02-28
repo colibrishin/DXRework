@@ -21,7 +21,7 @@ bool Engine::SoundManagerModule::ShutdownImpl()
     CoreLoop::RemoveManager(
         CoreLoop::LOOP_TYPE_LOGIC,
         &Managers::SoundManager::GetInstance);
-    s_sa.Shutdown();
+    g_sound_accessor.Shutdown();
     return true;
 }
 

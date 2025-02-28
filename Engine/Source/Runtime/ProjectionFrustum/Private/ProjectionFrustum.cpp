@@ -28,7 +28,7 @@ namespace Engine::Managers
 				BoundingFrustum::CreateFromMatrix
 						(
 						 m_frustum,
-						 s_ga.GetInterface().GetProjectionMatrix()
+						 g_graphic_accessor.GetInterface().GetProjectionMatrix()
 						);
 			}
 			else
