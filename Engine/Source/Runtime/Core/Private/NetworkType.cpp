@@ -2,7 +2,7 @@
 
 Engine::RawNetMessage::RawNetMessage( const void* data, const size_t size )
 {
-    m_raw_data_.reserve( size );
+    m_raw_data_.resize( size );
     SIMDExtension::_mm256_memcpy( m_raw_data_.data(), data, size );
 }
 

@@ -21,7 +21,7 @@ bool ClientModule::InitializeImpl()
 
 #if CLIENT
     Engine::g_network_accessor.GetMessageTask().AddNewHost( {
-            .ip = {192, 168, 0, 32},
+            .ip = {192, 168, 0, 47},
               .tcp = 60902,
               .udp = 60901,
     } );

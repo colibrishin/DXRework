@@ -7,7 +7,7 @@ ENGINE_CORE_API Engine::INetworkAPIAccessor Engine::g_network_accessor = {};
 
 void Engine::INetworkAPI::Initialize()
 {
-    if ( !Open(UDP) &&
+    if ( !Open(UDP) ||
 #if CLIENT || WITH_EDITOR
          !Bind(UDP, 51211) )
 #else
@@ -24,5 +24,12 @@ Engine::INetworkTask* Engine::INetworkAPI::ResolveTask( const NetMessageHeaderTy
 {
     NetworkMessageTask& task     = g_network_accessor.GetMessageTask();
     INetworkTask*       msg_task = task.GetConsumers().GetConsumer( header );
+    return msg_task;
+}
+
+Engine::INetworkTask* Engine::INetworkAPI::ResolveTask( const HashType type ) const
+{
+    NetworkMessageTask& task     = g_network_accessor.GetMessageTask();
+    INetworkTask*       msg_task = task.GetConsumers().GetConsumer( type );
     return msg_task;
 }

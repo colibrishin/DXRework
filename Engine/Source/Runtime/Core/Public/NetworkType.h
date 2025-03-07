@@ -70,15 +70,15 @@ namespace Engine
 
     struct ENGINE_CORE_API NetHost
     {
-        NetID          id = (NetID)-1;
-        std::array<uint8_t, 4>  ip{};
-        unsigned short         tcp{};
-        unsigned short          udp{};
+        NetID                  id = ( NetID )-1;
+        std::array<uint8_t, 4> ip{};
+        uint16_t               tcp{};
+        uint16_t               udp{};
 
         template <eNetSendType Type>
-        unsigned short GetPort() const
+        uint16_t GetPort() const
         {
-            if constexpr (Type == TCP)
+            if constexpr ( Type == TCP )
             {
                 return tcp;
             }

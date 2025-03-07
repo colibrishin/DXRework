@@ -46,10 +46,11 @@ void Engine::NetworkChallengeTask::Challenge( const NetID new_host )
     INetworkAPI& api = g_network_accessor.GetInterface();
     NetMessageDescription desc;
     desc.dst = new_host;
+    desc.targetTask = this;
     api.Send( UDP, std::move( desc ), ChallengeMessage{} );
 
     std::lock_guard l( m_mtx_ );
-    m_challenge_status_.emplace( new_host, false );
+    m_challenge_status_[ new_host ] = false;
 }
 
 void Engine::NetworkChallengeTask::Consume( NetMessageDescription&& desc, Unique<NetMessage>&& message )
@@ -57,24 +58,19 @@ void Engine::NetworkChallengeTask::Consume( NetMessageDescription&& desc, Unique
     NetMessageDescription moved_desc = std::move( desc );
     Unique<NetMessage>    msg  = std::move( message );
 
-    if ( std::lock_guard l( m_mtx_ ); 
-        m_challenge_status_.contains( moved_desc.src ) )
+    if ( std::lock_guard l( m_mtx_ ); m_challenge_status_.contains( moved_desc.src ) )
     {
         // First challenged host received the ack.
         m_challenge_status_[ moved_desc.src ] = true;
 
         // if last challenge does not exists, then it would be the handshake.
-        if (!m_last_challenge_.contains(moved_desc.src))
+        if ( !m_last_challenge_.contains( moved_desc.src ) )
         {
             Challenge( moved_desc.src );
+            m_challenge_status_[ moved_desc.src ] = true;
         }
 
         m_last_challenge_[ moved_desc.src ] = std::chrono::high_resolution_clock::now();
-    }
-    else
-    {
-        // Other host sees new host. try challenge.
-        Challenge( moved_desc.src );
     }
 }
 
@@ -99,23 +95,27 @@ void Engine::NetworkChallengeTask::KeepChallenge()
     {
         const std::chrono::steady_clock::time_point& checktime = std::chrono::high_resolution_clock::now();
 
-        std::for_each( std::execution::par_unseq,
-                       m_last_challenge_.begin(),
-                       m_last_challenge_.end(),
-                       [ this, &checktime ]( const std::pair<NetID, std::chrono::steady_clock::time_point>& pair )
-                       {
-                           if ( !HaveAck( pair.first ) )
-                           {
-                               Remove( pair.first );
-                           }
-                           if ( NeedAck( pair.first ) )
-                           {
-                               Challenge( pair.first );
-                           }
-                       } );
+        for (auto it = m_challenge_status_.begin(); it != m_challenge_status_.end(); )
+        {
+            const decltype( m_challenge_status_ )::value_type& pair = *it;
+
+            if ( !HaveAck( pair.first ) )
+            {
+                auto next_it = std::next( it );
+                Remove( pair.first );
+                it = next_it;
+                continue;
+            }
+
+            if ( NeedAck( pair.first ) )
+            {
+                Challenge( pair.first );
+                ++it;
+            }
+        }
 
         std::unique_lock l( m_sleeper_mtx_ );
-        m_challenge_sleeper_.wait_for(l, sleeping );
+        m_challenge_sleeper_.wait_for( l, sleeping );
     }
 }
 

@@ -3,6 +3,7 @@
 #include <boost/asio/buffer.hpp>
 #include <boost/asio/io_context.hpp>
 #include <boost/asio/ip/udp.hpp>
+#include <cmath>
 
 #include "INetworkAPI.h"
 #include "NetworkMessageTask.h"
@@ -67,8 +68,7 @@ namespace Engine
 
             for ( const boost::asio::ip::basic_endpoint<T>& endpoint : endpoints )
             {
-                if ( endpoint.address().is_v4() && 
-                     !endpoint.address().is_loopback() &&
+                if ( endpoint.address().is_v4() && !endpoint.address().is_loopback() &&
                      !endpoint.address().is_unspecified() )
                 {
                     return endpoint.address().to_v4().to_bytes();
@@ -81,7 +81,7 @@ namespace Engine
 
     private:
         inline static boost::asio::io_context context{};
-        inline static T::resolver resolver{ context };
+        inline static T::resolver             resolver{ context };
     };
 
     namespace BoostNetwork
@@ -106,7 +106,7 @@ namespace Engine
         {
             getAllocator<Type>().deallocate( ptr, bytes );
         }
-    }
+    } // namespace BoostNetwork
 
     template <typename Protocol>
     struct Context
@@ -117,6 +117,24 @@ namespace Engine
         {
             Destory();
         }
+
+        Context()
+        {
+            m_socket_ = decltype( m_socket_ )( m_context_ );
+
+            const auto& thread_count       = std::min<uint32_t>( std::thread::hardware_concurrency(), 4 );
+            const auto& bind_error_handler = std::bind( &Context::contextErrorHandler, this, std::placeholders::_1 );
+
+            std::generate_n( std::back_inserter( m_io_threads_ ),
+                             thread_count,
+                             [ this, &bind_error_handler ]() {
+                                 return std::thread( &Context::contextRunner,
+                                                     this,
+                                                     std::ref( m_context_ ),
+                                                     std::ref( bind_error_handler ) );
+                             } );
+        }
+
 
         bool open()
         {
@@ -131,12 +149,9 @@ namespace Engine
 
         bool bind( uint16_t port )
         {
-            static local_address_resolver<Protocol> resolver{};
-            std::array<uint8_t, 4>                  address = resolver();
-
             while ( true )
             {
-                m_local_endpoint_ = { boost::asio::ip::address_v4( address ), port };
+                m_local_endpoint_ = { Protocol::v4(), port };
 
                 if ( boost::system::error_code ec; m_socket_.bind( m_local_endpoint_, ec ) )
                 {
@@ -152,7 +167,9 @@ namespace Engine
         }
 
         template <typename = std::enable_if_t<std::is_same_v<boost::asio::ip::tcp, Protocol>>>
-        bool receive( const std::function<void( const boost::asio::mutable_buffer&, const boost::system::error_code& ec, size_t )>& predicate )
+        bool
+        receive( const std::function<
+                 void( const boost::asio::mutable_buffer&, const boost::system::error_code& ec, size_t )>& predicate )
         {
             m_socket_.async_receive(
                     m_recv_buffer_,
@@ -162,14 +179,16 @@ namespace Engine
         }
 
         template <typename = std::enable_if_t<std::is_same_v<boost::asio::ip::udp, Protocol>>>
-        bool
-        receive_from( const std::function<void( const endpoint_type&, const boost::asio::mutable_buffer&, const boost::system::error_code&, size_t )>& predicate )
+        bool receive_from( const std::function<void( const endpoint_type&,
+                                                     const boost::asio::mutable_buffer&,
+                                                     const boost::system::error_code&,
+                                                     size_t )>& predicate )
         {
-            endpoint_type remote_endpoint;
+            static endpoint_type remote_endpoint{};
             m_socket_.async_receive_from( m_recv_buffer_,
                                           remote_endpoint,
                                           std::bind( predicate,
-                                                     remote_endpoint,
+                                                     std::ref( remote_endpoint ),
                                                      m_recv_buffer_,
                                                      std::placeholders::_1,
                                                      std::placeholders::_2 ) );
@@ -184,11 +203,10 @@ namespace Engine
         }
 
         template <typename = std::enable_if_t<std::is_same_v<boost::asio::ip::udp, Protocol>>>
-        bool send_to( const boost::asio::const_buffer&     buffer,
-                      const endpoint_type&                 remote_endpoint,
-                      const std::function<void( const endpoint_type&,
-                                                const boost::system::error_code&,
-                                                size_t )>& predicate )
+        bool send_to(
+                const boost::asio::const_buffer& buffer,
+                const endpoint_type&             remote_endpoint,
+                const std::function<void( const endpoint_type&, const boost::system::error_code&, size_t )>& predicate )
         {
             m_socket_.async_send_to(
                     buffer,
@@ -201,7 +219,18 @@ namespace Engine
         {
             m_socket_.cancel();
             m_socket_.close();
+            m_work_gurad_.reset();
             m_context_.stop();
+
+            std::ranges::for_each( m_io_threads_,
+                                   []( std::thread& elem )
+                                   {
+                                       if ( elem.joinable() )
+                                       {
+                                           elem.join();
+                                       }
+                                   } );
+
             BoostNetwork::deallocate<protocol_to_enum<Protocol>::value>( ( uint8_t* )m_recv_buffer_.data(),
                                                                          m_recv_buffer_.size() );
         }
@@ -212,7 +241,32 @@ namespace Engine
         }
 
     private:
-        boost::asio::io_context     m_context_;
+        void contextRunner( boost::asio::io_context&                            context,
+                            const std::function<void( const std::exception& )>& err_handler )
+        {
+            while ( true )
+            {
+                try
+                {
+                    context.run();
+                    break;
+                }
+                catch ( std::exception& e )
+                {
+                    err_handler( e );
+                }
+            }
+        }
+
+        void contextErrorHandler( const std::exception& e )
+        { }
+
+
+        boost::asio::io_context                                                 m_context_;
+        boost::asio::executor_work_guard<decltype( m_context_ )::executor_type> m_work_gurad_{
+            boost::asio::make_work_guard( m_context_ )
+        };
+        std::vector<std::thread>    m_io_threads_;
         Protocol::socket            m_socket_{ m_context_ };
         endpoint_type               m_local_endpoint_;
         boost::asio::mutable_buffer m_recv_buffer_{ BoostNetwork::allocate<protocol_to_enum<Protocol>::value>(
@@ -220,7 +274,7 @@ namespace Engine
                                                     max_packet_size<Protocol>::value };
     };
 
-    ECLASS(virtual)
+    ECLASS( virtual )
     struct ENGINE_BOOSTSOCKETWRAPPER_API BoostSocketWrapper : public INetworkAPI
     {
         GENERATE_BODY
@@ -236,13 +290,13 @@ namespace Engine
 
     private:
         template <typename Protocol>
-        const NetHost* ResolveHost(const boost::asio::ip::basic_endpoint<Protocol>& endpoint)
+        const NetHost* ResolveHost( const boost::asio::ip::basic_endpoint<Protocol>& endpoint )
         {
             return g_network_accessor.GetMessageTask().GetNetHost( endpoint.address().to_v4().to_bytes() );
         }
 
         void sendImpl( const eNetSendType type, NetMessageDescription&& desc, RawNetMessage&& message ) override;
-        
+
         template <eNetSendType Protocol, typename EndpointProtocolType = typename enum_to_protocol<Protocol>::type>
         void Send( boost::asio::ip::basic_endpoint<EndpointProtocolType>&& dst, RawNetMessage&& message )
         {
@@ -250,7 +304,7 @@ namespace Engine
 
             if constexpr ( Protocol == UDP )
             {
-                const auto& [value, _] = m_sending_message_.emplace( std::move ( message ) );
+                const auto& [ value, _ ] = m_sending_message_.emplace( std::move( message ) );
                 assert( value->size() < max_packet_size<EndpointProtocolType>::value );
                 m_udp_router_.send_to(
                         boost::asio::buffer( value->data(), value->size() ),
@@ -268,7 +322,7 @@ namespace Engine
         }
 
         Context<boost::asio::ip::udp> m_udp_router_;
-        
+
         std::unordered_set<RawNetMessage> m_sending_message_;
     };
-}
+} // namespace Engine

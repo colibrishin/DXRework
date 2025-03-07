@@ -31,9 +31,10 @@ namespace Engine
         void Send( const eNetSendType type, NetMessageDescription&& send_desc, T&& message )
         {
             NetMessageSendType<T> packed_msg;
-            if ( NetMessageDescription desc    = std::move( send_desc );
-                ResolveTask( packed_msg.header ) )
+            if ( NetMessageDescription desc    = std::move( send_desc ); 
+                 ResolveTask( desc.targetTask->GetTypeHash() ) )
             {
+                packed_msg.header.targetTask = desc.targetTask->GetTypeHash()->v;
                 packed_msg.body = std::forward<T>( message );
                 RawNetMessage msg( packed_msg );
                 sendImpl( type, std::move( desc ), std::move( msg ) );
@@ -42,6 +43,7 @@ namespace Engine
 
     protected:
         INetworkTask* ResolveTask( const NetMessageHeaderType& header ) const;
+        INetworkTask* ResolveTask( const HashType type ) const;
         virtual void  sendImpl( const eNetSendType type, NetMessageDescription&& desc, RawNetMessage&& message ) = 0;
     };
 
