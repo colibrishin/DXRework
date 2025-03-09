@@ -15,16 +15,12 @@ MODULE_IMPL( ClientModule, Client )
 bool ClientModule::InitializeImpl()
 {
 #if CLIENT || WITH_EDITOR
-    Engine::Managers::Renderer::GetInstance().RegisterRenderPass( L"ShadowIntersectionRenderTask",
-        new Engine::RenderPassTaskFactory<ShadowIntersectionRenderTask>() );
+    Engine::Managers::Renderer::GetInstance().RegisterRenderPass(
+            L"ShadowIntersectionRenderTask", new Engine::RenderPassTaskFactory<ShadowIntersectionRenderTask>() );
 #endif
 
 #if CLIENT
-    Engine::g_network_accessor.GetMessageTask().AddNewHost( {
-            .ip = {192, 168, 0, 47},
-              .tcp = 60902,
-              .udp = 60901,
-    } );
+    Engine::g_network_accessor.GetMessageTask().AddNewHost( { { 127, 0, 0, 1 }, Engine::UDP, 60901 } );
 #endif
 
     return IClientModule::InitializeImpl();

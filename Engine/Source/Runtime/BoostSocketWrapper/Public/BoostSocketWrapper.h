@@ -4,6 +4,8 @@
 #include <boost/asio/io_context.hpp>
 #include <boost/asio/ip/udp.hpp>
 #include <cmath>
+#include <iostream>
+#include <execution>
 
 #include "INetworkAPI.h"
 #include "NetworkMessageTask.h"
@@ -59,6 +61,21 @@ namespace Engine
         static constexpr size_t value = 65535;
     };
 
+#ifdef _WIN32
+    struct winsock_udp_connreset
+    {
+        unsigned long value = 0;
+        int       name()
+        {
+            return -1744830452; /* SIO_UDP_CONNRESET */
+        }
+        unsigned long* data()
+        {
+            return &value;
+        }
+    };
+#endif
+    
     template <typename T>
     struct local_address_resolver
     {
@@ -81,7 +98,7 @@ namespace Engine
 
     private:
         inline static boost::asio::io_context context{};
-        inline static T::resolver             resolver{ context };
+        inline static typename T::resolver    resolver{ context };
     };
 
     namespace BoostNetwork
@@ -115,7 +132,7 @@ namespace Engine
 
         ~Context()
         {
-            Destory();
+            Destroy();
         }
 
         Context()
@@ -133,28 +150,60 @@ namespace Engine
                                                      std::ref( m_context_ ),
                                                      std::ref( bind_error_handler ) );
                              } );
+
+            const size_t receiving_threads = std::min<size_t>( std::thread::hardware_concurrency(), 4 );
+            m_recv_buffers_.resize( receiving_threads );
+            m_remote_endpoint_storage_.resize( receiving_threads );
+            
+            for (size_t i = 0; i < receiving_threads; ++i)
+            {
+                m_recv_running_.emplace_back( false );
+            }
+
+            for ( auto& buffer : m_recv_buffers_ )
+            {
+                buffer = { BoostNetwork::allocate<protocol_to_enum<Protocol>::value>(
+                                   max_packet_size<Protocol>::value ),
+                           max_packet_size<Protocol>::value };
+            }
         }
 
 
         bool open()
         {
+            CONSOLE_OUT( "BoostContext", "Opening UDP Socket" )
             if ( boost::system::error_code ec; m_socket_.open( Protocol::v4(), ec ) )
             {
                 OutputDebugStringA( ec.message().c_str() );
+                CONSOLE_OUT( "BoostContext", "Unable to opening the socket: {}", ec.value() );
                 return false;
             }
+
+#if _WIN32
+            static winsock_udp_connreset conn_reset_flag{};
+            m_socket_.set_option( boost::asio::socket_base::reuse_address( true ) );
+            m_socket_.io_control( conn_reset_flag );
+#endif
+            m_running_ = true;
 
             return true;
         }
 
         bool bind( uint16_t port )
         {
+            if ( !m_running_ )
+            {
+                return false;
+            }
+
             while ( true )
             {
+                CONSOLE_OUT( "BoostContext", "Binding UDP Socket to {}", port )
                 m_local_endpoint_ = { Protocol::v4(), port };
 
                 if ( boost::system::error_code ec; m_socket_.bind( m_local_endpoint_, ec ) )
                 {
+                    CONSOLE_OUT( "BoostContext", "Unable to bind the UDP Socket to {}, trying {}", port, port + 1 )
                     ++port;
                 }
                 else
@@ -171,33 +220,69 @@ namespace Engine
         receive( const std::function<
                  void( const boost::asio::mutable_buffer&, const boost::system::error_code& ec, size_t )>& predicate )
         {
+            if ( !m_running_ )
+            {
+                return false;
+            }
+
+            /*
             m_socket_.async_receive(
                     m_recv_buffer_,
                     0,
                     std::bind( predicate, m_recv_buffer_, std::placeholders::_1, std::placeholders::_2 ) );
+            */
+
             return true;
         }
 
+        using ReceiveHandlerSignature = std::function<void(
+                const endpoint_type&, const boost::asio::mutable_buffer&, const boost::system::error_code&, size_t )>;
+
         template <typename = std::enable_if_t<std::is_same_v<boost::asio::ip::udp, Protocol>>>
-        bool receive_from( const std::function<void( const endpoint_type&,
-                                                     const boost::asio::mutable_buffer&,
-                                                     const boost::system::error_code&,
-                                                     size_t )>& predicate )
+        bool receive_from( const ReceiveHandlerSignature& predicate )
         {
-            static endpoint_type remote_endpoint{};
-            m_socket_.async_receive_from( m_recv_buffer_,
-                                          remote_endpoint,
-                                          std::bind( predicate,
-                                                     std::ref( remote_endpoint ),
-                                                     m_recv_buffer_,
-                                                     std::placeholders::_1,
-                                                     std::placeholders::_2 ) );
+            if ( !m_running_ )
+            {
+                return false;
+            }
+
+            CONSOLE_OUT( "BoostContext", "Start receiving..." )
+
+            for ( auto it = m_recv_buffers_.begin(); it != m_recv_buffers_.end(); ++it )
+            {
+                const ptrdiff_t idx = std::distance( m_recv_buffers_.begin(), it );
+
+                if ( !m_recv_running_[ idx ] )
+                {
+                    m_socket_.async_receive_from( *it,
+                                                  m_remote_endpoint_storage_.at( idx ),
+                                                  std::bind( &Context::receiveHandler,
+                                                             this,
+                                                             idx,
+                                                             predicate,
+                                                             *it,
+                                                             std::placeholders::_1,
+                                                             std::placeholders::_2 ) );
+
+                    bool expected = false;
+                    while ( !m_recv_running_[ idx ].compare_exchange_strong( expected, true ) )
+                    { }
+
+                    CONSOLE_OUT( "BoostContext", "Start the receiving thread {}", idx )
+                }
+            }
+
             return true;
         }
 
         bool send( const boost::asio::mutable_buffer&                                        buffer,
                    const std::function<void( const boost::system::error_code& ec, size_t )>& predicate )
         {
+            if ( !m_running_ )
+            {
+                return false;
+            }
+
             m_socket_.async_send( buffer, predicate );
             return true;
         }
@@ -208,6 +293,11 @@ namespace Engine
                 const endpoint_type&             remote_endpoint,
                 const std::function<void( const endpoint_type&, const boost::system::error_code&, size_t )>& predicate )
         {
+            if ( !m_running_ )
+            {
+                return false;
+            }
+
             m_socket_.async_send_to(
                     buffer,
                     remote_endpoint,
@@ -215,8 +305,20 @@ namespace Engine
             return true;
         }
 
-        void Destory()
+        void Destroy()
         {
+            m_running_ = false;
+
+            for ( std::atomic<bool>& flag : m_recv_running_ )
+            {
+                if ( flag )
+                {
+                    bool expected = true;
+                    while ( !flag.compare_exchange_strong( expected, false ) )
+                    { }
+                }
+            }
+
             m_socket_.cancel();
             m_socket_.close();
             m_work_gurad_.reset();
@@ -231,16 +333,41 @@ namespace Engine
                                        }
                                    } );
 
-            BoostNetwork::deallocate<protocol_to_enum<Protocol>::value>( ( uint8_t* )m_recv_buffer_.data(),
-                                                                         m_recv_buffer_.size() );
+            for ( auto& buffer : m_recv_buffers_ )
+            {
+                BoostNetwork::deallocate<protocol_to_enum<Protocol>::value>( ( uint8_t* )buffer.data(),
+                                                                             buffer.size() );
+            }
         }
 
         uint16_t GetListenPort() const
         {
-            return m_local_endpoint_.port();
+            return m_local_endpoint_.m_port_();
         }
 
     private:
+        void receiveHandler( const size_t                       index,
+                             const ReceiveHandlerSignature&     predicate,
+                             const boost::asio::mutable_buffer& recv_buffer,
+                             const boost::system::error_code&   ec,
+                             size_t                             read )
+        {
+            predicate( m_remote_endpoint_storage_.at( index ), recv_buffer, ec, read );
+            
+            if ( !ec && m_recv_running_[ index ] )
+            {
+                m_socket_.async_receive_from( recv_buffer,
+                                              m_remote_endpoint_storage_.at( index ),
+                                              std::bind( &Context::receiveHandler,
+                                                         this,
+                                                         index,
+                                                         predicate,
+                                                         recv_buffer,
+                                                         std::placeholders::_1,
+                                                         std::placeholders::_2 ) );
+            }
+        }
+
         void contextRunner( boost::asio::io_context&                            context,
                             const std::function<void( const std::exception& )>& err_handler )
         {
@@ -258,20 +385,22 @@ namespace Engine
             }
         }
 
-        void contextErrorHandler( const std::exception& e )
-        { }
+        void contextErrorHandler( const std::exception& e ){
+            CONSOLE_OUT( "BoostContext", "contextRunner throws exception with {}", e.what() )
+        }
 
-
-        boost::asio::io_context                                                 m_context_;
+        boost::asio::io_context m_context_;
         boost::asio::executor_work_guard<decltype( m_context_ )::executor_type> m_work_gurad_{
             boost::asio::make_work_guard( m_context_ )
         };
-        std::vector<std::thread>    m_io_threads_;
-        Protocol::socket            m_socket_{ m_context_ };
-        endpoint_type               m_local_endpoint_;
-        boost::asio::mutable_buffer m_recv_buffer_{ BoostNetwork::allocate<protocol_to_enum<Protocol>::value>(
-                                                            max_packet_size<Protocol>::value ),
-                                                    max_packet_size<Protocol>::value };
+        std::vector<std::thread>  m_io_threads_;
+        typename Protocol::socket m_socket_{ m_context_ };
+        endpoint_type             m_local_endpoint_;
+
+        std::vector<endpoint_type>               m_remote_endpoint_storage_;
+        std::atomic<bool>                        m_running_;
+        std::vector<boost::asio::mutable_buffer> m_recv_buffers_;
+        std::deque<std::atomic<bool>>            m_recv_running_;
     };
 
     ECLASS( virtual )
@@ -289,10 +418,17 @@ namespace Engine
         bool Connect( const std::string_view ip, const unsigned short port ) override;
 
     private:
+        void ReceiveHandler( const eNetSendType type,
+                             const boost::asio::ip::udp::endpoint& endpoint,
+                             const boost::asio::mutable_buffer&    buffer,
+                             const boost::system::error_code&      ec,
+                             size_t                                read );
+
         template <typename Protocol>
         const NetHost* ResolveHost( const boost::asio::ip::basic_endpoint<Protocol>& endpoint )
         {
-            return g_network_accessor.GetMessageTask().GetNetHost( endpoint.address().to_v4().to_bytes() );
+            return g_network_accessor.GetMessageTask().GetNetHost(
+                    endpoint.address().to_v4().to_bytes(), endpoint.port(), protocol_to_enum<Protocol>::value );
         }
 
         void sendImpl( const eNetSendType type, NetMessageDescription&& desc, RawNetMessage&& message ) override;

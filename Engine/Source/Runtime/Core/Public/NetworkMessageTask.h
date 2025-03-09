@@ -19,52 +19,65 @@ namespace Engine
 {
     struct NetHosts
     {
-        mutable std::mutex                                  m_mtx_;
-        std::unordered_map<NetID, NetHost>                  id_wise_;
-        std::unordered_map<uint32_t, NetHost>               addr_wise;
+        mutable std::recursive_mutex              m_mtx_;
+        std::unordered_set<NetHost>               m_hosts_;
+        std::unordered_map<NetID, NetHost>        m_id_wises_;
 
         NetID emplace( NetHost&& h ) 
         {
             NetHost host = std::move( h );
-
-            if ( std::lock_guard l(m_mtx_); !addr_wise.contains( addr_to_int( host.ip ) ) )
+            
+            if ( std::lock_guard l( m_mtx_ ); !contains( h ) )
             {
                 NetID id              = find_unique_id();
-                const auto& [ it, _ ] = id_wise_.emplace( id, host );
-                addr_wise.insert( { addr_to_int(it->second.ip), it->second } );
+                host.set_id( id );
+                const auto& [ it, _ ] = m_hosts_.emplace( host );
+                m_id_wises_.emplace( id, *it );
                 return id;
             }
 
             return -1;
         }
 
-        const NetHost* const find(NetID id) const
+        const NetHost* find( const NetID id ) const
         {
-            if ( std::lock_guard l( m_mtx_ ); id_wise_.contains( id ) )
+            if ( std::lock_guard l( m_mtx_ ); m_id_wises_.contains( id ) )
             {
-                return &id_wise_.at( id );
+                return &m_id_wises_.at( id );
             }
 
             return nullptr;
         }
 
-        const NetHost* const find( const std::array<uint8_t, 4>& addr ) const
+        const NetHost* find( const std::array<uint8_t, 4>& addr, const uint16_t port, const eNetSendType type ) const
         {
-            if ( std::lock_guard l( m_mtx_ ); addr_wise.contains( addr_to_int( addr ) ) )
+            const NetHost test( addr, type, port );
+
+            if (std::lock_guard l(m_mtx_); m_hosts_.contains( test ))
             {
-                return &addr_wise.at( addr_to_int( addr ) );
+                return &(*m_hosts_.find( test ));
             }
 
             return nullptr;
+        }
+
+        [[nodiscard]] bool contains( const NetHost& host ) const
+        {
+            if ( std::lock_guard l( m_mtx_ ); m_hosts_.contains( host ) )
+            {
+                return true;
+            }
+
+            return false;
         }
 
         bool remove(const NetID& id)
         {
-            if ( std::lock_guard l( m_mtx_ ); id_wise_.contains( id ) )
+            if ( std::lock_guard l( m_mtx_ ); find( id ) )
             {
-                NetHost target = id_wise_.at( id );
-                addr_wise.erase( addr_to_int( target.ip ) );
-                id_wise_.erase( id );
+                const NetHost& target = m_id_wises_.at( id );
+                m_hosts_.erase( target );
+                m_id_wises_.erase( id );
                 return true;
             }   
 
@@ -72,17 +85,12 @@ namespace Engine
         }
 
     private:
-        uint32_t addr_to_int( const std::array<uint8_t, 4>& addr ) const
-        {
-            return addr[ 0 ] + addr[ 1 ] << 8 + addr[ 2 ] << 16 + addr[ 3 ] << 24;
-        }
-
         NetID find_unique_id() const
         {
             NetID i = 0;
             while (true)
             {
-                if (id_wise_.contains(i))
+                if (m_id_wises_.contains(i))
                 {
                     ++i;
                     continue;
@@ -109,7 +117,7 @@ namespace Engine
         NetID          AddNewHost( NetHost&& other );
         void           RemoveHost( const NetID id );
         const NetHost* GetNetHost( const NetID id ) const;
-        const NetHost* GetNetHost( const std::array<uint8_t, 4>& address );
+        const NetHost* GetNetHost( const std::array<uint8_t, 4>& address, const uint16_t port, const eNetSendType type ) const;
 
         void PushConsumeReady( const NetMessageDescription& desc, Unique<NetMessage>&& msg );
 

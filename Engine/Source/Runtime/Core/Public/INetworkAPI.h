@@ -42,6 +42,8 @@ namespace Engine
         }
 
     protected:
+        virtual void HandleReceived( const eNetSendType type, const std::array<uint8_t, 4>& remote_address, const uint16_t remote_port, const RawNetMessage& msg );
+
         INetworkTask* ResolveTask( const NetMessageHeaderType& header ) const;
         INetworkTask* ResolveTask( const HashType type ) const;
         virtual void  sendImpl( const eNetSendType type, NetMessageDescription&& desc, RawNetMessage&& message ) = 0;

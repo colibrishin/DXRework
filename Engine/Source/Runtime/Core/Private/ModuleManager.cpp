@@ -1,5 +1,9 @@
 #include "ModuleManager.h"
+
+#include <iostream>
 #include <ranges>
+
+#include "NetworkType.h"
 
 #if Platform == Windows
 #include <Windows.h>
@@ -123,6 +127,9 @@ namespace Engine::Managers
                         }
                     }
 
+					std::string conversion( name.begin(), name.end() );
+					CONSOLE_OUT( "ModuleManager", "Module {} loaded", conversion.c_str() )
+
                     module_info->m_module_->Initialize();
                     TryResolveLazyness( name );
                     return module_info->m_module_.get();
@@ -187,6 +194,7 @@ namespace Engine::Managers
                     }
                 }
 
+				CONSOLE_OUT( "ModuleManager", "Module {} loaded", name.data() )
                 module_info->m_module_->Initialize();
                 TryResolveLazyness( name );
                 return module_info->m_module_.get();

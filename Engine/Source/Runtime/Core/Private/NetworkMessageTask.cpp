@@ -45,7 +45,7 @@ inline void Engine::NetworkMessageTask::Poll()
 
 Engine::NetID Engine::NetworkMessageTask::AddNewHost( NetHost&& other )
 {
-    NetID id = m_net_hosts_.emplace( std::move( other ) );
+    const NetID id = m_net_hosts_.emplace( std::move( other ) );
     onHostAdded.Broadcast( id );
     return id;
 }
@@ -63,18 +63,15 @@ const Engine::NetHost* Engine::NetworkMessageTask::GetNetHost( const NetID id ) 
     return m_net_hosts_.find( id );
 }
 
-const Engine::NetHost* Engine::NetworkMessageTask::GetNetHost( const std::array<uint8_t, 4>& address )
+const Engine::NetHost* Engine::NetworkMessageTask::GetNetHost( const std::array<uint8_t, 4>& address, const uint16_t port, const eNetSendType type ) const
 {
-    return m_net_hosts_.find( address );
+    return m_net_hosts_.find( address, port, type );
 }
 
 void Engine::NetworkMessageTask::PushConsumeReady( const NetMessageDescription& desc, Unique<NetMessage>&& msg )
 {
-    if ( m_consume_running_ )
-    {
-        std::lock_guard l( m_consume_mutex );
-        m_consume_ready_queue_.emplace( desc, std::move( msg ) );
-    }
+    std::lock_guard l( m_consume_mutex );
+    m_consume_ready_queue_.emplace( desc, std::move( msg ) );
 }
 
 inline Engine::NetworkConsumers& Engine::NetworkMessageTask::GetConsumers()

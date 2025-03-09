@@ -12,7 +12,7 @@ void Engine::BoostSocketWrapper::Initialize()
 
 void Engine::BoostSocketWrapper::Shutdown()
 {
-    m_udp_router_.Destory();
+    m_udp_router_.Destroy();
 }
 
 bool Engine::BoostSocketWrapper::Open( const eNetSendType type )
@@ -41,9 +41,9 @@ bool Engine::BoostSocketWrapper::Bind( const eNetSendType type, const uint16_t p
     return false;
 }
 
-bool Engine::BoostSocketWrapper::Listen( const eNetSendType type, const NetHost* const host )
+bool Engine::BoostSocketWrapper::Listen( const eNetSendType type, const NetHost* const h )
 {
-    if ( const NetHost* host = g_network_accessor.GetMessageTask().GetNetHost( host->ip ) )
+    if ( const NetHost* host = g_network_accessor.GetMessageTask().GetNetHost( h->address(), h->port(), h->type() ) )
     {
         switch ( type )
         {
@@ -60,74 +60,13 @@ bool Engine::BoostSocketWrapper::Listen( const eNetSendType type )
     switch ( type )
     {
         case UDP:
-            m_udp_router_.receive_from(
-                    [ & ]( const boost::asio::ip::udp::endpoint& endpoint,
-                           const boost::asio::mutable_buffer&    buffer,
-                           const boost::system::error_code&      ec,
-                           size_t                                read )
-                    {
-                        if ( ec )
-                        {
-                            OutputDebugStringA( ec.message().c_str() );
-                            return;
-                        }
-
-                        if ( !read )
-                        {
-                            // Invalid
-                            return;
-                        }
-
-                        if ( read > 0 )
-                        {
-                            // Copy the data
-                            RawNetMessage message{ buffer.data(), read };
-                            auto          header = reinterpret_cast<const NetMessageHeaderType&>( *message.data() );
-                            INetworkTask* task =
-                                    g_network_accessor.GetMessageTask().GetConsumers().GetConsumer( header );
-
-                            if ( !task )
-                            {
-                                // Invalid
-                                return;
-                            }
-
-                            if ( !task->Validate( message ) )
-                            {
-                                // Invalid
-                                return;
-                            }
-
-                            const NetHost* host = ResolveHost( endpoint );
-
-                            if ( !host )
-                            {
-                                if ( task->GetTypeHash() == NetworkChallengeTask::StaticTypeHash() )
-                                {
-                                    g_network_accessor.GetMessageTask().AddNewHost(
-                                            { .ip  = endpoint.address().to_v4().to_bytes(),
-                                              .tcp = ( uint16_t )-1,
-                                              .udp = endpoint.port() } );
-
-                                    host = ResolveHost( endpoint );
-                                }
-                                else
-                                {
-                                    // messsage from unknown host.
-                                    return;
-                                }
-                            }
-
-                            NetMessageDescription desc;
-                            desc.src        = host->id;
-                            desc.targetTask = task;
-
-                            Unique<NetMessage> message_body;
-                            task->Convert( message, message_body );
-                            g_network_accessor.GetMessageTask().PushConsumeReady( std::move( desc ),
-                                                                                  std::move( message_body ) );
-                        }
-                    } );
+            m_udp_router_.receive_from( std::bind( &BoostSocketWrapper::ReceiveHandler,
+                                                   this,
+                                                   type,
+                                                   std::placeholders::_1,
+                                                   std::placeholders::_2,
+                                                   std::placeholders::_3,
+                                                   std::placeholders::_4 ) );
             return true;
         default:
             break;
@@ -139,6 +78,32 @@ bool Engine::BoostSocketWrapper::Listen( const eNetSendType type )
 bool Engine::BoostSocketWrapper::Connect( const std::string_view ip, const unsigned short port )
 {
     return false;
+}
+
+void Engine::BoostSocketWrapper::ReceiveHandler( const eNetSendType                    type,
+                                                 const boost::asio::ip::udp::endpoint& endpoint,
+                                                 const boost::asio::mutable_buffer&    buffer,
+                                                 const boost::system::error_code&      ec,
+                                                 size_t                                read )
+{
+    if ( ec )
+    {
+        CONSOLE_OUT( GetTypeName(), "Error {} : {}", ec.value(), ec.message().c_str() )
+        OutputDebugStringA( ec.message().c_str() );
+        return;
+    }
+
+    if ( !read )
+    {
+        // Invalid
+        return;
+    }
+
+    if ( read > 0 )
+    {
+        RawNetMessage msg( buffer.data(), read );
+        HandleReceived( type, endpoint.address().to_v4().to_bytes(), endpoint.port(), msg );
+    }
 }
 
 void Engine::BoostSocketWrapper::sendImpl( const eNetSendType      type,
@@ -156,22 +121,22 @@ void Engine::BoostSocketWrapper::sendImpl( const eNetSendType      type,
 
     if ( type == UDP )
     {
-        boost::asio::ip::basic_endpoint<enum_to_protocol<UDP>::type> endpoint( boost::asio::ip::make_address_v4( host->ip ),
-                                                                               host->GetPort<UDP>() );
+        boost::asio::ip::basic_endpoint<enum_to_protocol<UDP>::type> endpoint(
+                boost::asio::ip::make_address_v4( host->address() ), host->port() );
 #if WITH_DEBUG
         // host - network byte order check
-        assert( endpoint.port() == host->GetPort<UDP>() );
+        assert( endpoint.port() == host->port() );
 #endif
 
         Send<UDP>( std::move( endpoint ), std::move( message ) );
     }
     else if ( type == TCP )
     {
-        boost::asio::ip::basic_endpoint<enum_to_protocol<TCP>::type> endpoint( boost::asio::ip::make_address_v4( host->ip ),
-                                                                               host->GetPort<TCP>() );
+        boost::asio::ip::basic_endpoint<enum_to_protocol<TCP>::type> endpoint(
+                boost::asio::ip::make_address_v4( host->address() ), host->port() );
 #if WITH_DEBUG
         // host - network byte order check
-        assert( endpoint.port() == host->GetPort<UDP>() );
+        assert( endpoint.port() == host->port() );
 #endif
         
         Send<TCP>( std::move( endpoint ), std::move( message ) );

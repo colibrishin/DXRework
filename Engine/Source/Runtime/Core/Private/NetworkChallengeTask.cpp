@@ -4,6 +4,7 @@
 #include "NetworkMessageTask.h"
 
 #include <execution>
+#include <iostream>
 
 Engine::NetworkChallengeTask::NetworkChallengeTask()
 {
@@ -55,22 +56,21 @@ void Engine::NetworkChallengeTask::Challenge( const NetID new_host )
 
 void Engine::NetworkChallengeTask::Consume( NetMessageDescription&& desc, Unique<NetMessage>&& message )
 {
-    NetMessageDescription moved_desc = std::move( desc );
+    const NetMessageDescription moved_desc = std::move( desc );
     Unique<NetMessage>    msg  = std::move( message );
+    CONSOLE_OUT( GetTypeName(), "Alive Challenge received from {}", moved_desc.src );
 
     if ( std::lock_guard l( m_mtx_ ); m_challenge_status_.contains( moved_desc.src ) )
     {
-        // First challenged host received the ack.
-        m_challenge_status_[ moved_desc.src ] = true;
-
-        // if last challenge does not exists, then it would be the handshake.
-        if ( !m_last_challenge_.contains( moved_desc.src ) )
+        if ( !m_last_challenge_.contains( moved_desc.src ) || NeedAck( moved_desc.src ) )
         {
+            CONSOLE_OUT( GetTypeName(), "Received challenge, challenging back" )
             Challenge( moved_desc.src );
-            m_challenge_status_[ moved_desc.src ] = true;
         }
 
+        CONSOLE_OUT( GetTypeName(), "Last challenge time updated for {}", moved_desc.src );
         m_last_challenge_[ moved_desc.src ] = std::chrono::high_resolution_clock::now();
+        m_challenge_status_[ moved_desc.src ] = true;
     }
 }
 
@@ -93,15 +93,14 @@ void Engine::NetworkChallengeTask::KeepChallenge()
 
     while ( m_challenge_task_running_ )
     {
-        const std::chrono::steady_clock::time_point& checktime = std::chrono::high_resolution_clock::now();
-
         for (auto it = m_challenge_status_.begin(); it != m_challenge_status_.end(); )
         {
             const decltype( m_challenge_status_ )::value_type& pair = *it;
 
-            if ( !HaveAck( pair.first ) )
+            if ( NeedAck( pair.first ) && !HaveAck( pair.first ) )
             {
-                auto next_it = std::next( it );
+                CONSOLE_OUT( GetTypeName(), "Liveness check failed for {}, Removing from host...", pair.first );
+                const auto next_it = std::next( it );
                 Remove( pair.first );
                 it = next_it;
                 continue;
@@ -109,9 +108,13 @@ void Engine::NetworkChallengeTask::KeepChallenge()
 
             if ( NeedAck( pair.first ) )
             {
+                CONSOLE_OUT( GetTypeName(), "Liveness check time out for {}, Send the challenge to the host...", pair.first );
                 Challenge( pair.first );
                 ++it;
+                continue;
             }
+
+            ++it;
         }
 
         std::unique_lock l( m_sleeper_mtx_ );
@@ -119,17 +122,17 @@ void Engine::NetworkChallengeTask::KeepChallenge()
     }
 }
 
-bool Engine::NetworkChallengeTask::HaveAck( const NetID id )
+bool Engine::NetworkChallengeTask::HaveAck( const NetID id ) const
 {
-    if (std::lock_guard l(m_mtx_); m_challenge_status_.contains(id))
+    if ( std::lock_guard l( m_mtx_ ); m_challenge_status_.contains( id ) )
     {
-        return m_challenge_status_.at( id ) && !NeedAck( id );
+        return m_challenge_status_.at( id );
     }
 
     return false;
 }
 
-bool Engine::NetworkChallengeTask::NeedAck( const NetID id )
+bool Engine::NetworkChallengeTask::NeedAck( const NetID id ) const
 {
     constexpr static std::chrono::minutes interval( 1 );
     const std::chrono::steady_clock::time_point& checktime = std::chrono::high_resolution_clock::now();

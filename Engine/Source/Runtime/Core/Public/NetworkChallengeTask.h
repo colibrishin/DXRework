@@ -32,13 +32,13 @@ namespace Engine
         void Cleanup() override;
 
     private:
-        bool HaveAck( const NetID id );
-        bool NeedAck( const NetID id );
+        bool HaveAck( const NetID id ) const;
+        bool NeedAck( const NetID id ) const;
         void KeepChallenge();
 
         mutable std::recursive_mutex                                     m_mtx_;
-        std::unordered_map<NetID, bool>                                  m_challenge_status_;
-        std::unordered_map<NetID, std::chrono::steady_clock::time_point> m_last_challenge_;
+        std::unordered_map<NetID, bool>                                  m_challenge_status_{};
+        std::unordered_map<NetID, std::chrono::steady_clock::time_point> m_last_challenge_{};
 
         std::condition_variable m_challenge_sleeper_;
         mutable std::mutex      m_sleeper_mtx_;

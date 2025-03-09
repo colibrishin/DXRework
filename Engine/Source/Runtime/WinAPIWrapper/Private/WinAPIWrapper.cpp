@@ -43,6 +43,17 @@ namespace WinAPI
 
 	HWND WinAPIWrapper::InitializeWindow(HINSTANCE hInstance)
 	{
+#if SERVER
+        if (AllocConsole())
+        {
+            static FILE* file;
+            if ( freopen_s( &file, "CONOUT$", "w", stdout ) || freopen_s( &file, "CONOUT$", "w", stderr ) )
+            {
+                assert( nullptr );
+            }
+        }
+#endif
+
 		WNDCLASSEXW wc{};
 		DEVMODE     dmScreenSettings;
 		int         posX, posY;
@@ -107,14 +118,21 @@ namespace WinAPI
 				);
 
 		// Bring the window up on the screen and set it as main focus.
-		ShowWindow(hwnd, SW_SHOW);
+#if SERVER
+	    ShowWindow( hwnd, SW_HIDE );
+		SetFocus(hwnd);
+        ShowCursor( true );
+#else
+	    ShowWindow(hwnd, SW_SHOW);
 		SetForegroundWindow(hwnd);
 		SetFocus(hwnd);
 		ShowCursor(false);
+#endif
 
-
+#if WITH_DEBUG
 		// Show mouse cursor for debugging.
 		ShowCursor(true);
+#endif
 
 		s_hwnd_ = hwnd;
 
