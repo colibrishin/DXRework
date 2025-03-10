@@ -19,26 +19,26 @@ namespace Engine
         std::unordered_map<std::string, std::string> temporaryStrings{};
     };
 
-	struct ENGINE_CORE_API UITokenBase
+	struct ENGINE_CORE_API IUITokenBase
     {
-        virtual ~UITokenBase() = default;
+        virtual ~IUITokenBase() = default;
 
-        UITokenBase(const void* context, const std::string_view name) : m_context_(context), m_name_( name ) {}
+        IUITokenBase(const void* context, const std::string_view name) : m_context_(context), m_name_( name ) {}
         
-        UITokenBase(UITokenBase&) = delete;
-        UITokenBase& operator=(UITokenBase&) = delete;
+        IUITokenBase(IUITokenBase&) = delete;
+        IUITokenBase& operator=(IUITokenBase&) = delete;
 
-        UITokenBase& SetFunction(const std::function<void()>& function)
+        IUITokenBase& SetFunction(const std::function<void()>& function)
         {
             m_function_ = function;
             return *this;
         }
 
         // Add children and return this.
-        UITokenBase& AddChildren(const std::initializer_list<UITokenBase*>& contexts)
+        IUITokenBase& AddChildren(const std::initializer_list<IUITokenBase*>& contexts)
         {
             m_children_.insert(m_children_.end(), contexts.begin(), contexts.end());
-            std::ranges::for_each(contexts, [&](UITokenBase* new_child)
+            std::ranges::for_each(contexts, [&](IUITokenBase* new_child)
             {
 	            new_child->m_parent_ = this;
             });
@@ -46,19 +46,19 @@ namespace Engine
         }
 
         // Add child and returns added child.
-        UITokenBase& AddChild(UITokenBase* child)
+        IUITokenBase& AddChild(IUITokenBase* child)
         {
-            m_children_.push_back(std::unique_ptr<UITokenBase>(child));
+            m_children_.push_back(std::unique_ptr<IUITokenBase>(child));
             child->m_parent_ = this;
         	return *child;
         }
 
-        UITokenBase& operator+=(UITokenBase* child)
+        IUITokenBase& operator+=(IUITokenBase* child)
         {
 	        return AddChild(child);
         }
 
-        UITokenBase* GetParentInternal() const
+        IUITokenBase* GetParentInternal() const
         {
 	        return m_parent_;
         }
@@ -75,21 +75,21 @@ namespace Engine
         const void*                               m_context_ = nullptr;
         std::string                               m_name_;
         std::function<void()>                     m_function_;
-        UITokenBase*                              m_parent_ = nullptr;
-        std::vector<std::unique_ptr<UITokenBase>> m_children_;
+        IUITokenBase*                              m_parent_ = nullptr;
+        std::vector<std::unique_ptr<IUITokenBase>> m_children_;
     };
     
     template <typename... Args>
-    struct UIToken : public UITokenBase
+    struct IUIToken : public IUITokenBase
     {
         using ArgumentTuple = std::tuple<Args...>;
         using ArgumentCount = std::integral_constant<size_t, sizeof...( Args )>;
 
-        ~UIToken() override
+        ~IUIToken() override
         {}
 
-        UIToken( const void *context, const std::string_view name, Args... args )
-            : UITokenBase( context, name ),
+        IUIToken( const void *context, const std::string_view name, Args... args )
+            : IUITokenBase( context, name ),
               m_tuple_( std::forward_as_tuple( args... ) )
         {}
 
@@ -102,7 +102,7 @@ namespace Engine
                     m_function_();
                 }
 
-                for ( const std::unique_ptr<UITokenBase> &context : m_children_ )
+                for ( const std::unique_ptr<IUITokenBase> &context : m_children_ )
                 {
                     context->Do();
                 }
@@ -137,9 +137,9 @@ namespace Engine
     using UITokenInputContext = uint64_t;
 
 #define NEW_TOKEN_DECL(Name, ...) \
-    struct ENGINE_CORE_API Name##Token : UIToken<__VA_ARGS__> \
+    struct ENGINE_CORE_API Name##Token : IUIToken<__VA_ARGS__> \
     {   \
-        using UIToken<__VA_ARGS__>::UIToken; \
+        using IUIToken<__VA_ARGS__>::IUIToken; \
     };
 
     NEW_TOKEN_DECL( MainMenuBar )
@@ -164,9 +164,9 @@ namespace Engine
 
     template <typename Numerical>
     struct ENGINE_CORE_API LabelAndNumericalToken
-            : UIToken<const std::string_view, Numerical &, float, Numerical, Numerical, bool>
+            : IUIToken<const std::string_view, Numerical &, float, Numerical, Numerical, bool>
     {
-        using UIToken<const std::string_view, Numerical &, float, Numerical, Numerical, bool>::UIToken;
+        using IUIToken<const std::string_view, Numerical &, float, Numerical, Numerical, bool>::IUIToken;
     };
 
 #define NEW_LABEL_NUMERICAL_DECL(Name, Type) \
@@ -188,9 +188,9 @@ namespace Engine
 
     struct ENGINE_CORE_API UIContext
     {
-        explicit UIContext(UITokenBase* parent)
+        explicit UIContext(IUITokenBase* parent)
         {
-	        m_parent_ = std::unique_ptr<UITokenBase>(parent);
+	        m_parent_ = std::unique_ptr<IUITokenBase>(parent);
             m_active_child_ = nullptr;
         }
 
@@ -208,7 +208,7 @@ namespace Engine
         }
 
         // Add Child and return this
-        UITokenBase& operator<<(UITokenBase* child)
+        IUITokenBase& operator<<(IUITokenBase* child)
         {
             m_parent_->AddChild(child);
             m_active_child_ = child;
@@ -216,25 +216,25 @@ namespace Engine
         }
 
         // Add Child and return this
-        UITokenBase& operator<=(UITokenBase* child)
+        IUITokenBase& operator<=(IUITokenBase* child)
         {
             m_parent_->AddChild(child);
             m_active_child_ = child;
             return *child;
         }
 
-        UITokenBase& operator<<(const std::function<void()>& functor) const
+        IUITokenBase& operator<<(const std::function<void()>& functor) const
         {
             m_parent_->SetFunction(functor);
 	        return *m_parent_;
         }
 
         // Add Child and return child
-        UITokenBase& operator+=(UITokenBase* child)
+        IUITokenBase& operator+=(IUITokenBase* child)
         {
             if (m_active_child_)
             {
-                UITokenBase* old_active = m_active_child_;
+                IUITokenBase* old_active = m_active_child_;
 				old_active->AddChild(child);
                 m_active_child_ = child;
                 return *old_active;
@@ -247,7 +247,7 @@ namespace Engine
         }
 
         // Add Child to active child without swapping active child.
-        UITokenBase& operator|=(UITokenBase* child) const
+        IUITokenBase& operator|=(IUITokenBase* child) const
         {
 	        if (m_active_child_)
 	        {
@@ -261,7 +261,7 @@ namespace Engine
             }
         }
 
-        UITokenBase& operator+=(const std::function<void()>& functor) const
+        IUITokenBase& operator+=(const std::function<void()>& functor) const
         {
             if (m_active_child_)
             {
@@ -275,7 +275,7 @@ namespace Engine
             }
         }
 
-        UITokenBase& operator>>(UITokenBase* child) const
+        IUITokenBase& operator>>(IUITokenBase* child) const
         {
             if (m_active_child_ && m_active_child_->GetParentInternal())
             {
@@ -289,25 +289,25 @@ namespace Engine
             }
         }
 
-        UITokenBase& operator--()
+        IUITokenBase& operator--()
         {
 	        m_active_child_ = m_active_child_->GetParentInternal();
             return *m_active_child_;
         }
 
     private:
-        std::unique_ptr<UITokenBase> m_parent_;
-        UITokenBase* m_active_child_ = nullptr;
+        std::unique_ptr<IUITokenBase> m_parent_;
+        IUITokenBase* m_active_child_ = nullptr;
     };
 
 #define TOKEN_PURE_GETTER_DECL(Name) \
-    virtual UITokenBase* New##Name##(const void* context, const std::string_view name, const Name##Token::ArgumentTuple& arguments) = 0;
+    virtual IUITokenBase* New##Name##(const void* context, const std::string_view name, const Name##Token::ArgumentTuple& arguments) = 0;
 
-    struct ENGINE_CORE_API UIInterface
+    struct ENGINE_CORE_API IUIAPI
     {
-        virtual ~UIInterface() = default;
+        virtual ~IUIAPI() = default;
 
-        [[nodiscard]] static UIContext NewContext(UITokenBase* root)
+        [[nodiscard]] static UIContext NewContext(IUITokenBase* root)
         {
             return UIContext(root);
         }
@@ -361,10 +361,10 @@ namespace Engine
         std::tuple<> a;
     };
 
-    struct ENGINE_CORE_API UIInterfaceAccessor final
+    struct ENGINE_CORE_API IUIAPIAccessor final
     {
-        template <typename T> requires (std::is_base_of_v<UIInterface, T>)
-        static void SetInterface()
+        template <typename T> requires (std::is_base_of_v<IUIAPI, T>)
+        void SetInterface()
         {
             if (!m_ui_interface_)
             {
@@ -372,7 +372,7 @@ namespace Engine
             }
         }
 
-        static void NewFrame()
+        void NewFrame()
         {
             if (m_ui_interface_)
             {
@@ -380,17 +380,17 @@ namespace Engine
             }
         }
 
-        static bool IsValid()
+        [[nodiscard]] bool IsValid()
         {
             return m_ui_interface_ != nullptr;
         }
 
-        [[nodiscard]] static UIInterface& GetInterface()
+        [[nodiscard]] IUIAPI& GetInterface()
         {
             return *m_ui_interface_;
         }
 
-        static void Shutdown()
+        void Shutdown()
         {
 	        if (IsValid())
 	        {
@@ -399,6 +399,8 @@ namespace Engine
         }
         
     private:
-        static std::unique_ptr<UIInterface> m_ui_interface_;
+        std::unique_ptr<IUIAPI> m_ui_interface_;
     };
+
+    extern ENGINE_CORE_API IUIAPIAccessor g_ui_accessor;
 }

@@ -80,7 +80,7 @@ Engine::eShaderSamplerFunction Engine::Resources::RaytracingShader::GetSamplerFu
     return m_sampler_func_;
 }
 
-Engine::PrimitiveShaderBase& Engine::Resources::RaytracingShader::GetPrimitive() const
+Engine::IShaderBase& Engine::Resources::RaytracingShader::GetPrimitive() const
 {
     return *m_primitive_shader_;
 }
@@ -93,7 +93,7 @@ Engine::Resources::RaytracingShader::RaytracingShader()
 
 void Engine::Resources::RaytracingShader::Load_INTERNAL()
 {
-    RaytracingExtensionInterface &rgi = GraphicInterfaceAccessor::GetRaytracingInterface();
+    IRaytracingExtension &rgi = g_graphic_accessor.GetRaytracingInterface();
     m_primitive_shader_ = std::unique_ptr<decltype(m_primitive_shader_)::element_type>( rgi.GetNewRaytracingShader() );
     m_primitive_shader_->Generate( this, rgi.GetRaytracingNativePipeline() );
 }

@@ -1,4 +1,5 @@
 #pragma once
+#if CLIENT || WITH_EDITOR
 #include "RenderPassTask.h"
 
 #include "ShadowIntersectionRenderTask.generated.h"
@@ -73,3 +74,4 @@ private:
     Engine::Strong<Engine::Resources::Shader>        m_shadow_shader_;
     Engine::Strong<Engine::Resources::Shader>        m_intensity_test_shader_;
 };
+#endif

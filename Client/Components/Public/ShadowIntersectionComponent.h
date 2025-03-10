@@ -1,13 +1,17 @@
 ﻿#pragma once
 #include "RenderComponent.h"
+#if CLIENT || WITH_EDITOR
 #include "Resources/Public/ShadowIntensityComputeShader.h"
 #include "ShadowManager.h"
+#endif
 
 #include "ShadowIntersectionComponent.generated.h"
 
+#if CLIENT || WITH_EDITOR
 class IntensityPositionTexture;
 class IntensityTexture;
 class ShadowMaskTexture;
+#endif
 
 ECLASS(component=client, serialize)
 class ENGINE_CLIENT_API ShadowIntersectionComponent : public Engine::Components::RenderComponent
@@ -22,9 +26,10 @@ public:
     Engine::eComponentUpdatePriorities GetUpdatePriority() const override;
 
 private:
-    friend struct ShadowIntersectionRenderTask;
     using RenderComponent::RenderComponent;
 
+#if CLIENT || WITH_EDITOR
+    friend struct ShadowIntersectionRenderTask;
     std::map<std::pair<UINT, UINT>, BoundingBox> m_shadow_bbox_;
 
     Engine::Strong<Engine::StructuredBufferTypeProxy<LightTableSB>> m_sb_light_table_;
@@ -37,4 +42,5 @@ private:
 
     Engine::Strong<IntensityTexture>         m_intensity_test_texs_[ CFG_MAX_DIRECTIONAL_LIGHT ];
     Engine::Strong<IntensityPositionTexture> m_intensity_position_texs_[ CFG_MAX_DIRECTIONAL_LIGHT ];
+#endif
 };

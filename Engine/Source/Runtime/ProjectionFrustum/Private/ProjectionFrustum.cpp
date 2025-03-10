@@ -3,7 +3,7 @@
 #include "Camera.h"
 #include "Scene.h"
 #include "Transform.h"
-#include "GraphicInterface.h"
+#include "IGraphicAPI.h"
 
 #if WITH_DEBUG
 #include "Debugger.h"
@@ -28,7 +28,7 @@ namespace Engine::Managers
 				BoundingFrustum::CreateFromMatrix
 						(
 						 m_frustum,
-						 GraphicInterfaceAccessor::GetInterface().GetProjectionMatrix()
+						 g_graphic_accessor.GetInterface().GetProjectionMatrix()
 						);
 			}
 			else

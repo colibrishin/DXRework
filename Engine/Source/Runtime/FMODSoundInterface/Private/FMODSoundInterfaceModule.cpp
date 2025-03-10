@@ -2,20 +2,20 @@
 #include "FMODSoundInterfaceModule.generated.h"
 
 #include "FMODSoundInterface.h"
-#include "SoundInterface.h"
+#include "ISoundAPI.h"
 
 
 MODULE_IMPL(Engine::FMODSoundInterfaceModule, FMODSoundInterface)
 
 bool Engine::FMODSoundInterfaceModule::InitializeImpl()
 {
-    SoundInterfaceAccessor::SetInterface<FMODSoundInterface>();
+    g_sound_accessor.SetInterface<FMODSoundInterface>();
     return true;
 }
 
 bool Engine::FMODSoundInterfaceModule::ShutdownImpl()
 {
-    SoundInterfaceAccessor::Shutdown();
+    g_sound_accessor.Shutdown();
     return true;
 }
 

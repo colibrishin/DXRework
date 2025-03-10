@@ -3,7 +3,7 @@
 #include <magic_enum.hpp>
 #include <memory>
 
-#include "GraphicInterface.h"
+#include "IGraphicAPI.h"
 
 #include "ConcurrentTypeLibrary.h"
 #include "ResourceManager.h"
@@ -14,7 +14,7 @@
 
 namespace Engine 
 {
-	struct GraphicPrimitiveShader;
+	struct IGraphicShader;
 }
 
 namespace Engine::Resources
@@ -84,7 +84,7 @@ namespace Engine::Resources
 		[[nodiscard]] ePrimitiveTopology          GetPrimitiveTopology() const;
 		[[nodiscard]] ePrimitiveTopologyType      GetPrimitiveTopologyType() const;
 		[[nodiscard]] eSampler                    GetSampler() const;
-	    [[nodiscard]] PrimitiveShaderBase&        GetPrimitive() const override;
+	    [[nodiscard]] IShaderBase&        GetPrimitive() const override;
 
 	protected:
 		void OnSerialized() override;
@@ -141,6 +141,6 @@ namespace Engine::Resources
 		int m_sampler_slot_selected_ = 0;
 #endif
 		
-		std::unique_ptr<GraphicPrimitiveShader> m_primitive_;
+		std::unique_ptr<IGraphicShader> m_primitive_;
     };
 } // namespace Engine::Graphic

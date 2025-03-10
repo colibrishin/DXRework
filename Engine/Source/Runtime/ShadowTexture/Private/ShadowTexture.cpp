@@ -55,9 +55,9 @@ namespace Engine::Resources
 		return Texture2D::GetWidth();
 	}
 
-	void ShadowTexture::Clear(const GraphicInterfaceContextPrimitive* context) const
+	void ShadowTexture::Clear(const IGraphicContext* context) const
 	{
-		GraphicInterfaceAccessor::GetInterface().Clear(context, this, BIND_TYPE_DSV);
+		g_graphic_accessor.GetInterface().Clear(context, this, BIND_TYPE_DSV);
 	}
 
 	void ShadowTexture::Unload_INTERNAL()

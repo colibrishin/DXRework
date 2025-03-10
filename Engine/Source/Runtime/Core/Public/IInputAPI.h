@@ -447,9 +447,9 @@ namespace Engine
 #endif
 #pragma pack(pop)
 
-	struct ENGINE_CORE_API InputInterface
+	struct ENGINE_CORE_API IInputAPI
 	{
-		virtual ~InputInterface() = default;
+		virtual ~IInputAPI() = default;
 
 		virtual void Initialize() = 0;
 		virtual void Shutdown() = 0;
@@ -473,10 +473,10 @@ namespace Engine
 		virtual bool IsKeyReleased(const eMouseButtonEnum key) const noexcept = 0;
 	};
 
-	struct ENGINE_CORE_API InputInterfaceAccessor
+	struct ENGINE_CORE_API IInputAPIAccessor
 	{
 		template <typename T>
-		static void SetInterface() 
+		void SetInterface() 
 		{
 			if (!s_interface_)
 			{
@@ -485,12 +485,12 @@ namespace Engine
 			}
 		}
 
-		static InputInterface& GetInterface()
+		IInputAPI& GetInterface()
 		{
 			return *s_interface_;
 		}
 
-		static void Shutdown()
+		void Shutdown()
 		{
 			if (s_interface_)
 			{
@@ -500,6 +500,8 @@ namespace Engine
 		}
 
 	private:
-		static Unique<InputInterface> s_interface_;
+		Unique<IInputAPI> s_interface_;
 	};
+
+	extern ENGINE_CORE_API IInputAPIAccessor g_input_accessor;
 }

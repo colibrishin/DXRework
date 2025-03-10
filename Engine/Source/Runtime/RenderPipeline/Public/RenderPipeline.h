@@ -52,8 +52,8 @@ namespace Engine::Managers
 #endif
 
 		void SetPerspectiveMatrix(const CBs::PerspectiveCB& matrix);
-	    void UpdateLights(const GraphicInterfaceContextPrimitive* context, const SBs::LightSB* lights, size_t count);
-		void BindConstantBuffers(const GraphicInterfaceContextPrimitive* context) const;
+	    void UpdateLights(const IGraphicContext* context, const SBs::LightSB* lights, size_t count);
+		void BindConstantBuffers(const IGraphicContext* context) const;
 #if CFG_RAYTRACING
         void SetRaytracing(const bool flag);
 #endif

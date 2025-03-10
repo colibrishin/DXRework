@@ -9,10 +9,12 @@
 
 #include "ObjectBase.h"
 #include "Camera.h"
+#if CLIENT || WITH_EDITOR
 #include "InputManager.h"
+#include "IInputAPI.h"
+#endif
 #include "SceneManager.h"
 #include "CollisionDetector.h"
-#include "InputInterface.h"
 
 #include "Transform.h"
 #include "Collider.h"
@@ -64,6 +66,7 @@ void PlayerComponent::PostUpdate(const float dt)
 
 void PlayerComponent::Update(const float dt)
 {
+#if CLIENT || WITH_EDITOR
 	if (Engine::Managers::SceneManager::GetInstance().IsPlaying())
 	{
 		const auto rb = GetOwner().lock()->GetComponent<Engine::Components::Rigidbody>().lock();
@@ -89,6 +92,7 @@ void PlayerComponent::Update(const float dt)
 		checkMove(rb);
 		checkAttack(dt);
 	}
+#endif
 
 #if WITH_DEBUG
 	switch (getState())
@@ -285,6 +289,7 @@ void PlayerComponent::checkMove(const Engine::Strong<Engine::Components::Rigidbo
 	bool       pressed = false;
 	const auto atr = GetOwner().lock()->GetComponent<Engine::Components::Animator>().lock();
 
+#if CLIENT || WITH_EDITOR
 	constexpr UINT forward_anim = 20;
 	constexpr UINT backward_anim = 19;
 	constexpr UINT left_anim = 22;
@@ -328,10 +333,12 @@ void PlayerComponent::checkMove(const Engine::Strong<Engine::Components::Rigidbo
 	{
 		setState(CHAR_STATE_WALK);
 	}
+#endif
 }
 
 void PlayerComponent::checkAttack(const float dt)
 {
+#if CLIENT || WITH_EDITOR
 	if (Engine::Managers::InputManager::GetInstance().IsKeyDown(Engine::eMouseButtonEnum::MOUSE_LEFT))
 	{
 		setState(CHAR_STATE_ATTACK);
@@ -360,6 +367,7 @@ void PlayerComponent::checkAttack(const float dt)
 
 		hitScan(10.f, 10.f);
 	}
+#endif
 }
 
 void PlayerComponent::checkGround()

@@ -1,5 +1,5 @@
 #pragma once
-#include "GraphicInterface.h"
+#include "IGraphicAPI.h"
 #include "Resource.h"
 #include "VertexElement.h"
 #include "ResourceManager.h"
@@ -38,7 +38,7 @@ namespace Engine::Resources
 		[[nodiscard]] size_t                  GetIndexCount() const;
 		[[nodiscard]] const VertexCollection& GetVertexCollection() const;
 		[[nodiscard]] const IndexCollection&  GetIndexCollection() const;
-		[[nodiscard]] PrimitiveMesh*          GetPrimitive() const;
+		[[nodiscard]] IMesh*          GetPrimitive() const;
 
 		void UpdateCollider(const Weak<Components::Collider>& w_collider) const;
 
@@ -54,7 +54,7 @@ namespace Engine::Resources
 	protected:
 		Mesh();
 		friend class Components::Collider;
-		friend struct PrimitiveMesh;
+		friend struct IMesh;
 		
 		void         Load_INTERNAL() final;
 		virtual void Load_CUSTOM();
@@ -77,7 +77,7 @@ namespace Engine::Resources
 		EPROPERTY()
 		BoundingOrientedBox m_bounding_box_;
 
-		Unique<PrimitiveMesh> m_primitive_mesh_;
+		Unique<IMesh> m_primitive_mesh_;
 	    Unique<StructuredBufferTypeProxy<Graphics::VertexElement>> m_vertex_buffer_structured_;
 
 #if CFG_RAYTRACING

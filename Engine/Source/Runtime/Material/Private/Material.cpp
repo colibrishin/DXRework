@@ -27,7 +27,7 @@ namespace Engine::Resources
 		{
 			Resource::OnUIUpdate(parent, dt);
 
-			UIInterface& ui = UIInterfaceAccessor::GetInterface();
+			IUIAPI& ui = g_ui_accessor.GetInterface();
 
 			*parent |= ui.NewLabelAndFloat(this, "SpecularPower", {"Specular Power", m_material_sb_.specularPower, 0.1f, 0.f, std::numeric_limits<float>::max(), true});
 			*parent |= ui.NewLabelAndFloat(this, "ReflectionScale", {"Reflection Scale", m_material_sb_.reflectionScale, 0.1f, 0.f, std::numeric_limits<float>::max(), true});
@@ -61,7 +61,7 @@ namespace Engine::Resources
 
                     if ( tex->m_ui_info_.dialogOpened )
                     {
-                        if ( UIContext context = UIInterface::NewContext(
+                        if ( UIContext context = IUIAPI::NewContext(
                                 ui.NewDialog( tex.get(),
                                               "TextureDialog",
                                               { tex->GetName(), tex->m_ui_info_.dialogOpened } ) ) )

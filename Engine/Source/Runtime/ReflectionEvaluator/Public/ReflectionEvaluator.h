@@ -24,8 +24,8 @@ namespace Engine::Managers
 		void PostUpdate(const float dt) override;
 		void Initialize() override;
 
-		void BindReflectionMap(const GraphicInterfaceContextPrimitive* context);
-		void UnbindReflectionMap(const GraphicInterfaceContextPrimitive* context);
+		void BindReflectionMap(const IGraphicContext* context);
+		void UnbindReflectionMap(const IGraphicContext* context);
 
 	private:
 		void CheckRender(const eShaderDomain shaderDomain);

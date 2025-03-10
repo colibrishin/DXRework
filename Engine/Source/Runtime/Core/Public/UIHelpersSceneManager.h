@@ -1,7 +1,7 @@
 #pragma once
 #if WITH_EDITOR
 #include <functional>
-#include "UIInterface.h"
+#include "IUIAPI.h"
 #include "UIHelpers.h"
 #include "SceneManager.h"
 
@@ -23,7 +23,7 @@ namespace Engine::UIHelpers
                          TypeSelectionMap<Abstracts::ObjectBase> &selection_map,
                          bool &                                   window ) const
         {
-            UIInterface &ui = UIInterfaceAccessor::GetInterface();
+            IUIAPI &ui = g_ui_accessor.GetInterface();
 
             for ( auto it = container.begin(); it != container.end(); ++it )
             {

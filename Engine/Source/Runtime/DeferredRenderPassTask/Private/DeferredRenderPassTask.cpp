@@ -34,7 +34,7 @@ void Engine::DeferredRenderPassTask::Run(
         return;
     }
 
-    GraphicInterface &gi= GraphicInterfaceAccessor::GetInterface();
+    IGraphicAPI &gi= g_graphic_accessor.GetInterface();
     {
         const auto &context   = gi.GetNewContext( 0, false, L"Clear Deferred Textures" );
         const auto &primitive = context.GetPointers();
@@ -128,7 +128,7 @@ void Engine::DeferredRenderPassTask::Run(
 
 void Engine::DeferredRenderPassTask::Cleanup()
 {
-    GraphicInterface &gi = GraphicInterfaceAccessor::GetInterface();
+    IGraphicAPI &gi = g_graphic_accessor.GetInterface();
     const auto       &context = gi.GetNewContext( 0, false, L"Clear Deferred Textures" );
     const auto       &primitive = context.GetPointers();
     
@@ -231,14 +231,14 @@ inline void Engine::DeferredRenderPassTask::StartPhase_MultiThread(
     }
 #endif
 
-    GraphicInterface &gi = GraphicInterfaceAccessor::GetInterface();
+    IGraphicAPI &gi = g_graphic_accessor.GetInterface();
 
     // Manual release
     SpinLockToken                            gi_token = SingletonSpinLock::GetInstance().Lock( m_gi_ticket_ );
-    const GraphicInterfaceContextReturnType &context  = std::move( gi.GetNewContext( 0, false, L"Render Pass" ) );
+    const IGraphicContextImpl &context  = std::move( gi.GetNewContext( 0, false, L"Render Pass" ) );
     gi_token.Release();
 
-    const GraphicInterfaceContextPrimitive &primitive = context.GetPointers();
+    const IGraphicContext &primitive = context.GetPointers();
     primitive.commandList->SoftReset();
 
     // Manual release
@@ -247,8 +247,8 @@ inline void Engine::DeferredRenderPassTask::StartPhase_MultiThread(
     StructuredBufferTypeProxy<Graphics::SBs::LocalParamSB> &sb = m_local_param_pool_.get();
     local_param_token.Release();
 
-    GraphicHeapBase                       *current_heap = m_heaps_.emplace_back( gi.GetHeap() )->get();
-    const GraphicInterfaceContextPrimitive temp_context{ .commandList = primitive.commandList, .heap = current_heap };
+    IHeapBase                       *current_heap = m_heaps_.emplace_back( gi.GetHeap() )->get();
+    const IGraphicContext temp_context{ .commandList = primitive.commandList, .heap = current_heap };
 
     current_heap->BindGraphic( &temp_context );
     sb.SetData( &temp_context, 1, &local_param );
@@ -326,7 +326,7 @@ inline void Engine::DeferredRenderPassTask::MaterialPass_Multithread(
         StructuredBufferTypeProxy<Graphics::SBs::InstanceSB> &instance_buffer,
         const Resources::Shader                              *shader,
         const Resources::Mesh                                *mesh,
-        const GraphicInterfaceContextPrimitive               *context,
+        const IGraphicContext               *context,
         const aligned_vector<Graphics::SBs::InstanceSB *>    &instances,
         const aligned_vector<TexturePair>                    &texture_pairs )
 {
@@ -334,7 +334,7 @@ inline void Engine::DeferredRenderPassTask::MaterialPass_Multithread(
 
     // Manual release
     auto              token = SingletonSpinLock::GetInstance().Lock( m_gi_ticket_ );
-    GraphicInterface &gi    = GraphicInterfaceAccessor::GetInterface();
+    IGraphicAPI &gi    = g_graphic_accessor.GetInterface();
     token.Release();
 
     if ( !shader_bypass )
@@ -487,16 +487,16 @@ inline void Engine::DeferredRenderPassTask::LightPass(
         const std::unordered_map<std::string_view, ContextSetupFunction> &prerender_predicates,
         const std::unordered_map<std::string_view, ContextSetupFunction> &postrender_predicates )
 {
-    GraphicInterface &gi = GraphicInterfaceAccessor::GetInterface();
-    const GraphicInterfaceContextReturnType &context  = std::move( gi.GetNewContext( 0, false, L"Render Pass" ) );
-    const GraphicInterfaceContextPrimitive &primitive = context.GetPointers();
+    IGraphicAPI &gi = g_graphic_accessor.GetInterface();
+    const IGraphicContextImpl &context  = std::move( gi.GetNewContext( 0, false, L"Render Pass" ) );
+    const IGraphicContext &primitive = context.GetPointers();
     primitive.commandList->SoftReset();
 
     m_local_param_pool_.advance();
     StructuredBufferTypeProxy<Graphics::SBs::LocalParamSB> &sb = m_local_param_pool_.get();
     
-    GraphicHeapBase                       *current_heap = m_heaps_.emplace_back( gi.GetHeap() )->get();
-    const GraphicInterfaceContextPrimitive temp_context{ .commandList = primitive.commandList, .heap = current_heap };
+    IHeapBase                       *current_heap = m_heaps_.emplace_back( gi.GetHeap() )->get();
+    const IGraphicContext temp_context{ .commandList = primitive.commandList, .heap = current_heap };
 
     current_heap->BindGraphic( &temp_context );
     sb.SetData( &temp_context, 1, &local_param );
@@ -558,8 +558,8 @@ inline void Engine::DeferredRenderPassTask::LightPass(
     temp_context.commandList->FlagReady();
 }
 
-void Engine::DeferredRenderPassTask::RecordUsedTexture( const GraphicInterfaceContextPrimitive *context,
-                                                        GraphicInterface                       &gi,
+void Engine::DeferredRenderPassTask::RecordUsedTexture( const IGraphicContext *context,
+                                                        IGraphicAPI                       &gi,
                                                         const Resources::Texture               *tex )
 {
     auto tt = SingletonSpinLock::GetInstance().Lock( m_texture_record_ticket_ );

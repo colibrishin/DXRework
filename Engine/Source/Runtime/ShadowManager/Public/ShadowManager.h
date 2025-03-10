@@ -1,5 +1,5 @@
 #pragma once
-#include "GraphicInterface.h"
+#include "IGraphicAPI.h"
 #include "Allocator.h"
 #include "StructuredBuffer.h"
 #include "Singleton.h"
@@ -62,8 +62,8 @@ namespace Engine::Managers
 		void Reset();
 
 		static void EvalShadowVP(const Weak<Objects::Camera>& ptr_cam, const Vector3& light_dir, SBs::LightVPSB& buffer);
-		void BindShadowMaps(const GraphicInterfaceContextPrimitive* context) const;
-		void TransitBackShadowMaps(const GraphicInterfaceContextPrimitive* context) const;
+		void BindShadowMaps(const IGraphicContext* context) const;
+		void TransitBackShadowMaps(const IGraphicContext* context) const;
 
         const StructuredBufferTypeProxy<SBs::LightVPSB> &GetLightVPBuffer() const;
         const std::vector<SBs::LightVPSB> &              GetCurrentSceneLightVP() const;
@@ -76,7 +76,7 @@ namespace Engine::Managers
 		void InitializeShadowBuffer(LocalActorID id);
 
 		void BuildShadowMap(float dt, UINT light_idx) const;
-		void ClearShadowMaps(const GraphicInterfaceContextPrimitive* context);
+		void ClearShadowMaps(const IGraphicContext* context);
 
 		static void CreateSubfrusta(
 			const Matrix& projection, float start, float end,
@@ -91,7 +91,7 @@ namespace Engine::Managers
 
         StructuredBufferTypeProxy<SBs::LightVPSB> m_light_vp_sb_;
         std::vector<SBs::LightVPSB>               m_current_scene_light_vp_;
-        Unique<PrimitiveSampler>                  m_shadow_sampler_;
+        Unique<ISampler>                  m_shadow_sampler_;
 
         Viewport m_viewport_;
 	};

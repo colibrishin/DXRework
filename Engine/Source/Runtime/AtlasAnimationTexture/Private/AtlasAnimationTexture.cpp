@@ -107,7 +107,7 @@ namespace Engine::Resources
 	{
 		// See DepthOrArraySize for type.
 		const UINT16 num_atlases = static_cast<UINT16>(m_atlases_.size());
-		PrimitiveTexture* atlas_tex = GetPrimitiveTexture();
+		ITexture* atlas_tex = GetPrimitiveTexture();
 
 		if (GetPath().empty())
 		{

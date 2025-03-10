@@ -14,7 +14,7 @@ bool Engine::ShapeModule::InitializeImpl()
 		{
             const auto &ui_callback = []( UIContext *const context )
             {
-                UIInterface &ui = UIInterfaceAccessor::GetInterface();
+                IUIAPI &ui = g_ui_accessor.GetInterface();
                 *context |= ui.NewText( nullptr,
                                         "ShapeNoteText1",
                                         { "Please Note that the path should be the location of the mesh file (e.g., obj, fbx)" } );
@@ -38,7 +38,7 @@ bool Engine::ShapeModule::InitializeImpl()
 
 	Managers::ResourceManager::GetInstance().RegisterLoadResource(Resources::Shape::StaticTypeName(), [](bool& managing_flag)
 	{
-		UIInterface& ui = UIInterfaceAccessor::GetInterface();
+		IUIAPI& ui = g_ui_accessor.GetInterface();
 
 		const auto& load_callback = [](const std::string& name, const std::string& path)
 		{

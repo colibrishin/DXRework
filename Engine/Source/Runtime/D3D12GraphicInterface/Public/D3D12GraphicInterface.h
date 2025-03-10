@@ -1,6 +1,6 @@
 #pragma once
 #include "CommandPair.h"
-#include "GraphicInterface.h"
+#include "IGraphicAPI.h"
 
 #include <dxgi1_5.h>
 #include <directx/d3d12.h>
@@ -31,9 +31,9 @@ namespace Engine
 	};
 
 #if CFG_RAYTRACING
-	struct ENGINE_D3D12GRAPHICINTERFACE_API D3D12GraphicInterface : public GraphicInterface, public RaytracingExtensionInterface
+	struct ENGINE_D3D12GRAPHICINTERFACE_API D3D12GraphicInterface : public IGraphicAPI, public IRaytracingExtension
 #else
-	struct ENGINE_D3D12GRAPHICINTERFACE_API D3D12GraphicInterface : public GraphicInterface
+	struct ENGINE_D3D12GRAPHICINTERFACE_API D3D12GraphicInterface : public IGraphicAPI
 #endif
 	{
 		INLINE_COMPILE_TIME_TYPENAME(D3D12GraphicInterface)
@@ -52,28 +52,28 @@ namespace Engine
 		void InitializeRaytracing() override;
 		void ShutdownRaytracing() override;
 
-	    Unique<GraphicHeapBase> GetRaytracingHeap() override;
+	    Unique<IHeapBase> GetRaytracingHeap() override;
 	    
-	    RaytracingPrimitiveShader* GetNewRaytracingShader() override;
+	    IRaytracingShader* GetNewRaytracingShader() override;
 		
 		void* GetRaytracingNativeInterface() override;
 		void* GetRaytracingNativePipeline() override;
 
 	    bool BuildTopLevelAccelerationBuffer(
-            const GraphicInterfaceContextPrimitive* context,
+            const IGraphicContext* context,
             RenderMap const* render_map,
             size_t render_map_size,
             AccelStructBuffer& out_tlas_buffer,
             const ObjectPredication& predication = {}) override;
 	    
 		void DispatchRay(
-            const GraphicInterfaceContextPrimitive* context, const Resources::RaytracingShader* shader, const
+            const IGraphicContext* context, const Resources::RaytracingShader* shader, const
             StructuredBufferTypeProxy<Graphics::SBs::LightSB>& light, const StructuredBufferTypeProxy<Graphics::SBs::InstanceSB>
             & instances, const ConstantBufferTypeProxy<Graphics::CBs::PerspectiveCB>& perspective, const ConstantBufferTypeProxy
             <Graphics::CBs::ParamCB>& param, const byte_stream& hit_records, const AccelStructBuffer& top_level_accel_buffer
         ) override;
 
-	    void CopyRaytracingToRenderTarget(const GraphicInterfaceContextPrimitive* context) override;
+	    void CopyRaytracingToRenderTarget(const IGraphicContext* context) override;
 	    
 	private:
 		void QueryDevice();
@@ -92,90 +92,90 @@ namespace Engine
 
 	public:
 #endif
-		PrimitiveTexture*       GetNewPrimitiveTexture() override;
-		PrimitiveMesh*          GetNewPrimitiveMesh() override;
-		GraphicPrimitiveShader* GetNewGraphicPrimitiveShader() override;
-		ComputePrimitiveShader* GetNewComputePrimitiveShader() override;
-	    PrimitiveFont          *GetNewPrimitiveFont() override;
-	    PrimitiveSampler       *GetNewPrimitiveSampler() override;
+		ITexture*       GetNewPrimitiveTexture() override;
+		IMesh*          GetNewPrimitiveMesh() override;
+		IGraphicShader* GetNewGraphicPrimitiveShader() override;
+		IComputeShader* GetNewComputePrimitiveShader() override;
+	    IFont          *GetNewPrimitiveFont() override;
+	    ISampler       *GetNewPrimitiveSampler() override;
 
-		GraphicInterfaceContextReturnType GetNewContext(const int8_t type, bool heap_allocation, const std::wstring_view debug_name) override;
+		IGraphicContextImpl GetNewContext(const int8_t type, bool heap_allocation, const std::wstring_view debug_name) override;
 
 		CommandPairTask        &GetCommandTask();
-        Strong<CommandListBase> GetCommandList( const int8_t type, const std::wstring_view debug_name ) override;
-        Unique<GraphicHeapBase> GetHeap() override;
+        Strong<ICommandList> GetCommandList( const int8_t type, const std::wstring_view debug_name ) override;
+        Unique<IHeapBase> GetHeap() override;
 
-		void SetViewport( const GraphicInterfaceContextPrimitive *context, const Viewport &viewport ) override;
-        void SetDefaultRenderTarget( const GraphicInterfaceContextPrimitive *context ) override;
-        void SetDefaultGraphicPipeline( const GraphicInterfaceContextPrimitive *context ) override;
-        void SetDefaultComputePipeline( const GraphicInterfaceContextPrimitive *context ) override;
+		void SetViewport( const IGraphicContext *context, const Viewport &viewport ) override;
+        void SetDefaultRenderTarget( const IGraphicContext *context ) override;
+        void SetDefaultGraphicPipeline( const IGraphicContext *context ) override;
+        void SetDefaultComputePipeline( const IGraphicContext *context ) override;
 
-		void Draw( const GraphicInterfaceContextPrimitive *context,
+		void Draw( const IGraphicContext *context,
                    const Resources::Mesh                  *mesh,
                    UINT                                    instance_count,
                    UINT                                    instance_offset ) override;
-        void Dispatch( const GraphicInterfaceContextPrimitive *context,
+        void Dispatch( const IGraphicContext *context,
                        const Resources::ComputeShader         *shader,
                        const Graphics::SBs::LocalParamSB      &local_param,
                        const UINT                              group_count[ 3 ] ) override;
-        void BindGraphic( const GraphicInterfaceContextPrimitive *context, const Resources::Shader *shader ) override;
-        void BindCompute( const GraphicInterfaceContextPrimitive *context,
+        void BindGraphic( const IGraphicContext *context, const Resources::Shader *shader ) override;
+        void BindCompute( const IGraphicContext *context,
                           const Resources::ComputeShader         *shader ) override;
 
-		inline void Transit( const GraphicInterfaceContextPrimitive *context,
+		inline void Transit( const IGraphicContext *context,
                              const Resources::Texture               *tex,
                              const D3D12_RESOURCE_STATES             before,
                              const D3D12_RESOURCE_STATES             after );
-        void        TransitTo( const GraphicInterfaceContextPrimitive *context,
+        void        TransitTo( const IGraphicContext *context,
                                const Resources::Texture               *tex,
                                const eBindType                         bind_type ) override;
-        void        TransitBack( const GraphicInterfaceContextPrimitive *context,
+        void        TransitBack( const IGraphicContext *context,
                                  const Resources::Texture               *tex,
                                  const eBindType                         bind_type ) override;
 
-        inline void TransitMultiple( const GraphicInterfaceContextPrimitive *context,
+        inline void TransitMultiple( const IGraphicContext *context,
                                      const Resources::Texture *const        *texes,
                                      const size_t                            count,
                                      D3D12_RESOURCE_STATES                   before,
                                      D3D12_RESOURCE_STATES                   after );
-        void        TransitToMultiple( const GraphicInterfaceContextPrimitive *context,
+        void        TransitToMultiple( const IGraphicContext *context,
                                        const Resources::Texture *const        *texes,
                                        const size_t                            count,
                                        const eBindType                         bind_type ) override;
-        void        TransitBackMultiple( const GraphicInterfaceContextPrimitive *context,
+        void        TransitBackMultiple( const IGraphicContext *context,
                                          const Resources::Texture *const        *texes,
                                          const size_t                            count,
                                          const eBindType                         bind_type ) override;
 
-        void Bind( const GraphicInterfaceContextPrimitive *context,
+        void Bind( const IGraphicContext *context,
                    const Resources::Texture               *tex,
                    const eBindType                         bind_type,
                    const UINT                              slot,
                    const UINT                              offset ) override;
-        void BindMultiple( const GraphicInterfaceContextPrimitive *context,
+        void BindMultiple( const IGraphicContext *context,
                            const Resources::Texture *const        *rtvs,
                            const size_t                            rtv_count,
                            Resources::Texture                     *dsv ) override;
-        void BindMultiple( const GraphicInterfaceContextPrimitive *context,
+        void BindMultiple( const IGraphicContext *context,
                            const Resources::Texture *const        *textures,
                            const eBindType                         bind_type,
                            const UINT                              slot,
                            const UINT                              offset,
                            const size_t                            count ) override;
 
-        void Clear( const GraphicInterfaceContextPrimitive *context,
+        void Clear( const IGraphicContext *context,
                     const Resources::Texture               *tex,
                     const eBindType                         clear_type ) override;
         void ClearRenderTarget() override;
-        void CopyRenderTarget( const GraphicInterfaceContextPrimitive *context,
+        void CopyRenderTarget( const IGraphicContext *context,
                                const Resources::Texture               *tex ) override;
 
         Matrix GetProjectionMatrix() override;
         Matrix GetOrthogonalMatrix() override;
 		
 	protected:
-		StructuredBufferTypeless* GetNativeStructuredBuffer() override;
-		ConstantBufferTypeless* GetNativeConstantBuffer() override;
+		IStructuredBuffer* GetNativeStructuredBuffer() override;
+		IConstantBuffer* GetNativeConstantBuffer() override;
 		
 	private:
 		void InitializeDevice();

@@ -17,7 +17,7 @@ bool Engine::InputManagerModule::InitializeImpl()
 bool Engine::InputManagerModule::ShutdownImpl()
 {
     CoreLoop::RemoveManager(CoreLoop::LOOP_TYPE_LOGIC, &Managers::InputManager::GetInstance);
-    InputInterfaceAccessor::Shutdown();
+    g_input_accessor.Shutdown();
     return true;
 }
 

@@ -2,7 +2,7 @@
 #include "Entity.generated.h"
 
 #if WITH_EDITOR
-#include "UIInterface.h"
+#include "IUIAPI.h"
 #endif
 
 #include "Serialization.hpp"
@@ -62,7 +62,7 @@ void Engine::Abstracts::Entity::OnUIUpdate( UIContext *const parent, const float
 {
     if ( parent )
     {
-        UIInterface &ui = UIInterfaceAccessor::GetInterface();
+        IUIAPI &ui = g_ui_accessor.GetInterface();
 
         ( *parent |= ui.NewLabelAndText( this, "EntityName", { "Name", m_name_, true } ) ).SetFunction( [&]()
         {

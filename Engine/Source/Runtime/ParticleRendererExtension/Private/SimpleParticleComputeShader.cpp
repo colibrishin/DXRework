@@ -20,7 +20,7 @@ void Engine::Resources::SimpleParticleComputeShader::OnUIUpdateParam(UIContext *
 {
     if ( parent )
     {
-        UIInterface &ui = UIInterfaceAccessor::GetInterface();
+        IUIAPI &ui = g_ui_accessor.GetInterface();
         *parent |= ui.NewCheckbox(this, "Scaling",
                                   { "Scaling", local_param.GetParam<bool>(param_scaling_active_slot), true });
         if ( local_param.GetParam<bool>(param_scaling_active_slot) )
@@ -63,9 +63,9 @@ void Engine::Resources::SimpleParticleComputeShader::OnUIUpdateParam(UIContext *
 #endif
 
 void Engine::Resources::SimpleParticleComputeShader::preDispatch(
-    const GraphicInterfaceContextPrimitive* context, SBs::LocalParamSB& param, const float dt)
+    const IGraphicContext* context, SBs::LocalParamSB& param, const float dt)
 {
-    GraphicInterface& gi = GraphicInterfaceAccessor::GetInterface();
+    IGraphicAPI& gi = g_graphic_accessor.GetInterface();
     gi.TransitTo( context, m_noises_[ 0 ].get(), BIND_TYPE_SRV );
     gi.TransitTo( context, m_noises_[ 1 ].get(), BIND_TYPE_SRV );
     gi.TransitTo( context, m_noises_[ 2 ].get(), BIND_TYPE_SRV );
@@ -82,9 +82,9 @@ void Engine::Resources::SimpleParticleComputeShader::preDispatch(
 }
 
 void Engine::Resources::SimpleParticleComputeShader::postDispatch(
-    const GraphicInterfaceContextPrimitive* context, SBs::LocalParamSB& param, const float dt)
+    const IGraphicContext* context, SBs::LocalParamSB& param, const float dt)
 {
-    GraphicInterface& gi = GraphicInterfaceAccessor::GetInterface();
+    IGraphicAPI& gi = g_graphic_accessor.GetInterface();
     gi.TransitBack( context, m_noises_[ 0 ].get(), BIND_TYPE_SRV );
     gi.TransitBack( context, m_noises_[ 1 ].get(), BIND_TYPE_SRV );
     gi.TransitBack( context, m_noises_[ 2 ].get(), BIND_TYPE_SRV );

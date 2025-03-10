@@ -6,7 +6,7 @@
 #include <mutex>
 
 
-#include "UIInterface.h"
+#include "IUIAPI.h"
 
 namespace Engine::UIHelpers
 {
@@ -29,13 +29,13 @@ namespace Engine::UIHelpers
         const UICleanupCallbackSignature&          cleanup_callback
     )
     {
-        UIInterface& ui = UIInterfaceAccessor::GetInterface();
+        IUIAPI& ui = g_ui_accessor.GetInterface();
 
         static bool        pressed = false;
         static std::string name{};
         static std::string path{};
 
-        if ( UIContext context = UIInterface::NewContext( ui.NewDialog( pointer, "NewPathDialog", { title, flag } ) ) )
+        if ( UIContext context = IUIAPI::NewContext( ui.NewDialog( pointer, "NewPathDialog", { title, flag } ) ) )
         {
             if constexpr ( UseName )
             {
@@ -176,7 +176,7 @@ namespace Engine::UIHelpers
         bool                       window = true;
         static TypeSelectionMap<U> selection{};
 
-        UIInterface &ui = UIInterfaceAccessor::GetInterface();
+        IUIAPI &ui = g_ui_accessor.GetInterface();
 
         static ContIterator      iterator{};
         static const std::string dialog_id    = std::format( "Single{}SelectionDialog", U::StaticTypeName() );
@@ -184,7 +184,7 @@ namespace Engine::UIHelpers
         static const std::string dialog_listbox_name = std::format( "Single{}SelectionDialogListBox", U::StaticTypeName() );
         static const std::string dialog_confirm = std::format( "Single{}SelectionDialogListBoxConfirmButton", U::StaticTypeName() );
 
-        if ( UIContext context = UIInterface::NewContext( ui.NewDialog(
+        if ( UIContext context = IUIAPI::NewContext( ui.NewDialog(
                 ptr.get(),
                 dialog_id,
                 { dialog_title, window } ) ) )
@@ -228,7 +228,7 @@ namespace Engine::UIHelpers
         bool                       window = true;
         static TypeSelectionMap<U> selection{};
 
-        UIInterface &ui = UIInterfaceAccessor::GetInterface();
+        IUIAPI &ui = g_ui_accessor.GetInterface();
 
         static ContIterator      iterator{};
         static const std::string dialog_id    = std::format( "Multiple{}SelectionDialog", U::StaticTypeName() );
@@ -237,7 +237,7 @@ namespace Engine::UIHelpers
         static const std::string dialog_confirm = std::format( "Multiple{}SelectionDialogListBoxConfirmButton", U::StaticTypeName() );
 
 
-        if ( UIContext context = UIInterface::NewContext( ui.NewDialog(
+        if ( UIContext context = IUIAPI::NewContext( ui.NewDialog(
                 ptr.get(),
                 dialog_id,
                 { dialog_title, window } ) ) )

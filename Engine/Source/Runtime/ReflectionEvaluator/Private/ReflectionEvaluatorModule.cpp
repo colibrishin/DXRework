@@ -15,14 +15,14 @@ bool Engine::ReflectionEvaluatorModule::InitializeImpl()
     
     Managers::Renderer::GetInstance().RegisterContextPreRenderSetup(
         "BindReflectionMap",
-        [](const GraphicInterfaceContextPrimitive* prim)
+        [](const IGraphicContext* prim)
         {
             Managers::ReflectionEvaluator::GetInstance().BindReflectionMap(prim);
         });
 
     Managers::Renderer::GetInstance().RegisterContextPostRenderSetup(
         "UnbindReflectionMap",
-        [](const GraphicInterfaceContextPrimitive* prim)
+        [](const IGraphicContext* prim)
         {
             Managers::ReflectionEvaluator::GetInstance().UnbindReflectionMap(prim);
         });

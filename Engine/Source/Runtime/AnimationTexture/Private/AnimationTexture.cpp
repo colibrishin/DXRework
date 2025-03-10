@@ -79,7 +79,7 @@ namespace Engine::Resources
 		Texture3D::Map();
 
 		const GenericTextureDescription& desc = GetDescription();
-		PrimitiveTexture* tex = GetPrimitiveTexture();
+		ITexture* tex = GetPrimitiveTexture();
 
 		tex->Map(
 			m_evaluated_animations_.data(),

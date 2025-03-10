@@ -66,7 +66,7 @@ namespace Engine
         }
 
         void BindGraphic(
-            ID3D12RootSignature*               root_signature, const GraphicInterfaceContextPrimitive* context,
+            ID3D12RootSignature*               root_signature, const IGraphicContext* context,
             ID3D12DescriptorHeap*              buffer_heap, ID3D12DescriptorHeap*                      sampler_heap,
             const D3D12_GPU_DESCRIPTOR_HANDLE& buffer_handle, const D3D12_GPU_DESCRIPTOR_HANDLE&       sampler_handle,
             const UINT                         buffer_size, const UINT                                 sampler_size
@@ -95,7 +95,7 @@ namespace Engine
         }
 
         void BindCompute(
-            ID3D12RootSignature*               root_signature, const GraphicInterfaceContextPrimitive* context,
+            ID3D12RootSignature*               root_signature, const IGraphicContext* context,
             ID3D12DescriptorHeap*              buffer_heap, ID3D12DescriptorHeap*                      sampler_heap,
             const D3D12_GPU_DESCRIPTOR_HANDLE& buffer_handle, const D3D12_GPU_DESCRIPTOR_HANDLE&       sampler_handle,
             const UINT                         buffer_size, const UINT                                 sampler_size

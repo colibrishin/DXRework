@@ -38,14 +38,14 @@ void Engine::Resources::Font::OnDeserialized()
 {
 }
 
-Engine::PrimitiveFont& Engine::Resources::Font::GetPrimitive() const
+Engine::IFont& Engine::Resources::Font::GetPrimitive() const
 {
 	return *m_primitive_;
 }
 
 void Engine::Resources::Font::Load_INTERNAL()
 {
-	GraphicInterface& gi = GraphicInterfaceAccessor::GetInterface();
+	IGraphicAPI& gi = g_graphic_accessor.GetInterface();
 	m_primitive_ = Unique<decltype(m_primitive_)::element_type>(gi.GetNewPrimitiveFont());
 	if (m_primitive_)
 	{

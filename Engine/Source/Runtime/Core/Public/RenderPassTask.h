@@ -1,14 +1,14 @@
 #pragma once
 #include <memory>
 
-#include "GraphicInterface.h"
+#include "IGraphicAPI.h"
 #include "TypeLibrary.h"
 
 #include "RenderPassTask.generated.h"
 
 namespace Engine
 {
-    using ContextSetupFunction = std::function<void( const GraphicInterfaceContextPrimitive* )>;
+    using ContextSetupFunction = std::function<void( const IGraphicContext* )>;
 
     ECLASS( virtual )
     struct ENGINE_CORE_API RenderPassTask

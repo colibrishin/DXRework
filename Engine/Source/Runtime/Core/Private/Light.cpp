@@ -94,10 +94,10 @@ namespace Engine::Objects
 
             if ( m_ui_info_.dialogOpened )
             {
-                UIInterface &         ui              = UIInterfaceAccessor::GetInterface();
+                IUIAPI &         ui              = g_ui_accessor.GetInterface();
                 static constexpr auto light_type_enum = CStrEnumStrings<eLightType>();
 
-                if ( const UIContext context = UIInterface::NewContext(
+                if ( const UIContext context = IUIAPI::NewContext(
                         ui.NewDialog( this, "LightDialog", { m_ui_info_.label, m_ui_info_.dialogOpened } ) ) )
                 {
                     context |= ui.NewLabelAndFloat( this, "Radius", { "Radius", m_radius_, 0.f, 0.f, FLT_MAX, true } );

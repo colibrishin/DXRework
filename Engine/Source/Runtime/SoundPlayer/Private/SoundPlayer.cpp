@@ -106,7 +106,7 @@ void Engine::Components::SoundPlayer::OnUIUpdate(UIContext* const parent, const 
     {
         Component::OnUIUpdate( parent, dt );
         {
-            UIInterface&       ui = UIInterfaceAccessor::GetInterface();
+            IUIAPI&       ui = g_ui_accessor.GetInterface();
             static std::string sound_name;
             if (m_loaded_sound_)
             {

@@ -1,7 +1,9 @@
+#if CLIENT || WITH_EDITOR
 #include "RenderTasks/Public/ShadowIntersectionRenderTask.h"
 
 #include "RenderPipeline.h"
 #include "ShadowIntersectionRenderTask.generated.h"
+
 
 #include "Renderer.h"
 #include "Shader.h"
@@ -111,7 +113,7 @@ void ShadowIntersectionRenderTask::FirstPass(float dt,
     const size_t                                   shadow_slot,
     const Strong<Layer> &                          lights) const
 {
-    GraphicInterface& gi = GraphicInterfaceAccessor::GetInterface();
+    IGraphicAPI& gi = g_graphic_accessor.GetInterface();
     
     {
         const auto& context = gi.GetNewContext( 0, false, L"Prepare Shadow Intersection Textures" );
@@ -156,7 +158,7 @@ void ShadowIntersectionRenderTask::FirstPass(float dt,
 
                  return true;
              },
-             [&gi, this, i, &component](const GraphicInterfaceContextPrimitive* context)
+             [&gi, this, i, &component](const IGraphicContext* context)
              {
                  gi.SetViewport( context, m_viewport_ );
                  gi.BindGraphic( context, m_shadow_shader_.get() );
@@ -196,7 +198,7 @@ void ShadowIntersectionRenderTask::FirstPass(float dt,
 
                  return true;
              },
-             [&gi, this, i, &component](const GraphicInterfaceContextPrimitive* context)
+             [&gi, this, i, &component](const IGraphicContext* context)
              {
                  gi.SetViewport( context, m_viewport_ );
                  gi.BindGraphic( context, m_shadow_shader_.get() );
@@ -236,7 +238,7 @@ void ShadowIntersectionRenderTask::SecondPass( const float dt,
 	constexpr size_t custom_view_slot  = 1;
 	constexpr size_t custom_proj_slot  = 2;
 
-    GraphicInterface& gi = GraphicInterfaceAccessor::GetInterface();
+    IGraphicAPI& gi = g_graphic_accessor.GetInterface();
 	{
 	    const auto& context = gi.GetNewContext( 0, false, L"Intensity Render Prepare" );
 	    const auto& primitive = context.GetPointers();
@@ -295,7 +297,7 @@ void ShadowIntersectionRenderTask::SecondPass( const float dt,
 
                       return true;
                   },
-                  [this, i, &gi, &component]( const GraphicInterfaceContextPrimitive *context )
+                  [this, i, &gi, &component]( const IGraphicContext *context )
                   {
                       gi.SetViewport( context, m_viewport_ );
                       gi.BindGraphic( context, m_intensity_test_shader_.get() );
@@ -319,7 +321,7 @@ void ShadowIntersectionRenderTask::SecondPass( const float dt,
                                 0,
                                 CFG_MAX_DIRECTIONAL_LIGHT );
                   },
-                  [this, i, &component, &gi]( const GraphicInterfaceContextPrimitive *context )
+                  [this, i, &component, &gi]( const IGraphicContext *context )
                   {
                       Resources::Texture *rtvs[ ]{ component->m_intensity_test_texs_[ i ].get(),
                                                    component->m_intensity_position_texs_[ i ].get() };
@@ -355,7 +357,7 @@ void ShadowIntersectionRenderTask::ThirdPass( const float dt, const ShadowInters
     // then this object shadow intersects with designated light.
     static constexpr UINT group[] = {256, 1, 1};
     
-    GraphicInterface& gi = GraphicInterfaceAccessor::GetInterface();
+    IGraphicAPI& gi = g_graphic_accessor.GetInterface();
     const auto& context = gi.GetNewContext( 0, true, L"Intersection Compute Dispatch" );
     const auto& primitive = context.GetPointers();
 
@@ -378,3 +380,4 @@ void ShadowIntersectionRenderTask::PreRun( const RenderMap *render_map,
         const size_t render_map_count,
         const ObjectPredication &predication )
 {}
+#endif

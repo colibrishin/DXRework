@@ -2,7 +2,7 @@
 #if WITH_EDITOR
 #include <functional>
 #include "UIHelpers.h"
-#include "UIInterface.h"
+#include "IUIAPI.h"
 #include "ResourceManager.h"
 
 namespace Engine::UIHelpers
@@ -21,7 +21,7 @@ namespace Engine::UIHelpers
                          TypeSelectionMap<Abstracts::Resource> & selection_map,
                          bool &                                  window ) const
         {
-            UIInterface &ui = UIInterfaceAccessor::GetInterface();
+            IUIAPI &ui = g_ui_accessor.GetInterface();
 
             for ( auto it = container.begin(); it != container.end(); ++it )
             {

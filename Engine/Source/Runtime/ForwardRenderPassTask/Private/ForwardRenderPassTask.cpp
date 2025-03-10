@@ -87,7 +87,7 @@ namespace Engine
 			}
 		}
 
-		auto& gi = GraphicInterfaceAccessor::GetInterface();
+		auto& gi = g_graphic_accessor.GetInterface();
 		auto context = gi.GetNewContext(0, false, L"Lazy Shader Resource Texture Transition Back");
 		auto primitive = context.GetPointers();
 		
@@ -166,14 +166,14 @@ namespace Engine
             const aligned_vector<InstancePair>                               &instance_pairs
 	)
 	{
-		GraphicInterface& gi = GraphicInterfaceAccessor::GetInterface();
+		IGraphicAPI& gi = g_graphic_accessor.GetInterface();
 
 		// Manual release
 		SpinLockToken gi_token = SingletonSpinLock::GetInstance().Lock(m_gi_ticket_);
-		const GraphicInterfaceContextReturnType& context = std::move(gi.GetNewContext(0, false, L"Render Pass"));
+		const IGraphicContextImpl& context = std::move(gi.GetNewContext(0, false, L"Render Pass"));
 		gi_token.Release();
 		
-		const GraphicInterfaceContextPrimitive&  primitive = context.GetPointers();
+		const IGraphicContext&  primitive = context.GetPointers();
 		primitive.commandList->SoftReset();
 
 		// Manual release
@@ -182,8 +182,8 @@ namespace Engine
 		StructuredBufferTypeProxy<Graphics::SBs::LocalParamSB>& sb = m_local_param_pool_.get();
 		local_param_token.Release();
 
-		GraphicHeapBase*                       current_heap = m_heaps_.emplace_back(gi.GetHeap())->get();
-		const GraphicInterfaceContextPrimitive temp_context
+		IHeapBase*                       current_heap = m_heaps_.emplace_back(gi.GetHeap())->get();
+		const IGraphicContext temp_context
 		{
 			.commandList = primitive.commandList,
 			.heap = current_heap
@@ -252,7 +252,7 @@ namespace Engine
 	}
 
 	void ForwardRenderPassTask::RecordUsedTexture(
-		const GraphicInterfaceContextPrimitive* context, GraphicInterface& gi, const Resources::Texture* tex
+		const IGraphicContext* context, IGraphicAPI& gi, const Resources::Texture* tex
 	)
 	{
 		auto tt = SingletonSpinLock::GetInstance().Lock(m_texture_record_ticket_);
@@ -278,7 +278,7 @@ namespace Engine
 		StructuredBufferTypeProxy<Graphics::SBs::InstanceSB> &instance_buffer,
 		const Resources::Shader                              *shader,
 		const Resources::Mesh                                *mesh,
-		const GraphicInterfaceContextPrimitive               *context,
+		const IGraphicContext               *context,
 		const aligned_vector<Graphics::SBs::InstanceSB *>    &instances,
 		const aligned_vector<TexturePair>                    &texture_pairs
 	)
@@ -287,7 +287,7 @@ namespace Engine
 
 		// Manual release
 		auto token = SingletonSpinLock::GetInstance().Lock(m_gi_ticket_);
-		GraphicInterface& gi = GraphicInterfaceAccessor::GetInterface();
+		IGraphicAPI& gi = g_graphic_accessor.GetInterface();
 		token.Release();
 
 		if (!shader_bypass)

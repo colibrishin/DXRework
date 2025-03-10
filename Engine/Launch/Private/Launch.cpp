@@ -5,7 +5,7 @@
 #include "EngineEntryPoint.h"
 #endif
 
-#if Platform == Windows
+#if _WIN32 || _WIN64
 int WINAPI WinMain(
 	HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline,
 	int       iCmdshow

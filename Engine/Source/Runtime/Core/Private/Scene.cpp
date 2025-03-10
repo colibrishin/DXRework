@@ -8,7 +8,7 @@
 #include "Scene.generated.h"
 
 #if WITH_EDITOR
-#include "UIInterface.h"
+#include "IUIAPI.h"
 #endif
 
 #include "Layer.h"
@@ -814,9 +814,9 @@ namespace Engine
 #if WITH_EDITOR
     void Scene::OnUIUpdate( UIContext *const parent, const float dt )
     {
-        UIInterface &ui = UIInterfaceAccessor::GetInterface();
+        IUIAPI &ui = g_ui_accessor.GetInterface();
 
-        if ( UIContext context = UIInterface::NewContext(
+        if ( UIContext context = IUIAPI::NewContext(
                 ui.NewDialog( this, "SceneDialog", { m_ui_info_.label, m_ui_info_.dialogOpened } ) ) )
         {
             context << [&]()

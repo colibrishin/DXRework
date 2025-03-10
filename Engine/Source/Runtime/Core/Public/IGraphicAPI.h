@@ -719,9 +719,9 @@ namespace Engine
 		UAVDescription			 Uav = ZeroSet<decltype(Uav)>();
 	};
 
-	struct ENGINE_CORE_API PrimitiveTexture
+	struct ENGINE_CORE_API ITexture
 	{
-		virtual      ~PrimitiveTexture() = default;
+		virtual      ~ITexture() = default;
 		virtual void Generate(Resources::Texture* texture) = 0;
 		virtual void LoadFromFile(Resources::Texture* texture, const std::filesystem::path& path) = 0;
 		virtual void SaveAsFile(const std::filesystem::path& path) = 0;
@@ -734,7 +734,7 @@ namespace Engine
 			const size_t depth) = 0;
 		
 		virtual void Map( 
-			PrimitiveTexture* src,
+			ITexture* src,
 			const UINT src_width,
 			const UINT src_height,
 			const size_t src_idx,
@@ -794,10 +794,10 @@ namespace Engine
         class RaytracingShader;
     }
 
-    struct ENGINE_CORE_API PrimitiveShaderBase
+    struct ENGINE_CORE_API IShaderBase
     {
     public:
-        virtual ~PrimitiveShaderBase() = default;
+        virtual ~IShaderBase() = default;
 
         [[nodiscard]] void* GetNativeShader() const
         {
@@ -825,10 +825,10 @@ namespace Engine
     };
     
 #if CFG_RAYTRACING
-    struct ENGINE_CORE_API RaytracingPrimitiveShader : PrimitiveShaderBase
+    struct ENGINE_CORE_API IRaytracingShader : IShaderBase
     {
     public:
-        ~RaytracingPrimitiveShader() override = default;
+        ~IRaytracingShader() override = default;
         virtual void                Generate( const Resources::RaytracingShader* shader, void* pipeline_signature ) = 0;
         [[nodiscard]] virtual void* GetShaderRecord( const size_t idx ) const                                       = 0;
         virtual void UpdateShaderRecords( eRaytracingShaderRecordType type, const byte_stream& records )            = 0;
@@ -859,17 +859,17 @@ namespace Engine
     };
 #endif
 
-	struct ENGINE_CORE_API GraphicPrimitiveShader : PrimitiveShaderBase
+	struct ENGINE_CORE_API IGraphicShader : IShaderBase
 	{
 	public:
-        ~GraphicPrimitiveShader() override = default;
+        ~IGraphicShader() override = default;
 		virtual void        Generate(const Resources::Shader* shader, void* pipeline_signature) = 0;
 	};
 
-	struct ENGINE_CORE_API ComputePrimitiveShader
+	struct ENGINE_CORE_API IComputeShader
 	{
 	public:
-		virtual      ~ComputePrimitiveShader() = default;
+		virtual      ~IComputeShader() = default;
 		virtual void Generate(Resources::ComputeShader* shader, void* pipeline_signature) = 0;
 
 		[[nodiscard]] void* GetNativeShader() const
@@ -887,10 +887,10 @@ namespace Engine
 		void* m_shader_ = nullptr;
 	};
 
-    struct ENGINE_CORE_API GraphicResourcePrimitive
+    struct ENGINE_CORE_API IGraphicResource
     {
     public:
-        virtual ~GraphicResourcePrimitive() = default;
+        virtual ~IGraphicResource() = default;
 
         template <typename T>
         T* GetResource()
@@ -915,9 +915,9 @@ namespace Engine
         void* m_resource_ = nullptr;
     };
 
-	struct ENGINE_CORE_API PrimitiveFont
+	struct ENGINE_CORE_API IFont
 	{
-		virtual ~PrimitiveFont() = default;
+		virtual ~IFont() = default;
 		virtual void Generate(const Resources::Font* font) = 0;
 		virtual void Render(
 			const std::string_view text, 
@@ -936,9 +936,9 @@ namespace Engine
 		void* m_font_ = nullptr;
 	};
 
-	struct ENGINE_CORE_API PrimitiveMesh
+	struct ENGINE_CORE_API IMesh
 	{
-		virtual      ~PrimitiveMesh() = default;
+		virtual      ~IMesh() = default;
 		virtual void Generate(Resources::Mesh* mesh) = 0;
 
 		[[nodiscard]] void* GetNativeVertexBuffer() const { return m_vertex_buffer_; }
@@ -962,19 +962,19 @@ namespace Engine
 		void* m_index_buffer_ = nullptr;
 	};
 
-	struct ENGINE_CORE_API CommandListBase
+	struct ENGINE_CORE_API ICommandList
 	{
-		virtual ~CommandListBase() = default;
+		virtual ~ICommandList() = default;
 		virtual void SoftReset() = 0;
 		virtual void FlagReady(const std::function<void()>& post_function = {}) = 0;
 		virtual void Execute() = 0;
 	};
 
-	struct GraphicInterfaceContextPrimitive;
+	struct IGraphicContext;
 
-	struct ENGINE_CORE_API PrimitiveSampler
+	struct ENGINE_CORE_API ISampler
     {
-        virtual ~PrimitiveSampler() = default;
+        virtual ~ISampler() = default;
         virtual void Generate( eShaderSamplerAddress addr, eShaderSamplerFunction function, eSamplerFilter filter ) = 0;
         virtual bool IsValid()
         {
@@ -994,9 +994,9 @@ namespace Engine
         void *m_sampler_ = nullptr;
     };
 	
-	struct ENGINE_CORE_API GraphicHeapBase
+	struct ENGINE_CORE_API IHeapBase
 	{
-		virtual ~GraphicHeapBase() = default;
+		virtual ~IHeapBase() = default;
 
 	    virtual void SetSampler(const Resources::ShaderBase* shader, const eSampler slot) const = 0;
 		virtual void SetShaderResources(
@@ -1005,11 +1005,11 @@ namespace Engine
 			const UINT offset) const = 0;
 
         virtual void SetSampler( 
-			const PrimitiveSampler *sampler,
+			const ISampler *sampler,
 			const eSampler slot ) const = 0;
 		
-		virtual void BindGraphic(const GraphicInterfaceContextPrimitive* cmd) const = 0;
-		virtual void BindCompute(const GraphicInterfaceContextPrimitive* cmd) const = 0;
+		virtual void BindGraphic(const IGraphicContext* cmd) const = 0;
+		virtual void BindCompute(const IGraphicContext* cmd) const = 0;
 
 	    [[nodiscard]] virtual UINT64 GetBufferHeapGPUAddress(const size_t offset) const = 0;
 	    [[nodiscard]] virtual UINT64 GetSamplerHeapGPUAddress(const size_t offset) const = 0;
@@ -1019,17 +1019,17 @@ namespace Engine
 		virtual void* GetNativeGPUHandle() = 0;
 	};
 
-	struct ENGINE_CORE_API GraphicInterfaceContextPrimitive
+	struct ENGINE_CORE_API IGraphicContext
 	{
-		CommandListBase* commandList;
-		GraphicHeapBase* heap;
+		ICommandList* commandList;
+		IHeapBase* heap;
 	};
 
-	struct ENGINE_CORE_API GraphicInterfaceContextReturnType
+	struct ENGINE_CORE_API IGraphicContextImpl
 	{
-		GraphicInterfaceContextReturnType(const Weak<CommandListBase>& cmd, Unique<GraphicHeapBase> heap)
+		IGraphicContextImpl(const Weak<ICommandList>& cmd, Unique<IHeapBase> heap)
 		{
-			if (const Strong<CommandListBase>& locked = cmd.lock()) 
+			if (const Strong<ICommandList>& locked = cmd.lock()) 
 			{
 				m_command_list_ = locked;
 			}
@@ -1037,9 +1037,9 @@ namespace Engine
 			m_heap_ = std::move(heap);
 		}
 
-		GraphicInterfaceContextPrimitive GetPointers() const
+		IGraphicContext GetPointers() const
 		{
-			return GraphicInterfaceContextPrimitive
+			return IGraphicContext
 			{
 				.commandList = m_command_list_.get(),
 				.heap = m_heap_.get()
@@ -1047,21 +1047,21 @@ namespace Engine
 		}
 
 	private:
-		Strong<CommandListBase> m_command_list_{};
-		Unique<GraphicHeapBase> m_heap_{};
+		Strong<ICommandList> m_command_list_{};
+		Unique<IHeapBase> m_heap_{};
 	};
 
-	class ENGINE_CORE_API ConstantBufferTypeless
+	class ENGINE_CORE_API IConstantBuffer
 	{
 	public:
-		virtual ~ConstantBufferTypeless() = default;
+		virtual ~IConstantBuffer() = default;
 
 		virtual void                 Create(const void* src_data, const size_t stride) = 0;
 		virtual void                 SetData(const void* src_data, const size_t stride) = 0;
 		[[nodiscard]] virtual void*  GetData() const = 0;
-		virtual void                 Bind(const GraphicInterfaceContextPrimitive* context, const size_t slot) = 0;
+		virtual void                 Bind(const IGraphicContext* context, const size_t slot) = 0;
         [[nodiscard]] virtual UINT64 GetGPUAddress() const = 0;
-        virtual void Flush(const GraphicInterfaceContextPrimitive* context) = 0;
+        virtual void Flush(const IGraphicContext* context) = 0;
     };
 
 	class ENGINE_CORE_API ConstantBufferDecorator
@@ -1070,7 +1070,7 @@ namespace Engine
 		virtual  ~ConstantBufferDecorator() = default;
 
 		ConstantBufferDecorator() = default;
-		explicit ConstantBufferDecorator(ConstantBufferTypeless* base)
+		explicit ConstantBufferDecorator(IConstantBuffer* base)
 			: m_base_(base) {}
 		ConstantBufferDecorator(ConstantBufferDecorator&) = delete;
 		ConstantBufferDecorator& operator=(ConstantBufferDecorator& other) = delete;
@@ -1096,15 +1096,15 @@ namespace Engine
 			return m_base_->GetData();
 		}
 
-		void Bind(const GraphicInterfaceContextPrimitive* context, const size_t slot) const
+		void Bind(const IGraphicContext* context, const size_t slot) const
 		{
 			if (m_base_) m_base_->Bind(context, slot);
 		}
 		
-		virtual void Bind(const GraphicInterfaceContextPrimitive* context) const = 0;
+		virtual void Bind(const IGraphicContext* context) const = 0;
 
 	protected:
-		Unique<ConstantBufferTypeless> m_base_{};
+		Unique<IConstantBuffer> m_base_{};
 	};
 
 	template <typename T>
@@ -1113,7 +1113,7 @@ namespace Engine
 	public:
 		ConstantBufferTypeProxy() = default;
 
-		explicit ConstantBufferTypeProxy(ConstantBufferTypeless* base) : ConstantBufferDecorator(base)
+		explicit ConstantBufferTypeProxy(IConstantBuffer* base) : ConstantBufferDecorator(base)
 		{
 			static_assert(std::is_standard_layout_v<T>, "Constant buffer type must be a POD type");
 		}
@@ -1128,7 +1128,7 @@ namespace Engine
 			if (m_base_) m_base_->SetData(src_data, sizeof(T));
 		}
 
-		void Bind(const GraphicInterfaceContextPrimitive* context) const override
+		void Bind(const IGraphicContext* context) const override
 		{
 			if (m_base_) m_base_->Bind(context, which_cb<T>::value);
 		}
@@ -1139,30 +1139,30 @@ namespace Engine
 		    return m_base_->GetGPUAddress();
 		}
 
-        void Flush(const GraphicInterfaceContextPrimitive* context) const
+        void Flush(const IGraphicContext* context) const
 		{
 		    if (m_base_) m_base_->Flush(context);
 		}
     };
 
-	class ENGINE_CORE_API StructuredBufferTypeless
+	class ENGINE_CORE_API IStructuredBuffer
 	{
 	public:
-		virtual ~StructuredBufferTypeless() = default;
+		virtual ~IStructuredBuffer() = default;
 
-		virtual void Create(const GraphicInterfaceContextPrimitive* context, const UINT size, const void* initial_data, const size_t stride, const bool uav) = 0;
-		virtual void SetData(const GraphicInterfaceContextPrimitive* context, const UINT size, const void* src_data, const size_t stride, const bool uav) = 0;
-		virtual void SetDataContainer(const GraphicInterfaceContextPrimitive* context, const UINT size, const void* const* container_ptr, const size_t stride) = 0;
-		virtual void SetDataPointerContainer(const GraphicInterfaceContextPrimitive* context, const UINT size, const void* const* container_ptr, const size_t stride) = 0;
-		virtual void GetData(const GraphicInterfaceContextPrimitive* context, const UINT size, void* dst_ptr, const size_t stride) = 0;
+		virtual void Create(const IGraphicContext* context, const UINT size, const void* initial_data, const size_t stride, const bool uav) = 0;
+		virtual void SetData(const IGraphicContext* context, const UINT size, const void* src_data, const size_t stride, const bool uav) = 0;
+		virtual void SetDataContainer(const IGraphicContext* context, const UINT size, const void* const* container_ptr, const size_t stride) = 0;
+		virtual void SetDataPointerContainer(const IGraphicContext* context, const UINT size, const void* const* container_ptr, const size_t stride) = 0;
+		virtual void GetData(const IGraphicContext* context, const UINT size, void* dst_ptr, const size_t stride) = 0;
 		virtual void Clear() = 0;
 
-		virtual void TransitionToSRV(const GraphicInterfaceContextPrimitive* context) = 0;
-		virtual void TransitionToUAV(const GraphicInterfaceContextPrimitive* context) = 0;
-		virtual void TransitionCommon(const GraphicInterfaceContextPrimitive* context) = 0;
+		virtual void TransitionToSRV(const IGraphicContext* context) = 0;
+		virtual void TransitionToUAV(const IGraphicContext* context) = 0;
+		virtual void TransitionCommon(const IGraphicContext* context) = 0;
 
-		virtual void CopySRVHeap(const GraphicInterfaceContextPrimitive* context, const UINT slot) const = 0;
-		virtual void CopyUAVHeap(const GraphicInterfaceContextPrimitive* context, const UINT slot) const = 0;
+		virtual void CopySRVHeap(const IGraphicContext* context, const UINT slot) const = 0;
+		virtual void CopyUAVHeap(const IGraphicContext* context, const UINT slot) const = 0;
 
 	    [[nodiscard]] virtual void* GetResource() const = 0;
 	    [[nodiscard]] virtual uint64_t GetGPUAddress() const = 0;
@@ -1174,7 +1174,7 @@ namespace Engine
 		virtual ~StructuredBufferDecorator() = default;
 
 		StructuredBufferDecorator() = default;
-		explicit StructuredBufferDecorator(StructuredBufferTypeless* base) : m_base_(base) {}
+		explicit StructuredBufferDecorator(IStructuredBuffer* base) : m_base_(base) {}
 		StructuredBufferDecorator (StructuredBufferDecorator&) = delete;
 		StructuredBufferDecorator& operator=(StructuredBufferDecorator&) = delete;
 		
@@ -1194,23 +1194,23 @@ namespace Engine
 			return m_base_ == nullptr;
 		}
 
-		void Create(const GraphicInterfaceContextPrimitive* context, const UINT size, const void* initial_data, const size_t stride, const bool uav) const
+		void Create(const IGraphicContext* context, const UINT size, const void* initial_data, const size_t stride, const bool uav) const
 		{
 			if (m_base_) m_base_->Create(context, size, initial_data, stride, uav);
 		}
-		void SetData(const GraphicInterfaceContextPrimitive* context, const UINT size, const void* src_data, const size_t stride, const bool uav) const
+		void SetData(const IGraphicContext* context, const UINT size, const void* src_data, const size_t stride, const bool uav) const
 		{
 			if (m_base_) m_base_->SetData(context, size, src_data, stride, uav);
 		}
-		void SetDataContainer(const GraphicInterfaceContextPrimitive* context, const UINT size, const void* const* container_ptr, const size_t stride) const
+		void SetDataContainer(const IGraphicContext* context, const UINT size, const void* const* container_ptr, const size_t stride) const
 		{
 			if (m_base_) m_base_->SetDataContainer(context, size, container_ptr, stride);
 		}
-		void SetDataPointerContainer(const GraphicInterfaceContextPrimitive* context, const UINT size, const void* const* container_ptr, const size_t stride) const
+		void SetDataPointerContainer(const IGraphicContext* context, const UINT size, const void* const* container_ptr, const size_t stride) const
 		{
 			if (m_base_) m_base_->SetDataPointerContainer(context, size, container_ptr, stride);
 		}
-		void GetData(const GraphicInterfaceContextPrimitive* context, const UINT size, void* dst_ptr, const size_t stride) const
+		void GetData(const IGraphicContext* context, const UINT size, void* dst_ptr, const size_t stride) const
 		{
 			if (m_base_) m_base_->GetData(context, size, dst_ptr, stride);
 		}
@@ -1219,30 +1219,30 @@ namespace Engine
 			if (m_base_) m_base_->Clear();
 		}
 
-		void TransitionToSRV(const GraphicInterfaceContextPrimitive* context) const
+		void TransitionToSRV(const IGraphicContext* context) const
 		{
 			if (m_base_) m_base_->TransitionToSRV(context);
 		}
-		void TransitionToUAV(const GraphicInterfaceContextPrimitive* context) const
+		void TransitionToUAV(const IGraphicContext* context) const
 		{
 			if (m_base_) m_base_->TransitionToUAV(context);
 		}
-		void TransitionCommon(const GraphicInterfaceContextPrimitive* context) const
+		void TransitionCommon(const IGraphicContext* context) const
 		{
 			if (m_base_) m_base_->TransitionCommon(context);
 		}
 
-		void CopySRVHeap(const GraphicInterfaceContextPrimitive* context, const UINT slot) const
+		void CopySRVHeap(const IGraphicContext* context, const UINT slot) const
 		{
 			if (m_base_) m_base_->CopySRVHeap(context, slot);
 		}
-		void CopyUAVHeap(const GraphicInterfaceContextPrimitive* context, const UINT slot) const
+		void CopyUAVHeap(const IGraphicContext* context, const UINT slot) const
 		{
 			if (m_base_) m_base_->CopyUAVHeap(context, slot);
 		}
 		
-		virtual void CopySRVHeap(const GraphicInterfaceContextPrimitive* context) const = 0;
-		virtual void CopyUAVHeap(const GraphicInterfaceContextPrimitive* context) const = 0;
+		virtual void CopySRVHeap(const IGraphicContext* context) const = 0;
+		virtual void CopyUAVHeap(const IGraphicContext* context) const = 0;
 
 	    [[nodiscard]] void* GetResource() const
 	    {
@@ -1257,7 +1257,7 @@ namespace Engine
 	    }
 
 	protected:
-		Unique<StructuredBufferTypeless> m_base_{};
+		Unique<IStructuredBuffer> m_base_{};
 	};
 	
 	template <typename T>
@@ -1276,37 +1276,37 @@ namespace Engine
 			return *this;
 		}
 
-		void Create(const GraphicInterfaceContextPrimitive* context, const UINT size, const T* initial_data)
+		void Create(const IGraphicContext* context, const UINT size, const T* initial_data)
 		{
 			if (!m_base_) return;
 			m_base_->Create(context, size, initial_data, sizeof(T), is_uav_sb<T>::value || is_client_uav_sb<T>::value);
 		}
 
-		void SetData(const GraphicInterfaceContextPrimitive* context, const UINT size, const T* src_data)
+		void SetData(const IGraphicContext* context, const UINT size, const T* src_data)
 		{
 			if (!m_base_) return;
 			m_base_->SetData(context, size, src_data, sizeof(T), is_uav_sb<T>::value || is_client_uav_sb<T>::value);
 		}
 
-		void SetDataContainer(const GraphicInterfaceContextPrimitive* context, const UINT size, const T* const* container_ptr)
+		void SetDataContainer(const IGraphicContext* context, const UINT size, const T* const* container_ptr)
 		{
 			if (!m_base_) return;
 			m_base_->SetDataContainer(context, size, reinterpret_cast<const void* const*>(container_ptr), sizeof(T));
 		}
 
-		void SetDataPointerContainer(const GraphicInterfaceContextPrimitive* context, const UINT size, const T* const* container_ptr)
+		void SetDataPointerContainer(const IGraphicContext* context, const UINT size, const T* const* container_ptr)
 		{
 			if (!m_base_) return;
 			m_base_->SetDataPointerContainer(context, size, reinterpret_cast<const void* const*>(container_ptr), sizeof(T));
 		}
 
-		void GetData(const GraphicInterfaceContextPrimitive* context, const UINT size, T* dst_ptr)
+		void GetData(const IGraphicContext* context, const UINT size, T* dst_ptr)
 		{
 			if (!m_base_) return;
 			m_base_->GetData(context, size, dst_ptr, sizeof(T));
 		}
 		
-		void CopySRVHeap(const GraphicInterfaceContextPrimitive* context) const override
+		void CopySRVHeap(const IGraphicContext* context) const override
 		{
 			if (!m_base_) return;
 
@@ -1320,7 +1320,7 @@ namespace Engine
 			}
 		}
 
-		void CopyUAVHeap(const GraphicInterfaceContextPrimitive* context) const override
+		void CopyUAVHeap(const IGraphicContext* context) const override
 		{
 			if (!m_base_) return;
 
@@ -1344,10 +1344,10 @@ namespace Engine
 	using InstanceBufferContainer = aligned_vector<StructuredBufferTypeProxy<Graphics::SBs::InstanceSB>>;
     using ConcurrentInstanceBufferContainer = tbb::concurrent_vector<StructuredBufferTypeProxy<Graphics::SBs::InstanceSB>>;
 
-	struct ENGINE_CORE_API PolymorphicGraphicInterface
+	struct ENGINE_CORE_API IGraphicAPIBase
 	{
-		virtual ~PolymorphicGraphicInterface() = default;
-		INLINE_COMPILE_TIME_TYPENAME(PolymorphicGraphicInterface);
+        INLINE_COMPILE_TIME_TYPENAME( IGraphicAPIBase )
+		virtual ~IGraphicAPIBase() = default;
 		virtual void Initialize() = 0;
 		virtual void Shutdown() = 0;
 	};
@@ -1360,10 +1360,10 @@ namespace Engine
         StructuredBufferTypeProxy<Graphics::SBs::InstanceSB> instance;
     };
     
-	struct ENGINE_CORE_API RaytracingExtensionInterface : public virtual PolymorphicGraphicInterface
+	struct ENGINE_CORE_API IRaytracingExtension : public virtual IGraphicAPIBase
 	{
-        ~RaytracingExtensionInterface() override = default;
-		INLINE_COMPILE_TIME_TYPENAME(RaytracingExtensionInterface)
+        ~IRaytracingExtension() override = default;
+		INLINE_COMPILE_TIME_TYPENAME(IRaytracingExtension)
 
 		virtual bool IsRaytracingSupported() = 0;
 		virtual void InitializeRaytracing() = 0;
@@ -1378,36 +1378,36 @@ namespace Engine
 	    }
 	    [[nodiscard]] bool ShouldUseRaytracing() const noexcept { return m_b_raytracing_; }
 
-	    virtual Unique<GraphicHeapBase> GetRaytracingHeap() = 0;
-	    virtual RaytracingPrimitiveShader* GetNewRaytracingShader() = 0;
+	    virtual Unique<IHeapBase> GetRaytracingHeap() = 0;
+	    virtual IRaytracingShader* GetNewRaytracingShader() = 0;
 	    
 		virtual void* GetRaytracingNativeInterface() = 0;
 		virtual void* GetRaytracingNativePipeline() = 0;
 
 	    virtual bool BuildTopLevelAccelerationBuffer(
-            const GraphicInterfaceContextPrimitive* context,
+            const IGraphicContext* context,
             RenderMap const* render_map,
             size_t render_map_size,
             AccelStructBuffer& out_tlas_buffer,
             const ObjectPredication& predication = {}) = 0;
 
 	    virtual void DispatchRay(
-            const GraphicInterfaceContextPrimitive* context, const Resources::RaytracingShader* shader, const
+            const IGraphicContext* context, const Resources::RaytracingShader* shader, const
             StructuredBufferTypeProxy<Graphics::SBs::LightSB>& light, const StructuredBufferTypeProxy<Graphics::SBs::InstanceSB>
             & instances, const ConstantBufferTypeProxy<Graphics::CBs::PerspectiveCB>& perspective, const ConstantBufferTypeProxy
             <Graphics::CBs::ParamCB>& param, const byte_stream& hit_records, const AccelStructBuffer& top_level_accel_buffer
         ) = 0;
 
-	    virtual void CopyRaytracingToRenderTarget(const GraphicInterfaceContextPrimitive* context) = 0;
+	    virtual void CopyRaytracingToRenderTarget(const IGraphicContext* context) = 0;
 
 	private:
 	    bool m_b_raytracing_ = false;
 	};
 
-	struct ENGINE_CORE_API GraphicInterface : public virtual PolymorphicGraphicInterface
+	struct ENGINE_CORE_API IGraphicAPI : public virtual IGraphicAPIBase
 	{
-		~GraphicInterface() override = default;
-		INLINE_COMPILE_TIME_TYPENAME(GraphicInterface)
+		~IGraphicAPI() override = default;
+		INLINE_COMPILE_TIME_TYPENAME(IGraphicAPI)
 
 		virtual void WaitForNextFrame() = 0;
 		virtual void Present() = 0;
@@ -1415,12 +1415,12 @@ namespace Engine
 		virtual void* GetNativeInterface() = 0;
 		virtual void* GetNativePipeline() = 0;
 
-		virtual PrimitiveTexture       *GetNewPrimitiveTexture()       = 0;
-        virtual PrimitiveMesh          *GetNewPrimitiveMesh()          = 0;
-		virtual GraphicPrimitiveShader* GetNewGraphicPrimitiveShader() = 0;
-		virtual ComputePrimitiveShader* GetNewComputePrimitiveShader() = 0;
-        virtual PrimitiveFont          *GetNewPrimitiveFont()          = 0;
-        virtual PrimitiveSampler       *GetNewPrimitiveSampler()       = 0;
+		virtual ITexture       *GetNewPrimitiveTexture()       = 0;
+        virtual IMesh          *GetNewPrimitiveMesh()          = 0;
+		virtual IGraphicShader* GetNewGraphicPrimitiveShader() = 0;
+		virtual IComputeShader* GetNewComputePrimitiveShader() = 0;
+        virtual IFont          *GetNewPrimitiveFont()          = 0;
+        virtual ISampler       *GetNewPrimitiveSampler()       = 0;
 
 		virtual Matrix GetProjectionMatrix() = 0;
 		virtual Matrix GetOrthogonalMatrix() = 0;
@@ -1437,73 +1437,75 @@ namespace Engine
 			return ConstantBufferTypeProxy<T>(GetNativeConstantBuffer());
 		}
 
-		virtual GraphicInterfaceContextReturnType GetNewContext(const int8_t type, bool heap_allocation, const std::wstring_view debug_name) = 0;
-		virtual Strong<CommandListBase> GetCommandList(const int8_t type, const std::wstring_view debug_name) = 0;
-		virtual Unique<GraphicHeapBase> GetHeap() = 0;
+		virtual IGraphicContextImpl GetNewContext(const int8_t type, bool heap_allocation, const std::wstring_view debug_name) = 0;
+		virtual Strong<ICommandList> GetCommandList(const int8_t type, const std::wstring_view debug_name) = 0;
+		virtual Unique<IHeapBase> GetHeap() = 0;
 
-		virtual void SetViewport(const GraphicInterfaceContextPrimitive* context, const Viewport& viewport) = 0;
-		virtual void SetDefaultRenderTarget(const GraphicInterfaceContextPrimitive* context) = 0;
-		virtual void SetDefaultGraphicPipeline(const GraphicInterfaceContextPrimitive* context) = 0;
-		virtual void SetDefaultComputePipeline(const GraphicInterfaceContextPrimitive* context) = 0;
+		virtual void SetViewport(const IGraphicContext* context, const Viewport& viewport) = 0;
+		virtual void SetDefaultRenderTarget(const IGraphicContext* context) = 0;
+		virtual void SetDefaultGraphicPipeline(const IGraphicContext* context) = 0;
+		virtual void SetDefaultComputePipeline(const IGraphicContext* context) = 0;
 
-		virtual void Draw(const GraphicInterfaceContextPrimitive* context, const Resources::Mesh* mesh, UINT instance_count, UINT instance_offset) = 0;
-		virtual void Dispatch(const GraphicInterfaceContextPrimitive* context, const Resources::ComputeShader* shader, const Graphics::SBs::LocalParamSB& local_param, const UINT group_count[3]) = 0;
+		virtual void Draw(const IGraphicContext* context, const Resources::Mesh* mesh, UINT instance_count, UINT instance_offset) = 0;
+		virtual void Dispatch(const IGraphicContext* context, const Resources::ComputeShader* shader, const Graphics::SBs::LocalParamSB& local_param, const UINT group_count[3]) = 0;
 
-		virtual void BindGraphic(const GraphicInterfaceContextPrimitive* context, const Resources::Shader* shader) = 0;
-		virtual void BindCompute(const GraphicInterfaceContextPrimitive* context, const Resources::ComputeShader* shader) = 0;
+		virtual void BindGraphic(const IGraphicContext* context, const Resources::Shader* shader) = 0;
+		virtual void BindCompute(const IGraphicContext* context, const Resources::ComputeShader* shader) = 0;
 		
-		virtual void TransitTo(const GraphicInterfaceContextPrimitive* context, const Resources::Texture* tex, const eBindType bind_type) = 0;
-		virtual void TransitBack(const GraphicInterfaceContextPrimitive* context, const Resources::Texture* tex, const eBindType bind_type) = 0;
-		virtual void TransitToMultiple(const GraphicInterfaceContextPrimitive* context, const Resources::Texture* const* texes, const size_t count, const eBindType bind_type) = 0;
-		virtual void TransitBackMultiple(const GraphicInterfaceContextPrimitive* context, const Resources::Texture* const* texes, const size_t count, const eBindType bind_type) = 0;
+		virtual void TransitTo(const IGraphicContext* context, const Resources::Texture* tex, const eBindType bind_type) = 0;
+		virtual void TransitBack(const IGraphicContext* context, const Resources::Texture* tex, const eBindType bind_type) = 0;
+		virtual void TransitToMultiple(const IGraphicContext* context, const Resources::Texture* const* texes, const size_t count, const eBindType bind_type) = 0;
+		virtual void TransitBackMultiple(const IGraphicContext* context, const Resources::Texture* const* texes, const size_t count, const eBindType bind_type) = 0;
 
-		virtual void Bind(const GraphicInterfaceContextPrimitive* context, const Resources::Texture* tex, const eBindType bind_type, const UINT slot, const UINT offset) = 0;
-		virtual void BindMultiple(const GraphicInterfaceContextPrimitive* context, const Resources::Texture* const* rtvs, const size_t rtv_count, Resources::Texture* dsv) = 0;
-		virtual void BindMultiple(const GraphicInterfaceContextPrimitive* context, const Resources::Texture* const* textures, const eBindType bind_type, const UINT slot, const UINT offset, const size_t count) = 0;
-		virtual void Clear(const GraphicInterfaceContextPrimitive* context, const Resources::Texture* tex, const eBindType clear_type) = 0;
+		virtual void Bind(const IGraphicContext* context, const Resources::Texture* tex, const eBindType bind_type, const UINT slot, const UINT offset) = 0;
+		virtual void BindMultiple(const IGraphicContext* context, const Resources::Texture* const* rtvs, const size_t rtv_count, Resources::Texture* dsv) = 0;
+		virtual void BindMultiple(const IGraphicContext* context, const Resources::Texture* const* textures, const eBindType bind_type, const UINT slot, const UINT offset, const size_t count) = 0;
+		virtual void Clear(const IGraphicContext* context, const Resources::Texture* tex, const eBindType clear_type) = 0;
 		virtual void ClearRenderTarget() = 0;
-		virtual void CopyRenderTarget(const GraphicInterfaceContextPrimitive* context, const Resources::Texture* tex) = 0;
+		virtual void CopyRenderTarget(const IGraphicContext* context, const Resources::Texture* tex) = 0;
 
 	protected:
-		virtual StructuredBufferTypeless* GetNativeStructuredBuffer() = 0;
-		virtual ConstantBufferTypeless* GetNativeConstantBuffer() = 0;
+		virtual IStructuredBuffer* GetNativeStructuredBuffer() = 0;
+		virtual IConstantBuffer* GetNativeConstantBuffer() = 0;
 	};
 
-	struct ENGINE_CORE_API GraphicInterfaceAccessor
+	struct ENGINE_CORE_API IGraphicAPIAccessor
 	{
 	public:
-		template <typename T> requires (std::is_base_of_v<PolymorphicGraphicInterface, T>)
-		static void SetGraphicInterface()
+		template <typename T> requires (std::is_base_of_v<IGraphicAPIBase, T>)
+		void SetGraphicInterface()
 		{
-			if (!s_graphic_interface_)
+			if (!m_graphic_)
 			{
-				s_graphic_interface_ = std::make_unique<T>();
-				s_graphic_interface_->Initialize();
+				m_graphic_ = std::make_unique<T>();
+				m_graphic_->Initialize();
 			}
 		}
 
-		[[nodiscard]] static GraphicInterface& GetInterface()
+		[[nodiscard]] IGraphicAPI& GetInterface()
 		{
-			return *dynamic_cast<GraphicInterface*>(s_graphic_interface_.get());
+			return *dynamic_cast<IGraphicAPI*>(m_graphic_.get());
 		}
 
-		[[nodiscard]] static RaytracingExtensionInterface& GetRaytracingInterface()
+		[[nodiscard]] IRaytracingExtension& GetRaytracingInterface()
 		{
-			return *dynamic_cast<RaytracingExtensionInterface*>(s_graphic_interface_.get());
+			return *dynamic_cast<IRaytracingExtension*>(m_graphic_.get());
 		}
 
-		static void Shutdown()
+		void Shutdown()
 		{
-			if (s_graphic_interface_) 
+			if (m_graphic_) 
 			{
-				s_graphic_interface_->Shutdown();
-				s_graphic_interface_.reset();
+				m_graphic_->Shutdown();
+				m_graphic_.reset();
 			}
 		}
 
 	private:
-		static Unique<PolymorphicGraphicInterface> s_graphic_interface_;
+		Unique<IGraphicAPIBase> m_graphic_;
 	};
+
+	extern ENGINE_CORE_API IGraphicAPIAccessor g_graphic_accessor;
 
 	template <typename T>
 	class StructuredBufferMemoryPool
@@ -1581,9 +1583,9 @@ namespace Engine
 				size_t      end_it = m_resource_.size();
 				m_resource_.resize(count);
 
-				GraphicInterface& gi = GraphicInterfaceAccessor::GetInterface();
-				const GraphicInterfaceContextReturnType& context = gi.GetNewContext(0, false, L"Structured Buffer Memory pool resizing");
-				const GraphicInterfaceContextPrimitive& primitive = context.GetPointers();
+				IGraphicAPI& gi = g_graphic_accessor.GetInterface();
+				const IGraphicContextImpl& context = gi.GetNewContext(0, false, L"Structured Buffer Memory pool resizing");
+				const IGraphicContext& primitive = context.GetPointers();
 
 				primitive.commandList->SoftReset();
 
@@ -1606,9 +1608,9 @@ namespace Engine
 				throw std::logic_error("Memory pool is not allocated enough size");
 			}
 
-			GraphicInterface& gi = GraphicInterfaceAccessor::GetInterface();
-			const GraphicInterfaceContextReturnType& context = gi.GetNewContext(0, false, L"Structured Buffer Memory pool copy");
-			const GraphicInterfaceContextPrimitive& primitive = context.GetPointers();
+			IGraphicAPI& gi = g_graphic_accessor.GetInterface();
+			const IGraphicContextImpl& context = gi.GetNewContext(0, false, L"Structured Buffer Memory pool copy");
+			const IGraphicContext& primitive = context.GetPointers();
 
 			primitive.commandList->SoftReset();
 			
@@ -1677,13 +1679,13 @@ namespace Engine
 			return m_resource_->GetResource<T>();
 		}
 
-		[[nodiscard]] GraphicResourcePrimitive& GetPrimitive() const
+		[[nodiscard]] IGraphicResource& GetPrimitive() const
 		{
 			return *m_resource_;
 		}
 
 	protected:
-	    Unique<GraphicResourcePrimitive> m_resource_;
+	    Unique<IGraphicResource> m_resource_;
 	    
 	private:
 		virtual void InitializeBuffer(const size_t count, const size_t stride) = 0;

@@ -12,11 +12,11 @@ void Engine::Graphics::D3D12ConstantBufferTypeless::Create(const void* src_data,
 	m_stride_ = stride;
 	m_alignment_ = (stride + 255) & ~255;
 
-	GraphicInterface&                        gi      = GraphicInterfaceAccessor::GetInterface();
+	IGraphicAPI&                        gi      = g_graphic_accessor.GetInterface();
 	const auto                               dev     = static_cast<ID3D12Device2*>(gi.GetNativeInterface());
-	const GraphicInterfaceContextReturnType& context = gi.GetNewContext
+	const IGraphicContextImpl& context = gi.GetNewContext
 			(D3D12_COMMAND_LIST_TYPE_DIRECT, false, L"D3D12ConstantBuffer Initialization");
-	const GraphicInterfaceContextPrimitive& primitive = context.GetPointers();
+	const IGraphicContext& primitive = context.GetPointers();
 
 	const auto cmd = static_cast<CommandPair*>(primitive.commandList);
 	cmd->SoftReset();

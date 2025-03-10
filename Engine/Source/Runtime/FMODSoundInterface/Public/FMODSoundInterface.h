@@ -1,5 +1,5 @@
 #pragma once
-#include "SoundInterface.h"
+#include "ISoundAPI.h"
 #include "Allocator.h"
 #include <Public/fmod.hpp>
 #include <Public/fmod_common.h>
@@ -9,7 +9,7 @@
 
 namespace Engine
 {
-	struct ENGINE_FMODSOUNDINTERFACE_API FMODSoundPrimitive : public SoundPrimitive
+	struct ENGINE_FMODSOUNDINTERFACE_API FMODSoundPrimitive : public ISound
 	{
 		virtual ~FMODSoundPrimitive()
 		{
@@ -47,27 +47,31 @@ namespace Engine
 	};
 
 	ECLASS()
-	struct ENGINE_FMODSOUNDINTERFACE_API FMODSoundInterface : SoundInterface
-	{
-		GENERATE_BODY
-		void Initialize() override;
-		void Shutdown() override;
-		void Update() override;
-		SoundPrimitive* NewSound(const std::filesystem::path& path) override;
-		void ReleaseSound(SoundPrimitive* primitive) override;
-		void UpdatePosition(const SoundChannelID id, const Vector3& position) override;
-		void UpdatePosition(const SoundChannelID id, const Vector3& position, const Vector3& velocity) override;
-		bool PlaySound(const SoundPrimitive* sound, const Vector3& position, const Vector3& velocity, bool loop, SoundChannelID& id) override;
-		bool StopSound(const SoundChannelID id) override;
-		void StopLoop(const SoundPrimitive* sound, const SoundChannelID id) override;
+    struct ENGINE_FMODSOUNDINTERFACE_API FMODSoundInterface : ISoundAPI
+    {
+        GENERATE_BODY
+        void    Initialize() override;
+        void    Shutdown() override;
+        void    Update() override;
+        ISound* NewSound( const std::filesystem::path& path ) override;
+        void    ReleaseSound( ISound* primitive ) override;
+        void    UpdatePosition( const SoundChannelID id, const Vector3& position ) override;
+        void    UpdatePosition( const SoundChannelID id, const Vector3& position, const Vector3& velocity ) override;
+        bool    PlaySound( const ISound*   sound,
+                           const Vector3&  position,
+                           const Vector3&  velocity,
+                           bool            loop,
+                           SoundChannelID& id ) override;
+        bool    StopSound( const SoundChannelID id ) override;
+        void    StopLoop( const ISound* sound, const SoundChannelID id ) override;
 
-	private:
-		FMOD::System* m_audio_engine_ = nullptr;
-		FMOD::ChannelGroup* m_master_channel_group_ = nullptr;
-		FMOD::ChannelControl* m_channel_control_ = nullptr;
-		
-		std::array<FMOD::Channel*, g_max_sound_channel> m_channel_map_{};
-		u_fast_pool_allocator_single<FMODSoundPrimitive> m_primitive_allocator_{};
-		std::vector<FMODSoundPrimitive*> m_instanced_primitives_{};
-	};
+    private:
+        FMOD::System*         m_audio_engine_         = nullptr;
+        FMOD::ChannelGroup*   m_master_channel_group_ = nullptr;
+        FMOD::ChannelControl* m_channel_control_      = nullptr;
+
+        std::array<FMOD::Channel*, g_max_sound_channel>  m_channel_map_{};
+        u_fast_pool_allocator_single<FMODSoundPrimitive> m_primitive_allocator_{};
+        std::vector<FMODSoundPrimitive*>                 m_instanced_primitives_{};
+    };
 }

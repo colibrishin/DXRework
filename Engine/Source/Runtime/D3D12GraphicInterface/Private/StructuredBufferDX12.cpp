@@ -15,7 +15,7 @@ void Engine::Graphics::D3D12StructuredBufferTypeless::Clear()
 	m_upload_buffer_.Reset();
 }
 
-void Engine::Graphics::D3D12StructuredBufferTypeless::TransitionToSRV(const GraphicInterfaceContextPrimitive* context)
+void Engine::Graphics::D3D12StructuredBufferTypeless::TransitionToSRV(const IGraphicContext* context)
 {
 	auto* cmd = static_cast<CommandPair*>(context->commandList);
 
@@ -30,7 +30,7 @@ void Engine::Graphics::D3D12StructuredBufferTypeless::TransitionToSRV(const Grap
 	m_current_state_ = D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE;
 }
 
-void Engine::Graphics::D3D12StructuredBufferTypeless::TransitionToUAV(const GraphicInterfaceContextPrimitive* context)
+void Engine::Graphics::D3D12StructuredBufferTypeless::TransitionToUAV(const IGraphicContext* context)
 {
 	auto* cmd = static_cast<CommandPair*>(context->commandList);
 
@@ -45,7 +45,7 @@ void Engine::Graphics::D3D12StructuredBufferTypeless::TransitionToUAV(const Grap
 	m_current_state_ = D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
 }
 
-void Engine::Graphics::D3D12StructuredBufferTypeless::TransitionCommon(const GraphicInterfaceContextPrimitive* context)
+void Engine::Graphics::D3D12StructuredBufferTypeless::TransitionCommon(const IGraphicContext* context)
 {
 	auto* cmd = static_cast<CommandPair*>(context->commandList);
 
@@ -60,7 +60,7 @@ void Engine::Graphics::D3D12StructuredBufferTypeless::TransitionCommon(const Gra
 	m_current_state_ = D3D12_RESOURCE_STATE_COMMON;
 }
 
-void Engine::Graphics::D3D12StructuredBufferTypeless::CopySRVHeap(const GraphicInterfaceContextPrimitive* context, const UINT slot) const
+void Engine::Graphics::D3D12StructuredBufferTypeless::CopySRVHeap(const IGraphicContext* context, const UINT slot) const
 {
 	auto* heap = static_cast<DescriptorPtrImpl*>(context->heap);
 
@@ -71,7 +71,7 @@ void Engine::Graphics::D3D12StructuredBufferTypeless::CopySRVHeap(const GraphicI
 	);
 }
 
-void Engine::Graphics::D3D12StructuredBufferTypeless::CopyUAVHeap(const GraphicInterfaceContextPrimitive* context, const UINT slot) const
+void Engine::Graphics::D3D12StructuredBufferTypeless::CopyUAVHeap(const IGraphicContext* context, const UINT slot) const
 {
 	auto* heap = static_cast<DescriptorPtrImpl*>(context->heap);
 
@@ -87,7 +87,7 @@ D3D12_GPU_VIRTUAL_ADDRESS Engine::Graphics::D3D12StructuredBufferTypeless::GetGP
 	return m_buffer_->GetGPUVirtualAddress();
 }
 
-void Engine::Graphics::D3D12StructuredBufferTypeless::Create(const GraphicInterfaceContextPrimitive* context, UINT size, const void* initial_data, const size_t stride, const bool uav)
+void Engine::Graphics::D3D12StructuredBufferTypeless::Create(const IGraphicContext* context, UINT size, const void* initial_data, const size_t stride, const bool uav)
 {
 	if (size == 0)
 	{
@@ -107,7 +107,7 @@ void Engine::Graphics::D3D12StructuredBufferTypeless::Create(const GraphicInterf
 	InitializeReadBuffer(size, stride);
 }
 
-void Engine::Graphics::D3D12StructuredBufferTypeless::SetData(const GraphicInterfaceContextPrimitive* context, UINT size, const void* src_ptr, const size_t stride, const bool uav)
+void Engine::Graphics::D3D12StructuredBufferTypeless::SetData(const IGraphicContext* context, UINT size, const void* src_ptr, const size_t stride, const bool uav)
 {
 	auto* cmd = static_cast<CommandPair*>(context->commandList);
 
@@ -141,7 +141,7 @@ void Engine::Graphics::D3D12StructuredBufferTypeless::SetData(const GraphicInter
 	cmd->GetList4()->ResourceBarrier(1, &common_transition);
 }
 
-void Engine::Graphics::D3D12StructuredBufferTypeless::SetDataContainer(const GraphicInterfaceContextPrimitive* context, UINT size, const void* const* src_ptr, const size_t stride)
+void Engine::Graphics::D3D12StructuredBufferTypeless::SetDataContainer(const IGraphicContext* context, UINT size, const void* const* src_ptr, const size_t stride)
 {
 	auto* cmd = static_cast<CommandPair*>(context->commandList);
 
@@ -179,7 +179,7 @@ void Engine::Graphics::D3D12StructuredBufferTypeless::SetDataContainer(const Gra
 }
 
 void Engine::Graphics::D3D12StructuredBufferTypeless::SetDataPointerContainer(
-	const GraphicInterfaceContextPrimitive* context, UINT size, const void* const* src_ptr, const size_t stride
+	const IGraphicContext* context, UINT size, const void* const* src_ptr, const size_t stride
 )
 {
 	auto* cmd = static_cast<CommandPair*>(context->commandList);
@@ -217,7 +217,7 @@ void Engine::Graphics::D3D12StructuredBufferTypeless::SetDataPointerContainer(
 	cmd->GetList4()->ResourceBarrier(1, &common_transition);
 }
 
-void Engine::Graphics::D3D12StructuredBufferTypeless::GetData(const GraphicInterfaceContextPrimitive* context, UINT size, void* dst_ptr, const size_t stride)
+void Engine::Graphics::D3D12StructuredBufferTypeless::GetData(const IGraphicContext* context, UINT size, void* dst_ptr, const size_t stride)
 {
 	auto* cmd = reinterpret_cast<CommandPair*>(context->commandList);
 	cmd->SoftReset();
@@ -253,7 +253,7 @@ void Engine::Graphics::D3D12StructuredBufferTypeless::GetData(const GraphicInter
 
 void Engine::Graphics::D3D12StructuredBufferTypeless::InitializeSRV(UINT size, const size_t stride)
 {
-	const auto dev = static_cast<ID3D12Device2*>(GraphicInterfaceAccessor::GetInterface().GetNativeInterface());
+	const auto dev = static_cast<ID3D12Device2*>(g_graphic_accessor.GetInterface().GetNativeInterface());
 
 	constexpr D3D12_DESCRIPTOR_HEAP_DESC srv_heap_desc
 	{
@@ -296,7 +296,7 @@ void Engine::Graphics::D3D12StructuredBufferTypeless::InitializeSRV(UINT size, c
 
 void Engine::Graphics::D3D12StructuredBufferTypeless::InitializeUAV(UINT size, const size_t stride)
 {
-	const auto dev = static_cast<ID3D12Device2*>(GraphicInterfaceAccessor::GetInterface().GetNativeInterface());
+	const auto dev = static_cast<ID3D12Device2*>(g_graphic_accessor.GetInterface().GetNativeInterface());
 	
 	constexpr D3D12_DESCRIPTOR_HEAP_DESC uav_heap_desc
 	{
@@ -337,7 +337,7 @@ void Engine::Graphics::D3D12StructuredBufferTypeless::InitializeMainBuffer(UINT 
 {
 	const auto& default_heap = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
 	auto        buffer_desc = CD3DX12_RESOURCE_DESC::Buffer(stride * size);
-	const auto  dev         = static_cast<ID3D12Device2*>(GraphicInterfaceAccessor::GetInterface().GetNativeInterface());
+	const auto  dev         = static_cast<ID3D12Device2*>(g_graphic_accessor.GetInterface().GetNativeInterface());
 
 	if (m_uav_)
 	{
@@ -362,11 +362,11 @@ void Engine::Graphics::D3D12StructuredBufferTypeless::InitializeMainBuffer(UINT 
 	DX::ThrowIfFailed(m_buffer_->SetName(buffer_name.c_str()));
 }
 
-void Engine::Graphics::D3D12StructuredBufferTypeless::InitializeUploadBuffer(const GraphicInterfaceContextPrimitive* context, UINT size, const void* initial_data, const size_t stride)
+void Engine::Graphics::D3D12StructuredBufferTypeless::InitializeUploadBuffer(const IGraphicContext* context, UINT size, const void* initial_data, const size_t stride)
 {
 	const auto& upload_heap = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
 	const auto& buffer_desc = CD3DX12_RESOURCE_DESC::Buffer(stride * size);
-	const auto  dev         = static_cast<ID3D12Device2*>(GraphicInterfaceAccessor::GetInterface().GetNativeInterface());
+	const auto  dev         = static_cast<ID3D12Device2*>(g_graphic_accessor.GetInterface().GetNativeInterface());
 	const auto  cmd         = static_cast<CommandPair*>(context->commandList);
 	
 	DX::ThrowIfFailed
@@ -414,7 +414,7 @@ void Engine::Graphics::D3D12StructuredBufferTypeless::InitializeReadBuffer(UINT 
 {
 	const auto& readback_heap = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_READBACK);
 	const auto& buffer_desc = CD3DX12_RESOURCE_DESC::Buffer(stride * size);
-	const auto  dev         = static_cast<ID3D12Device2*>(GraphicInterfaceAccessor::GetInterface().GetNativeInterface());
+	const auto  dev         = static_cast<ID3D12Device2*>(g_graphic_accessor.GetInterface().GetNativeInterface());
 
 	DX::ThrowIfFailed
 	(

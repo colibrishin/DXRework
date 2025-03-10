@@ -1,19 +1,20 @@
 #include "DirectInputInterfaceModule.h"
 #include "DirectInputInterfaceModule.generated.h"
 
-#include "InputInterface.h"
+#include "IInputAPI.h"
 #include "DirectInputInterface.h"
 
 MODULE_IMPL( Engine::DirectInputInterfaceModule, DirectInputInterface )
 
 bool Engine::DirectInputInterfaceModule::InitializeImpl()
 {
-    InputInterfaceAccessor::SetInterface<DirectInputInterface>();
+    g_input_accessor.SetInterface<DirectInputInterface>();
     return true;
 }
 
 bool Engine::DirectInputInterfaceModule::ShutdownImpl()
 {
+    g_input_accessor.Shutdown();
     return true;
 }
 

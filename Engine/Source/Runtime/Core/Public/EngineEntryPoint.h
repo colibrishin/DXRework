@@ -123,7 +123,7 @@ namespace Engine::Managers
 
 		void tickInternal();
 
-		static void SIGTERM();
+		static void handleSIGTERM();
 
 		HWND m_hWnd = nullptr;
 

@@ -27,7 +27,7 @@ bool Engine::ShaderModule::InitializeImpl()
 
 	Managers::ResourceManager::GetInstance().RegisterNewResource(Resources::Shader::StaticTypeName(), [](bool& managing_flag)
 		{
-			UIInterface& ui = UIInterfaceAccessor::GetInterface();
+			IUIAPI& ui = g_ui_accessor.GetInterface();
 
 			static eShaderDomain domain = SHADER_DOMAIN_OPAQUE;
 

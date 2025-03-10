@@ -3,14 +3,14 @@
 #include <directx/d3dx12.h>
 #include "TypeLibrary.h"
 
-#include "GraphicInterface.h"
+#include "IGraphicAPI.h"
 #include "ThrowIfFailed.h"
 
 #include "SIMDExtension.hpp"
 
 namespace Engine
 {
-    struct ENGINE_D3D12GRAPHICINTERFACE_API DescriptorPtrImpl : public GraphicHeapBase
+    struct ENGINE_D3D12GRAPHICINTERFACE_API DescriptorPtrImpl : public IHeapBase
 	{
 	public:
 		DescriptorPtrImpl(DescriptorPtrImpl&& other) noexcept;
@@ -38,7 +38,7 @@ namespace Engine
 		}
 
         void SetSampler( const Resources::ShaderBase *shader, const eSampler slot ) const override;
-        void SetSampler( const PrimitiveSampler *sampler, const eSampler slot ) const override;
+        void SetSampler( const ISampler *sampler, const eSampler slot ) const override;
 		void SetSampler(const D3D12_CPU_DESCRIPTOR_HANDLE& sampler, UINT slot) const;
 		void SetConstantBuffer(const D3D12_CPU_DESCRIPTOR_HANDLE& cbv, UINT slot) const;
 		void SetShaderResource(const D3D12_CPU_DESCRIPTOR_HANDLE& srv_handle, UINT slot) const;
@@ -46,8 +46,8 @@ namespace Engine
 		void SetShaderResources(UINT slot, UINT count, const std::vector<D3D12_CPU_DESCRIPTOR_HANDLE>& data) const;
 		void SetUnorderedAccess(const D3D12_CPU_DESCRIPTOR_HANDLE& uav, UINT slot) const;
 
-		void BindGraphic(const GraphicInterfaceContextPrimitive* context) const override;
-		void BindCompute(const GraphicInterfaceContextPrimitive* context) const override;
+		void BindGraphic(const IGraphicContext* context) const override;
+		void BindCompute(const IGraphicContext* context) const override;
 
 	private:
 		DescriptorPtrImpl();

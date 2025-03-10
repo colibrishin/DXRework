@@ -1,6 +1,7 @@
 #include "CoreModule.h"
 #include "CoreModule.generated.h"
 #include "EngineEntryPoint.h"
+#include "IInputAPI.h"
 
 MODULE_IMPL(Engine::CoreModule, Core)
 
@@ -44,7 +45,8 @@ bool Engine::CoreModule::ShutdownImpl()
 #endif
 	
 #if WITH_EDITOR
-	UIInterfaceAccessor::Shutdown();
+	g_ui_accessor.Shutdown();
+    g_input_accessor.Shutdown();
 #endif
 	return true;
 }

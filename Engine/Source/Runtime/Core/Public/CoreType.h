@@ -898,7 +898,8 @@ namespace cityhash
 		}
 	}
 
-	constexpr cityhash256 CityHashCrc256_s(const char* s, size_t len) {
+	constexpr cityhash256 CityHashCrc256_s(const char* s, size_t len) 
+	{
 		cityhash256 retval{};
 		
 		if (LIKELY(len >= 240)) {

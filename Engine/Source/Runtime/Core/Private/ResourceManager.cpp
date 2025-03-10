@@ -38,9 +38,9 @@ namespace Engine::Managers
 #if WITH_EDITOR
 	void ResourceManager::OnUIUpdate(UIContext* const parent, const float dt)
 	{
-		UIInterface& ui = UIInterfaceAccessor::GetInterface();
+		IUIAPI& ui = g_ui_accessor.GetInterface();
 
-        if ( UIContext context = UIInterface::NewContext(
+        if ( UIContext context = IUIAPI::NewContext(
                 ui.NewDialog( this, "ResourceManagerDialog", { m_ui_info_.label, m_ui_info_.dialogOpened } ) ) )
         {
             for ( const auto &set : m_resources_ | std::views::values )
@@ -70,7 +70,7 @@ namespace Engine::Managers
 
                     if ( resource->m_ui_info_.dialogOpened )
                     {
-                        if ( UIContext resource_context = UIInterface::NewContext(
+                        if ( UIContext resource_context = IUIAPI::NewContext(
                                 ui.NewDialog( this,
                                               std::format( "ResourceDialog{}", idx ),
                                               { resource->m_ui_info_.label, resource->m_ui_info_.dialogOpened } ) ) )
@@ -86,7 +86,7 @@ namespace Engine::Managers
             }
 		}
 
-        if ( UIContext menu_context = UIInterface::NewContext( ui.NewMainMenuBar( nullptr, "MainMenuBar", {} ) ) )
+        if ( UIContext menu_context = IUIAPI::NewContext( ui.NewMainMenuBar( nullptr, "MainMenuBar", {} ) ) )
         {
             menu_context += ui.NewMenu( nullptr, "NewMenu", { "New" } );
 

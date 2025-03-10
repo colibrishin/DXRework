@@ -1,6 +1,6 @@
 ﻿#pragma once
 #if CFG_RAYTRACING
-#include "GraphicInterface.h"
+#include "IGraphicAPI.h"
 #include "ShaderBase.h"
 #include "Resource.h"
 
@@ -51,7 +51,7 @@ namespace Engine::Resources
         [[nodiscard]] eSamplerFilter                           GetSamplerFilter() const;
         [[nodiscard]] eShaderSamplerAddress                    GetSamplerAddressMode() const;
         [[nodiscard]] eShaderSamplerFunction                   GetSamplerFunction() const;
-        [[nodiscard]] PrimitiveShaderBase&                     GetPrimitive() const override;
+        [[nodiscard]] IShaderBase&                     GetPrimitive() const override;
 
     protected:
         RaytracingShader();
@@ -72,7 +72,7 @@ namespace Engine::Resources
         EPROPERTY()
         eShaderSamplerFunction m_sampler_func_;
 
-        Unique<RaytracingPrimitiveShader> m_primitive_shader_;
+        Unique<IRaytracingShader> m_primitive_shader_;
     };   
 }
 #endif

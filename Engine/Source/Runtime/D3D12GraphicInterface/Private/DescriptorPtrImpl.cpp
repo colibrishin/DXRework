@@ -97,7 +97,7 @@ namespace Engine
             slot);
     }
 
-    void DescriptorPtrImpl::SetSampler( const PrimitiveSampler *sampler, const eSampler slot ) const
+    void DescriptorPtrImpl::SetSampler( const ISampler *sampler, const eSampler slot ) const
     {
         if (!IsValid()) { return; }
         m_handler_->SetSampler(
@@ -154,7 +154,7 @@ namespace Engine
         m_handler_->SetUnorderedAccess(m_cpu_handle_, uav, slot);
     }
 
-    void DescriptorPtrImpl::BindGraphic(const GraphicInterfaceContextPrimitive* context) const
+    void DescriptorPtrImpl::BindGraphic(const IGraphicContext* context) const
     {
         if (!IsValid()) { return; }
 
@@ -162,7 +162,7 @@ namespace Engine
             (context, GetMainDescriptorHeap(), GetMainSamplerDescriptorHeap(), m_gpu_handle_, m_gpu_sampler_handle_);
     }
 
-    void DescriptorPtrImpl::BindCompute(const GraphicInterfaceContextPrimitive* context) const
+    void DescriptorPtrImpl::BindCompute(const IGraphicContext* context) const
     {
         if (!IsValid()) { return; }
 

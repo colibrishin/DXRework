@@ -1,6 +1,7 @@
 ﻿#include "Components/Public/ShadowIntersectionComponent.h"
 #include "ShadowIntersectionComponent.generated.h"
 
+#if CLIENT || WITH_EDITOR
 #include "Shader.h"
 #include "ComputeShader.h"
 #include "Renderer.h"
@@ -15,13 +16,15 @@
 #include "Resources/Public/IntensityTexture.h"
 #include "Resources/Public/IntensityPositionTexture.h"
 #include "Resources/Public/ShadowMaskTexture.h"
+#endif
 
 using namespace Engine;
 
 void ShadowIntersectionComponent::Initialize()
 {
     Component::Initialize();
-    
+
+#if CLIENT || WITH_EDITOR
     UINT idx = 0;
 	for (auto& tex : m_shadow_texs_)
 	{
@@ -50,7 +53,7 @@ void ShadowIntersectionComponent::Initialize()
         ++idx;
 	}
 
-    GraphicInterface& gi = GraphicInterfaceAccessor::GetInterface();
+    IGraphicAPI& gi = g_graphic_accessor.GetInterface();
 	m_sb_light_table_ = boost::make_shared<decltype(m_sb_light_table_)::element_type>(gi.GetStructuredBuffer<LightTableSB>());
 
 	const auto& context = gi.GetNewContext(0, false, L"Shadow Intersection");
@@ -59,6 +62,7 @@ void ShadowIntersectionComponent::Initialize()
     primitive.commandList->SoftReset();
 	m_sb_light_table_->Create(&primitive, CFG_CASCADE_SHADOW_COUNT, nullptr);
 	primitive.commandList->FlagReady();
+#endif
 }
 
 void ShadowIntersectionComponent::PreUpdate( const float dt )
@@ -66,6 +70,7 @@ void ShadowIntersectionComponent::PreUpdate( const float dt )
 
 void ShadowIntersectionComponent::Update( const float dt )
 {
+#if CLIENT || WITH_EDITOR
     Vector3 position;
     Vector3 dir;
 
@@ -93,6 +98,7 @@ void ShadowIntersectionComponent::Update( const float dt )
     }
 
     m_shadow_bbox_.clear();
+#endif
 }
 
 void ShadowIntersectionComponent::FixedUpdate( const float dt )

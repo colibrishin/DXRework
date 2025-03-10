@@ -88,7 +88,7 @@ void Engine::D3D12PrimitiveTexture::Generate(Resources::Texture* texture)
 		&clear_value :
 		nullptr;
 
-	const auto dev = static_cast<ID3D12Device2*>(GraphicInterfaceAccessor::GetInterface().GetNativeInterface());
+	const auto dev = static_cast<ID3D12Device2*>(g_graphic_accessor.GetInterface().GetNativeInterface());
 
 	DX::ThrowIfFailed
 	(
@@ -121,8 +121,8 @@ void Engine::D3D12PrimitiveTexture::Generate(Resources::Texture* texture)
 
 void Engine::D3D12PrimitiveTexture::LoadFromFile(Engine::Resources::Texture* texture, const std::filesystem::path& path)
 {
-	const auto dev    = static_cast<ID3D12Device2*>(GraphicInterfaceAccessor::GetInterface().GetNativeInterface());
-	auto&      native = reinterpret_cast<D3D12GraphicInterface&>(GraphicInterfaceAccessor::GetInterface());
+	const auto dev    = static_cast<ID3D12Device2*>(g_graphic_accessor.GetInterface().GetNativeInterface());
+	auto&      native = reinterpret_cast<D3D12GraphicInterface&>(g_graphic_accessor.GetInterface());
 
 	ID3D12CommandQueue* queue = native.GetCommandTask().GetCommandQueue(D3D12_COMMAND_LIST_TYPE_DIRECT);
 	
@@ -170,8 +170,8 @@ void Engine::D3D12PrimitiveTexture::LoadFromFile(Engine::Resources::Texture* tex
 	const auto& token = resource_upload_batch.End(queue);
 	token.wait();
 
-	const GraphicInterfaceContextReturnType& context = GraphicInterfaceAccessor::GetInterface().GetNewContext(0, false, L"Texture Uploading");
-	const GraphicInterfaceContextPrimitive& primitive = context.GetPointers();
+	const IGraphicContextImpl& context = g_graphic_accessor.GetInterface().GetNewContext(0, false, L"Texture Uploading");
+	const IGraphicContext& primitive = context.GetPointers();
 
 	const auto& cmd = reinterpret_cast<CommandPair*>(primitive.commandList);
 	const auto& common_transition = CD3DX12_RESOURCE_BARRIER::Transition
@@ -226,7 +226,7 @@ void Engine::D3D12PrimitiveTexture::LoadFromFile(Engine::Resources::Texture* tex
 
 void Engine::D3D12PrimitiveTexture::InitializeDescriptorHeaps()
 {
-	const auto dev = static_cast<ID3D12Device2*>(GraphicInterfaceAccessor::GetInterface().GetNativeInterface());
+	const auto dev = static_cast<ID3D12Device2*>(g_graphic_accessor.GetInterface().GetNativeInterface());
 
 	{
 		constexpr D3D12_DESCRIPTOR_HEAP_DESC desc
@@ -306,7 +306,7 @@ void Engine::D3D12PrimitiveTexture::InitializeDescriptorHeaps()
 
 void Engine::D3D12PrimitiveTexture::InitializeResourceViews() const
 {
-	const auto dev = static_cast<ID3D12Device2*>(GraphicInterfaceAccessor::GetInterface().GetNativeInterface());
+	const auto dev = static_cast<ID3D12Device2*>(g_graphic_accessor.GetInterface().GetNativeInterface());
 
 	const auto& compare = [](const void* a, const void* b, size_t length)
 	{
@@ -412,7 +412,7 @@ void Engine::D3D12PrimitiveTexture::InitializeResourceViews() const
 
 void Engine::D3D12PrimitiveTexture::SaveAsFile(const std::filesystem::path& path)
 {
-	auto& native = reinterpret_cast<D3D12GraphicInterface&>(GraphicInterfaceAccessor::GetInterface());
+	auto& native = reinterpret_cast<D3D12GraphicInterface&>(g_graphic_accessor.GetInterface());
 	ID3D12CommandQueue* queue = native.GetCommandTask().GetCommandQueue(D3D12_COMMAND_LIST_TYPE_DIRECT);
 
 	const auto& image = std::make_unique<DirectX::ScratchImage>();
@@ -439,7 +439,7 @@ void Engine::D3D12PrimitiveTexture::Map(
 	void* data_ptr, const size_t width, const size_t height, const size_t stride, const size_t depth
 )
 {
-	const auto dev = static_cast<ID3D12Device2*>(GraphicInterfaceAccessor::GetInterface().GetNativeInterface());
+	const auto dev = static_cast<ID3D12Device2*>(g_graphic_accessor.GetInterface().GetNativeInterface());
 	const GenericTextureDescription& desc = GetDescription();
 
 	const size_t pixel_in_bytes = DirectX::BitsPerPixel(static_cast<DXGI_FORMAT>(desc.Format)) / 8;
@@ -511,8 +511,8 @@ void Engine::D3D12PrimitiveTexture::Map(
 	m_upload_buffer_->Unmap(0, nullptr);
 
 	const auto                               texture_res = static_cast<ID3D12Resource*>(GetNativeTexture());
-	const GraphicInterfaceContextReturnType& context     = GraphicInterfaceAccessor::GetInterface().GetNewContext(D3D12_COMMAND_LIST_TYPE_DIRECT, false, L"Texture mapping");
-	const GraphicInterfaceContextPrimitive&  primitive   = context.GetPointers();
+	const IGraphicContextImpl& context     = g_graphic_accessor.GetInterface().GetNewContext(D3D12_COMMAND_LIST_TYPE_DIRECT, false, L"Texture mapping");
+	const IGraphicContext&  primitive   = context.GetPointers();
 	auto                                     cmd         = static_cast<CommandPair*>(primitive.commandList);
 
 	const auto dst = CD3DX12_TEXTURE_COPY_LOCATION(texture_res, 0);
@@ -554,12 +554,12 @@ void Engine::D3D12PrimitiveTexture::Map(
 }
 
 void Engine::D3D12PrimitiveTexture::Map(
-	PrimitiveTexture* src, const UINT src_width, const UINT src_height, const size_t src_idx, const UINT dst_x,
+	ITexture* src, const UINT src_width, const UINT src_height, const size_t src_idx, const UINT dst_x,
 	const UINT dst_y, const size_t dst_idx
 )
 {
-	const GraphicInterfaceContextReturnType& context = GraphicInterfaceAccessor::GetInterface().GetNewContext(D3D12_COMMAND_LIST_TYPE_COPY, false, L"Texture Copy");
-	const GraphicInterfaceContextPrimitive& primitive = context.GetPointers();
+	const IGraphicContextImpl& context = g_graphic_accessor.GetInterface().GetNewContext(D3D12_COMMAND_LIST_TYPE_COPY, false, L"Texture Copy");
+	const IGraphicContext& primitive = context.GetPointers();
 	CommandPair* cmd = static_cast<CommandPair*>(primitive.commandList);
 	
 	D3D12PrimitiveTexture* native_src = reinterpret_cast<D3D12PrimitiveTexture*>(src);

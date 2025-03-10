@@ -24,8 +24,8 @@ namespace Engine::Resources
 #endif
 
     protected:
-        void preDispatch(const GraphicInterfaceContextPrimitive* context, Graphics::SBs::LocalParamSB& param, const float dt) override;
-        void postDispatch(const GraphicInterfaceContextPrimitive* context, Graphics::SBs::LocalParamSB& param, const float dt) override;
+        void preDispatch(const IGraphicContext* context, Graphics::SBs::LocalParamSB& param, const float dt) override;
+        void postDispatch(const IGraphicContext* context, Graphics::SBs::LocalParamSB& param, const float dt) override;
         void loadDerived() override;
         void unloadDerived() override;
         static void SetScaling(bool scaling, Graphics::ParamBase& config);

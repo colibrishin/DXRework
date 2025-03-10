@@ -3,7 +3,7 @@
 
 #include "EngineEntryPoint.h"
 #include "ImGuiManagerModule.generated.h"
-
+#include "IInputAPI.h"
 
 #include "CoreModule.h"
 
@@ -14,7 +14,6 @@ bool Engine::ImGuiManagerModule::InitializeImpl()
 	CoreLoop::AddManager(
 		CoreLoop::LOOP_TYPE_RENDER,
 		Managers::ImGuiManager::GetInstance);
-
 	return true;
 }
 
@@ -23,7 +22,7 @@ bool Engine::ImGuiManagerModule::ShutdownImpl()
 	CoreLoop::RemoveManager(
 		CoreLoop::LOOP_TYPE_RENDER,
 		Managers::ImGuiManager::GetInstance);
-
+    g_input_accessor.Shutdown();
 	return true;
 }
 

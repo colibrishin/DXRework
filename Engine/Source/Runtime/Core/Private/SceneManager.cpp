@@ -1,7 +1,7 @@
 #include "SceneManager.h"
 
 #if WITH_EDITOR
-#include "UIInterface.h"
+#include "IUIAPI.h"
 #include "UIHelpers.h"
 #endif
 
@@ -296,9 +296,9 @@ namespace Engine::Managers
 #if WITH_EDITOR
 	void SceneManager::OnUIUpdate(UIContext* const parent, const float dt)
 	{
-        UIInterface &ui = UIInterfaceAccessor::GetInterface();
+        IUIAPI &ui = g_ui_accessor.GetInterface();
 
-        if ( UIContext context = UIInterface::NewContext( ui.NewMainMenuBar( nullptr, "MainMenuBar", {} ) ) )
+        if ( UIContext context = IUIAPI::NewContext( ui.NewMainMenuBar( nullptr, "MainMenuBar", {} ) ) )
         {
             context += ui.NewMenu( nullptr, "NewMenu", { "New" } );
 
