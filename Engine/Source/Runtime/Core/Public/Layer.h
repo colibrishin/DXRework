@@ -46,45 +46,21 @@ namespace Engine
 
 		void clear();
 
-		auto begin() noexcept
-		{
-			return m_objects_.begin();
-		}
+		auto begin() noexcept;
 
-		auto end() noexcept
-		{
-			return m_objects_.end();
-		}
+		auto end() noexcept;
 
-		auto begin() const noexcept
-		{
-			return m_objects_.begin();
-		}
+		auto begin() const noexcept;
 
-		auto end() const noexcept
-		{
-			return m_objects_.end();
-		}
+		auto end() const noexcept;
 
-		auto cbegin() const noexcept
-		{
-			return m_objects_.cbegin();
-		}
+		auto cbegin() const noexcept;
 
-		auto cend() const noexcept
-		{
-			return m_objects_.cend();
-		}
+		auto cend() const noexcept;
 
-		auto size() const noexcept
-		{
-			return m_objects_.size();
-		}
+		auto size() const noexcept;
 
-		size_t Empty() const noexcept 
-		{
-			return m_objects_.empty();
-		}
+		size_t Empty() const noexcept;
 
 	private:
 		Layer();

@@ -53,7 +53,7 @@ namespace Engine::Managers
 		{
 			if (const Strong<Abstracts::Resource>& locked = GetResource(name, T::StaticTypeHash()).lock()) 
 			{
-				return boost::reinterpret_pointer_cast<T>(locked);
+                return managed_reinterpret_pointer_cast<T>( locked );
 			}
 			
 			return {};
@@ -66,7 +66,7 @@ namespace Engine::Managers
 		{
 			if (const Strong<Abstracts::Resource>& found = GetResourceByMetadataPath(path, T::StaticTypeHash()).lock()) 
 			{
-				return boost::reinterpret_pointer_cast<T>(found);
+                return managed_reinterpret_pointer_cast<T>( found );
 			}
 
 			return {};

@@ -1403,7 +1403,7 @@ public:
         while ( !m_lock_.compare_exchange_strong( return_expected, false ) )
         {
         }
-        ::new ( m_start_ptr_ + next_pair.to_raw_index() ) T( std::forward<Args...>( arguments ) );
+        ::new ( m_start_ptr_ + next_pair.to_raw_index() ) T( std::forward<Args>( arguments )... );
 
         return accessor;
     }
@@ -1450,57 +1450,165 @@ public:
 
 inline static PoolAllocatorStorage g_allocator_storage{};
 
-template <typename T>
-struct null_deleter
+struct deleter_base 
 {
-    void operator()( T* ptr ) {}
+	void operator()(void* ptr)
+	{
+        predicate( ptr );
+	}
+
+    virtual void predicate( void* shared_ptr ) const = 0;
+};
+
+struct resolver_base
+{
+    virtual void* resolve( const IndexPair&    pair,
+                           size_t&             reallocation_count ) const = 0;
 };
 
 template <typename T>
 class managed_shared_ptr : protected boost::shared_ptr<T>
 {
-	IndexPair m_key_;
-    size_t    m_allocation_count_;
+    struct default_deleter : public deleter_base
+    {
+        void predicate( void* shared_ptr ) const override
+        {
+            const boost::shared_ptr<T>* instanced = reinterpret_cast<const boost::shared_ptr<T>*>( shared_ptr ); 
 
-	template <typename U> friend class managed_weak_ptr;
+			if ( !( *instanced ) )
+			{
+                return; 
+			}
+
+			if ( *instanced && instanced->use_count() == 1 )
+			{
+                object_pool_allocator<T>::deallocate( instanced->get() );
+			}
+		}
+    };
+
+    struct default_resolver : public resolver_base
+    {
+        void* resolve( const IndexPair&    pair,
+                       size_t&             reallocation_count ) const override
+        {
+            if ( pair == null_pair )
+            {
+                return nullptr;
+            }
+
+            T* storage_ptr = object_pool_allocator<T>::get_ptr( pair );
+
+            if ( reallocation_count != object_pool_allocator<T>::get_reallocation_count() )
+            {
+                reallocation_count = object_pool_allocator<T>::get_reallocation_count();
+            }
+
+            return storage_ptr;
+        }
+    };
+
+	using DeleterType  = default_deleter;
+    using ResolverType = default_resolver;
+
+    inline const static ResolverType default_resolver{};
+    inline const static DeleterType  default_deleter{};
+
+    IndexPair                            m_key_;
+    mutable size_t                       m_allocation_count_ = 0;
+    const deleter_base*                  m_deleter_  = &managed_shared_ptr<T>::default_deleter;
+    const resolver_base*                 m_resolver_ = &managed_shared_ptr<T>::default_resolver;
+
+	template <typename U> 
+	friend class managed_weak_ptr;
+    
+	template <typename U>
+    friend class managed_shared_ptr;
+
+	struct reinterpret_tag
+    { };
+
+	template <typename U>
+	managed_shared_ptr( managed_shared_ptr<U>& const other, const reinterpret_tag& )
+	{
+        m_key_ = other.m_key_;
+        m_allocation_count_ = other.m_allocation_count_;
+        m_resolver_ = other.m_resolver_;
+        m_deleter_  = other.m_deleter_;
+        resolve();
+	}
+
+	managed_shared_ptr(const IndexPair& key, const size_t allocation_count, const resolver_base& resolver, const deleter_base& deleter)
+	{
+        m_key_ = key;
+        m_allocation_count_ = allocation_count;
+        m_resolver_         = &resolver;
+        m_deleter_          = &deleter;
+        resolve();
+	}
 
 public:
 	~managed_shared_ptr()
 	{
         resolve();
-
-        if ( this->use_count() == 1 )
-        {
-            object_pool_allocator<T>::deallocate( this->get() );
-        }
+        m_deleter_->predicate( this );
 	}
 
-	managed_shared_ptr( nullptr_t ) : boost::shared_ptr<T>( nullptr )
+	managed_shared_ptr( nullptr_t ) : boost::shared_ptr<T>( nullptr, default_deleter )
 	{
         m_key_              = { ( size_t )-1, uint8_t( -1 ), uint8_t( -1 ) };
         m_allocation_count_ = -1;
 	}
 
-	managed_shared_ptr() : boost::shared_ptr<T>( nullptr )
+	managed_shared_ptr() : boost::shared_ptr<T>( nullptr, default_deleter )
 	{
         m_key_              = { ( size_t )-1, uint8_t( -1 ), uint8_t( -1 ) };
         m_allocation_count_ = -1;
 	}
 
-	template <typename U> requires std::is_convertible_v<T, U>
-	managed_shared_ptr( const managed_shared_ptr& other )
-        : managed_shared_ptr( m_key_, m_allocation_count_ )
+	template <typename U> requires std::is_convertible_v<U*, T*>
+    managed_shared_ptr( const managed_shared_ptr<U>& other )
+        : m_key_( other.m_key_ ), m_allocation_count_( other.m_allocation_count_ )
     {
+        m_deleter_  = &managed_shared_ptr<U>::default_deleter;
+        m_resolver_ = &managed_shared_ptr<U>::default_resolver;
         resolve();
-	}
+    }
 
     managed_shared_ptr( const IndexPair& pair, const size_t allocation_count )
-        : boost::shared_ptr<T>( object_pool_allocator<T>::get_ptr( m_key_ ), null_deleter<T>{} ),
+        : boost::shared_ptr<T>( object_pool_allocator<T>::get_ptr( pair ), *default_deleter ),
           m_key_( pair ),
           m_allocation_count_( allocation_count )
     {
         g_allocator_storage.register_allocator<T>();
         resolve();
+    }
+
+	template <typename U> requires std::is_convertible_v<U*, T*>
+	managed_shared_ptr<U>& operator=( managed_shared_ptr<U>& other ) const
+	{
+        T* internal_ptr = resolve();
+        other.m_key_ = m_key_;
+        other.m_allocation_count_ = m_allocation_count_;
+        other.m_resolver_ = m_resolver_;
+        other.m_deleter_  = m_deleter_;
+        other.reset( internal_ptr, *default_deleter );
+        return other;
+	}
+
+	managed_weak_ptr<T>& operator=( managed_weak_ptr<T>& other ) const
+	{
+        resolve();
+        other = *this;
+        return other;
+	}
+
+	template <typename U> requires std::is_convertible_v<U*, T*>
+    managed_weak_ptr<U>& operator=( managed_weak_ptr<U>& other ) const
+    {
+        resolve();
+        other = *this;
+        return other;
     }
 
 	bool operator==( const managed_shared_ptr& other )
@@ -1518,33 +1626,32 @@ public:
         return m_key_ != null_pair && boost::shared_ptr<T>::get();
 	}
 
-    explicit operator boost::shared_ptr<T>() const
+	operator boost::shared_ptr<T>() const
 	{
         resolve();
-        return *this;
+        boost::shared_ptr<T> result( *this );
+        return result;
 	}
 
 	void reset()
 	{
         m_key_ = null_pair;
-        m_allocation_count_ = 0;
-        reset();
+        m_allocation_count_ = -1;
+        boost::shared_ptr<T>::reset();
 	}
 
 	T* resolve() const
-	{
-        if ( m_key_ == null_pair )
-        {
-            return nullptr;
-        }
+    {
+        T* current = boost::shared_ptr<T>::get();
+        T* resolved = static_cast<T*>( m_resolver_->resolve( m_key_, m_allocation_count_ ) );
 
-        if ( m_allocation_count_ != object_pool_allocator<T>::get_reallocation_count() )
-        {
-            T* realloc_ptr = object_pool_allocator<T>::get_ptr( m_key_ );
-            reset( realloc_ptr, null_deleter<T>{} );
-        }
+		if ( current != resolved )
+		{
+            managed_shared_ptr<T>* non_const = const_cast<managed_shared_ptr<T>*>( this );
+            static_cast<boost::shared_ptr<T>*>( non_const )->reset( resolved, *m_deleter_ );
+		}
 
-        return get();
+        return resolved;
 	}
 
 	T* operator*() const
@@ -1562,6 +1669,16 @@ public:
         return resolve();
 	}
 
+	const IndexPair& internal_key() const
+	{
+        return m_key_;
+	}
+
+	const size_t reallocation_count() const
+	{
+        return m_allocation_count_;
+	}
+
     [[nodiscard]] managed_weak_ptr<T> to_weak() const
 	{
         return managed_weak_ptr( *this );
@@ -1569,7 +1686,16 @@ public:
 
 	[[nodiscard]] boost::shared_ptr<T> get_native() const
 	{
-	    return *this;
+        return *this;
+	}
+};
+
+template <typename T>
+struct std::hash<managed_shared_ptr<T>>
+{
+	size_t operator()( const managed_shared_ptr<T>& p ) const noexcept
+	{
+        return static_cast<size_t>( p.get() );
 	}
 };
 
@@ -1591,11 +1717,26 @@ inline bool operator!=( managed_shared_ptr<T> const& a, nullptr_t ) noexcept
     return a.get() != nullptr;
 }
 
+template <class T, class U>
+managed_shared_ptr<T> managed_reinterpret_pointer_cast( const managed_shared_ptr<U>& r ) noexcept
+{
+    static managed_shared_ptr<T>::reinterpret_tag placeholder{};
+    return managed_shared_ptr<T>( r, placeholder );
+}
+
+template <typename T, typename U> requires std::is_convertible_v<U*, T*>
+managed_shared_ptr<T> managed_static_pointer_cast( const managed_shared_ptr<U>& r ) noexcept
+{
+    return managed_shared_ptr<T>( r );
+}
+
 template <typename T>
 class managed_weak_ptr : protected boost::weak_ptr<T>
 {
     IndexPair m_key_;
     size_t    m_allocation_count_;
+    const resolver_base* m_resolver_ = &managed_shared_ptr<T>::default_resolver;
+    const deleter_base*  m_deleter_  = &managed_shared_ptr<T>::default_deleter;
 
 public:
     managed_weak_ptr()
@@ -1607,27 +1748,39 @@ public:
     managed_weak_ptr( const managed_shared_ptr<T>& other )
         : boost::weak_ptr( other ),
           m_key_( other.m_key_ ),
-          m_allocation_count_( other.m_allocation_count_ )
-    {
-    }
+          m_allocation_count_( other.m_allocation_count_ ),
+          m_resolver_( other.m_resolver_ ),
+          m_deleter_( other.m_deleter_ )
+    { }
+
+	template <typename U> requires std::is_convertible_v<U*, T*>
+    managed_weak_ptr( const managed_shared_ptr<U>& other )
+        : boost::weak_ptr( other ),
+          m_key_( other.m_key_ ),
+          m_allocation_count_( other.m_allocation_count_ ),
+          m_resolver_( other.m_resolver ),
+          m_deleter_( other.m_deleter_ )
+    { }
 
 	void reset()
     {
         m_key_              = { ( size_t )-1, uint8_t( -1 ), uint8_t( -1 ) };
         m_allocation_count_ = -1;
-		static_cast<boost::weak_ptr<T>>( this )->reset();
+        m_resolver_         = &managed_shared_ptr<T>::default_resolver;
+        m_deleter_          = &managed_shared_ptr<T>::default_deleter;
+		boost::weak_ptr<T>::reset();
     }
 
 	managed_shared_ptr<T> lock() const
     {
-        return managed_shared_ptr<T>( m_key_, m_allocation_count_ );
+        return managed_shared_ptr<T>( m_key_, m_allocation_count_, *m_resolver_, *m_deleter_ );
     }
 };
 
 template <typename T, typename... Args>
 managed_shared_ptr<T> make_managed_shared( Args&&... arguments )
 {
-    return object_pool_allocator<T>::allocate( std::forward<Args...>( arguments ) );
+    return object_pool_allocator<T>::allocate( std::forward<Args>( arguments )... );
 }
 
 namespace Engine

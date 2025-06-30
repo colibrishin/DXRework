@@ -2,6 +2,7 @@
 #include "Allocator.h"
 #include "TypeLibrary.h"
 #include "ConcurrentTypeLibrary.h"
+#include "Object.h"
 
 namespace Engine 
 {
