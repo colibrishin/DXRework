@@ -97,7 +97,7 @@ namespace Engine::Abstracts
 			constexpr static bool dtor      = !std::is_destructible_v<T>;
 		};
 
-		inline static Strong<T>         s_instance_ = nullptr;
+		inline static boost::shared_ptr<T>         s_instance_ = nullptr;
 		inline static std::once_flag    s_first_call_;
 		inline static std::atomic<bool> s_destroyed_ = true;
 		inline static std::mutex        s_mutex_     = std::mutex();

@@ -2,6 +2,7 @@
 #include "Singleton.h"
 #include "Delegation.hpp"
 #include "TaskScheduler.h"
+#include "Scene.h"
 
 #include "UIHelpers.h"
 #include "SceneManager.generated.h"

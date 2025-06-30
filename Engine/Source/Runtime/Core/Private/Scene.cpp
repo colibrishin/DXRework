@@ -91,9 +91,9 @@ namespace Engine
 	    Renderable::Initialize();
 	}
 
-    Strong<Scene> Scene::cloneImpl()
+    managed_shared_ptr<Scene> Scene::cloneImpl()
 	{
-        auto copy_scene = Strong<Scene>(new Scene());
+        auto copy_scene = make_managed_shared<Scene>();
 	    copy_scene->initializeForce();
 	    copy_scene->deepCopy( GetSharedPtr<Scene>() );
 	    copy_scene->SetName( GetName() + "_Clone" );
@@ -864,7 +864,7 @@ namespace Engine
 		return m_layers_[layer]->GetGameObjects();
 	}
 
-	Weak<Objects::Camera> Scene::GetMainCamera() const
+    managed_weak_ptr<Objects::Camera> Scene::GetMainCamera() const
 	{
 		return m_main_camera_;
 	}

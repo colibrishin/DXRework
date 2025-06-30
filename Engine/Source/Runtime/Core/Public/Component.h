@@ -61,15 +61,9 @@ namespace Engine::Abstracts
 
 		void SetOwner(const Weak<ObjectBase>& owner);
 
-		void SetLocalID(LocalComponentID id)
-		{
-			if (const auto locked = m_owner_.lock())
-			{
-				m_local_id_ = id;
-			}
-		}
+		void SetLocalID(LocalComponentID id);
 
-	private:
+    private:
 		EPROPERTY()
 		LocalComponentID m_local_id_{};
 

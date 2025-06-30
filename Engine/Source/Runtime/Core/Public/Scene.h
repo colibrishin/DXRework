@@ -11,7 +11,7 @@
 #include "Octree.hpp"
 #include "Delegation.hpp"
 #include "SingletonSpinLock.h"
-
+#include "Layer.h"
 
 #include "Scene.generated.h"
 

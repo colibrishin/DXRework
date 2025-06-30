@@ -1226,12 +1226,425 @@ struct is_hash_type : std::false_type {};
 template <typename T>
 struct is_hash_type<T, std::void_t<decltype(&T::StaticTypeHash)>> : std::true_type {};
 
+template <typename T>
+std::atomic<bool>& get_spinlock()
+{
+    static std::atomic<bool> lock;
+    return lock;
+}
+
+inline void do_lock( std::atomic<bool>& mtx, const bool value )
+{
+    bool expected = !value;
+    while ( !mtx.compare_exchange_strong( expected, value ) )
+    {
+    }
+}
+
+template <typename T>
+void do_lock( const bool value )
+{
+    std::atomic<bool>& mtx = get_spinlock<T>();
+    do_lock( mtx, value );
+}
+
+struct IndexPair
+{
+    size_t chunk = 0;
+    uint8_t segment = 0;
+    uint8_t offset  = 0;
+
+	bool operator==( const IndexPair& other ) const
+	{
+        return to_raw_index() == other.to_raw_index();
+	}
+
+    [[nodiscard]] size_t to_raw_index() const
+	{
+        return ( chunk * ( 1 << 8 ) ) + ((size_t)segment * std::numeric_limits<uint32_t>::digits) + (size_t)offset;
+	}
+};
+
+inline static constexpr IndexPair null_pair = { ( size_t )-1, (uint8_t)-1, (uint8_t)-1 };
+
+template <typename T>
+class managed_shared_ptr;
+
+class pool_allocator_base
+{
+public:
+    virtual ~pool_allocator_base() {}
+    virtual void destroy() = 0;
+};
+
+template <typename T>
+class object_pool_allocator : public pool_allocator_base
+{
+    struct object_tag
+    { };
+    using PoolType = boost::singleton_pool<object_tag,
+                                           sizeof( T ),
+                                           boost::default_user_allocator_new_delete,
+                                           boost::details::pool::null_mutex>;
+
+    inline static T*                   m_start_ptr_ = nullptr;
+    inline static std::vector<__m256i> m_mask_{ __m256i{} };
+    inline static size_t               m_reallocation_count_ = 0;
+
+    inline static std::atomic<bool> m_lock_        = false;
+    inline static bool              m_initialized_ = false;
+
+    static void init()
+    {
+        if ( !m_initialized_ )
+        {
+            m_initialized_ = true;
+            reallocate();
+        }
+    }
+
+    static void reallocate()
+    {
+        T* reallocated = PoolType::ordered_malloc( m_mask_.size() * ( 1 << 8 ) );
+        if ( m_start_ptr_ )
+        {
+            std::memmove( reallocated, m_start_ptr_, sizeof( T* ) * ( m_mask_.size() - 1 ) * ( 1 << 8 ) );
+            PoolType::ordered_free( m_start_ptr_, ( m_mask_.size() - 1 ) * ( 1 << 8 ) );
+        }
+        m_mask_.emplace_back( __m256i{} );
+        ++m_reallocation_count_;
+    }
+
+	static IndexPair get_free_space()
+    {
+        auto it = m_mask_.begin();
+        while ( it != m_mask_.end() )
+        {
+            if ( _mm256_test_all_ones( *it ) )
+            {
+                ++it;
+                continue;
+            }
+
+            break;
+        }
+
+        const size_t chunk = std::distance( m_mask_.begin(), it );
+
+        if ( it == m_mask_.end() )
+        {
+            reallocate();
+            return { ( size_t )chunk, ( uint8_t )0, ( uint8_t )0 };
+        }
+
+        const __mmask8 segment_mask = _mm256_test_epi32_mask( *it, _mm256_cmpeq_epi32( *it, *it ) );
+        for ( uint8_t segment = 0; segment < std::numeric_limits<__mmask8>::digits; ++segment )
+        {
+            if ( !( bool )( segment_mask >> std::numeric_limits<__mmask8>::digits - 1 + segment ) )
+            {
+                const uint8_t offset = _tzcnt_u32( ( *it ).m256i_i32[ segment ] );
+                return { chunk, segment, offset };
+            }
+        }
+
+        return { ( size_t )-1, ( uint8_t )-1, ( uint8_t )-1 };
+    }
+
+	template <bool Allocate>
+    static void flip( T* ptr )
+    {
+        const size_t dist    = ptr - m_start_ptr_;
+        const size_t chunk   = dist % ( 1 << 8 );
+        const size_t segment = ( dist % ( ( 1 << 8 ) * chunk ) ) % std::numeric_limits<uint32_t>::digits;
+        const size_t offset  = ( dist % ( ( 1 << 8 ) * chunk ) ) % ( segment * std::numeric_limits<uint32_t>::digits );
+
+        if constexpr ( Allocate )
+        {
+            m_mask_[ chunk ].m256i_i32[ segment ] &= ~( 1 << offset );
+        }
+        else
+        {
+            m_mask_[ chunk ].m256i_i32[ segment ] |= 1 << offset;
+        }
+    }
+
+    template <bool Allocate>
+    static void flip( const IndexPair& pair )
+    {
+        if constexpr ( Allocate )
+        {
+            m_mask_[ pair.chunk ].m256i_i32[ pair.segment ] &= ~( 1 << pair.offset );
+        }
+        else
+        {
+            m_mask_[ pair.chunk ].m256i_i32[ pair.segment ] |= 1 << pair.offset;
+        }
+    }
+
+public:
+	static size_t get_reallocation_count()
+    {
+        return m_reallocation_count_;
+    }
+
+    template <typename... Args>
+    static managed_shared_ptr<T> allocate( Args&&... arguments )
+    {
+        init();
+        bool entry_expected  = false;
+        bool return_expected = true;
+
+        while ( !m_lock_.compare_exchange_strong( entry_expected, true ) )
+        {
+        }
+        IndexPair             next_pair = get_free_space();
+        managed_shared_ptr<T> accessor{ next_pair, m_reallocation_count_ };
+        flip<true>( next_pair );
+        while ( !m_lock_.compare_exchange_strong( return_expected, false ) )
+        {
+        }
+        ::new ( m_start_ptr_ + next_pair.to_raw_index() ) T( std::forward<Args...>( arguments ) );
+
+        return accessor;
+    }
+
+	static T* get_ptr( const IndexPair& pair )
+    {
+        return m_start_ptr_ + pair.to_raw_index();
+    }
+
+    static void deallocate( T* ptr )
+    {
+        assert( m_start_ptr_ <= ptr && m_start_ptr_ + ( m_mask_.size() * ( 1 << 8 ) ) > ptr );
+        ptr->~T();
+        flip<false>( ptr );
+    }
+
+    virtual void destroy() override
+    {
+        PoolType::ordered_free( m_start_ptr_, m_mask_.size() * ( 1 << 8 ) );
+        PoolType::release_memory();
+        PoolType::purge_memory();
+    }
+};
+
+class PoolAllocatorStorage
+{
+    std::unordered_set<std::unique_ptr<pool_allocator_base>> m_allocators_ = {};
+
+public:
+	template <typename T>
+    void register_allocator()
+    {
+        m_allocators_.emplace( std::make_unique<object_pool_allocator<T>>() );
+    }
+
+	void cleanup()
+	{
+	    for ( const std::unique_ptr<pool_allocator_base>& allocator : m_allocators_ )
+	    {
+            allocator->destroy();
+	    }
+	}
+};
+
+inline static PoolAllocatorStorage g_allocator_storage{};
+
+template <typename T>
+struct null_deleter
+{
+    void operator()( T* ptr ) {}
+};
+
+template <typename T>
+class managed_shared_ptr : protected boost::shared_ptr<T>
+{
+	IndexPair m_key_;
+    size_t    m_allocation_count_;
+
+	template <typename U> friend class managed_weak_ptr;
+
+public:
+	~managed_shared_ptr()
+	{
+        resolve();
+
+        if ( this->use_count() == 1 )
+        {
+            object_pool_allocator<T>::deallocate( this->get() );
+        }
+	}
+
+	managed_shared_ptr( nullptr_t ) : boost::shared_ptr<T>( nullptr )
+	{
+        m_key_              = { ( size_t )-1, uint8_t( -1 ), uint8_t( -1 ) };
+        m_allocation_count_ = -1;
+	}
+
+	managed_shared_ptr() : boost::shared_ptr<T>( nullptr )
+	{
+        m_key_              = { ( size_t )-1, uint8_t( -1 ), uint8_t( -1 ) };
+        m_allocation_count_ = -1;
+	}
+
+	template <typename U> requires std::is_convertible_v<T, U>
+	managed_shared_ptr( const managed_shared_ptr& other )
+        : managed_shared_ptr( m_key_, m_allocation_count_ )
+    {
+        resolve();
+	}
+
+    managed_shared_ptr( const IndexPair& pair, const size_t allocation_count )
+        : boost::shared_ptr<T>( object_pool_allocator<T>::get_ptr( m_key_ ), null_deleter<T>{} ),
+          m_key_( pair ),
+          m_allocation_count_( allocation_count )
+    {
+        g_allocator_storage.register_allocator<T>();
+        resolve();
+    }
+
+	bool operator==( const managed_shared_ptr& other )
+	{
+        return m_key_ == other.m_key_;
+	}
+
+	bool operator==( nullptr_t )
+	{
+        return m_key_ == null_pair && boost::shared_ptr<T>::get() == nullptr;
+	}
+
+    explicit operator bool() const
+    {
+        return m_key_ != null_pair && boost::shared_ptr<T>::get();
+	}
+
+    explicit operator boost::shared_ptr<T>() const
+	{
+        resolve();
+        return *this;
+	}
+
+	void reset()
+	{
+        m_key_ = null_pair;
+        m_allocation_count_ = 0;
+        reset();
+	}
+
+	T* resolve() const
+	{
+        if ( m_key_ == null_pair )
+        {
+            return nullptr;
+        }
+
+        if ( m_allocation_count_ != object_pool_allocator<T>::get_reallocation_count() )
+        {
+            T* realloc_ptr = object_pool_allocator<T>::get_ptr( m_key_ );
+            reset( realloc_ptr, null_deleter<T>{} );
+        }
+
+        return get();
+	}
+
+	T* operator*() const
+	{
+        return resolve();
+	}
+
+	T* operator->() const
+	{
+        return resolve();
+	}
+
+	T* get() const
+	{
+        return resolve();
+	}
+
+    [[nodiscard]] managed_weak_ptr<T> to_weak() const
+	{
+        return managed_weak_ptr( *this );
+	}
+
+	[[nodiscard]] boost::shared_ptr<T> get_native() const
+	{
+	    return *this;
+	}
+};
+
+template <class T, class U>
+inline bool operator==( managed_shared_ptr<T> const& a, managed_shared_ptr<U> const& b ) noexcept
+{
+    return a.get() == b.get();
+}
+
+template <class T>
+inline bool operator==( managed_shared_ptr<T> const& a, nullptr_t ) noexcept
+{
+    return a.get() == nullptr;
+}
+
+template <class T>
+inline bool operator!=( managed_shared_ptr<T> const& a, nullptr_t ) noexcept
+{
+    return a.get() != nullptr;
+}
+
+template <typename T>
+class managed_weak_ptr : protected boost::weak_ptr<T>
+{
+    IndexPair m_key_;
+    size_t    m_allocation_count_;
+
+public:
+    managed_weak_ptr()
+    {
+        m_key_ = { ( size_t )-1, uint8_t( -1 ), uint8_t( -1 ) };
+		m_allocation_count_ = -1;
+    }
+
+    managed_weak_ptr( const managed_shared_ptr<T>& other )
+        : boost::weak_ptr( other ),
+          m_key_( other.m_key_ ),
+          m_allocation_count_( other.m_allocation_count_ )
+    {
+    }
+
+	void reset()
+    {
+        m_key_              = { ( size_t )-1, uint8_t( -1 ), uint8_t( -1 ) };
+        m_allocation_count_ = -1;
+		static_cast<boost::weak_ptr<T>>( this )->reset();
+    }
+
+	managed_shared_ptr<T> lock() const
+    {
+        return managed_shared_ptr<T>( m_key_, m_allocation_count_ );
+    }
+};
+
+template <typename T, typename... Args>
+managed_shared_ptr<T> make_managed_shared( Args&&... arguments )
+{
+    return object_pool_allocator<T>::allocate( std::forward<Args...>( arguments ) );
+}
+
+namespace Engine
+{
+    template <typename T>
+    using Weak = managed_weak_ptr<T>;
+
+    template <typename T>
+    using Strong = managed_shared_ptr<T>;
+} // namespace Engine
+
 struct ENGINE_CORE_API ConstructorAccess 
 {
 	template <typename T, typename... Args>
 	inline static boost::shared_ptr<T> Create(Args&&... args)
 	{
-		return boost::shared_ptr<T>(new T(std::forward<Args>(args)...));
+        return boost::shared_ptr<T>( new T( std::forward<Args>( args )... ) );
 	}
 };
 
