@@ -7,7 +7,7 @@
 // Cloning component declaration macro
 #define COMP_CLONE_DECL Engine::Strong<Engine::Abstracts::Component> cloneImpl() const override;
 // Cloning component implementation macro
-#define COMP_CLONE_IMPL(CLASS) Engine::Strong<Engine::Abstracts::Component> CLASS::cloneImpl() const { return boost::make_shared<CLASS>(*this); }
+#define COMP_CLONE_IMPL(CLASS) Engine::Strong<Engine::Abstracts::Component> CLASS::cloneImpl() const { return make_managed_shared<CLASS>(*this); }
 
 namespace Engine
 {

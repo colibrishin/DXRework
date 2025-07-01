@@ -12,7 +12,7 @@ namespace Engine
 		template <typename T>
 		static bool Serialize(const std::string& filename, const managed_shared_ptr<T>& object)
 		{
-            Serialize( filename, object.get_native() );
+            return Serialize( filename, object.native() );
 		}
 
 		// Serialize the object. Use when the object is nested, and if nested objects are required to be serialized.

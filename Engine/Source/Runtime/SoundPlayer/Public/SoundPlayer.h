@@ -1,6 +1,7 @@
 #pragma once
 #include "Component.h"
 #include "Sound.h"
+#include "ObjectBase.h"
 
 #include "SoundPlayer.generated.h"
 
@@ -27,7 +28,6 @@ namespace Engine::Components
 #endif
         eComponentUpdatePriorities GetUpdatePriority() const override;
     private:
-        friend struct ConstructorAccess;
         SoundPlayer(const Weak<Engine::Abstracts::ObjectBase>& owner) : Component(owner) {}
         SoundPlayer() : Component({}) {}
 
