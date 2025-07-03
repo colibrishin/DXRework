@@ -1282,9 +1282,9 @@ struct ENGINE_CORE_API ConstructorAccess
 
 private:
     template <typename T, typename... Args>
-    inline static T* InternalConstruct( T* ptr, Args&&... args )
+    inline static void InternalConstruct( T* ptr, Args&&... args )
     {
-        return ::new ( ptr ) T( std::forward<Args>( args )... );
+        ::new ( ptr ) T( std::forward<Args>( args )... );
     }
 
     template <typename T>
@@ -1458,7 +1458,7 @@ class object_pool_allocator : public pool_allocator_base
             PoolType::ordered_free( m_start_ptr_, m_mask_.size() * ( 1 << 8 ) );
         }
         m_mask_.emplace_back( __m256i{} );
-        m_local_allocation_count_.resize( m_mask_.size() * ( 1 << 8 ), 0 );
+        m_local_allocation_count_.resize( ( m_mask_.size() + 1 ) * ( 1 << 8 ), 0 );
         ++m_reallocation_count_;
     }
 
@@ -1546,6 +1546,17 @@ class object_pool_allocator : public pool_allocator_base
         return m_start_ptr_;
     }
 
+	static const object_pool_allocator& get_instanced()
+	{
+        static object_pool_allocator instanced{};
+        return instanced;
+	}
+
+	static bool is_safe( T* ptr )
+	{
+        return m_start_ptr_ <= ptr && m_start_ptr_ + ( m_mask_.size() * ( 1 << 8 ) ) > ptr;
+	}
+
 public:
     size_t allocation_count() const override
     {
@@ -1555,7 +1566,6 @@ public:
     template <typename... Args>
     static AllocationContext allocate( Args&&... arguments )
     {
-        static object_pool_allocator instanced{};
         init();
         bool entry_expected  = false;
         bool return_expected = true;
@@ -1564,6 +1574,7 @@ public:
         {
         }
         AllocationKey             next_pair = get_free_space();
+        const object_pool_allocator& instanced = get_instanced();
         AllocationContext context( next_pair, m_reallocation_count_, &instanced );
         flip<true>( next_pair );
         while ( !m_lock_.compare_exchange_strong( return_expected, false ) )
@@ -1577,7 +1588,7 @@ public:
 
     static void deallocate( T* ptr )
     {
-        assert( m_start_ptr_ <= ptr && m_start_ptr_ + ( m_mask_.size() * ( 1 << 8 ) ) > ptr );
+        assert( is_safe( ptr ) );
         bool entry_expected  = false;
         bool return_expected = true;
 
@@ -1592,13 +1603,12 @@ public:
         }
     }
 
-	void predicate_dealloc( void* ptr ) const override
+	void predicate_dealloc( void* instance ) const override
 	{
-        boost::shared_ptr<T> instanced;
-        instanced.reset( static_cast<T*>( ptr ) );
-		if ( instanced.use_count() == 2 )
+        boost::shared_ptr<T>* shared = static_cast<boost::shared_ptr<T>*>( instance );
+        if ( shared && *shared && shared->use_count() == 1 )
 		{
-            deallocate( static_cast<T*>( ptr ) ); 
+            deallocate( shared->get() );
 		}
 	}
 
@@ -1610,6 +1620,18 @@ public:
 	bool expired( const AllocationContext& context ) const override
 	{
 		return peak( context.m_key_ );
+	}
+
+	static AllocationContext get_context( T* ptr )
+	{
+        const size_t dist    = ptr - m_start_ptr_;
+        const size_t chunk   = dist % ( 1 << 8 );
+        const size_t segment = ( dist % ( ( 1 << 8 ) * chunk ) ) % std::numeric_limits<uint32_t>::digits;
+        const size_t offset  = ( dist % ( ( 1 << 8 ) * chunk ) ) % ( segment * std::numeric_limits<uint32_t>::digits );
+        const size_t allocation_count = m_local_allocation_count_[ dist ];
+        const object_pool_allocator& instanced        = get_instanced();
+
+        return AllocationContext( { allocation_count, chunk, segment, offset }, m_reallocation_count_, &instanced );
 	}
 
     virtual void destroy() override
@@ -1675,9 +1697,8 @@ class managed_shared_ptr : protected boost::shared_ptr<T>
         resolve();
 	}
 
-	managed_shared_ptr( const AllocationContext& context )
+	managed_shared_ptr( const AllocationContext& context ) : m_context_( context )
 	{
-        m_context_ = context;
         resolve();
 	}
 
@@ -1696,17 +1717,17 @@ public:
 	~managed_shared_ptr()
 	{
         resolve();
-        m_context_.predicate_dealloc( get() );
+        m_context_.predicate_dealloc( this );
 	}
 
-	managed_shared_ptr( nullptr_t ) : boost::shared_ptr<T>( nullptr, null_deleter{} )
+	managed_shared_ptr( nullptr_t )
+        : boost::shared_ptr<T>( nullptr, null_deleter{} ), m_context_( AllocationContext::get_null_context()  )
     {
-        m_context_ = AllocationContext::get_null_context();
 	}
 
-	managed_shared_ptr() : boost::shared_ptr<T>( nullptr, null_deleter{} )
+	managed_shared_ptr()
+        : boost::shared_ptr<T>( nullptr, null_deleter{} ), m_context_( AllocationContext::get_null_context()  )
 	{
-        m_context_ = AllocationContext::get_null_context();
 	}
 
 	template <typename U> requires std::is_convertible_v<U*, T*>
@@ -1715,12 +1736,10 @@ public:
         resolve();
     }
 
-	template <typename... Args>
-    managed_shared_ptr( Args&&... args ) : m_context_( AllocationContext::no_assert_tag{} )
+    managed_shared_ptr( const managed_shared_ptr& other ) : m_context_( other.m_context_ )
 	{
-        g_allocator_storage.register_allocator<T>();
-        m_context_ = object_pool_allocator<T>::allocate( std::forward<Args>( args )... );
-        boost::shared_ptr<T>::reset( get(), null_deleter{} );
+        m_context_ = other.m_context_;
+        boost::shared_ptr<T>::reset( other, null_deleter{} );
 	}
 
 	bool operator==( nullptr_t )
@@ -1918,10 +1937,19 @@ struct std::less<managed_shared_ptr<T>>
 template <typename T, typename... Args>
 managed_shared_ptr<T> make_managed_shared( Args&&... arguments )
 {
+    g_allocator_storage.register_allocator<T>();
     return object_pool_allocator<T>::allocate( std::forward<Args>( arguments )... );
 }
 
-template <typename T, typename U> requires std::is_convertible_v<U*, T*>
+template <typename T, typename U, typename... Args>
+    requires std::is_convertible_v<U*, T*>
+managed_shared_ptr<U> make_managed_shared( Args&&... arguments )
+{
+    g_allocator_storage.register_allocator<T>();
+    return object_pool_allocator<T>::allocate( std::forward<Args>( arguments )... );
+}
+
+template <typename T, typename U>
 managed_shared_ptr<T> from_native_shared( const boost::shared_ptr<U>& native )
 {
 	if ( !native )
