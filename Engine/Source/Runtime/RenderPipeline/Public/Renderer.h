@@ -6,6 +6,7 @@
 #include "Allocator.h"
 #include "ConcurrentTypeLibrary.h"
 #include "Singleton.h"
+#include "RenderType.h"
 #include "RenderPassTask.h"
 #include "RenderPassTaskFactory.h"
 #include "RenderInstanceTask.h"

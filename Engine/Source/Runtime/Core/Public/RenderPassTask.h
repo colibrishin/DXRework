@@ -1,8 +1,8 @@
 #pragma once
 #include <memory>
 
-#include "IGraphicAPI.h"
 #include "TypeLibrary.h"
+#include "IGraphicAPI_Extensions.h"
 
 #include "RenderPassTask.generated.h"
 

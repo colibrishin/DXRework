@@ -17,7 +17,7 @@ Engine::SpinLockTicket Engine::SingletonSpinLock::Register()
 			break;
 		}
 	}
-	m_spin_locks_.emplace(m_nonce_, boost::allocate_shared<std::atomic<bool>>(m_allocator_));
+	m_spin_locks_.emplace(m_nonce_, make_managed_shared<std::atomic<bool>>());
 	const size_t return_value = m_nonce_;
 	m_nonce_ = m_nonce_ + 1 % (size_t)-2;
 

@@ -275,7 +275,7 @@ namespace Engine::Managers
 
 		for (auto& set : m_resources_ | std::views::values)
 		{
-			for (boost::shared_ptr<Abstracts::Resource> resource : set)
+			for ( Engine::Strong<Abstracts::Resource> resource : set )
 			{
 				resource->Unload();
 				resource.reset();

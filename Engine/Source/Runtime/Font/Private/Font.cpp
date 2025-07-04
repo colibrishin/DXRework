@@ -1,5 +1,6 @@
 #include "Font.h"
 #include "Font.generated.h"
+#include "IGraphicAPI_Extensions.h"
 
 Engine::Resources::Font::Font(const Font& other) : Resource(other)
 {

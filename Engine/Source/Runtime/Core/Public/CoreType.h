@@ -1266,6 +1266,21 @@ struct AllocationKey
 	}
 };
 
+template <typename T>
+class managed_weak_ptr;
+
+template <typename T>
+class managed_shared_ptr;
+
+namespace Engine
+{
+    template <typename T>
+    using Weak = managed_weak_ptr<T>;
+
+    template <typename T>
+    using Strong = managed_shared_ptr<T>;
+} // namespace Engine
+
 struct ENGINE_CORE_API ConstructorAccess
 {
     template <typename T>
@@ -1275,10 +1290,7 @@ struct ENGINE_CORE_API ConstructorAccess
     friend class managed_shared_ptr;
 
     template <typename T, typename... Args>
-    inline static boost::shared_ptr<T> Create( Args&&... args )
-    {
-        return boost::shared_ptr<T>( new T( std::forward<Args>( args )... ) );
-    }
+    inline static Engine::Strong<T> Create( Args&&... args );
 
 private:
     template <typename T, typename... Args>
@@ -1327,7 +1339,7 @@ public:
     virtual void                 destroy()                                 = 0;
     virtual bool                 past( const AllocationContext& ) const    = 0;
     virtual bool                 expired( const AllocationContext& ) const = 0;
-    virtual void*                start_ptr() const                         = 0;
+    virtual void*                get_ptr( const AllocationContext& ) const = 0;
     virtual size_t               allocation_count() const                  = 0;
     virtual void                 predicate_dealloc( void* ptr ) const      = 0;
 };
@@ -1338,6 +1350,7 @@ private:
     AllocationKey              m_key_                     = null_pair;
     mutable size_t             m_type_reallocation_count_ = -1;
     const pool_allocator_base* m_allocator_               = nullptr;
+    mutable void*              m_ptr_				      = nullptr;
 
 	template <typename T>
     friend class object_pool_allocator;
@@ -1348,18 +1361,15 @@ private:
     template <typename T>
     friend class managed_weak_ptr;
 
+	template <typename T>
+    friend struct std::hash;
+
 	AllocationContext() = delete;
 
 	struct no_assert_tag
     { };
 	
 	AllocationContext( no_assert_tag ) {}
-
-	template <typename T>
-    T* unsafe_ptr() const
-    {
-        return static_cast<T*>( m_allocator_->start_ptr() ) + m_key_.to_raw_index();
-    }
 
 public:
 	AllocationContext( const AllocationContext& context )
@@ -1393,6 +1403,7 @@ public:
 	void update() const
 	{
         m_type_reallocation_count_ = m_allocator_->allocation_count();
+        m_ptr_                     = m_allocator_->get_ptr( *this );
 	}
 
 	bool expired() const
@@ -1405,12 +1416,33 @@ public:
         m_allocator_->predicate_dealloc( ptr );
 	}
 
+	void* ptr() const
+	{
+		if ( should_resolve() )
+		{
+            update();
+		}
+
+		if ( expired() )
+        {
+            return nullptr;
+        }
+
+		if ( !valid() )
+        {
+            return nullptr;
+        }
+
+		return m_ptr_;
+	}
+
 	AllocationContext( const AllocationKey& key, size_t type_allocation_count, const pool_allocator_base* allocator )
 	{
         assert( key != null_pair && allocator );
-        m_key_ = key;
+        m_key_                     = key;
         m_type_reallocation_count_ = type_allocation_count;
         m_allocator_               = allocator;
+        m_ptr_                     = allocator->get_ptr( *this );
 	}
 
 	size_t allocation_count() const
@@ -1487,9 +1519,9 @@ class object_pool_allocator : public pool_allocator_base
         const __mmask8 segment_mask = _mm256_test_epi32_mask( *it, _mm256_cmpeq_epi32( *it, *it ) );
         for ( uint8_t segment = 0; segment < std::numeric_limits<__mmask8>::digits; ++segment )
         {
-            if ( !( bool )( segment_mask >> std::numeric_limits<__mmask8>::digits - 1 + segment ) )
+            if ( !( bool )( ( segment_mask >> ( std::numeric_limits<__mmask8>::digits - 1 ) ) + segment ) )
             {
-                const uint8_t offset = _tzcnt_u32( ( *it ).m256i_i32[ segment ] );
+                const uint8_t offset = ( uint8_t )_tzcnt_u32( ( *it ).m256i_i32[ segment ] );
                 return { chunk, segment, offset };
             }
         }
@@ -1537,7 +1569,7 @@ class object_pool_allocator : public pool_allocator_base
 	static bool peak(const AllocationKey& pair)
 	{
         const uint32_t shift = m_mask_[ pair.chunk ].m256i_i32[ pair.segment ] >> pair.offset;
-        const uint32_t allocation_count = m_local_allocation_count_[ pair.to_raw_index() ];
+        const size_t allocation_count = m_local_allocation_count_[ pair.to_raw_index() ];
         return (bool)( shift & 1 ) && pair.allocation_count == allocation_count;
 	}
 	
@@ -1622,6 +1654,27 @@ public:
 		return peak( context.m_key_ );
 	}
 
+	void* get_ptr( const AllocationContext& context ) const override
+	{
+		if ( !context.valid() )
+		{
+            return nullptr;
+		}
+
+		if ( context.expired() )
+		{
+            return nullptr;
+		}
+
+        T* ptr = m_start_ptr_ + context.m_key_.to_raw_index();
+		if ( is_safe(ptr) )
+		{
+            return ptr;
+		}
+
+        return nullptr;
+	}
+
 	static AllocationContext get_context( T* ptr )
 	{
         const size_t dist    = ptr - m_start_ptr_;
@@ -1631,7 +1684,8 @@ public:
         const size_t allocation_count = m_local_allocation_count_[ dist ];
         const object_pool_allocator& instanced        = get_instanced();
 
-        return AllocationContext( { allocation_count, chunk, segment, offset }, m_reallocation_count_, &instanced );
+        return AllocationContext(
+                { allocation_count, chunk, ( uint8_t )segment, ( uint8_t )offset }, m_reallocation_count_, &instanced );
 	}
 
     virtual void destroy() override
@@ -1672,7 +1726,7 @@ namespace Engine
 template <typename T>
 class managed_shared_ptr : protected boost::shared_ptr<T>
 {
-    AllocationContext m_context_;
+    mutable AllocationContext m_context_;
 
 	template <typename U> 
 	friend class managed_weak_ptr;
@@ -1683,17 +1737,28 @@ class managed_shared_ptr : protected boost::shared_ptr<T>
     friend struct std::hash<managed_shared_ptr>;
 
 	friend struct Engine::Serializer;
+
+	friend class boost::serialization::access;
 	
     template <typename T1, typename T2>
     friend managed_shared_ptr<T1> managed_reinterpret_pointer_cast( const managed_shared_ptr<T2>& r ) noexcept;
+
+	template <typename T, typename... Args>
+    friend managed_shared_ptr<T> make_managed_shared( Args&&... arguments );
+
+    template <typename T, typename U, typename... Args>
+        requires std::is_convertible_v<U*, T*>
+    friend managed_shared_ptr<U> make_managed_shared( Args&&... arguments );
+
+	template <typename To, typename From>
+    friend managed_shared_ptr<To> from_native_shared( const boost::shared_ptr<From>& native );
 
 	struct reinterpret_tag
     { };
 
 	template <typename U>
-	managed_shared_ptr( const managed_shared_ptr<U>& other, const reinterpret_tag& )
+    managed_shared_ptr( const managed_shared_ptr<U>& other, const reinterpret_tag& ) : m_context_( other.m_context_ )
 	{
-        m_context_ = other.m_context_;
         resolve();
 	}
 
@@ -1712,6 +1777,12 @@ class managed_shared_ptr : protected boost::shared_ptr<T>
         resolve();
         return *this;
     }
+
+	template <class Archive>
+    void serialize( Archive& ar, const unsigned int file_version )
+    {
+        ar & static_cast<boost::shared_ptr<T>&>( *this );
+	}
 
 public:
 	~managed_shared_ptr()
@@ -1739,7 +1810,7 @@ public:
     managed_shared_ptr( const managed_shared_ptr& other ) : m_context_( other.m_context_ )
 	{
         m_context_ = other.m_context_;
-        boost::shared_ptr<T>::reset( other, null_deleter{} );
+        boost::shared_ptr<T>::reset( other.get(), null_deleter{} );
 	}
 
 	bool operator==( nullptr_t )
@@ -1747,7 +1818,7 @@ public:
         return !m_context_.valid();
 	}
 
-    explicit operator bool() const
+    operator bool() const noexcept
     {
         return !m_context_.valid();
 	}
@@ -1765,7 +1836,7 @@ public:
         boost::shared_ptr<T>::reset();
 	}
 
-	T* resolve() const
+	T* resolve() const noexcept
     {
 		if ( !m_context_.valid() )
 		{
@@ -1778,31 +1849,42 @@ public:
 			{
                 managed_shared_ptr<T>* non_const = const_cast<managed_shared_ptr<T>*>( this );
                 static_cast<boost::shared_ptr<T>*>( non_const )->reset();
+                m_context_ = AllocationContext::get_null_context();
 			}
             return nullptr;
 		}
 
 		if ( m_context_.should_resolve() )
 		{
-            managed_shared_ptr<T>* non_const = const_cast<managed_shared_ptr<T>*>( this );
-            static_cast<boost::shared_ptr<T>*>( non_const )->reset( m_context_.unsafe_ptr<T>(), null_deleter{} );
             m_context_.update();
+			managed_shared_ptr<T>* non_const = const_cast<managed_shared_ptr<T>*>( this );
+            static_cast<boost::shared_ptr<T>*>( non_const )->reset( static_cast<T*>( m_context_.ptr() ), null_deleter{} );
         }
 
         return boost::shared_ptr<T>::get();
 	}
 
-	T* operator*() const
+	[[nodiscard]] size_t use_count() const
+	{
+        return boost::shared_ptr<T>::use_count();
+	}
+
+	bool operator!() const noexcept
+    {
+        return resolve() == nullptr;
+	}
+
+	T& operator*() const noexcept
+	{
+        return *resolve();
+	}
+
+	T* operator->() const noexcept
 	{
         return resolve();
 	}
 
-	T* operator->() const
-	{
-        return resolve();
-	}
-
-	T* get() const
+	T* get() const noexcept
 	{
         return resolve();
 	}
@@ -1838,22 +1920,31 @@ managed_shared_ptr<T> managed_reinterpret_pointer_cast( const managed_shared_ptr
     return managed_shared_ptr<T>( r, placeholder );
 }
 
-template <typename T, typename U> requires std::is_convertible_v<U*, T*>
+template <typename T, typename U> requires std::is_convertible_v<U*, T*> || std::is_convertible_v<T*, U*>
 managed_shared_ptr<T> managed_static_pointer_cast( const managed_shared_ptr<U>& r ) noexcept
 {
-    return managed_shared_ptr<T>( r );
+    return managed_reinterpret_pointer_cast<T>( r );
 }
 
 template <typename T>
 class managed_weak_ptr : protected boost::weak_ptr<T>
 {
-    AllocationContext m_context_;
+    mutable AllocationContext m_context_;
+
+	template <typename U>
+    friend class managed_weak_ptr;
 
 public:
     managed_weak_ptr() : boost::weak_ptr<T>( {} ), m_context_( AllocationContext::no_assert_tag{} )
     {
         m_context_ = AllocationContext::get_null_context();
     }
+
+	template <typename U> requires std::is_convertible_v<U*, T*>
+	managed_weak_ptr( const managed_weak_ptr<U>& other )
+		: boost::weak_ptr<T>( other ),
+		m_context_( other.m_context_ )
+	{ }
 
     managed_weak_ptr( const managed_shared_ptr<T>& other )
         : boost::weak_ptr<T>( other ), m_context_( other.m_context_ )
@@ -1871,7 +1962,7 @@ public:
 
 	bool operator==(const managed_weak_ptr<T>& other) const
 	{
-        return m_context_ == other.context_;
+        return m_context_ == other.m_context_;
 	}
 
 	[[nodiscard]] bool expired() const
@@ -1879,9 +1970,19 @@ public:
         return m_context_.expired();
 	}
 
+	[[nodiscard]] bool empty() const
+    {
+        return m_context_ == AllocationContext::get_null_context();
+	}
+
 	managed_shared_ptr<T> lock() const
     {
-        return managed_shared_ptr<T>( m_context_ );
+        if ( !boost::weak_ptr<T>::lock() )
+        {
+            m_context_ = AllocationContext::get_null_context();
+        }
+
+		return managed_shared_ptr<T>( m_context_ );
     }
 };
 
@@ -1902,8 +2003,13 @@ struct std::hash<managed_shared_ptr<T>>
 {
     size_t operator()( const managed_shared_ptr<T>& p ) const noexcept
     {
+		if ( p.m_context_.expired() )
+		{
+            return 0;
+		}
+
         static std::hash<size_t> hasher{};
-        size_t                   seed = hasher( p.m_key_.to_raw_index() );
+        size_t                   seed = hasher( p.m_context_.m_key_.to_raw_index() );
 		boost::hash_combine( seed, hasher( reinterpret_cast<size_t>( p.get() ) ) );
         return seed;
     }
@@ -1924,15 +2030,17 @@ struct std::hash<managed_weak_ptr<T>>
     }
 };
 
-template <typename T>
-struct std::less<managed_shared_ptr<T>>
+template <typename T, typename U>
+inline bool operator<( const managed_shared_ptr<T>& left, const managed_shared_ptr<U>& right ) noexcept
 {
-	template <typename U> requires std::is_convertible_v<U*, T*>
-	bool operator()( const managed_shared_ptr<T>& left, const managed_shared_ptr<U>& right )
-	{
-        return left.get() < right.get();
-	}
-};
+    return reinterpret_cast<uintptr_t>( left.get() ) < reinterpret_cast<uintptr_t>( right.get() );
+}
+
+template <typename T, typename U>
+inline bool operator<( const managed_weak_ptr<T>& left, const managed_weak_ptr<U>& right ) noexcept
+{
+    return left.lock() < right.lock();
+}
 
 template <typename T, typename... Args>
 managed_shared_ptr<T> make_managed_shared( Args&&... arguments )
@@ -1949,32 +2057,23 @@ managed_shared_ptr<U> make_managed_shared( Args&&... arguments )
     return object_pool_allocator<T>::allocate( std::forward<Args>( arguments )... );
 }
 
-template <typename T, typename U>
-managed_shared_ptr<T> from_native_shared( const boost::shared_ptr<U>& native )
+template <typename To, typename From>
+managed_shared_ptr<To> from_native_shared( const boost::shared_ptr<From>& native )
 {
 	if ( !native )
 	{
-        return null_pair;
+        return {};
 	}
 
-	AllocationContext key =  object_pool_allocator<U>::get_context( native.get() );
-	return managed_shared_ptr<U>( key );
+	AllocationContext key = object_pool_allocator<To>::get_context( static_cast<To*>( native.get() ) );
+    return managed_shared_ptr<To>( key );
 }
-
-namespace Engine
-{
-    template <typename T>
-    using Weak = managed_weak_ptr<T>;
-
-    template <typename T>
-    using Strong = managed_shared_ptr<T>;
-} // namespace Engine
 
 template <typename ValueType, typename... Args> requires is_hash_type<ValueType>::value
 struct FactoryTemplate
 {
 public:
-	using GeneratorSignature = std::function<boost::shared_ptr<ValueType>(Args...)>;
+	using GeneratorSignature = std::function<Engine::Strong<ValueType>(Args...)>;
 	using GeneratorContainer = std::unordered_map<HashType, GeneratorSignature>;
 
 	static GeneratorSignature GetGenerator(HashType key)
@@ -2008,7 +2107,7 @@ public:
 	}
 
 	template <typename T> requires std::is_base_of_v<ValueType, T>
-	static boost::shared_ptr<ValueType> Create(Args&&... args)
+	static Engine::Strong<ValueType> Create(Args&&... args)
 	{
 		return ConstructorAccess::Create<T>(std::forward<Args>(args)...);
 	}
@@ -2016,3 +2115,9 @@ public:
 private:
 	inline static GeneratorContainer m_generators_ = {};
 };
+
+template <typename T, typename... Args>
+inline Engine::Strong<T> ConstructorAccess::Create( Args&&... args )
+{
+    return make_managed_shared<T>( std::forward<Args>( args )... );
+}

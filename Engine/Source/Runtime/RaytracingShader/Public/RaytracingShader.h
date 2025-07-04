@@ -1,6 +1,5 @@
 ﻿#pragma once
 #if CFG_RAYTRACING
-#include "IGraphicAPI.h"
 #include "ShaderBase.h"
 #include "Resource.h"
 

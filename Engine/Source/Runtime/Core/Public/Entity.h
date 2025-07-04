@@ -113,7 +113,7 @@ namespace Engine::Abstracts
 		template <typename T>
 		Strong<T> GetSharedPtr()
 		{
-			return from_native_shared<T>( shared_from_this() );
+            return from_native_shared<T>( shared_from_this() );
 		}
 
 		virtual void Initialize();
@@ -162,7 +162,7 @@ inline static Engine::Strong<Derived> Cast(const Engine::Strong<Base>& castee)
 	{
 		return {};
 	}
-	return boost::static_pointer_cast<Derived>(castee);
+	return managed_static_pointer_cast<Derived>(castee);
 }
 
 template <typename Derived, typename Base> requires (std::is_base_of_v<Base, Derived>, std::is_base_of_v<Engine::Abstracts::Entity, Base>)

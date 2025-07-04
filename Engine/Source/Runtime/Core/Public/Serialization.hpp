@@ -130,7 +130,7 @@ namespace Engine
 			}
 			
 			object->OnDeserialized();
-			out_ptr = boost::static_pointer_cast<T>(object);
+			out_ptr = managed_static_pointer_cast<T>(object);
 			return true;
 		}
 	};

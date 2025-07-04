@@ -105,7 +105,7 @@ namespace Engine
 #if WITH_EDITOR
 	    for (int i = 0; i < RESERVED_LAYER_MAX + CFG_LAYER_COUNT; ++i)
 	    {
-	        m_layers_.emplace_back(boost::make_shared<Layer>(i));
+	        m_layers_.emplace_back(make_managed_shared<Layer>(i));
 
 	        if (i < std::size(g_reserved_layer_name))
 	        {
@@ -469,7 +469,7 @@ namespace Engine
 			UINT idx = 0;
             for ( const auto &layer : scene->m_layers_)
             {
-				m_layers_.push_back( boost::make_shared<Layer>( idx ) );
+				m_layers_.push_back( make_managed_shared<Layer>( idx ) );
 				m_layers_.back()->SetName( layer->GetName() );
 
                 for ( const auto &obj : layer->GetGameObjects() )

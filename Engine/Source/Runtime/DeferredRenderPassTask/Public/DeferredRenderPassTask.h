@@ -7,6 +7,7 @@
 #include "SingletonSpinLock.h"
 
 #include "DeferredRenderPassTask.generated.h"
+#include "TexturePair.h"
 
 namespace Engine
 {

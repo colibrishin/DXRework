@@ -97,7 +97,7 @@ namespace Engine::Managers
 
 	void SceneManager::AddScene(const std::string& name)
 	{
-		const auto scene = boost::make_shared<Scene>();
+		const auto scene = make_managed_shared<Scene>();
 		scene->SetName(name);
 		m_scenes_.push_back(scene);
 	}
