@@ -5,9 +5,9 @@
 #include "RenderPassTask.h"
 #include "RenderPassTaskFactory.h"
 #include "SingletonSpinLock.h"
+#include "TexturePair.h"
 
 #include "DeferredRenderPassTask.generated.h"
-#include "TexturePair.h"
 
 namespace Engine
 {

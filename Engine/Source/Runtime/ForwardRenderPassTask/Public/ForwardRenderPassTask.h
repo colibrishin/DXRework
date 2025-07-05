@@ -7,6 +7,7 @@
 #include "RenderPassTaskFactory.h"
 #include "SingletonSpinLock.h"
 #include "Texture.h"
+#include "TexturePair.h"
 #include "TypeLibrary.h"
 
 #include "ForwardRenderPassTask.generated.h"

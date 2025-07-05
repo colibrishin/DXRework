@@ -494,7 +494,7 @@ void Engine::D3D12GraphicInterface::QueryDevice()
 
 void Engine::D3D12GraphicInterface::InitializeRaytracingDescriptorHeaps()
 {
-    m_raytracing_heap_handler_ = boost::make_shared<decltype(m_raytracing_heap_handler_)::element_type>();
+    m_raytracing_heap_handler_ = make_managed_shared<decltype(m_raytracing_heap_handler_)::element_type>();
 	m_raytracing_heap_handler_->Initialize(m_dev_.Get(), m_raytracing_root_pipeline_.Get());
 }
 
@@ -1486,7 +1486,7 @@ void Engine::D3D12GraphicInterface::InitializePipeline()
 		)
 	);
 
-	m_heap_handler_ = boost::make_shared<decltype(m_heap_handler_)::element_type>();
+	m_heap_handler_ = make_managed_shared<decltype(m_heap_handler_)::element_type>();
 	m_heap_handler_->Initialize(m_dev_.Get(), m_pipeline_root_signature_.Get());
 }
 
