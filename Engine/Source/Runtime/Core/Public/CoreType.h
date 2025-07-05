@@ -1268,7 +1268,7 @@ class managed_shared_ptr;
 
 struct AllocationContext;
 
-struct deleter_base
+struct ENGINE_CORE_API deleter_base
 {
     virtual ~deleter_base() = default;
 
@@ -1280,18 +1280,17 @@ struct deleter_base
     virtual void predicate( void* shared_ptr ) const = 0;
 };
 
-struct null_deleter : deleter_base
+struct ENGINE_CORE_API null_deleter : deleter_base
 {
     void predicate( void* shared_ptr ) const override
     { }
 };
 
-class pool_allocator_base
+class ENGINE_CORE_API pool_allocator_base
 {
 public:
-    virtual ~pool_allocator_base()
-    { }
-    virtual void                 destroy()                                 = 0;
+    virtual ~pool_allocator_base() = default;
+    virtual void                 destroy() const                           = 0;
     virtual bool                 past( const AllocationContext& ) const    = 0;
     virtual bool                 expired( const AllocationContext& ) const = 0;
     virtual void*                get_ptr( const AllocationContext& ) const = 0;
@@ -1299,7 +1298,7 @@ public:
     virtual void                 predicate_dealloc( void* ptr ) const      = 0;
 };
 
-struct AllocationContext
+struct ENGINE_CORE_API AllocationContext
 {
 private:
     AllocationKey              m_key_                     = null_pair;
@@ -1426,6 +1425,8 @@ class object_pool_allocator : public pool_allocator_base
 
     inline static std::atomic<bool> m_lock_        = false;
     inline static bool              m_initialized_ = false;
+
+	friend class PoolAllocatorStorage;
 
     static void init()
     {
@@ -1643,7 +1644,7 @@ public:
                 { allocation_count, chunk, ( uint8_t )segment, ( uint8_t )offset }, m_reallocation_count_, &instanced );
 	}
 
-    virtual void destroy() override
+    virtual void destroy() const override
     {
         PoolType::ordered_free( m_start_ptr_, m_mask_.size() * ( 1 << 8 ) );
         PoolType::release_memory();
@@ -1651,20 +1652,21 @@ public:
     }
 };
 
-class PoolAllocatorStorage
+class ENGINE_CORE_API PoolAllocatorStorage
 {
-    std::unordered_set<std::unique_ptr<pool_allocator_base>> m_allocators_ = {};
+    std::unordered_set<const pool_allocator_base*> m_allocators_;
 
 public:
 	template <typename T>
     void register_allocator()
     {
-        m_allocators_.emplace( std::make_unique<object_pool_allocator<T>>() );
+        const object_pool_allocator<T>& instanced = object_pool_allocator<T>::get_instanced();
+        m_allocators_.emplace( &instanced );
     }
 
-	void cleanup()
-	{
-	    for ( const std::unique_ptr<pool_allocator_base>& allocator : m_allocators_ )
+	void cleanup() const
+    {
+	    for ( const pool_allocator_base* allocator : m_allocators_ )
 	    {
             allocator->destroy();
 	    }
@@ -1740,6 +1742,8 @@ class managed_shared_ptr : protected boost::shared_ptr<T>
 	}
 
 public:
+    using element_type = T;
+
 	~managed_shared_ptr()
 	{
         resolve();
