@@ -389,46 +389,6 @@ namespace Engine
 		m_weak_objects_cache_.clear();
     }
 
-    inline auto Layer::begin() noexcept
-    {
-        return m_objects_.begin();
-    }
-
-    inline auto Layer::end() noexcept
-    {
-        return m_objects_.end();
-    }
-
-    inline auto Layer::begin() const noexcept
-    {
-        return m_objects_.begin();
-    }
-
-    inline auto Layer::end() const noexcept
-    {
-        return m_objects_.end();
-    }
-
-    inline auto Layer::cbegin() const noexcept
-    {
-        return m_objects_.cbegin();
-    }
-
-    inline auto Layer::cend() const noexcept
-    {
-        return m_objects_.cend();
-    }
-
-    inline auto Layer::size() const noexcept
-    {
-        return m_objects_.size();
-    }
-
-    inline size_t Layer::Empty() const noexcept
-    {
-        return m_objects_.empty();
-    }
-
     Layer::Layer() :
 		m_layer_type_(0),
 		m_cache_lock_idx_(SingletonSpinLock::GetInstance().Register()){}
