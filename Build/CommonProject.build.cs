@@ -215,6 +215,7 @@ public abstract class CommonProject : Project
             conf.IntermediatePath = SolutionDir + @"/Intermediate/Build/" + conf.Name + "/[project.Name]/";
 
             conf.AdditionalCompilerOptions.Add("/FS");
+            conf.AdditionalCompilerOptions.Add("/Zm1000");
             conf.IsFastBuild = true;
             string FastBuildPath = SolutionDir + @"/Programs\Sharpmake\tools\FastBuild\Windows-x64\FBuild.exe";
             FastBuildSettings.FastBuildMakeCommand = FastBuildPath;
