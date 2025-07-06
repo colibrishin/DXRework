@@ -41,6 +41,8 @@
 
 #include <magic_enum.hpp>
 
+#include "CoreType.h"
+
 template <typename Enum>
 constexpr auto CStrEnumStrings()
 {
@@ -1205,14 +1207,20 @@ void do_lock( const bool value )
 
 struct AllocationKey
 {
-    size_t  allocation_count = 0;
-    size_t  chunk = 0;
-    uint8_t segment = 0;
-    uint8_t offset  = 0;
+    size_t  allocation_count = ( size_t )-1;
+    size_t  chunk            = ( size_t )-1;
+    uint8_t segment          = ( uint8_t )-1;
+    uint8_t offset           = ( uint8_t )-1;
 
 	bool operator==( const AllocationKey& other ) const
 	{
         return to_raw_index() == other.to_raw_index() && allocation_count == other.allocation_count;
+	}
+
+	bool valid() const
+	{
+        return allocation_count == ( size_t )-1 && chunk == ( size_t )-1 && segment == ( uint8_t )-1 &&
+               offset == ( uint8_t )-1;
 	}
 
     [[nodiscard]] size_t to_raw_index() const
@@ -1261,7 +1269,7 @@ private:
     }
 };
 
-inline static constexpr AllocationKey null_pair = { ( size_t )-1, ( uint8_t )-1, ( uint8_t )-1 };
+inline static constexpr AllocationKey null_pair = { (size_t)-1, ( size_t )-1, ( uint8_t )-1, ( uint8_t )-1 };
 
 template <typename T>
 class managed_shared_ptr;
@@ -1289,13 +1297,14 @@ struct ENGINE_CORE_API null_deleter : deleter_base
 class ENGINE_CORE_API pool_allocator_base
 {
 public:
-    virtual ~pool_allocator_base() = default;
-    virtual void                 destroy() const                           = 0;
-    virtual bool                 past( const AllocationContext& ) const    = 0;
-    virtual bool                 expired( const AllocationContext& ) const = 0;
-    virtual void*                get_ptr( const AllocationContext& ) const = 0;
-    virtual size_t               allocation_count() const                  = 0;
-    virtual void                 predicate_dealloc( void* ptr ) const      = 0;
+    virtual ~pool_allocator_base()                                                 = default;
+    virtual void                         destroy() const                           = 0;
+    virtual bool                         past( const AllocationContext& ) const    = 0;
+    virtual bool                         expired( const AllocationContext& ) const = 0;
+    virtual void*                        get_ptr( const AllocationContext& ) const = 0;
+    virtual size_t                       allocation_count() const                  = 0;
+    virtual void                         predicate_dealloc( void* ptr ) const      = 0;
+    virtual const std::function<void( void* )>& get_deleter() const                       = 0;
 };
 
 struct ENGINE_CORE_API AllocationContext
@@ -1331,11 +1340,12 @@ public:
         m_key_                     = context.m_key_;
         m_allocator_               = context.m_allocator_;
         m_type_reallocation_count_ = context.m_type_reallocation_count_;
+        m_ptr_                     = context.m_ptr_;
 	}
 
 	static const AllocationContext& get_null_context()
 	{
-        static AllocationContext null_context = { null_pair, ( size_t )-1, nullptr };
+        static AllocationContext null_context( no_assert_tag{} );
 		return null_context;
 	}
 
@@ -1351,7 +1361,7 @@ public:
 
 	bool should_resolve() const
 	{
-        return m_allocator_->past( *this );
+        return m_allocator_->past( *this ) && m_ptr_ == nullptr;
 	}
 
 	void update() const
@@ -1362,7 +1372,7 @@ public:
 
 	bool expired() const
     {
-        return m_allocator_->expired( *this );
+        return !valid() || !m_allocator_ || m_allocator_->expired( *this );
 	}
 
 	void predicate_dealloc( void* ptr ) const
@@ -1396,7 +1406,7 @@ public:
         m_key_                     = key;
         m_type_reallocation_count_ = type_allocation_count;
         m_allocator_               = allocator;
-        m_ptr_                     = allocator->get_ptr( *this );
+        m_ptr_                     = allocator->get_ptr( *this );   
 	}
 
 	size_t allocation_count() const
@@ -1406,13 +1416,11 @@ public:
 };
 
 template <typename T>
-class object_pool_allocator;
-
-template <typename T>
 class object_pool_allocator : public pool_allocator_base
 {
     struct object_tag
     { };
+
     using PoolType = boost::singleton_pool<object_tag,
                                            sizeof( T ),
                                            boost::default_user_allocator_new_delete,
@@ -1448,6 +1456,7 @@ class object_pool_allocator : public pool_allocator_base
         m_mask_.emplace_back( __m256i{} );
         m_local_allocation_count_.resize( ( m_mask_.size() + 1 ) * ( 1 << 8 ), 0 );
         ++m_reallocation_count_;
+        m_start_ptr_ = reallocated;
     }
 
     static AllocationKey get_free_space()
@@ -1469,31 +1478,47 @@ class object_pool_allocator : public pool_allocator_base
         if ( it == m_mask_.end() )
         {
             reallocate();
-            return { ( size_t )chunk, ( uint8_t )0, ( uint8_t )0 };
+            return { ( size_t )m_local_allocation_count_[ chunk * (1 << 8) ], ( size_t )chunk, ( uint8_t )0, ( uint8_t )0 };
         }
-
-        const __mmask8 segment_mask = _mm256_test_epi32_mask( *it, _mm256_cmpeq_epi32( *it, *it ) );
-        for ( uint8_t segment = 0; segment < std::numeric_limits<__mmask8>::digits; ++segment )
+		
+        for ( uint8_t segment = 0; segment < 8; ++segment )
         {
-            if ( !( bool )( ( segment_mask >> ( std::numeric_limits<__mmask8>::digits - 1 ) ) + segment ) )
+            const uint32_t& segment_value = it->m256i_u32[ segment ];
+            if ( segment_value == std::numeric_limits<uint32_t>::max() )
             {
-                const uint8_t offset = ( uint8_t )_tzcnt_u32( ( *it ).m256i_i32[ segment ] );
-                return { chunk, segment, offset };
+                continue;
             }
+
+			uint32_t bitmask = segment_value; 
+			do
+			{
+                if ( !( bitmask & ( 1 << 31 ) ) )
+                {
+                    break;
+                }
+			}
+            while ( bitmask <<= 1 );
+			
+			const uint8_t offset = ( uint8_t )_tzcnt_u32( ~( ( *it ).m256i_i32[ segment ] ) );
+            const size_t  unwrapped_index =
+                    ( chunk * ( 1 << 8 ) ) + ( segment * std::numeric_limits<uint32_t>::digits ) + offset;
+            return { ( size_t )m_local_allocation_count_[ unwrapped_index ], chunk, segment, offset };
         }
 
-        return { ( size_t )-1, ( uint8_t )-1, ( uint8_t )-1 };
+        return { ( size_t )-1, ( size_t )-1, ( uint8_t )-1, ( uint8_t )-1 };
     }
+#define UNWRAP( Pointer )                                                                                              \
+    const size_t dist    = ptr - m_start_ptr_;                                                                         \
+    const size_t chunk   = dist / ( 1 << 8 );                                                                          \
+    const size_t segment = ( dist - ( ( 1 << 8 ) * chunk ) ) / std::numeric_limits<uint32_t>::digits;                  \
+    const size_t offset  = ( dist - ( ( 1 << 8 ) * chunk ) ) - ( segment * std::numeric_limits<uint32_t>::digits );
 
     template <bool Allocate>
     static void flip( T* ptr )
     {
-        const size_t dist    = ptr - m_start_ptr_;
-        const size_t chunk   = dist % ( 1 << 8 );
-        const size_t segment = ( dist % ( ( 1 << 8 ) * chunk ) ) % std::numeric_limits<uint32_t>::digits;
-        const size_t offset  = ( dist % ( ( 1 << 8 ) * chunk ) ) % ( segment * std::numeric_limits<uint32_t>::digits );
+        UNWRAP( ptr )
 
-        if constexpr ( Allocate )
+        if constexpr ( !Allocate )
         {
             m_mask_[ chunk ].m256i_i32[ segment ] &= ~( 1 << offset );
         }
@@ -1512,7 +1537,7 @@ class object_pool_allocator : public pool_allocator_base
     template <bool Allocate>
     static void flip( const AllocationKey& pair )
     {
-        if constexpr ( Allocate )
+        if constexpr ( !Allocate )
         {
             m_mask_[ pair.chunk ].m256i_i32[ pair.segment ] &= ~( 1 << pair.offset );
         }
@@ -1561,9 +1586,9 @@ public:
         while ( !m_lock_.compare_exchange_strong( entry_expected, true ) )
         {
         }
-        AllocationKey             next_pair = get_free_space();
+        const AllocationKey          next_pair = get_free_space();
         const object_pool_allocator& instanced = get_instanced();
-        AllocationContext context( next_pair, m_reallocation_count_, &instanced );
+        AllocationContext            context( next_pair, m_reallocation_count_, &instanced );
         flip<true>( next_pair );
         while ( !m_lock_.compare_exchange_strong( return_expected, false ) )
         {
@@ -1580,9 +1605,12 @@ public:
         bool entry_expected  = false;
         bool return_expected = true;
 
-		ConstructorAccess::InternalDeconstruct( ptr );
         while ( !m_lock_.compare_exchange_strong( entry_expected, true ) )
         {
+        }
+        if ( !get_instanced().expired( get_context( ptr ) ) )
+        {
+            ConstructorAccess::InternalDeconstruct( ptr );
         }
         increase( ptr );
         flip<false>( ptr );
@@ -1607,7 +1635,7 @@ public:
 
 	bool expired( const AllocationContext& context ) const override
 	{
-		return peak( context.m_key_ );
+		return !peak( context.m_key_ );
 	}
 
 	void* get_ptr( const AllocationContext& context ) const override
@@ -1622,6 +1650,11 @@ public:
             return nullptr;
 		}
 
+		if ( context.m_key_.allocation_count != m_local_allocation_count_[ context.m_key_.to_raw_index() ] )
+		{
+            return nullptr;
+		}
+
         T* ptr = m_start_ptr_ + context.m_key_.to_raw_index();
 		if ( is_safe(ptr) )
 		{
@@ -1631,12 +1664,9 @@ public:
         return nullptr;
 	}
 
-	static AllocationContext get_context( T* ptr )
+	static AllocationContext get_context( const T* ptr )
 	{
-        const size_t dist    = ptr - m_start_ptr_;
-        const size_t chunk   = dist % ( 1 << 8 );
-        const size_t segment = ( dist % ( ( 1 << 8 ) * chunk ) ) % std::numeric_limits<uint32_t>::digits;
-        const size_t offset  = ( dist % ( ( 1 << 8 ) * chunk ) ) % ( segment * std::numeric_limits<uint32_t>::digits );
+        UNWRAP( ptr )
         const size_t allocation_count = m_local_allocation_count_[ dist ];
         const object_pool_allocator& instanced        = get_instanced();
 
@@ -1650,6 +1680,18 @@ public:
         PoolType::release_memory();
         PoolType::purge_memory();
     }
+
+private:
+    inline static std::function<void( void* )> m_deleter_ = []( void* ptr )
+    { object_pool_allocator<T>::deallocate( static_cast<T*>( ptr ) ); };
+
+public:
+    const std::function<void( void* )>& get_deleter() const override
+    {
+        return m_deleter_;
+    }
+
+#undef UNWRAP
 };
 
 class ENGINE_CORE_API PoolAllocatorStorage
@@ -1700,29 +1742,48 @@ class managed_shared_ptr : protected boost::shared_ptr<T>
     template <typename T1, typename T2>
     friend managed_shared_ptr<T1> managed_reinterpret_pointer_cast( const managed_shared_ptr<T2>& r ) noexcept;
 
+    template <typename T1, typename T2>
+    friend managed_shared_ptr<T1> managed_static_pointer_cast( const managed_shared_ptr<T2>& r ) noexcept;
+
 	template <typename T, typename... Args>
     friend managed_shared_ptr<T> make_managed_shared( Args&&... arguments );
 
     template <typename T, typename U, typename... Args>
-        requires std::is_convertible_v<U*, T*>
     friend managed_shared_ptr<U> make_managed_shared( Args&&... arguments );
 
-	template <typename To, typename From>
-    friend managed_shared_ptr<To> from_native_shared( const boost::shared_ptr<From>& native );
+	template <typename T>
+    friend managed_shared_ptr<T> from_native( boost::weak_ptr<T> native );
 
-	struct reinterpret_tag
+	struct cast_tag
     { };
 
+	struct init_tag {};
+
 	template <typename U>
-    managed_shared_ptr( const managed_shared_ptr<U>& other, const reinterpret_tag& ) : m_context_( other.m_context_ )
+    managed_shared_ptr( const managed_shared_ptr<U>& other, const cast_tag& )
+        : boost::shared_ptr<T>( boost::reinterpret_pointer_cast<T>( other ) ), m_context_( other.m_context_ )
 	{
         resolve();
 	}
 
-	managed_shared_ptr( const AllocationContext& context ) : m_context_( context )
-	{
+	managed_shared_ptr( const AllocationContext& context, const init_tag& ) : boost::shared_ptr<T>( nullptr ), m_context_( context )
+    {
         resolve();
 	}
+
+	template <typename U>
+    explicit managed_shared_ptr( const boost::weak_ptr<U>& weak_native, const AllocationContext& context )
+        : boost::shared_ptr<T>( weak_native, boost::detail::sp_nothrow_tag{} ), m_context_( context )
+    {
+        resolve();
+    }
+
+	template <typename U>
+    explicit managed_shared_ptr( const managed_weak_ptr<U>& weak_native )
+        : boost::shared_ptr<T>( weak_native, boost::detail::sp_nothrow_tag{} ), m_context_( weak_native.m_context_ )
+    {
+        resolve();
+    }
 
 	AllocationContext internal_context() const
     {
@@ -1747,39 +1808,38 @@ public:
 	~managed_shared_ptr()
 	{
         resolve();
-        m_context_.predicate_dealloc( this );
 	}
 
 	managed_shared_ptr( nullptr_t )
-        : boost::shared_ptr<T>( nullptr, null_deleter{} ), m_context_( AllocationContext::get_null_context()  )
+        : boost::shared_ptr<T>( nullptr ), m_context_( AllocationContext::get_null_context()  )
     {
 	}
 
 	managed_shared_ptr()
-        : boost::shared_ptr<T>( nullptr, null_deleter{} ), m_context_( AllocationContext::get_null_context()  )
+        : boost::shared_ptr<T>( nullptr ), m_context_( AllocationContext::get_null_context()  )
 	{
 	}
 
-	template <typename U> requires std::is_convertible_v<U*, T*>
-    managed_shared_ptr( const managed_shared_ptr<U>& other ) : m_context_( other.m_context_ ), boost::shared_ptr<T>( other )
+	template <typename U>
+     managed_shared_ptr( const managed_shared_ptr<U>& other )
+        : boost::shared_ptr<T>( other ), m_context_( other.m_context_ )
     {
         resolve();
     }
 
-    managed_shared_ptr( const managed_shared_ptr& other ) : m_context_( other.m_context_ )
+    managed_shared_ptr( const managed_shared_ptr& other ) : boost::shared_ptr<T>( other ), m_context_( other.m_context_ )
 	{
-        m_context_ = other.m_context_;
-        boost::shared_ptr<T>::reset( other.get(), null_deleter{} );
+        resolve();
 	}
 
-	bool operator==( nullptr_t )
-	{
-        return !m_context_.valid();
-	}
-
-    operator bool() const noexcept
+	bool operator==( nullptr_t ) const
     {
         return !m_context_.valid();
+	}
+
+    explicit operator bool() const noexcept
+    {
+        return m_context_.valid();
 	}
 
 	operator boost::shared_ptr<T>() const
@@ -1808,16 +1868,17 @@ public:
 			{
                 managed_shared_ptr<T>* non_const = const_cast<managed_shared_ptr<T>*>( this );
                 static_cast<boost::shared_ptr<T>*>( non_const )->reset();
-                m_context_ = AllocationContext::get_null_context();
 			}
+
+            m_context_ = AllocationContext::get_null_context();
             return nullptr;
 		}
 
-		if ( m_context_.should_resolve() )
+		if ( m_context_.should_resolve() || boost::shared_ptr<T>::get() == nullptr )
 		{
             m_context_.update();
 			managed_shared_ptr<T>* non_const = const_cast<managed_shared_ptr<T>*>( this );
-            static_cast<boost::shared_ptr<T>*>( non_const )->reset( static_cast<T*>( m_context_.ptr() ), null_deleter{} );
+            static_cast<boost::shared_ptr<T>*>( non_const )->reset( static_cast<T*>( m_context_.ptr() ), m_context_.m_allocator_->get_deleter() );
         }
 
         return boost::shared_ptr<T>::get();
@@ -1875,14 +1936,17 @@ inline bool operator!=( managed_shared_ptr<T> const& a, nullptr_t ) noexcept
 template <class T, class U>
 managed_shared_ptr<T> managed_reinterpret_pointer_cast( const managed_shared_ptr<U>& r ) noexcept
 {
-    static typename managed_shared_ptr<T>::reinterpret_tag placeholder{};
+    static typename managed_shared_ptr<T>::cast_tag placeholder{};
     return managed_shared_ptr<T>( r, placeholder );
 }
 
-template <typename T, typename U> requires std::is_convertible_v<U*, T*> || std::is_convertible_v<T*, U*>
+template <typename T, typename U>
 managed_shared_ptr<T> managed_static_pointer_cast( const managed_shared_ptr<U>& r ) noexcept
 {
-    return managed_reinterpret_pointer_cast<T>( r );
+    static typename managed_shared_ptr<T>::cast_tag placeholder{};
+    ( void )static_cast<T*>( static_cast<U*>( nullptr ) );
+
+    return managed_shared_ptr<T>( r, placeholder );
 }
 
 template <typename T>
@@ -1893,13 +1957,16 @@ class managed_weak_ptr : protected boost::weak_ptr<T>
 	template <typename U>
     friend class managed_weak_ptr;
 
+	template <typename U>
+	friend class managed_shared_ptr;
+
 public:
     managed_weak_ptr() : boost::weak_ptr<T>( {} ), m_context_( AllocationContext::no_assert_tag{} )
     {
         m_context_ = AllocationContext::get_null_context();
     }
 
-	template <typename U> requires std::is_convertible_v<U*, T*>
+	template <typename U>
 	managed_weak_ptr( const managed_weak_ptr<U>& other )
 		: boost::weak_ptr<T>( other ),
 		m_context_( other.m_context_ )
@@ -1909,7 +1976,7 @@ public:
         : boost::weak_ptr<T>( other ), m_context_( other.m_context_ )
     { }
 
-	template <typename U> requires std::is_convertible_v<U*, T*>
+	template <typename U>
     managed_weak_ptr( const managed_shared_ptr<U>& other ) : boost::weak_ptr<T>( other ), m_context_( other.m_context_ )
     { }
 
@@ -1941,7 +2008,7 @@ public:
             m_context_ = AllocationContext::get_null_context();
         }
 
-		return managed_shared_ptr<T>( m_context_ );
+		return managed_shared_ptr<T>( *this );
     }
 };
 
@@ -2005,27 +2072,28 @@ template <typename T, typename... Args>
 managed_shared_ptr<T> make_managed_shared( Args&&... arguments )
 {
     g_allocator_storage.register_allocator<T>();
-    return object_pool_allocator<T>::allocate( std::forward<Args>( arguments )... );
+    static typename managed_shared_ptr<T>::init_tag tag{};
+    return managed_shared_ptr<T>( object_pool_allocator<T>::allocate( std::forward<Args>( arguments )... ), tag );
 }
 
 template <typename T, typename U, typename... Args>
-    requires std::is_convertible_v<U*, T*>
 managed_shared_ptr<U> make_managed_shared( Args&&... arguments )
 {
     g_allocator_storage.register_allocator<T>();
-    return object_pool_allocator<T>::allocate( std::forward<Args>( arguments )... );
+    static typename managed_shared_ptr<T>::init_tag tag{};
+    return managed_shared_ptr<U>( object_pool_allocator<T>::allocate( std::forward<Args>( arguments )... ), tag );
 }
 
-template <typename To, typename From>
-managed_shared_ptr<To> from_native_shared( const boost::shared_ptr<From>& native )
+template <typename T>
+managed_shared_ptr<T> from_native( boost::weak_ptr<T> native )
 {
-	if ( !native )
+	if ( native.expired() )
 	{
         return {};
 	}
 
-	AllocationContext key = object_pool_allocator<To>::get_context( static_cast<To*>( native.get() ) );
-    return managed_shared_ptr<To>( key );
+	AllocationContext key = native.lock()->GetAllocationContext();
+    return managed_shared_ptr<T>( native, key );
 }
 
 template <typename ValueType, typename... Args> requires is_hash_type<ValueType>::value
