@@ -43,20 +43,31 @@ namespace Engine::Managers
     {
         for ( auto &ptr : m_module_loaded_ | std::views::reverse | std::views::values )
         {
+#if IS_DLL
+            if ( ptr->m_handle_ )
+            {
+				if ( ptr->m_module_ )
+				{
+                    ptr->m_module_->Shutdown();
+                    ptr->m_module_.reset();   
+				}
+                FreeLibrary( static_cast<HMODULE>( ptr->m_handle_ ) );
+            }
+#else
             if ( ptr->m_module_ )
             {
                 ptr->m_module_.reset();
             }
-
-#if IS_DLL
-            if ( ptr->m_handle_ )
-            {
-                FreeLibrary( static_cast<HMODULE>( ptr->m_handle_ ) );
-            }
 #endif
 
-            ptr.reset();
+		    if ( ptr )
+		    {
+                ptr.reset();
+		    }
         }
+
+        g_allocator_storage.cleanup();
+        g_allocator_storage.report_leakage();
 	}
 
 	ModuleManager::ModuleInfo* ModuleManager::FindModule(const std::wstring_view name)

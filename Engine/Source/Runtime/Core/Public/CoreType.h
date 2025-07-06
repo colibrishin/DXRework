@@ -1713,6 +1713,17 @@ public:
             allocator->destroy();
 	    }
 	}
+
+    static void report_leakage()
+    {
+#if _WIN32 || _WIN64
+#define _CRTDBG_MAP_ALLOC
+#include <crtdbg.h>
+#include <stdlib.h>
+        _CrtSetDbgFlag( _CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF );
+        _CrtDumpMemoryLeaks();
+#endif
+	}
 };
 
 inline static PoolAllocatorStorage g_allocator_storage{};
@@ -1982,7 +1993,6 @@ public:
 
 	void reset()
     {
-        m_context_ = AllocationContext::get_null_context();
 		boost::weak_ptr<T>::reset();
     }
 
@@ -1998,7 +2008,7 @@ public:
 
 	[[nodiscard]] bool empty() const
     {
-        return m_context_ == AllocationContext::get_null_context();
+        return boost::weak_ptr<T>::empty();
 	}
 
 	managed_shared_ptr<T> lock() const

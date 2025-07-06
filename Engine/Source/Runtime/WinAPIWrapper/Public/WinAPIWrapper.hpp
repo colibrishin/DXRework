@@ -43,5 +43,6 @@ namespace WinAPI
         static std::wstring                   s_application_name_;
         static HINSTANCE                      s_hinstance_;
         static HWND                           s_hwnd_;
+        static bool                           s_alt_pressed_;
     };
 } // namespace WinAPI
