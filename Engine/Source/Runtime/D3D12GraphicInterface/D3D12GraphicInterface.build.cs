@@ -23,6 +23,7 @@ public class D3D12GraphicInterface : EngineCommonProject
         conf.AddPrivateDependency<ComputeShader>(target);
         conf.AddPrivateDependency<DirectXTex>(target);
         conf.AddPrivateDependency<Font>(target);
+        conf.AddPrivateDependency<Material>(target);
         conf.AddPrivateDependency<WinAPIWrapper>(target);
         conf.AddPrivateDependency<RenderPipeline>(target);
 
