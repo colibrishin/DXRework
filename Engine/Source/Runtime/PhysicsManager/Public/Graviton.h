@@ -1,10 +1,15 @@
 #pragma once
 #include "Singleton.h"
 
+#include "Graviton.generated.h"
+
 namespace Engine::Managers
 {
-	class Graviton : public Abstracts::Singleton<Graviton>
+    ECLASS()
+	class ENGINE_PHYSICSMANAGER_API Graviton : public Abstracts::Singleton<Graviton>
 	{
+        GENERATE_BODY
+
 	public:
 		Graviton(SINGLETON_LOCK_TOKEN) {}
 
@@ -19,6 +24,8 @@ namespace Engine::Managers
 
 	private:
 		friend struct SingletonDeleter;
+        friend struct ConstructorAccess;
+
 		~Graviton() override = default;
 	};
 }
