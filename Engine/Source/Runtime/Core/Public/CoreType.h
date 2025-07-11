@@ -1361,7 +1361,7 @@ public:
 
 	bool should_resolve() const
 	{
-        return m_allocator_->past( *this ) && m_ptr_ == nullptr;
+        return m_allocator_->past( *this ) || m_ptr_ == nullptr;
 	}
 
 	void update() const
@@ -1372,7 +1372,17 @@ public:
 
 	bool expired() const
     {
-        return !valid() || !m_allocator_ || m_allocator_->expired( *this );
+		if ( !valid() )
+		{
+		    return false;
+		}
+
+		if ( should_resolve() )
+		{
+            update();
+		}
+
+        return valid() && m_ptr_ == nullptr;
 	}
 
 	void predicate_dealloc( void* ptr ) const
@@ -1409,9 +1419,14 @@ public:
         m_ptr_                     = allocator->get_ptr( *this );   
 	}
 
-	size_t allocation_count() const
+	size_t type_allocation_count() const
 	{
         return m_type_reallocation_count_;
+	}
+
+	size_t allocation_count() const
+	{
+        return m_key_.allocation_count;
 	}
 };
 
@@ -1630,7 +1645,8 @@ public:
 
 	bool past( const AllocationContext& context ) const override
 	{
-        return context.allocation_count() != m_reallocation_count_;
+        return context.type_allocation_count() != m_reallocation_count_ || 
+               context.allocation_count() != m_local_allocation_count_[context.m_key_.to_raw_index()];
 	}
 
 	bool expired( const AllocationContext& context ) const override
@@ -1641,11 +1657,6 @@ public:
 	void* get_ptr( const AllocationContext& context ) const override
 	{
 		if ( !context.valid() )
-		{
-            return nullptr;
-		}
-
-		if ( context.expired() )
 		{
             return nullptr;
 		}
@@ -1843,14 +1854,18 @@ public:
         resolve();
 	}
 
-	bool operator==( nullptr_t ) const
+	explicit operator bool() const noexcept
     {
-        return !m_context_.valid();
+        if ( !m_context_.valid() )
+        {
+            return false;
+        }
+        return !m_context_.expired();
 	}
 
-    explicit operator bool() const noexcept
+	bool operator==( nullptr_t ) const
     {
-        return m_context_.valid();
+        return !m_context_.valid() || m_context_.expired();
 	}
 
 	operator boost::shared_ptr<T>() const
@@ -1870,6 +1885,12 @@ public:
     {
 		if ( !m_context_.valid() )
 		{
+            if ( boost::shared_ptr<T>::get() )
+            {
+                managed_shared_ptr<T>* non_const = const_cast<managed_shared_ptr<T>*>( this );
+                static_cast<boost::shared_ptr<T>*>( non_const )->reset();
+            }
+
 			return nullptr;
 		}
 
@@ -1902,7 +1923,7 @@ public:
 
 	bool operator!() const noexcept
     {
-        return resolve() == nullptr;
+        return !this->operator bool();
 	}
 
 	T& operator*() const noexcept
@@ -2008,16 +2029,11 @@ public:
 
 	[[nodiscard]] bool empty() const
     {
-        return boost::weak_ptr<T>::empty();
+        return !m_context_.valid();
 	}
 
 	managed_shared_ptr<T> lock() const
     {
-        if ( !boost::weak_ptr<T>::lock() )
-        {
-            m_context_ = AllocationContext::get_null_context();
-        }
-
 		return managed_shared_ptr<T>( *this );
     }
 };
