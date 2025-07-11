@@ -8,10 +8,8 @@
 
 Engine::NetworkChallengeTask::NetworkChallengeTask()
 {
-    const auto& challenge_func = std::bind_front( &NetworkChallengeTask::Challenge, this );
-    const auto& removal_func   = std::bind_front( &NetworkChallengeTask::Remove, this );
-    g_network_accessor.GetMessageTask().onHostAdded.Listen( challenge_func );
-    g_network_accessor.GetMessageTask().onHostRemoved.Listen( removal_func );
+    g_network_accessor.GetMessageTask().onHostAdded.Listen( get_bound_challenge() );
+    g_network_accessor.GetMessageTask().onHostRemoved.Listen( get_bound_remove() );
    
     m_challenge_task_running_ = true;
     m_challenge_task_ = std::async( std::launch::async, &NetworkChallengeTask::KeepChallenge, this );
@@ -29,10 +27,8 @@ bool Engine::NetworkChallengeTask::Validate( const RawNetMessage& message ) cons
 
 void Engine::NetworkChallengeTask::Cleanup()
 {
-    const auto& challenge_func = std::bind_front( &NetworkChallengeTask::Challenge, this );
-    const auto& removal_func   = std::bind_front( &NetworkChallengeTask::Remove, this );
-    g_network_accessor.GetMessageTask().onHostAdded.Remove( challenge_func );
-    g_network_accessor.GetMessageTask().onHostRemoved.Remove( removal_func );
+    g_network_accessor.GetMessageTask().onHostAdded.Remove( get_bound_challenge() );
+    g_network_accessor.GetMessageTask().onHostRemoved.Remove( get_bound_remove() );
 
     m_challenge_task_running_ = false;
     m_challenge_sleeper_.notify_all();
