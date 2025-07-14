@@ -1,33 +1,5 @@
 #pragma once
 
-#ifndef DLLIMPORT
-#define DLLIMPORT __declspec( dllimport )
-#endif
-
-#ifndef DLLEXPORT
-#define DLLEXPORT __declspec( dllexport )
-#endif
-
-#ifndef ECLASS
-#define ECLASS(...)
-#endif
-
-#ifndef EENUM
-#define EENUM(...)
-#endif
-
-#ifndef EFUNC
-#define EFUNC(...)
-#endif
-
-#ifndef EPROPERTY
-#define EPROPERTY(...)
-#endif
-
-#ifndef GENERATE_BODY
-#define GENERATE_BODY
-#endif
-
 #include <filesystem>
 #include <functional>
 #include <set>
@@ -35,7 +7,8 @@
 #include <string>
 #include <mutex>
 
-#include "boost/preprocessor/facilities/is_empty.hpp"
+#include "CoreType.h"
+
 
 #ifdef _UNICODE
 #ifndef UNICODE
@@ -47,7 +20,6 @@
 #define WIDEN(x) WIDEN2(x)
 #define STRINGIFY(X)      STRINGIFY_IMPL(X)
 #define STRINGIFY_IMPL(X) #X
-#define IS_DLL !BOOST_PP_IS_EMPTY( ENGINE_CORE_API )
 
 namespace Engine
 {

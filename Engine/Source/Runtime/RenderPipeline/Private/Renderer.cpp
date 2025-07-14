@@ -211,6 +211,59 @@ namespace Engine::Managers
 		}
     }
 
+#if IS_DLL
+    Renderer::BorrowedRenderPassFactories&
+    Renderer::GetRenderTasks( const RenderTaskTraits& traits, const std::vector<HashType>& types, bool inclusion )
+    {
+        BorrowedRenderPassFactories& borrowed_factories_ = GetFactories( traits );
+        std::once_flag               delegate_flag;
+
+        auto binder = managed_bind( &Renderer::ResolveDirty, GetWeakPtr<Renderer>(), types, borrowed_factories_, inclusion );
+        onRenderTaskDirty.Listen( binder );
+
+		return borrowed_factories_;
+    }
+
+    Renderer::BorrowedRenderPassFactories& Renderer::GetFactories( const RenderTaskTraits& traits )
+    {
+        if ( !m_render_task_resolvers_.contains( traits ) )
+        {
+            m_render_task_resolvers_.emplace( traits, BorrowedRenderPassFactories{} );
+        }
+
+        return m_render_task_resolvers_[ traits ];
+    }
+    void
+    Renderer::ResolveDirty( const std::vector<HashType>& types, BorrowedRenderPassFactories& tasks, bool inclusion )
+    { 
+		tasks.clear();
+        tasks.reserve( m_unique_render_pass_task_factories_.size() );
+
+        for ( const Unique<IRenderPassTaskFactory>& factory :
+              m_unique_render_pass_task_factories_ | std::views::values )
+        {
+            if ( std::any_of( types.begin(), types.end(), [ &factory ]( const HashType& h ) { return h == factory->GetTaskType(); } ) )
+            {
+                if ( inclusion && factory != nullptr )
+                {
+                    tasks.emplace_back( factory.get() );
+				}
+                else
+                {
+                    continue;
+				}
+            }
+            else
+            {
+                if ( !inclusion && factory != nullptr )
+                {
+                    tasks.emplace_back( factory.get() );
+				}
+			}
+        }
+	}
+#endif
+
 	bool Renderer::Ready() const
 	{
 		return m_b_ready_;

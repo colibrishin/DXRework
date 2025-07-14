@@ -17,6 +17,10 @@
 #define STRINGIFY(X) STRINGIFY_IMPL(X)
 #define STRINGIFY_IMPL(X) #X
 
+#include "boost/preprocessor/facilities/is_empty.hpp"
+
+#define IS_DLL !BOOST_PP_IS_EMPTY( ENGINE_CORE_API )
+
 #include <algorithm>
 #include <array>
 #include <vector>
@@ -2173,4 +2177,50 @@ template <typename T, typename... Args>
 inline Engine::Strong<T> ConstructorAccess::Create( Args&&... args )
 {
     return make_managed_shared<T>( std::forward<Args>( args )... );
+}
+
+
+template <typename T, typename BoundFunctionT, typename... Args>
+struct managed_binder
+{
+private:
+    BoundFunctionT func;
+    managed_weak_ptr<T>   ptr;
+	std::tuple<Args...> args;
+
+	using Indices = std::make_index_sequence<sizeof...(Args)>;
+
+	template <size_t... N>
+	void invoke_proxy_impl( std::index_sequence<N...>, const BoundFunctionT& func, T* ptr ) const noexcept
+	{
+        std::bind( func, ptr, std::get<N>( args )... )();
+	}
+
+    void invoke_proxy( const BoundFunctionT& func, T* ptr ) const noexcept
+	{
+        invoke_proxy_impl( Indices{ }, func, ptr );
+	}
+
+public:
+    managed_binder( BoundFunctionT func, managed_weak_ptr<T> ptr, Args&&... args )
+        : func( func ), ptr( ptr ), args( std::forward_as_tuple( args... ) )
+    { }
+
+	~managed_binder()
+	{
+	}
+
+	void operator()() const noexcept
+	{
+		if ( const managed_shared_ptr<T>& locked = ptr.lock() )
+		{
+            invoke_proxy( func, locked.get() );
+		}
+	}
+};
+
+template <typename FunctionT, typename T, typename... Args>
+auto managed_bind(FunctionT function, managed_weak_ptr<T> ptr, Args&&... args)
+{
+    return managed_binder<T, FunctionT, Args...>( function, ptr, args... );
 }

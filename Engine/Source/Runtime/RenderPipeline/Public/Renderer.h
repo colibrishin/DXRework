@@ -17,6 +17,34 @@
 DEFINE_DELEGATE(OnRenderDone, const Engine::eShaderDomain);
 DEFINE_DELEGATE(OnRenderTaskDirty);
 
+#if IS_DLL
+namespace Engine
+{
+    struct RenderTaskTraits
+    {
+        const std::type_info& rtti;
+        const eShaderDomain   domain;
+
+        bool operator==(const RenderTaskTraits& other) const noexcept
+        {
+            return rtti.name() == other.rtti.name() && domain == other.domain;
+        }
+    };
+}
+
+template<>
+struct std::hash<Engine::RenderTaskTraits>
+{
+    size_t operator()( const Engine::RenderTaskTraits& target ) const
+    {
+        static std::hash<uint32_t> domain_hasher;
+        size_t                     return_value = domain_hasher( target.domain );
+        boost::hash_combine( return_value, target.rtti.hash_code() );
+        return return_value;
+    }
+};
+#endif
+
 namespace Engine::Managers
 {
 	ECLASS()
@@ -54,7 +82,7 @@ namespace Engine::Managers
 		void RegisterContextPreRenderSetup(const std::string_view name, const ContextSetupFunction& prerender_func);
 		void UnregisterContextPreRenderSetup(const std::string_view name);
 		void RegisterContextPostRenderSetup(const std::string_view name, const ContextSetupFunction& postrender_func);
-		void UnregisterContextPostRenderSetup(const std::string_view name);
+        void UnregisterContextPostRenderSetup( const std::string_view name );
 
 		using RenderPassTaskFactoryContainer = std::unordered_map<std::wstring, Unique<IRenderPassTaskFactory>>;
 		using RenderPassTaskBorrowedContainer = std::unordered_map<std::wstring, IRenderPassTaskFactory*>;
@@ -132,13 +160,23 @@ namespace Engine::Managers
 		template <typename... ExcludeRenderTaskTs>
 		struct ExclusionPredicate
 		{
-            static void ResolveDirty( const RenderPassTaskFactoryContainer &cont,
-                                      std::vector<IRenderPassTaskFactory*> &factories )
+#if IS_DLL
+            constexpr static bool       Inclusion = false;
+            constexpr static std::array value     = { ExcludeRenderTaskTs::StaticTypeHash()... };
+
+            static const std::vector<HashType>& GetValue()
+            {
+                static std::vector<HashType> container( value.begin(), value.end() );
+                return container;
+            }
+#else
+            static void ResolveDirty( const RenderPassTaskFactoryContainer& cont,
+                                      std::vector<IRenderPassTaskFactory*>& factories )
             {
                 factories.clear();
                 factories.reserve( cont.size() );
 
-                for ( const Unique<IRenderPassTaskFactory> &factory : cont | std::views::values )
+                for ( const Unique<IRenderPassTaskFactory>& factory : cont | std::views::values )
                 {
                     if ( bool check[] = { factory->GetTaskType() == ExcludeRenderTaskTs::StaticTypeHash()... };
                          std::any_of(
@@ -152,12 +190,23 @@ namespace Engine::Managers
                         factories.emplace_back( factory.get() );
                     }
                 }
-			}
+            }
+#endif
 		};
 
 		template <typename... IncludeRenderTaskTs>
         struct InclusionPredicate
         {
+#if IS_DLL
+            constexpr static bool       Inclusion = true;
+            constexpr static std::array value     = { IncludeRenderTaskTs::StaticTypeHash()... };
+
+            static const std::vector<HashType>& GetValue()
+            {
+                static std::vector<HashType> container( value.begin(), value.end() );
+                return container;
+            }
+#else
             static void ResolveDirty( const RenderPassTaskFactoryContainer& cont,
                                       std::vector<IRenderPassTaskFactory*>& factories )
             {
@@ -174,7 +223,15 @@ namespace Engine::Managers
                     }
                 }
             }
+#endif
         };
+
+#if IS_DLL
+        using BorrowedRenderPassFactories = std::vector<IRenderPassTaskFactory*>;
+        BorrowedRenderPassFactories& GetRenderTasks( const RenderTaskTraits& traits, const std::vector<HashType>& types, bool inclusion );
+        BorrowedRenderPassFactories& GetFactories( const RenderTaskTraits& traits );
+        void ResolveDirty( const std::vector<HashType>& types, BorrowedRenderPassFactories& tasks, bool inclusion );
+#endif
 
     public:
 
@@ -191,6 +248,7 @@ namespace Engine::Managers
             const std::unordered_map<std::string_view, ContextSetupFunction>& postrender_funcs
         )
 	    {
+#if !IS_DLL
             static std::vector<IRenderPassTaskFactory*> borrowed_factories_;
             static std::once_flag                       delegate_flag;
 
@@ -203,6 +261,11 @@ namespace Engine::Managers
                                 func();
                                 onRenderTaskDirty.Listen( func );
                             } );
+#else
+            static RenderTaskTraits                     traits{ typeid( PredicationT ), Domain };
+            static std::vector<IRenderPassTaskFactory*> borrowed_factories_ =
+                    GetRenderTasks( traits, PredicationT::GetValue(), PredicationT::Inclusion );
+#endif
 
             for (IRenderPassTaskFactory* factory : borrowed_factories_)
             {
@@ -230,6 +293,7 @@ namespace Engine::Managers
                                           ContextSetupFunction &postrender_predicate
         )
 	    {
+#if !IS_DLL
             static std::vector<IRenderPassTaskFactory*> borrowed_factories_;
             static std::once_flag                       delegate_flag;
 
@@ -242,6 +306,11 @@ namespace Engine::Managers
                                 func();
                                 onRenderTaskDirty.Listen( func );
                             } );
+#else
+            static RenderTaskTraits                     traits{ typeid( PredicationT ), Domain };
+            static std::vector<IRenderPassTaskFactory*> borrowed_factories_ =
+                    GetRenderTasks( traits, PredicationT::GetValue(), PredicationT::Inclusion );
+#endif
 
             for ( IRenderPassTaskFactory* factory : borrowed_factories_ )
             {
@@ -369,6 +438,9 @@ namespace Engine::Managers
         
         RenderPassTaskInstantiatedContainer m_render_pass_tasks_[ SHADER_DOMAIN_MAX ];
         RenderPassTaskUsageContainer        m_render_pass_tasks_usage_[ SHADER_DOMAIN_MAX ];
+        
+        using BorrowedRenderTasksContainer = std::unordered_map<RenderTaskTraits, BorrowedRenderPassFactories>;
+        BorrowedRenderTasksContainer m_render_task_resolvers_;
 
 		RenderMap m_render_candidates_[SHADER_DOMAIN_MAX];
 	};
