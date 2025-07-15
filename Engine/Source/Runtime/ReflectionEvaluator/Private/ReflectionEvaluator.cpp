@@ -66,9 +66,7 @@ namespace Engine::Managers
 
 	ReflectionEvaluator::~ReflectionEvaluator()
 	{
-		if (Renderer::IsInitialized())
-		{
-			Renderer::GetInstance().onRenderDone.Remove(GetSharedPtr<ReflectionEvaluator>(), &ReflectionEvaluator::CheckRender);
-		}
+        Renderer::GetInstance().onRenderDone.Remove( GetWeakPtr<ReflectionEvaluator>(),
+                                                     &ReflectionEvaluator::CheckRender );
 	}
 }

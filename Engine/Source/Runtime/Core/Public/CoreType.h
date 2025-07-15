@@ -1432,6 +1432,16 @@ public:
 	{
         return m_key_.allocation_count;
 	}
+
+	size_t index() const
+	{
+        return m_key_.to_raw_index();
+	}
+
+	const pool_allocator_base* allocator() const
+	{
+        return m_allocator_;
+	}
 };
 
 template <typename T>
@@ -1945,6 +1955,34 @@ public:
         return resolve();
 	}
 
+	template <typename U>
+	bool owner_before( const managed_shared_ptr<U>& other ) const
+	{
+        return m_context_.index() < other.m_context_.index();
+	}
+
+	template <typename U>
+	bool owner_before( const managed_weak_ptr<T>& other ) const
+	{
+        return m_context_.index() < other.m_context_.index();
+	}
+
+	template <typename U>
+    bool owner_equals( const managed_shared_ptr<U>& other ) const
+    {
+        return m_context_.index() == other.m_context_.index() &&
+               m_context_.allocation_count() == other.m_context_.allocation_count() &&
+               m_context_.allocator() == other.m_context_.allocator();
+    }
+
+	template <typename U>
+    bool owner_equals( const managed_weak_ptr<U>& other ) const
+    {
+        return m_context_.index() == other.m_context_.index() &&
+                m_context_.allocation_count() == other.m_context_.allocation_count() &&
+                m_context_.allocator() == other.m_context_.allocator();
+    }
+
     [[nodiscard]] managed_weak_ptr<T> to_weak() const
 	{
         return managed_weak_ptr( *this );
@@ -2036,6 +2074,33 @@ public:
         return !m_context_.valid();
 	}
 
+	template <typename U>
+    [[nodiscard]] bool owner_before( const managed_weak_ptr<U>& other ) const
+    {
+        return m_context_.index() < other.m_context_.index();
+	}
+
+	template <typename U>
+    [[nodiscard]] bool owner_before( const managed_shared_ptr<U>& other ) const
+    {
+        return other.owner_before( *this );
+    }
+
+	template <typename U>
+    [[nodiscard]] bool owner_equals( const managed_weak_ptr<U>& other ) const
+    {
+        return m_context_.index() == other.m_context_.index() &&
+               m_context_.allocation_count() == other.m_context_.allocation_count() &&
+               m_context_.allocator() == other.m_context_.allocator();
+    }
+
+	template <typename U>
+    [[nodiscard]] bool owner_equals( const managed_shared_ptr<U>& other ) const
+    {
+        return other.owner_equal( other );
+    }
+
+
 	managed_shared_ptr<T> lock() const
     {
 		return managed_shared_ptr<T>( *this );
@@ -2089,13 +2154,13 @@ struct std::hash<managed_weak_ptr<T>>
 template <typename T, typename U>
 inline bool operator<( const managed_shared_ptr<T>& left, const managed_shared_ptr<U>& right ) noexcept
 {
-    return reinterpret_cast<uintptr_t>( left.get() ) < reinterpret_cast<uintptr_t>( right.get() );
+    return left.owner_before( right );
 }
 
 template <typename T, typename U>
 inline bool operator<( const managed_weak_ptr<T>& left, const managed_weak_ptr<U>& right ) noexcept
 {
-    return left.lock() < right.lock();
+    return left.owner_before( right );
 }
 
 template <typename T, typename... Args>
@@ -2186,7 +2251,7 @@ struct managed_binder
 private:
     BoundFunctionT func;
     managed_weak_ptr<T>   ptr;
-	std::tuple<Args...> args;
+	std::tuple<std::decay_t<Args>...> args;
 
 	using Indices = std::make_index_sequence<sizeof...(Args)>;
 
