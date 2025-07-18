@@ -13,23 +13,6 @@ namespace Engine
 	template <size_t... Indices>
 	struct build_indices<0, Indices...> : indices<Indices...> {};
 
-    template <typename T, typename... Args>
-    struct proxy_call
-    {
-        static void invoke( managed_weak_ptr<T> this_pointer, void ( T::*function )( Args... ), Args... args )
-        {
-            
-        }
-
-		static void invoke( managed_weak_ptr<T> this_pointer, void ( T::*function )( Args... ) const, Args... args )
-        {
-            if ( const managed_shared_ptr<T>& locked = this_pointer.lock() )
-            {
-                std::bind_front( function, locked.get() )( args... );
-            }
-        }
-    };
-
 	template <size_t... Indices, typename T, typename... Args>
 	auto mem_bind_impl(indices<Indices...>, T* this_pointer, void(T::*function)(Args...))
 	{
@@ -112,9 +95,6 @@ public:
 	using base_class_type = Engine::Abstracts::Entity;
 
 	template <typename T>
-	using strong_this_type = Engine::Strong<T>;
-
-	template <typename T>
 	using weak_this_type = Engine::Weak<T>;
 	using func_ptr_type = address_type;
 
@@ -123,23 +103,25 @@ public:
 	using function_type = std::function<void(Args...)>;
 
 	template <typename T> requires (std::is_base_of_v<base_class_type, T>)
-	void Listen(const strong_this_type<T>& this_pointer, void(T::*function)(Args...))
+    void Listen( const weak_this_type<T>& this_pointer, void ( T::*function )( Args... ) )
 	{
-		if (this_pointer)
+		if ( !this_pointer.empty() )
 		{
-            function_type func = Engine::mem_bind( this_pointer.to_weak(), function );
+            uintptr_t     address = reinterpret_cast<address_type&>( function );
+            function_type func    = Engine::mem_bind( this_pointer, function );
 			m_listener_.emplace(bucket_type{ this_pointer, reinterpret_cast<address_type&>( function ) }, func);
 		}
 	}
 
 	// const function
 	template <typename T> requires (std::is_base_of_v<base_class_type, T>)
-	void Listen(const strong_this_type<T>& this_pointer, void(T::*function)(Args...) const)
+    void Listen( const weak_this_type<T>& this_pointer, void ( T::*function )( Args... ) const )
 	{
-		if (this_pointer)
+        if ( !this_pointer.empty() )
 		{
-            function_type func = Engine::mem_bind( this_pointer.to_weak(), function );
-            m_listener_.emplace( bucket_type{ this_pointer, reinterpret_cast<address_type&>( function ) }, func );
+            uintptr_t     address = reinterpret_cast<address_type&>( function );
+            function_type func = Engine::mem_bind( this_pointer, function );
+            m_listener_.emplace( bucket_type{ this_pointer, address }, func );
 		}
 	}
 
@@ -177,14 +159,16 @@ public:
 	}
 
 	template <typename T> requires (std::is_base_of_v<base_class_type, T>)
-	void Remove(const strong_this_type<T>& this_pointer, void(T::*function)(Args...))
+	void Remove(const weak_this_type<T>& this_pointer, void(T::*function)(Args...))
 	{
-		const bucket_type key{ this_pointer, reinterpret_cast<address_type>(&function) };
+        address_type address = reinterpret_cast<address_type&>( function );
 
-		if (m_listener_.contains(key))
-		{
-			m_listener_.erase(key);
-		}
+		const bucket_type key{ this_pointer, address };
+
+        if ( m_listener_.contains( key ) )
+        {
+            m_listener_.erase( key );
+        }
 	}
 
 	template <typename FunctionT> requires std::is_convertible_v<FunctionT, function_type>

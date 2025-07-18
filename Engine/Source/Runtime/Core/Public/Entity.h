@@ -136,6 +136,8 @@ namespace Engine::Abstracts
 			m_b_initialized_(false),
 			m_b_garbage_(false) {}
 
+		virtual void PreDeconstruction() { }
+
 	private:
 		EPROPERTY()
 		EntityName     m_name_;

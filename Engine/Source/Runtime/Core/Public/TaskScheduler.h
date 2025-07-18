@@ -98,6 +98,9 @@ namespace Engine::Managers
 	    void Inject(const eTaskType type, const TaskSchedulerFunc& func);
 	    void Extract(const eTaskType type, const TaskSchedulerFunc& func);
 
+	protected:
+        void PreDeconstruction() override;
+
 	private:
 		TaskScheduler() = default;
 		friend struct SingletonDeleter;

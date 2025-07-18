@@ -46,7 +46,7 @@ namespace Engine::Managers
 	void CollisionDetector::Initialize()
 	{
 		UpdateLayerMask(SceneManager::GetInstance().GetActiveScene());
-		SceneManager::GetInstance().onSceneActive.Listen(GetSharedPtr<CollisionDetector>(), &CollisionDetector::UpdateScene);
+		SceneManager::GetInstance().onSceneActive.Listen(GetWeakPtr<CollisionDetector>(), &CollisionDetector::UpdateScene);
 
 #ifdef PHYSX_ENABLED
 		for (int i = 0; i < LAYER_MAX; ++i)
@@ -60,7 +60,7 @@ namespace Engine::Managers
 
 #if WITH_EDITOR
 		UpdateLayerNames(SceneManager::GetInstance().GetActiveScene());
-		SceneManager::GetInstance().onSceneActive.Listen(GetSharedPtr<CollisionDetector>(), &CollisionDetector::UpdateLayerNames);
+		SceneManager::GetInstance().onSceneActive.Listen(GetWeakPtr<CollisionDetector>(), &CollisionDetector::UpdateLayerNames);
 #endif
 
 	}

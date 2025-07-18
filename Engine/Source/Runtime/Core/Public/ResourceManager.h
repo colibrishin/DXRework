@@ -84,6 +84,9 @@ namespace Engine::Managers
 		UIHelpers::ManagedBoolAndFuncMap<std::string_view> m_ui_load_functions_;
 		UIHelpers::ManagedBoolAndFuncMap<std::string_view> m_ui_new_functions_;
 #endif
+    protected:
+        void PreDeconstruction() override;
+
 	private:
 		ResourceManager() = default;
 		friend struct SingletonDeleter;

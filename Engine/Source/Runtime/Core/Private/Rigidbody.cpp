@@ -47,7 +47,7 @@ namespace Engine::Components
 		// todo/refactor: component dependency
 		if (const Strong<Engine::Abstracts::ObjectBase>& owner = GetOwner().lock())
 		{
-			owner->onComponentRemoved.Listen(GetSharedPtr<Rigidbody>(), &Rigidbody::CheckColliderDependency);
+			owner->onComponentRemoved.Listen(GetWeakPtr<Rigidbody>(), &Rigidbody::CheckColliderDependency);
 		}
 	}
 

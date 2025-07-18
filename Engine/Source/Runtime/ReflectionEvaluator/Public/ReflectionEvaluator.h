@@ -27,8 +27,11 @@ namespace Engine::Managers
 		void BindReflectionMap(const IGraphicContext* context);
 		void UnbindReflectionMap(const IGraphicContext* context);
 
+	protected:
+        void PreDeconstruction() override;
+
 	private:
-		void CheckRender(const eShaderDomain shaderDomain);
+        void CheckRender( const eShaderDomain shaderDomain );
 		
 		friend struct SingletonDeleter;
 		~ReflectionEvaluator() override;

@@ -411,6 +411,13 @@ namespace Engine::Managers
 	    {
             setStop( );
 	    }
+    }
+
+    void SceneManager::PreDeconstruction()
+    {
+        m_active_scene_ = {};
+        m_playing_scene_ = {};
+        m_scenes_.clear();
 	}
 
 #if WITH_EDITOR

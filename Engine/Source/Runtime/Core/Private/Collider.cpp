@@ -79,7 +79,7 @@ namespace Engine::Components
 
 		if (const Strong<Transform> tr = owner->GetComponent<Transform>().lock())
 		{
-			tr->onTransformChanged.Listen(GetSharedPtr<Collider>(), &Collider::UpdateInertiaTensor);
+			tr->onTransformChanged.Listen(GetWeakPtr<Collider>(), &Collider::UpdateInertiaTensor);
 		}
 
 		InitializeStockVertices();

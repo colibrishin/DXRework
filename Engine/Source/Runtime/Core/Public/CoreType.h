@@ -1187,6 +1187,15 @@ struct is_hash_type : std::false_type {};
 template <typename T>
 struct is_hash_type<T, std::void_t<decltype(&T::StaticTypeHash)>> : std::true_type {};
 
+template <typename T, typename = void>
+struct is_predtor_defined : std::false_type
+{ };
+
+template <typename T>
+struct is_predtor_defined<T, std::void_t<decltype( &T::PreDeconstruction )>> : std::true_type
+{ };
+
+
 template <typename T>
 std::atomic<bool>& get_spinlock()
 {
@@ -1265,6 +1274,15 @@ private:
     {
         ::new ( ptr ) T( std::forward<Args>( args )... );
     }
+
+	template <typename T>
+	inline static void InternalPreDeconstruction( T* ptr )
+	{
+		if constexpr (is_predtor_defined<T>::value == true)
+		{
+            ptr->PreDeconstruction();
+		}
+	}
 
     template <typename T>
     inline static void InternalDeconstruct( T* ptr )
@@ -1441,6 +1459,28 @@ public:
 	const pool_allocator_base* allocator() const
 	{
         return m_allocator_;
+	}
+
+	bool owner_before(const AllocationContext& other) const
+	{
+        return index() < other.index() && reinterpret_cast<uintptr_t>( allocator() ) < reinterpret_cast<uintptr_t>( other.allocator() );
+	}
+
+	bool owner_equals(const AllocationContext& other) const
+	{
+        return index() == other.index() &&
+               allocation_count() == other.allocation_count() &&
+               allocator() == other.allocator();
+	}
+
+	size_t owner_hash_code() const
+	{
+        static std::hash<size_t> hasher;
+		static std::hash<uintptr_t> ptr_hasher;
+        size_t value = m_key_.to_raw_index();
+        boost::hash_combine( value, hasher( allocation_count() ) );
+        boost::hash_combine( value, ptr_hasher( reinterpret_cast<uintptr_t>( allocator() ) ) );
+		return value;
 	}
 };
 
@@ -1790,6 +1830,9 @@ class managed_shared_ptr : protected boost::shared_ptr<T>
 	template <typename T>
     friend managed_shared_ptr<T> from_native( boost::weak_ptr<T> native );
 
+	template <typename T>
+    friend managed_shared_ptr<T> from_native( const boost::shared_ptr<T>& native );
+
 	struct cast_tag
     { };
 
@@ -1810,6 +1853,13 @@ class managed_shared_ptr : protected boost::shared_ptr<T>
 	template <typename U>
     explicit managed_shared_ptr( const boost::weak_ptr<U>& weak_native, const AllocationContext& context )
         : boost::shared_ptr<T>( weak_native, boost::detail::sp_nothrow_tag{} ), m_context_( context )
+    {
+        resolve();
+    }
+
+	template <typename U>
+    explicit managed_shared_ptr( const boost::shared_ptr<U>& native, const AllocationContext& context )
+        : boost::shared_ptr<T>( native ), m_context_( context )
     {
         resolve();
     }
@@ -1838,12 +1888,21 @@ class managed_shared_ptr : protected boost::shared_ptr<T>
         ar & static_cast<boost::shared_ptr<T>&>( *this );
 	}
 
+	void reachability_test()
+	{
+        if ( boost::shared_ptr<T>::use_count() == 1 )
+        {
+            ConstructorAccess::InternalPreDeconstruction( get() );
+        }
+	}
+
 public:
     using element_type = T;
 
 	~managed_shared_ptr()
 	{
         resolve();
+        reachability_test();
 	}
 
 	managed_shared_ptr( nullptr_t )
@@ -1891,8 +1950,9 @@ public:
 
 	void reset()
 	{
-        m_context_ = AllocationContext::get_null_context();
+        reachability_test();
         boost::shared_ptr<T>::reset();
+        m_context_ = AllocationContext::get_null_context();
 	}
 
 	T* resolve() const noexcept
@@ -1955,32 +2015,33 @@ public:
         return resolve();
 	}
 
+	bool expired() const noexcept
+	{
+        return m_context_.expired();
+	}
+
 	template <typename U>
 	bool owner_before( const managed_shared_ptr<U>& other ) const
 	{
-        return m_context_.index() < other.m_context_.index();
+        return m_context_.owner_before( other.m_context_ );
 	}
 
 	template <typename U>
 	bool owner_before( const managed_weak_ptr<T>& other ) const
 	{
-        return m_context_.index() < other.m_context_.index();
+        return m_context_.owner_before( other.m_context_ );
 	}
 
 	template <typename U>
     bool owner_equals( const managed_shared_ptr<U>& other ) const
     {
-        return m_context_.index() == other.m_context_.index() &&
-               m_context_.allocation_count() == other.m_context_.allocation_count() &&
-               m_context_.allocator() == other.m_context_.allocator();
+        return m_context_.owner_equals( other.m_context_ );
     }
 
 	template <typename U>
     bool owner_equals( const managed_weak_ptr<U>& other ) const
     {
-        return m_context_.index() == other.m_context_.index() &&
-                m_context_.allocation_count() == other.m_context_.allocation_count() &&
-                m_context_.allocator() == other.m_context_.allocator();
+        return m_context_.owner_equals( other.m_context_ );
     }
 
     [[nodiscard]] managed_weak_ptr<T> to_weak() const
@@ -2034,6 +2095,16 @@ class managed_weak_ptr : protected boost::weak_ptr<T>
 	template <typename U>
 	friend class managed_shared_ptr;
 
+    friend struct std::hash<managed_weak_ptr<T>>;
+
+	struct init_tag
+    { };
+
+	managed_weak_ptr( const AllocationContext& context, const init_tag& )
+        : boost::weak_ptr<T>( nullptr ), m_context_( context )
+    {
+    }
+
 public:
     managed_weak_ptr() : boost::weak_ptr<T>( {} ), m_context_( AllocationContext::no_assert_tag{} )
     {
@@ -2077,27 +2148,25 @@ public:
 	template <typename U>
     [[nodiscard]] bool owner_before( const managed_weak_ptr<U>& other ) const
     {
-        return m_context_.index() < other.m_context_.index();
-	}
+        return m_context_.owner_before( other.m_context_ );
+    }
 
 	template <typename U>
     [[nodiscard]] bool owner_before( const managed_shared_ptr<U>& other ) const
     {
-        return other.owner_before( *this );
+        return m_context_.owner_before( other.m_context_ );
     }
 
 	template <typename U>
     [[nodiscard]] bool owner_equals( const managed_weak_ptr<U>& other ) const
     {
-        return m_context_.index() == other.m_context_.index() &&
-               m_context_.allocation_count() == other.m_context_.allocation_count() &&
-               m_context_.allocator() == other.m_context_.allocator();
+        return m_context_.owner_equals( other.m_context_ );
     }
 
 	template <typename U>
     [[nodiscard]] bool owner_equals( const managed_shared_ptr<U>& other ) const
     {
-        return other.owner_equal( other );
+        return m_context_.owner_equals( other.m_context_ );
     }
 
 
@@ -2124,15 +2193,7 @@ struct std::hash<managed_shared_ptr<T>>
 {
     size_t operator()( const managed_shared_ptr<T>& p ) const noexcept
     {
-		if ( p.m_context_.expired() )
-		{
-            return 0;
-		}
-
-        static std::hash<size_t> hasher{};
-        size_t                   seed = hasher( p.m_context_.m_key_.to_raw_index() );
-		boost::hash_combine( seed, hasher( reinterpret_cast<size_t>( p.get() ) ) );
-        return seed;
+        return p.m_context_.owner_hash_code();
     }
 };
 
@@ -2141,13 +2202,7 @@ struct std::hash<managed_weak_ptr<T>>
 {
     size_t operator()( const managed_weak_ptr<T>& p ) const noexcept
     {
-        if ( p.expired() )
-        {
-            return 0;
-        }
-
-		static std::hash<managed_shared_ptr<T>> hasher{};
-        return hasher( p.lock() );
+        return p.m_context_.owner_hash_code();
     }
 };
 
@@ -2182,13 +2237,13 @@ managed_shared_ptr<U> make_managed_shared( Args&&... arguments )
 template <typename T>
 managed_shared_ptr<T> from_native( boost::weak_ptr<T> native )
 {
-	if ( native.expired() )
+    if ( const boost::shared_ptr<T>& locked = native.lock() )
 	{
-        return {};
+        AllocationContext key = locked->GetAllocationContext();
+        return managed_shared_ptr<T>( native, key );
 	}
 
-	AllocationContext key = native.lock()->GetAllocationContext();
-    return managed_shared_ptr<T>( native, key );
+	return {};
 }
 
 template <typename ValueType, typename... Args> requires is_hash_type<ValueType>::value

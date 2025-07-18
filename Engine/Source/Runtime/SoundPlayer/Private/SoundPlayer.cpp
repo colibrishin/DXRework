@@ -14,7 +14,7 @@ void Engine::Components::SoundPlayer::Initialize()
 
     if (const Strong<Engine::Abstracts::ObjectBase>& owner = GetOwner().lock())
     {
-        owner->onComponentRemoved.Listen(GetSharedPtr<SoundPlayer>(), &SoundPlayer::CheckTransform);
+        owner->onComponentRemoved.Listen(GetWeakPtr<SoundPlayer>(), &SoundPlayer::CheckTransform);
 
         if (owner->GetComponent<Transform>().expired())
         {

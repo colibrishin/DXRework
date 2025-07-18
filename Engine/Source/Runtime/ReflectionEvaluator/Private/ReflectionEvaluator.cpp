@@ -37,7 +37,7 @@ namespace Engine::Managers
 			});
 
 		Renderer::GetInstance().onRenderDone.Listen(
-			GetSharedPtr<ReflectionEvaluator>(),
+			GetWeakPtr<ReflectionEvaluator>(),
 			&ReflectionEvaluator::CheckRender);
 	}
 
@@ -49,7 +49,7 @@ namespace Engine::Managers
 	void ReflectionEvaluator::UnbindReflectionMap(const IGraphicContext* context)
 	{
 		g_graphic_accessor.GetInterface().TransitBack(context, m_copy_.get(), BIND_TYPE_SRV);
-	}
+    }
 
 	void ReflectionEvaluator::CheckRender(const eShaderDomain shaderDomain)
 	{
@@ -62,11 +62,17 @@ namespace Engine::Managers
 			gi.CopyRenderTarget(&primitive, m_copy_.get());
 			primitive.commandList->FlagReady();
 		}
-	}
+    }
 
-	ReflectionEvaluator::~ReflectionEvaluator()
+    ReflectionEvaluator::~ReflectionEvaluator()
+    { }
+
+	void ReflectionEvaluator::PreDeconstruction()
 	{
-        Renderer::GetInstance().onRenderDone.Remove( GetWeakPtr<ReflectionEvaluator>(),
-                                                     &ReflectionEvaluator::CheckRender );
+		if ( Renderer::IsInitialized() )
+		{
+            Renderer::GetInstance().onRenderDone.Remove( GetWeakPtr<ReflectionEvaluator>(),
+                                                         &ReflectionEvaluator::CheckRender );
+		}
 	}
 }

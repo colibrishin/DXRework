@@ -92,11 +92,13 @@ namespace Engine::Managers
             std::wstring          m_filename_;
             std::filesystem::path m_path_;
 
-            void    *m_handle_     = nullptr;
+            void*    m_handle_     = nullptr;
             bool     m_b_dynamic_  = false;
             uint64_t m_last_error_ = 0;
 
             std::unique_ptr<IModule> m_module_;
+
+            ~ModuleInfo();
         };
 
         using ModuleInfoPtr = std::unique_ptr<ModuleInfo>;
@@ -108,28 +110,28 @@ namespace Engine::Managers
         ModuleManager() = default;
         ~ModuleManager();
 
-        void        Initialize();
-        void        Destroy();
-        ModuleInfo *FindModule( const std::wstring_view name );
-        IModule    *LoadModule( const std::wstring_view name );
-        void        AddModule( const std::wstring_view name );
-        void        RemoveModule( const std::wstring_view name );
-        void        LoadModuleAll();
+        void                  Initialize();
+        ModuleInfoPtr         Destroy();
+        ModuleInfo*           FindModule( const std::wstring_view name );
+        IModule*              LoadModule( const std::wstring_view name );
+        void                  AddModule( const std::wstring_view name );
+        void                  RemoveModule( const std::wstring_view name );
+        void                  LoadModuleAll();
         static ModuleManager& GetInstance();
 
 #if !IS_DLL
-        void RegisterStaticModule( const std::wstring_view name, const ModuleInitializationFunction &func );
+        void RegisterStaticModule( const std::wstring_view name, const ModuleInitializationFunction& func );
 #endif
 
     private:
-        std::recursive_mutex                                    m_read_mutex_;
-        std::recursive_mutex                                    m_write_mutex_;
-        std::unordered_map<std::wstring, ModuleInfoPtr>         m_module_loaded_;
-        std::unordered_map<std::wstring, std::filesystem::path> m_module_paths_;
+        std::recursive_mutex                                     m_read_mutex_;
+        std::recursive_mutex                                     m_write_mutex_;
+        std::unordered_map<std::wstring, ModuleInfoPtr>          m_module_loaded_;
+        std::unordered_map<std::wstring, std::filesystem::path>  m_module_paths_;
         std::unordered_map<std::wstring, std::set<std::wstring>> m_lazy_modules_;
 
 #if !IS_DLL
-        std::unordered_map<std::wstring, ModuleInitializationFunction> m_module_initializer_;     
+        std::unordered_map<std::wstring, ModuleInitializationFunction> m_module_initializer_;
 #endif
     };
 }

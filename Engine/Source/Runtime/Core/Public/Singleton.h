@@ -56,7 +56,7 @@ namespace Engine::Abstracts
 		static bool IsInitialized()
 		{
 			std::lock_guard l(s_mutex_);
-			return s_destroyed_;
+			return !s_destroyed_ || s_instance_ == nullptr;
 		}
 		
 		void OnSerialized() final {}

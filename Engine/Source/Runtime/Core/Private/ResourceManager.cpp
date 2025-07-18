@@ -268,19 +268,23 @@ namespace Engine::Managers
 	}
 #endif
 
-	ResourceManager::~ResourceManager()
-	{
-		m_resource_cache_.clear();
-		m_resource_ids_.clear();
+	void ResourceManager::PreDeconstruction()
+    {
+        m_resource_cache_.clear();
+        m_resource_ids_.clear();
 
-		for (auto& set : m_resources_ | std::views::values)
-		{
-			for ( Engine::Strong<Abstracts::Resource> resource : set )
-			{
-				resource->Unload();
-				resource.reset();
-			}
-		}
+        for ( auto& set : m_resources_ | std::views::values )
+        {
+            for ( Engine::Strong<Abstracts::Resource> resource : set )
+            {
+                resource->Unload();
+                resource.reset();
+            }
+        }
+	}
+
+    ResourceManager::~ResourceManager()
+	{
 	}
 
 	Weak<Abstracts::Resource> ResourceManager::SearchResourceByMetadata(

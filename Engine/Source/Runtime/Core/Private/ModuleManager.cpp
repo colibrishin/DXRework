@@ -36,17 +36,43 @@ namespace Engine::Managers
 	void ModuleManager::Initialize()
 	{
 		m_module_paths_.emplace(L"Default", "./");
-        LoadModule( L"CoreModuleManager" );
     }
 
-    void ModuleManager::Destroy()
+    ModuleManager::ModuleInfoPtr ModuleManager::Destroy()
     {
-        for ( auto &ptr : m_module_loaded_ | std::views::reverse | std::views::values )
+        ModuleInfoPtr core_ptr;
+        ModuleInfoPtr api_ptr;
+        ModuleInfoPtr gapi_ptr;
+
+        for ( auto it = m_module_loaded_.begin(); it != m_module_loaded_.end(); )
         {
+            auto& ptr = it->second;
+
+            if ( ptr->m_filename_.starts_with( L"Core" ) )
+            {
+                core_ptr = std::move( ptr );
+                it       = m_module_loaded_.erase( it );
+                continue;
+            }
+
+            if ( ptr->m_filename_.ends_with( L"Wrapper" ) )
+            {
+                api_ptr = std::move( ptr );
+                it      = m_module_loaded_.erase( it );
+                continue;
+            }
+
+			if ( ptr->m_filename_.ends_with( L"GraphicInterface" ) )
+            {
+                gapi_ptr = std::move( ptr );
+                it       = m_module_loaded_.erase( it );
+                continue;
+            }
+
 #if IS_DLL
             if ( ptr->m_handle_ )
             {
-				if ( ptr->m_module_ )
+                if ( GetModuleHandleW( it->second->m_path_.c_str() ) && ptr->m_module_ )
 				{
                     ptr->m_module_->Shutdown();
                     ptr->m_module_.reset();   
@@ -64,10 +90,34 @@ namespace Engine::Managers
 		    {
                 ptr.reset();
 		    }
+
+			it = m_module_loaded_.erase( it );
         }
 
         g_allocator_storage.cleanup();
         g_allocator_storage.report_leakage();
+
+        if ( gapi_ptr )
+        {
+#if IS_DLL
+            if ( gapi_ptr->m_handle_ )
+            {
+                if ( GetModuleHandleW( gapi_ptr->m_path_.c_str() ) && gapi_ptr->m_module_ )
+                {
+                    gapi_ptr->m_module_->Shutdown();
+                    gapi_ptr->m_module_.reset();
+                }
+                FreeLibrary( static_cast<HMODULE>( gapi_ptr->m_handle_ ) );
+            }
+#else
+            if ( gapi_ptr->m_module_ )
+            {
+                gapi_ptr->m_module_.reset();
+            }
+#endif
+        }
+
+        return std::move( api_ptr );
 	}
 
 	ModuleManager::ModuleInfo* ModuleManager::FindModule(const std::wstring_view name)
@@ -335,4 +385,13 @@ namespace Engine::Managers
 	{
         Destroy();
 	}
-}
+    ModuleManager::ModuleInfo::~ModuleInfo()
+    {
+#if IS_DLL
+        if ( !GetModuleHandleW( m_path_.c_str() ) )
+        {
+            m_module_.release();
+        }
+#endif
+    }
+} // namespace Engine::Managers

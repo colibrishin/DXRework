@@ -359,6 +359,9 @@ namespace Engine::Managers
         void FixedUpdate(const float dt) override;
         void PostUpdate(const float dt) override;
 
+    protected:
+        void PreDeconstruction() override;
+
     private:
         friend struct SingletonDeleter;
         ~ImGuiManager() override;

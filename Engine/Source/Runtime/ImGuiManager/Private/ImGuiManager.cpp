@@ -63,6 +63,11 @@ namespace Engine::Managers
 #endif
 	}
 
+	void ImGuiManager::PreDeconstruction()
+	{
+        WinAPI::WinAPIWrapper::UnregisterHandler( "ImGuiManager" );
+	}
+
 	void ImGuiManager::OnUIUpdate(UIContext* const parent, const float dt)
 	{
 		Singleton::OnUIUpdate(parent, dt);
