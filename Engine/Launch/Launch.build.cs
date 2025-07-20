@@ -18,6 +18,8 @@ public class Launch : EngineCommonProject
         {
             conf.AddPrivateDependency<Boost>(target);
             conf.AddPrivateDependency<Core>(target);
+            conf.AddPrivateDependency<CoreModule>(target);
+            conf.AddPrivateDependency<CoreType>(target);
 
             if (target.Platform == Platform.win64 || target.Platform == Platform.win32) 
             {

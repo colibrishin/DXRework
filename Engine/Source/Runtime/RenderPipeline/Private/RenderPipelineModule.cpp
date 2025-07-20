@@ -34,10 +34,6 @@ bool Engine::RenderPipelineModule::DynamicLoadable()
 
 const std::vector<std::string>& Engine::RenderPipelineModule::LoadAfter() const
 {
-	static const std::vector<std::string> load_after = { 	
-#if USE_DX12
-		"D3D12GraphicInterface", 
-#endif 
-	};
+	static const std::vector<std::string> load_after = {};
 	return load_after;
 }

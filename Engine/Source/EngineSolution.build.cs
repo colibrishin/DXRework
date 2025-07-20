@@ -26,6 +26,8 @@ public class EngineSolution : Solution
         string ProjectFilesDir = Utils.GetSolutionDir() + @"\Intermediate\ProjectFiles";
         Environment.SetEnvironmentVariable("ProjectFilesDir", ProjectFilesDir);
 		
+        conf.AddProject<CoreType>(target);
+        conf.AddProject<CoreModule>(target);
         conf.AddProject<Core>(target);
         conf.AddProject<BoostSocketWrapper>(target);
 

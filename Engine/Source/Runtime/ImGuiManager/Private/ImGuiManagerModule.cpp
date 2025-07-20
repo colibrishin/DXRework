@@ -33,15 +33,6 @@ bool Engine::ImGuiManagerModule::DynamicLoadable()
 
 const std::vector<std::string>& Engine::ImGuiManagerModule::LoadAfter() const
 {
-	static std::vector<std::string> load_after = {
-		"RenderPipeline",
-#if USE_DX12
-		"D3D12GraphicInterface",
-#endif
-#if Platform == Windows
-		"WinAPIWrapper",
-#endif
-	};
-
+	static std::vector<std::string> load_after = { "RenderPipeline" };
 	return load_after;
 }

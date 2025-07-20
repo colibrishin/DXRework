@@ -3,11 +3,16 @@
 #include <iostream>
 #include <ranges>
 
-#include "NetworkType.h"
+#include "ModuleInfo.h"
+#include "IModule.h"
 
-#if Platform == Windows
+#if _WIN32 || _WIN64
 #include <Windows.h>
 #endif
+
+std::unique_ptr<Engine::ModuleInfo>              g_os_api      = nullptr;
+std::unique_ptr<Engine::ModuleInfo>              g_graphic_api = nullptr;
+std::vector<std::unique_ptr<Engine::ModuleInfo>> g_core_api    = {};
 
 namespace Engine::Managers
 {
@@ -38,37 +43,11 @@ namespace Engine::Managers
 		m_module_paths_.emplace(L"Default", "./");
     }
 
-    ModuleManager::ModuleInfoPtr ModuleManager::Destroy()
+    void ModuleManager::Destroy()
     {
-        ModuleInfoPtr core_ptr;
-        ModuleInfoPtr api_ptr;
-        ModuleInfoPtr gapi_ptr;
-
         for ( auto it = m_module_loaded_.begin(); it != m_module_loaded_.end(); )
         {
             auto& ptr = it->second;
-
-            if ( ptr->m_filename_.starts_with( L"Core" ) )
-            {
-                core_ptr = std::move( ptr );
-                it       = m_module_loaded_.erase( it );
-                continue;
-            }
-
-            if ( ptr->m_filename_.ends_with( L"Wrapper" ) )
-            {
-                api_ptr = std::move( ptr );
-                it      = m_module_loaded_.erase( it );
-                continue;
-            }
-
-			if ( ptr->m_filename_.ends_with( L"GraphicInterface" ) )
-            {
-                gapi_ptr = std::move( ptr );
-                it       = m_module_loaded_.erase( it );
-                continue;
-            }
-
 #if IS_DLL
             if ( ptr->m_handle_ )
             {
@@ -93,34 +72,9 @@ namespace Engine::Managers
 
 			it = m_module_loaded_.erase( it );
         }
-
-        g_allocator_storage.cleanup();
-        g_allocator_storage.report_leakage();
-
-        if ( gapi_ptr )
-        {
-#if IS_DLL
-            if ( gapi_ptr->m_handle_ )
-            {
-                if ( GetModuleHandleW( gapi_ptr->m_path_.c_str() ) && gapi_ptr->m_module_ )
-                {
-                    gapi_ptr->m_module_->Shutdown();
-                    gapi_ptr->m_module_.reset();
-                }
-                FreeLibrary( static_cast<HMODULE>( gapi_ptr->m_handle_ ) );
-            }
-#else
-            if ( gapi_ptr->m_module_ )
-            {
-                gapi_ptr->m_module_.reset();
-            }
-#endif
-        }
-
-        return std::move( api_ptr );
 	}
 
-	ModuleManager::ModuleInfo* ModuleManager::FindModule(const std::wstring_view name)
+	ModuleInfo* ModuleManager::FindModule(const std::wstring_view name)
 	{
 		std::lock_guard l(m_write_mutex_);
 
@@ -219,6 +173,26 @@ namespace Engine::Managers
                 return nullptr;
             }
 
+            // OS API handle is loaded before the module manager.
+            if ( module_info->m_handle_ == g_os_api->m_handle_ )
+            {
+                return nullptr;
+            }
+
+            // Graphic API is loaded before the module mangers.
+            if ( module_info->m_handle_ == g_graphic_api->m_handle_ )
+            {
+                return nullptr;
+            }
+
+            // Core libraries are loaded before the module manager.
+            if ( std::ranges::find_if( g_core_api,
+                                       [ &module_info ]( const std::unique_ptr<ModuleInfo>& elem )
+                                       { return module_info->m_handle_ == elem->m_handle_; } ) != g_core_api.end() )
+            {
+                return nullptr;
+            }
+
             const ModuleInitializationFunctionCStyle &init_func = ( ModuleInitializationFunctionCStyle )GetProcAddress(
                     static_cast<HMODULE>( module_info->m_handle_ ), "InitializeModule" );
 
@@ -255,7 +229,7 @@ namespace Engine::Managers
                     }
                 }
 
-				CONSOLE_OUT( "ModuleManager", "Module {} loaded", name.data() )
+				CONSOLE_OUT( "ModuleManager", "Module {} loaded", name.data() );
                 module_info->m_module_->Initialize();
                 TryResolveLazyness( name );
                 return module_info->m_module_.get();
@@ -280,14 +254,14 @@ namespace Engine::Managers
 	void ModuleManager::AddModule(const std::wstring_view name)
 	{
 		{
-			std::lock_guard l(m_write_mutex_);
+            std::lock_guard l( m_write_mutex_ );
 			if (m_module_loaded_.contains(name.data()))
 			{
 				return;
 			}
 		}
 		
-		std::lock_guard l(m_read_mutex_);
+		std::lock_guard l( m_read_mutex_ );
 		m_module_loaded_.emplace(name, std::make_unique<ModuleInfo>());
 
 		ModuleInfo* module_info = m_module_loaded_.at(name.data()).get();
@@ -381,17 +355,5 @@ namespace Engine::Managers
 		return *instance;
 	}
 
-    ModuleManager::~ModuleManager()
-	{
-        Destroy();
-	}
-    ModuleManager::ModuleInfo::~ModuleInfo()
-    {
-#if IS_DLL
-        if ( !GetModuleHandleW( m_path_.c_str() ) )
-        {
-            m_module_.release();
-        }
-#endif
-    }
+    ModuleManager::~ModuleManager() {}
 } // namespace Engine::Managers

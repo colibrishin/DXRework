@@ -1,7 +1,9 @@
 #include "D3D12GraphicInterface.h"
 #include "D3D12GraphicInterface.generated.h"
 
+#if WITH_DEBUG
 #include <dxgidebug.h>
+#endif
 
 #include "D3D12GraphicPrimitiveShader.h"
 #include "D3D12PrimitiveMesh.h"
@@ -62,9 +64,7 @@ bool Engine::D3D12GraphicInterfaceModule::DynamicLoadable()
 }
 const std::vector<std::string>& Engine::D3D12GraphicInterfaceModule::LoadAfter() const
 {
-#if Platform == Windows
-	static std::vector<std::string> load_after{ "WinAPIWrapper" };
-#endif
+	static std::vector<std::string> load_after{};
 	return load_after;
 }
 

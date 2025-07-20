@@ -9,59 +9,9 @@
 
 #include "CoreType.h"
 
-
-#ifdef _UNICODE
-#ifndef UNICODE
-#define UNICODE
-#endif
-#endif
-
-#define WIDEN2(x) L ## x
-#define WIDEN(x) WIDEN2(x)
-#define STRINGIFY(X)      STRINGIFY_IMPL(X)
-#define STRINGIFY_IMPL(X) #X
-
-namespace Engine
-{
-    struct ENGINE_CORE_API IModule
-    {
-        virtual ~IModule() = default;
-
-        void Initialize()
-        {
-            if ( InitializeImpl() )
-            {
-                m_b_is_initialized_ = true;
-            }
-        }
-        void Shutdown()
-        {
-            if ( ShutdownImpl() )
-            {
-                m_b_is_initialized_ = false;
-            }
-        }
-
-        virtual bool InitializeImpl()  = 0;
-        virtual bool ShutdownImpl()    = 0;
-        virtual bool DynamicLoadable() = 0;
-
-        virtual const std::vector<std::string> &GetDependencies() const
-        {
-            static const std::vector<std::string> empty = {};
-            return empty;
-        }
-
-        virtual const std::vector<std::string> &LoadAfter() const
-        {
-            static const std::vector<std::string> load_after = {};
-            return load_after;
-        }
-
-    private:
-        bool m_b_is_initialized_ = false;
-    };
-} // namespace Engine
+extern ENGINE_COREMODULE_API std::unique_ptr<Engine::ModuleInfo> g_os_api;
+extern ENGINE_COREMODULE_API std::unique_ptr<Engine::ModuleInfo> g_graphic_api;
+extern ENGINE_COREMODULE_API std::vector<std::unique_ptr<Engine::ModuleInfo>> g_core_api;
 
 #if !IS_DLL
 #define MODULE_IMPL( ModuleType, Name )                                                                                \
@@ -78,29 +28,20 @@ namespace Engine
     {}
 #endif
 
+namespace Engine
+{
+    struct ModuleInfo;
+    struct IModule;
+}
+
 namespace Engine::Managers
 {
     using ModuleInitializationFunctionCStyle = Engine::IModule *( * )();
     using ModuleInitializationFunction       = std::function<Engine::IModule *()>;
 
-    struct ENGINE_CORE_API ModuleManager final
+    struct ENGINE_COREMODULE_API ModuleManager final
     {
     private:
-        struct ModuleInfo
-        {
-            std::wstring          m_filename_ext_;
-            std::wstring          m_filename_;
-            std::filesystem::path m_path_;
-
-            void*    m_handle_     = nullptr;
-            bool     m_b_dynamic_  = false;
-            uint64_t m_last_error_ = 0;
-
-            std::unique_ptr<IModule> m_module_;
-
-            ~ModuleInfo();
-        };
-
         using ModuleInfoPtr = std::unique_ptr<ModuleInfo>;
         using ModuleMap     = std::unordered_map<std::wstring, ModuleInfoPtr>;
 
@@ -111,7 +52,7 @@ namespace Engine::Managers
         ~ModuleManager();
 
         void                  Initialize();
-        ModuleInfoPtr         Destroy();
+        void                  Destroy();
         ModuleInfo*           FindModule( const std::wstring_view name );
         IModule*              LoadModule( const std::wstring_view name );
         void                  AddModule( const std::wstring_view name );
@@ -136,17 +77,18 @@ namespace Engine::Managers
     };
 }
 
+#if !IS_DLL
 template <typename ModuleType>
 struct StaticLinkModuleEntry
 {
     explicit StaticLinkModuleEntry( const std::wstring_view name )
     {
-        Engine::Managers::ModuleManager::GetInstance().RegisterStaticModule( name,
-                                                                            &InitializeModule );
+        Engine::Managers::ModuleManager::GetInstance().RegisterStaticModule( name, &InitializeModule );
     }
 
-    static Engine::IModule *InitializeModule()
+    static Engine::IModule* InitializeModule()
     {
         return new ModuleType();
     }
 };
+#endif

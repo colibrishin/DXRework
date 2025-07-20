@@ -1,5 +1,7 @@
 #include "WinAPIWrapper.hpp"
 #include "EngineEntryPoint.h"
+#include "CoreType.h"
+#include "ModuleInfo.h"
 
 std::unique_ptr<WinAPI::WinAPIWrapper> WinAPI::WinAPIWrapper::s_instance_         = nullptr;
 std::wstring                           WinAPI::WinAPIWrapper::s_application_name_ = L"Engine";
@@ -166,8 +168,13 @@ namespace WinAPI
 
 	HWND WinAPIWrapper::Initialize(HINSTANCE hInstance)
 	{
-		s_instance_ = std::unique_ptr<WinAPIWrapper>(new WinAPIWrapper());
-		return InitializeWindow(hInstance);
+        if ( !s_instance_ )
+        {
+            s_instance_ = std::unique_ptr<WinAPIWrapper>( new WinAPIWrapper() );
+            InitializeWindow( hInstance );
+        }
+
+		return s_hwnd_;
 	}
 
 	void WinAPIWrapper::UpdateWindowSize(const uint32_t width, const uint32_t height)

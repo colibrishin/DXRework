@@ -1,6 +1,5 @@
 #pragma once
-#include "ModuleManager.h"
-
+#include "IModule.h"
 #include "RenderInstanceTask.h"
 #include "Scene.h"
 

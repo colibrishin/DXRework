@@ -1,17 +1,17 @@
 #pragma once
-#include "CoreType.h"
+#include "IModule.h"
 #include "ModuleManager.h"
 
 #include "ForwardRenderPassTaskModule.generated.h"
 
-namespace Engine 
+namespace Engine
 {
-	ECLASS(module)
+    ECLASS( module )
     struct ENGINE_FORWARDRENDERPASSTASK_API ForwardRenderPassTaskModule : public IModule
-	{
-		GENERATE_BODY
-		bool InitializeImpl() override; 
-		bool ShutdownImpl() override;
-		bool DynamicLoadable() override;
-	};
-}
+    {
+        GENERATE_BODY
+        bool InitializeImpl() override;
+        bool ShutdownImpl() override;
+        bool DynamicLoadable() override;
+    };
+} // namespace Engine

@@ -1,6 +1,6 @@
 #pragma once
+#include "IModule.h"
 #include "ModuleManager.h"
-#include "CoreType.h"
 
 #include "MaterialModule.generated.h"
 

@@ -1,12 +1,12 @@
 #pragma once
-#include "CoreType.h"
+#include "IModule.h"
 #include "ModuleManager.h"
 
 #include "DeferredRenderPassTaskModule.generated.h"
 
 namespace Engine
 {
-    ECLASS(module)
+    ECLASS( module )
     struct ENGINE_DEFERREDRENDERPASSTASK_API DeferredRenderPassTaskModule : public IModule
     {
         GENERATE_BODY
@@ -14,4 +14,4 @@ namespace Engine
         bool ShutdownImpl() override;
         bool DynamicLoadable() override;
     };
-}
+} // namespace Engine

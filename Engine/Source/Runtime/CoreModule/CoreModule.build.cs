@@ -7,18 +7,14 @@ using Sharpmake;
 [module: Include("%EngineDir%/Engine/Source/ThirdParty/GCEM/GCEM.build.cs")]
 
 [Generate]
-public class Core : EngineCommonProject
+public class CoreModule : EngineCommonProject
 {
-    public Core() { }
+    public CoreModule() { }
 
     public override void ConfigureAll(Configuration conf, EngineTarget target)
     {
         base.ConfigureAll(conf, target);
-
-        conf.AddPublicDependency<Boost>(target);
-        conf.AddPublicDependency<TBB>(target);
-        conf.AddPublicDependency<GCEM>(target);
         conf.AddPublicDependency<CoreType>(target);
-        conf.AddPublicDependency<CoreModule>(target);
+        conf.AddPublicDependency<Boost>(target);
     }
 }

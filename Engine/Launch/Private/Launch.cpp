@@ -4,21 +4,134 @@
 #include "WinAPIWrapper.hpp"
 #include "EngineEntryPoint.h"
 #endif
+#include "ModuleInfo.h"
+#include "ModuleManager.h"
 
 #if _WIN32 || _WIN64
-int WINAPI WinMain(
-	HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline,
-	int       iCmdshow
-)
+int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline, int iCmdshow )
 {
-	// Create the system object.
 #ifndef CFG_MONOLITH
-	const auto hwnd = WinAPI::WinAPIWrapper::Initialize(hInstance);
-    Engine::Managers::EngineEntryPoint::GetInstance().Initialize();
-    WinAPI::WinAPIWrapper::Update();
+    const auto& load_seq =
+            []( Engine::ModuleInfo& module, const std::wstring& filename, const std::filesystem::path& entry )
+    {
+        module.m_filename_     = filename;
+        module.m_filename_ext_ = filename + L".dll";
+        module.m_path_         = entry;
+
+        if ( const HMODULE hModule = GetModuleHandleW( entry.c_str() ) )
+        {
+            module.m_handle_    = hModule;
+            module.m_b_dynamic_ = false;
+        }
+        else
+        {
+            module.m_handle_    = LoadLibraryW( entry.c_str() );
+            module.m_b_dynamic_ = true;
+        }
+
+        using ModuleInitializationFunctionCStyle = Engine::IModule* ( * )();
+
+        if ( const ModuleInitializationFunctionCStyle& init_func = ( ModuleInitializationFunctionCStyle )GetProcAddress(
+                     static_cast<HMODULE>( module.m_handle_ ), "InitializeModule" ) )
+        {
+            module.m_module_ = std::unique_ptr<Engine::IModule>( init_func() );
+            module.m_module_->Initialize();
+        }
+    };
+
+    const auto& cleanup_seq = []( Engine::ModuleInfo& module )
+    {
+        if( module.m_module_ && GetModuleHandleW( module.m_path_.c_str() ) )
+        {
+            module.m_module_->Shutdown();
+            module.m_module_.reset();
+
+            if ( module.m_handle_ )
+            {
+                FreeLibrary( static_cast<HMODULE>( module.m_handle_ ) );
+            }
+            else
+            {
+                module.m_handle_ = nullptr;
+            }
+        }
+    };
+
+    // Exception guard
+    try
+    {
+        std::vector<std::filesystem::path> core_modules;
+        std::filesystem::path              graphics_module;
+
+        // Load core modules and graphic API, and OS API wrapper.
+        for ( const auto& entry : std::filesystem::directory_iterator( "./" ) )
+        {
+            if ( const std::wstring& file_name = entry.path().stem().generic_wstring();
+                 entry.is_regular_file() && entry.path().extension() == ".dll" )
+            {
+                if ( file_name.starts_with( L"Core" ) )
+                {
+                    core_modules.push_back( entry );
+                }
+
+                if ( file_name.ends_with( L"GraphicInterface" ) )
+                {
+                    graphics_module = entry;
+                }
+            }
+        }
+
+        for ( const std::filesystem::path& core_module : core_modules )
+        {
+            g_core_api.emplace_back( std::make_unique<Engine::ModuleInfo>() );
+            load_seq( *( g_core_api.back() ), core_module.filename(), core_module );
+        }
+
+        g_os_api = std::make_unique<Engine::ModuleInfo>();
+        load_seq( *g_os_api, L"WinAPIWrapper.dll", "./WinAPIWrapper.dll" );
+
+        g_graphic_api = std::make_unique<Engine::ModuleInfo>();
+        load_seq( *( g_core_api.back() ), graphics_module.filename(), graphics_module );
+
+        WinAPI::WinAPIWrapper::Initialize( hInstance );
+        Engine::Managers::EngineEntryPoint::GetInstance().Initialize();
+        WinAPI::WinAPIWrapper::Update();
+    }
+    catch ( std::exception& e )
+    {
+        if ( Engine::Managers::EngineEntryPoint::IsInitialized() )
+        {
+            Engine::Managers::EngineEntryPoint::Destroy();
+        }
+    }
+
+    // Clean up core libraries
+    for ( const std::unique_ptr<Engine::ModuleInfo>& module : g_core_api )
+    {
+        cleanup_seq( *module );
+    }
+
+    // Clean up the graphic API.
+    if ( g_graphic_api )
+    {
+        cleanup_seq( *g_graphic_api );
+        g_graphic_api.reset();
+    }
+
+    // Kill the WinAPI wrapper
+    if ( g_os_api )
+    {
+        cleanup_seq( *g_os_api );
+        g_os_api.reset();
+    }
+
+    // todo: memory management module. this will load the core module again.
+    g_allocator_storage.cleanup();
+    PoolAllocatorStorage::report_leakage();
+
 #else
-	MonolithicLaunch(hInstance);
+    MonolithicLaunch( hInstance );
 #endif
-	return 0;
+    return 0;
 }
 #endif

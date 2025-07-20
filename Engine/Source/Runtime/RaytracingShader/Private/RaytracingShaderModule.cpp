@@ -27,6 +27,6 @@ bool Engine::RaytracingShaderModule::DynamicLoadable()
 
 const std::vector<std::string> & Engine::RaytracingShaderModule::LoadAfter() const
 {
-    static const std::vector<std::string> load_after = { "RenderPipeline" };
+    static const std::vector<std::string> load_after = { "RenderPipeline", "RaytracingExtension" };
     return load_after;
 }

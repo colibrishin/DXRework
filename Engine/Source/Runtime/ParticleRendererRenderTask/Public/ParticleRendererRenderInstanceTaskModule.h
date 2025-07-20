@@ -1,11 +1,12 @@
 ﻿#pragma once
+#include "IModule.h"
 #include "ModuleManager.h"
 
 #include "ParticleRendererRenderInstanceTaskModule.generated.h"
 
 namespace Engine
 {
-    ECLASS(module)
+    ECLASS( module )
     struct ENGINE_PARTICLERENDERERRENDERTASK_API ParticleRendererRenderInstanceTaskModule : public IModule
     {
         GENERATE_BODY
@@ -14,4 +15,4 @@ namespace Engine
         bool DynamicLoadable() override;
     };
 
-}
+} // namespace Engine

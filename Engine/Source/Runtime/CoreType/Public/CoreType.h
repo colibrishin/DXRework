@@ -1,25 +1,6 @@
 #pragma once
-#define EMPTY
-#ifndef DLLIMPORT
-#define DLLIMPORT __declspec( dllimport )
-#endif
 
-#ifndef DLLEXPORT
-#define DLLEXPORT __declspec( dllexport )
-#endif
-
-#define ECLASS(...)
-#define EENUM(...)
-#define EFUNC(...)
-#define EPROPERTY(...)
-#define GENERATE_BODY
-
-#define STRINGIFY(X) STRINGIFY_IMPL(X)
-#define STRINGIFY_IMPL(X) #X
-
-#include "boost/preprocessor/facilities/is_empty.hpp"
-
-#define IS_DLL !BOOST_PP_IS_EMPTY( ENGINE_CORE_API )
+#include "Macro.h"
 
 #include <algorithm>
 #include <array>
@@ -43,9 +24,10 @@
 #include <boost/serialization/access.hpp>
 #include <boost/pool/pool_alloc.hpp>
 
-#include <magic_enum.hpp>
-
-#include "CoreType.h"
+namespace Engine
+{
+    struct ModuleInfo;
+}
 
 template <typename Enum>
 constexpr auto CStrEnumStrings()
@@ -141,7 +123,7 @@ constexpr bool is_key_val_cont_v = is_key_val_cont<T, U>::value;
 #undef PERMUTE3
 #define PERMUTE3(a, b, c) do { std::swap(a, b); std::swap(a, c); } while (0)
 
-struct simple_gc_deleter_impl
+struct ENGINE_CORETYPE_API simple_gc_deleter_impl
 {
 	simple_gc_deleter_impl(const void* ptr) : ptr(ptr) {}
 	const void* ptr;
@@ -163,7 +145,7 @@ struct simple_gc_deleter : simple_gc_deleter_impl
 	}
 };
 
-class byte_stream
+class ENGINE_CORETYPE_API byte_stream
 {
 public:
     explicit byte_stream()
@@ -240,7 +222,7 @@ private:
     size_t m_used_size_;
 };
 
-struct simple_gc_collector 
+struct ENGINE_CORETYPE_API simple_gc_collector
 {
 private:
 	inline static std::unordered_set<const void*> s_collected = {};
@@ -271,7 +253,7 @@ public:
 	}
 };
 
-struct simple_gc_scope
+struct ENGINE_CORETYPE_API simple_gc_scope
 {
 	~simple_gc_scope()
 	{
@@ -459,7 +441,7 @@ namespace boost_constexpr
 
 namespace cityhash
 {
-	struct cityhash256
+    struct ENGINE_CORETYPE_API cityhash256
 	{
 		constexpr bool operator<(const cityhash256& other) const noexcept
 		{
@@ -877,7 +859,7 @@ namespace cityhash
 
 BOOST_CLASS_EXPORT_KEY(cityhash::cityhash256)
 
-struct typename_prober
+struct ENGINE_CORETYPE_API typename_prober
 {
 public:
     template <typename T>
@@ -982,7 +964,7 @@ public:
 	virtual bool IsDerivedOf(HashType base) const { return Type##::StaticIsDerivedOf(base); } \
 	virtual bool IsBaseOf(HashType derived) const { return derived->IsDerivedOf(Type##::StaticTypeHash()); }
 
-struct ENGINE_CORE_API HashTypeImpl
+struct ENGINE_CORETYPE_API HashTypeImpl
 {
 	virtual        ~HashTypeImpl() = default;
 	constexpr bool operator>(const HashTypeImpl& other) const { return v > other.v; }
@@ -1257,7 +1239,7 @@ namespace Engine
     using Strong = managed_shared_ptr<T>;
 } // namespace Engine
 
-struct ENGINE_CORE_API ConstructorAccess
+struct ENGINE_CORETYPE_API ConstructorAccess
 {
     template <typename T>
     friend class object_pool_allocator;
@@ -1298,7 +1280,7 @@ class managed_shared_ptr;
 
 struct AllocationContext;
 
-struct ENGINE_CORE_API deleter_base
+struct ENGINE_CORETYPE_API deleter_base
 {
     virtual ~deleter_base() = default;
 
@@ -1310,13 +1292,13 @@ struct ENGINE_CORE_API deleter_base
     virtual void predicate( void* shared_ptr ) const = 0;
 };
 
-struct ENGINE_CORE_API null_deleter : deleter_base
+struct ENGINE_CORETYPE_API null_deleter : deleter_base
 {
     void predicate( void* shared_ptr ) const override
     { }
 };
 
-class ENGINE_CORE_API pool_allocator_base
+class ENGINE_CORETYPE_API pool_allocator_base
 {
 public:
     virtual ~pool_allocator_base()                                                 = default;
@@ -1329,7 +1311,7 @@ public:
     virtual const std::function<void( void* )>& get_deleter() const                       = 0;
 };
 
-struct ENGINE_CORE_API AllocationContext
+struct ENGINE_CORETYPE_API AllocationContext
 {
 private:
     AllocationKey              m_key_                     = null_pair;
@@ -1759,7 +1741,7 @@ public:
 #undef UNWRAP
 };
 
-class ENGINE_CORE_API PoolAllocatorStorage
+class ENGINE_CORETYPE_API PoolAllocatorStorage
 {
     std::unordered_set<const pool_allocator_base*> m_allocators_;
 
@@ -1791,7 +1773,7 @@ public:
 	}
 };
 
-inline static PoolAllocatorStorage g_allocator_storage{};
+extern ENGINE_CORETYPE_API PoolAllocatorStorage g_allocator_storage;
 
 namespace Engine
 {
