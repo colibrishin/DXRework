@@ -90,10 +90,11 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline
         g_os_api = std::make_unique<Engine::ModuleInfo>();
         load_seq( *g_os_api, L"WinAPIWrapper.dll", "./WinAPIWrapper.dll" );
 
+        WinAPI::WinAPIWrapper::Initialize( hInstance );
+
         g_graphic_api = std::make_unique<Engine::ModuleInfo>();
         load_seq( *( g_core_api.back() ), graphics_module.filename(), graphics_module );
 
-        WinAPI::WinAPIWrapper::Initialize( hInstance );
         Engine::Managers::EngineEntryPoint::GetInstance().Initialize();
         WinAPI::WinAPIWrapper::Update();
     }
