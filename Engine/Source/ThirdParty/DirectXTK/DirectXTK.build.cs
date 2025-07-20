@@ -26,6 +26,13 @@ public class DirectXTK : VCPKG
         (
             @"DirectXTK12.lib"
         );
+
+        string BinPath = GetVCPKGBinPath(target);
+
+        conf.TargetCopyFiles.Add
+        (
+            BinPath + @"/DirectXTK12.dll"
+        );
     }
 
     public override void ConfigureRelease(Configuration conf, EngineTarget target)
@@ -35,6 +42,13 @@ public class DirectXTK : VCPKG
         conf.LibraryFiles.Add
         (
             @"DirectXTK12.lib"
+        );
+
+        string BinPath = GetVCPKGBinPath(target);
+
+        conf.TargetCopyFiles.Add
+        (
+            BinPath + @"/DirectXTK12.dll"
         );
     }
 }

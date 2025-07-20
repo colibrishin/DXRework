@@ -3,7 +3,7 @@
 #include "Allocator.h"
 #include <Public/fmod.hpp>
 #include <Public/fmod_common.h>
-#include <magic_enum.hpp>
+#include <magic_enum/magic_enum.hpp>
 
 #include "FMODSoundInterface.generated.h"
 

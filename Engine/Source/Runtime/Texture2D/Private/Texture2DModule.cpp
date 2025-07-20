@@ -4,7 +4,7 @@
 #include "Texture2D.h"
 
 #include "ResourceManager.h"
-#include <magic_enum.hpp>
+#include <magic_enum/magic_enum.hpp>
 
 MODULE_IMPL(Engine::Texture2DModule, Texture2D)
 

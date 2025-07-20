@@ -6,7 +6,7 @@
 #include <array>
 #include <vector>
 #include <cstddef>
-#include <magic_enum.hpp>
+#include <magic_enum/magic_enum.hpp>
 #include <string_view>
 #include <stdint.h>
 #include <stdexcept>
