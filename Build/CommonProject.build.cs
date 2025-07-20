@@ -277,6 +277,7 @@ public abstract class CommonProject : Project
         if (target.GraphicAPI == EGraphicAPI.D3D12)
         {
             conf.AddPublicDependency<DirectXTK>(target);
+            conf.Defines.Add("DIRECTX_TOOLKIT_IMPORT");
         }
     }
 }
