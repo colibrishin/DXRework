@@ -14,8 +14,8 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline
     const auto& load_seq =
             []( Engine::ModuleInfo& module, const std::wstring& filename, const std::filesystem::path& entry )
     {
-        module.m_filename_     = filename;
-        module.m_filename_ext_ = filename + L".dll";
+        module.m_filename_     = entry.stem();
+        module.m_filename_ext_ = filename;
         module.m_path_         = entry;
 
         if ( const HMODULE hModule = GetModuleHandleW( entry.c_str() ) )
@@ -27,6 +27,12 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline
         {
             module.m_handle_    = LoadLibraryW( entry.c_str() );
             module.m_b_dynamic_ = true;
+        }
+
+        if ( !module.m_handle_ )
+        {
+            module.m_last_error_ = GetLastError();
+            throw std::runtime_error( "Unable to load the essential library" );
         }
 
         using ModuleInitializationFunctionCStyle = Engine::IModule* ( * )();
@@ -93,7 +99,7 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline
         WinAPI::WinAPIWrapper::Initialize( hInstance );
 
         g_graphic_api = std::make_unique<Engine::ModuleInfo>();
-        load_seq( *( g_core_api.back() ), graphics_module.filename(), graphics_module );
+        load_seq( *g_graphic_api, graphics_module.filename(), graphics_module );
 
         Engine::Managers::EngineEntryPoint::GetInstance().Initialize();
         WinAPI::WinAPIWrapper::Update();
