@@ -11,6 +11,7 @@
 
 extern ENGINE_COREMODULE_API std::unique_ptr<Engine::ModuleInfo> g_os_api;
 extern ENGINE_COREMODULE_API std::unique_ptr<Engine::ModuleInfo> g_graphic_api;
+extern ENGINE_COREMODULE_API std::unique_ptr<Engine::ModuleInfo> g_core_mem;
 extern ENGINE_COREMODULE_API std::vector<std::unique_ptr<Engine::ModuleInfo>> g_core_api;
 
 #if !IS_DLL
@@ -46,6 +47,7 @@ namespace Engine::Managers
         using ModuleMap     = std::unordered_map<std::wstring, ModuleInfoPtr>;
 
         void TryResolveLazyness( const std::wstring_view name );
+        bool CheckNoInit( const ModuleInfo* module_info );
 
     public:
         ModuleManager() = default;

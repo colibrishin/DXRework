@@ -319,7 +319,6 @@ namespace Engine
                 }
             }
 
-            m_socket_.cancel();
             m_socket_.close();
             m_work_gurad_.reset();
             m_context_.stop();

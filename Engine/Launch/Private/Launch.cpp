@@ -87,10 +87,14 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline
             }
         }
 
+        // Memory and type management module
+        g_core_mem = std::make_unique<Engine::ModuleInfo>();
+        load_seq( *g_core_mem, L"Memory.dll", "./Memory.dll" );
+
         for ( const std::filesystem::path& core_module : core_modules )
         {
             g_core_api.emplace_back( std::make_unique<Engine::ModuleInfo>() );
-            load_seq( *( g_core_api.back() ), core_module.filename(), core_module );
+            load_seq( *( g_core_api.back() ), core_module.filename(), core_module );  
         }
 
         g_os_api = std::make_unique<Engine::ModuleInfo>();
@@ -118,6 +122,11 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline
         cleanup_seq( *module );
     }
 
+    if ( Engine::Managers::EngineEntryPoint::IsInitialized() )
+    {
+        Engine::Managers::EngineEntryPoint::Destroy();
+    }
+
     // Clean up the graphic API.
     if ( g_graphic_api )
     {
@@ -132,9 +141,14 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline
         g_os_api.reset();
     }
 
-    // todo: memory management module. this will load the core module again.
     g_allocator_storage.cleanup();
     PoolAllocatorStorage::report_leakage();
+
+    if ( g_core_mem )
+    {
+        cleanup_seq( *g_core_mem );
+        g_core_mem.reset();
+    }
 
 #else
     MonolithicLaunch( hInstance );

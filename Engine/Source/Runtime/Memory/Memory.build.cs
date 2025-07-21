@@ -5,9 +5,9 @@ using Sharpmake;
 [module: Include("%EngineDir%/Engine/Source/ThirdParty/Boost/Boost.build.cs")]
 
 [Generate]
-public class CoreType : EngineCommonProject
+public class Memory : EngineCommonProject
 {
-    public CoreType() { }
+    public Memory() { }
 
     public override void ConfigureAll(Configuration conf, EngineTarget target)
     {

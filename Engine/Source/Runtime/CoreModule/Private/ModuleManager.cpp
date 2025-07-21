@@ -12,6 +12,7 @@
 
 std::unique_ptr<Engine::ModuleInfo>              g_os_api      = nullptr;
 std::unique_ptr<Engine::ModuleInfo>              g_graphic_api = nullptr;
+std::unique_ptr<Engine::ModuleInfo>              g_core_mem    = nullptr;
 std::vector<std::unique_ptr<Engine::ModuleInfo>> g_core_api    = {};
 
 namespace Engine::Managers
@@ -36,7 +37,44 @@ namespace Engine::Managers
 
 			++it;
 		}
-	}
+    }
+
+    bool ModuleManager::CheckNoInit( const ModuleInfo* module_info )
+    {
+        // Ignore load/unload self
+        if ( module_info->m_filename_ == L"CoreModule" )
+        {
+            return true;
+        }
+
+        // OS API handle is loaded before the module manager.
+        if ( module_info->m_handle_ == g_os_api->m_handle_ )
+        {
+            return true;
+        }
+
+        // Graphic API is loaded before the module manager.
+        if ( module_info->m_handle_ == g_graphic_api->m_handle_ )
+        {
+            return true;
+        }
+
+        // Memory and type management moudle should be loaded before the module manager.
+        if ( module_info->m_handle_ == g_core_mem->m_handle_ )
+        {
+            return true;
+        }
+
+        // Core libraries are loaded before the module manager.
+        if ( std::ranges::find_if( g_core_api,
+                                   [ &module_info ]( const std::unique_ptr<ModuleInfo>& elem )
+                                   { return module_info->m_handle_ == elem->m_handle_; } ) != g_core_api.end() )
+        {
+            return true;
+        }
+
+        return false;
+    }
 
 	void ModuleManager::Initialize()
 	{
@@ -83,7 +121,7 @@ namespace Engine::Managers
 			return nullptr;
 		}
 
-		return m_module_loaded_.at(name.data()).get();
+		return m_module_loaded_.at( name.data() ).get();
 	}
 
 	Engine::IModule* ModuleManager::LoadModule(const std::wstring_view name)
@@ -94,6 +132,13 @@ namespace Engine::Managers
 		{
 			if (IModule* module = module_info->m_module_.get())
 			{
+                if ( module_info->m_b_lazy )
+                {
+                    module_info->m_module_->Initialize();
+                    module_info->m_b_lazy = false;
+                    TryResolveLazyness( name );
+                }
+
 				return module;
 			}
 		}
@@ -173,73 +218,64 @@ namespace Engine::Managers
                 return nullptr;
             }
 
-            // OS API handle is loaded before the module manager.
-            if ( module_info->m_handle_ == g_os_api->m_handle_ )
+            if ( !CheckNoInit(module_info) )
             {
-                return nullptr;
-            }
+                const ModuleInitializationFunctionCStyle& init_func =
+                        ( ModuleInitializationFunctionCStyle )GetProcAddress(
+                                static_cast<HMODULE>( module_info->m_handle_ ), "InitializeModule" );
 
-            // Graphic API is loaded before the module mangers.
-            if ( module_info->m_handle_ == g_graphic_api->m_handle_ )
-            {
-                return nullptr;
-            }
-
-            // Core libraries are loaded before the module manager.
-            if ( std::ranges::find_if( g_core_api,
-                                       [ &module_info ]( const std::unique_ptr<ModuleInfo>& elem )
-                                       { return module_info->m_handle_ == elem->m_handle_; } ) != g_core_api.end() )
-            {
-                return nullptr;
-            }
-
-            const ModuleInitializationFunctionCStyle &init_func = ( ModuleInitializationFunctionCStyle )GetProcAddress(
-                    static_cast<HMODULE>( module_info->m_handle_ ), "InitializeModule" );
-
-            if ( init_func )
-            {
-                module_info->m_module_ = std::unique_ptr<IModule>( init_func() );
-
-                if ( module_info->m_module_ )
+                if ( init_func )
                 {
-                    for ( const std::string_view required : module_info->m_module_->LoadAfter() )
-                    {
-                        std::wstring conversion( required.begin(), required.end() );
+                    module_info->m_module_ = std::unique_ptr<IModule>( init_func() );
+                    // Assuming that the dependent libraries are loaded.
+                    module_info->m_b_lazy  = false;
 
-                        if ( !FindModule( conversion ) )
+                    if ( module_info->m_module_ )
+                    {
+                        for ( const std::string_view required : module_info->m_module_->LoadAfter() )
                         {
-                            m_lazy_modules_[ name.data() ].insert( conversion );
+                            std::wstring conversion( required.begin(), required.end() );
+
+                            if ( !FindModule( conversion ) )
+                            {
+                                m_lazy_modules_[ name.data() ].insert( conversion );
+                                module_info->m_b_lazy = true;
+                            }
                         }
-                    }
 
-                    for ( const std::string_view dependency : module_info->m_module_->GetDependencies() )
-                    {
-                        std::wstring conversion( dependency.begin(), dependency.end() );
-
-                        if ( !FindModule( conversion ) )
+                        for ( const std::string_view dependency : module_info->m_module_->GetDependencies() )
                         {
-                            m_lazy_modules_[ name.data() ].insert( conversion );
-                        }
-                    }
+                            std::wstring conversion( dependency.begin(), dependency.end() );
 
-                    if ( m_lazy_modules_.contains( name.data() ) )
-                    {
-                        RemoveModule( name );
-                        return nullptr;
+                            if ( !FindModule( conversion ) )
+                            {
+                                m_lazy_modules_[ name.data() ].insert( conversion );
+                                module_info->m_b_lazy = true;
+                            }
+                        }
+
+                        if ( m_lazy_modules_.contains( name.data() ) )
+                        {
+                            module_info->m_b_lazy = true;
+                            return nullptr;
+                        }
+
+                        
+                        module_info->m_module_->Initialize();
                     }
                 }
 
-				CONSOLE_OUT( "ModuleManager", "Module {} loaded", name.data() );
-                module_info->m_module_->Initialize();
+                // todo: dll whitelist
+            }
+#endif
+            if ( !module_info->m_b_lazy )
+            {
+                CONSOLE_OUT( "ModuleManager", "Module {} loaded", name.data() );
                 TryResolveLazyness( name );
                 return module_info->m_module_.get();
             }
-            else
-            {
-                FreeLibrary( static_cast<HMODULE>( module_info->m_handle_ ) );
-                return nullptr;
-            }
-#endif
+
+            return nullptr;
         }
 	}
 
@@ -319,7 +355,7 @@ namespace Engine::Managers
 		}
 		
 		m_module_loaded_.erase(name.data());
-	}
+    }
 
 	void ModuleManager::LoadModuleAll()
 	{

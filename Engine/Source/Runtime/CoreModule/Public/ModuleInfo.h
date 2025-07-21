@@ -14,6 +14,7 @@ namespace Engine
 
         void*    m_handle_     = nullptr;
         bool     m_b_dynamic_  = false;
+        bool     m_b_lazy      = false;
         uint64_t m_last_error_ = 0;
 
         std::unique_ptr<IModule> m_module_;

@@ -18,7 +18,7 @@ public class Core : EngineCommonProject
         conf.AddPublicDependency<Boost>(target);
         conf.AddPublicDependency<TBB>(target);
         conf.AddPublicDependency<GCEM>(target);
-        conf.AddPublicDependency<CoreType>(target);
+        conf.AddPublicDependency<Memory>(target);
         conf.AddPublicDependency<CoreModule>(target);
     }
 }

@@ -14,7 +14,7 @@ public class CoreModule : EngineCommonProject
     public override void ConfigureAll(Configuration conf, EngineTarget target)
     {
         base.ConfigureAll(conf, target);
-        conf.AddPublicDependency<CoreType>(target);
+        conf.AddPublicDependency<Memory>(target);
         conf.AddPublicDependency<Boost>(target);
     }
 }
