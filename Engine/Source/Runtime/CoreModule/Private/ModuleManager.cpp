@@ -87,14 +87,32 @@ namespace Engine::Managers
         {
             auto& ptr = it->second;
 #if IS_DLL
-            if ( ptr->m_handle_ )
+            if ( GetModuleHandleW( it->second->m_path_.c_str() ) && ptr->m_module_ )
             {
-                if ( GetModuleHandleW( it->second->m_path_.c_str() ) && ptr->m_module_ )
-				{
+                bool                            found      = false;
+                const std::vector<std::string>& dependency = ptr->m_module_->GetDependencies();
+
+                for ( const std::string& name : dependency )
+                {
+                    std::wstring conversion( name.begin(), name.end() );
+
+                    if ( m_module_loaded_.contains( conversion ) )
+                    {
+                        m_lazy_modules_[ conversion ].insert( it->first );
+                        found = true;
+                    }
+                }
+
+                if ( !found )
+                {
                     ptr->m_module_->Shutdown();
-                    ptr->m_module_.reset();   
-				}
-                FreeLibrary( static_cast<HMODULE>( ptr->m_handle_ ) );
+                    ptr->m_module_.reset();
+
+                    if ( ptr->m_handle_ )
+                    {
+                        FreeLibrary( static_cast<HMODULE>( ptr->m_handle_ ) );
+                    }
+                }
             }
 #else
             if ( ptr->m_module_ )
