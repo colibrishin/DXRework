@@ -83,14 +83,13 @@ namespace Engine::Managers
 
     void ModuleManager::Destroy()
     {
-        for ( auto it = m_module_loaded_.begin(); it != m_module_loaded_.end(); )
-        {
-            auto& ptr = it->second;
 #if IS_DLL
-            if ( GetModuleHandleW( it->second->m_path_.c_str() ) && ptr->m_module_ )
+        const auto& resolve = [ this, resolve ]( const std::wstring_view module_name, ModuleInfo& info )
+        {
+            if ( GetModuleHandleW( info.m_path_.c_str() ) && info.m_module_ )
             {
                 bool                            found      = false;
-                const std::vector<std::string>& dependency = ptr->m_module_->GetDependencies();
+                const std::vector<std::string>& dependency = info.m_module_->GetDependencies();
 
                 for ( const std::string& name : dependency )
                 {
@@ -98,35 +97,55 @@ namespace Engine::Managers
 
                     if ( m_module_loaded_.contains( conversion ) )
                     {
-                        m_lazy_modules_[ conversion ].insert( it->first );
+                        m_lazy_modules_[ conversion ].insert( module_name.data() );
                         found = true;
                     }
                 }
 
                 if ( !found )
                 {
-                    ptr->m_module_->Shutdown();
-                    ptr->m_module_.reset();
+                    info.m_module_->Shutdown();
+                    info.m_module_.reset();
 
-                    if ( ptr->m_handle_ )
+                    if ( info.m_handle_ )
                     {
-                        FreeLibrary( static_cast<HMODULE>( ptr->m_handle_ ) );
+                        FreeLibrary( static_cast<HMODULE>( info.m_handle_ ) );
                     }
+
+                    return true;
                 }
+
+                return false;
+            }
+        };
+#endif
+
+        for ( auto it = m_module_loaded_.begin(); it != m_module_loaded_.end(); )
+        {
+            auto& ptr = it->second;
+#if IS_DLL
+            if ( resolve( it->first, *it->second ) )
+            {
+                if ( m_lazy_modules_.contains( it->first ) )
+                {
+                    // todo: 
+                }
+
+                it = m_module_loaded_.erase( it );
             }
 #else
             if ( ptr->m_module_ )
             {
                 ptr->m_module_.reset();
             }
-#endif
 
-		    if ( ptr )
-		    {
+            if ( ptr )
+            {
                 ptr.reset();
-		    }
+            }
 
-			it = m_module_loaded_.erase( it );
+            it = m_module_loaded_.erase( it );
+#endif
         }
 	}
 
