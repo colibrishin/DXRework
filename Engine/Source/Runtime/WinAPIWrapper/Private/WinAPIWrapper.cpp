@@ -208,8 +208,7 @@ namespace WinAPI
 
 				if (msg.message == WM_QUIT)
 				{
-                    Engine::Managers::EngineEntryPoint::GetInstance().Destroy();
-					return;
+                    return;
 				}
 			}
 			else

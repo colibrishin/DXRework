@@ -59,13 +59,12 @@ namespace Engine::Managers
                 ( m_injected_funcs_[ type ],
                   [&func]( const TaskSchedulerFunc &elem )
                   {
-                      return elem.target<void( * )( const std::vector<std::any> &, float )>() ==
-                          func.target<void( * )(const std::vector<std::any> &, float)>();
+                      return elem.target<void( const std::vector<std::any> &, float )>() ==
+                          func.target<void(const std::vector<std::any> &, float)>();
                   } );
     }
     void TaskScheduler::PreDeconstruction()
     {
-        PreUpdate(EngineEntryPoint::GetInstance().GetDeltaTime());
         m_injected_funcs_.clear();
         m_tasks_.clear();
     }

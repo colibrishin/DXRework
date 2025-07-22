@@ -589,6 +589,17 @@ namespace Engine::Managers
 	tbb::concurrent_vector<CollisionInfo>& CollisionDetector::GetCollisionInfo()
 	{
 		return m_collision_produce_queue_;
+    }
+
+    void CollisionDetector::PreDeconstruction()
+    {
+        SceneManager::GetInstance().onSceneActive.Remove( GetWeakPtr<CollisionDetector>(),
+                                                          &CollisionDetector::UpdateScene );
+
+#if WITH_EDITOR
+        SceneManager::GetInstance().onSceneActive.Remove( GetWeakPtr<CollisionDetector>(),
+                                                          &CollisionDetector::UpdateLayerNames );
+#endif
 	}
 
 	CollisionDetector::~CollisionDetector()

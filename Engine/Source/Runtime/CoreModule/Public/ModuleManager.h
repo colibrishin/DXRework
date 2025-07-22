@@ -12,7 +12,8 @@
 extern ENGINE_COREMODULE_API std::unique_ptr<Engine::ModuleInfo> g_os_api;
 extern ENGINE_COREMODULE_API std::unique_ptr<Engine::ModuleInfo> g_graphic_api;
 extern ENGINE_COREMODULE_API std::unique_ptr<Engine::ModuleInfo> g_core_mem;
-extern ENGINE_COREMODULE_API std::vector<std::unique_ptr<Engine::ModuleInfo>> g_core_api;
+extern ENGINE_COREMODULE_API std::unique_ptr<Engine::ModuleInfo> g_module_api;
+extern ENGINE_COREMODULE_API std::unique_ptr<Engine::ModuleInfo> g_core_api;
 
 #if !IS_DLL
 #define MODULE_IMPL( ModuleType, Name )                                                                                \
@@ -72,6 +73,7 @@ namespace Engine::Managers
         std::unordered_map<std::wstring, ModuleInfoPtr>          m_module_loaded_;
         std::unordered_map<std::wstring, std::filesystem::path>  m_module_paths_;
         std::unordered_map<std::wstring, std::set<std::wstring>> m_lazy_modules_;
+        std::list<std::wstring>                                  m_module_load_order_;
 
 #if !IS_DLL
         std::unordered_map<std::wstring, ModuleInitializationFunction> m_module_initializer_;

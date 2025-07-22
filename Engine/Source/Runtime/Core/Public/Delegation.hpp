@@ -105,12 +105,18 @@ public:
 	template <typename T> requires (std::is_base_of_v<base_class_type, T>)
     void Listen( const weak_this_type<T>& this_pointer, void ( T::*function )( Args... ) )
 	{
-		if ( !this_pointer.empty() )
-		{
+        if ( !this_pointer.empty() )
+        {
             uintptr_t     address = reinterpret_cast<address_type&>( function );
             function_type func    = Engine::mem_bind( this_pointer, function );
-			m_listener_.emplace(bucket_type{ this_pointer, reinterpret_cast<address_type&>( function ) }, func);
-		}
+
+            auto key = bucket_type{ this_pointer, reinterpret_cast<address_type&>( function ) };
+
+            if ( !m_listener_.contains( key ) )
+            {
+                m_listener_.emplace( key, func );
+            }
+        }
 	}
 
 	// const function
@@ -121,7 +127,12 @@ public:
 		{
             uintptr_t     address = reinterpret_cast<address_type&>( function );
             function_type func = Engine::mem_bind( this_pointer, function );
-            m_listener_.emplace( bucket_type{ this_pointer, address }, func );
+            auto          key     = bucket_type{ this_pointer, reinterpret_cast<address_type&>( function ) };
+
+            if ( !m_listener_.contains( key ) )
+            {
+                m_listener_.emplace( key, func );
+            }
 		}
 	}
 
@@ -132,7 +143,12 @@ public:
         function_type wrapper       = func;
         address_type  function_addr = reinterpret_cast<address_type>( wrapper.template target<FunctionT>() );
 
-        m_listener_.emplace( bucket_type{ {}, function_addr }, std::move( wrapper ) );
+        auto key = bucket_type{ {}, function_addr };
+
+        if ( !m_listener_.contains( key ) )
+        {
+            m_listener_.emplace( key, std::move( wrapper ) );
+        }
     }
 
 	void Broadcast(Args... args)

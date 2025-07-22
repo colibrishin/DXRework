@@ -33,7 +33,6 @@ namespace Engine::Abstracts
 			{
 				s_instance_ = make_managed_shared<T>( SINGLETON_LOCK_TOKEN{} );
 				s_instance_->SetName(s_instance_->GetPrettyTypeName());
-				std::call_once(s_first_call_, std::atexit, &Destroy);
 				s_destroyed_ = false;
 			}
 
@@ -98,7 +97,6 @@ namespace Engine::Abstracts
 		};
 
 		inline static managed_shared_ptr<T>         s_instance_ = nullptr;
-		inline static std::once_flag    s_first_call_;
 		inline static std::atomic<bool> s_destroyed_ = true;
 		inline static std::mutex        s_mutex_     = std::mutex();
 	};

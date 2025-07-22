@@ -66,20 +66,13 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline
     // Exception guard
     try
     {
-        std::vector<std::filesystem::path> core_modules;
         std::filesystem::path              graphics_module;
 
-        // Load core modules and graphic API, and OS API wrapper.
         for ( const auto& entry : std::filesystem::directory_iterator( "./" ) )
         {
             if ( const std::wstring& file_name = entry.path().stem().generic_wstring();
                  entry.is_regular_file() && entry.path().extension() == ".dll" )
             {
-                if ( file_name.starts_with( L"Core" ) )
-                {
-                    core_modules.push_back( entry );
-                }
-
                 if ( file_name.ends_with( L"GraphicInterface" ) )
                 {
                     graphics_module = entry;
@@ -91,11 +84,12 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline
         g_core_mem = std::make_unique<Engine::ModuleInfo>();
         load_seq( *g_core_mem, L"Memory.dll", "./Memory.dll" );
 
-        for ( const std::filesystem::path& core_module : core_modules )
-        {
-            g_core_api.emplace_back( std::make_unique<Engine::ModuleInfo>() );
-            load_seq( *( g_core_api.back() ), core_module.filename(), core_module );  
-        }
+        // Load core modules and graphic API, and OS API wrapper.
+        g_module_api = std::make_unique<Engine::ModuleInfo>();
+        load_seq( *g_module_api, L"CoreModule.dll", "./CoreModule.dll" );
+
+        g_core_api = std::make_unique<Engine::ModuleInfo>();
+        load_seq( *g_core_api, L"Core.dll", "./Core.dll" );
 
         g_os_api = std::make_unique<Engine::ModuleInfo>();
         load_seq( *g_os_api, L"WinAPIWrapper.dll", "./WinAPIWrapper.dll" );
@@ -110,22 +104,18 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline
     }
     catch ( std::exception& e )
     {
-        if ( Engine::Managers::EngineEntryPoint::IsInitialized() )
-        {
-            Engine::Managers::EngineEntryPoint::Destroy();
-        }
+        // todo: alert
     }
 
     // Clean up core libraries
-    for ( const std::unique_ptr<Engine::ModuleInfo>& module : g_core_api )
-    {
-        cleanup_seq( *module );
-    }
+    cleanup_seq( *g_core_api );
 
     if ( Engine::Managers::EngineEntryPoint::IsInitialized() )
     {
         Engine::Managers::EngineEntryPoint::Destroy();
     }
+
+    cleanup_seq( *g_module_api );
 
     // Clean up the graphic API.
     if ( g_graphic_api )

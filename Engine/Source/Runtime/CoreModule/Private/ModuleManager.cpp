@@ -13,7 +13,8 @@
 std::unique_ptr<Engine::ModuleInfo>              g_os_api      = nullptr;
 std::unique_ptr<Engine::ModuleInfo>              g_graphic_api = nullptr;
 std::unique_ptr<Engine::ModuleInfo>              g_core_mem    = nullptr;
-std::vector<std::unique_ptr<Engine::ModuleInfo>> g_core_api    = {};
+std::unique_ptr<Engine::ModuleInfo>              g_module_api  = nullptr;
+std::unique_ptr<Engine::ModuleInfo>              g_core_api    = nullptr;
 
 namespace Engine::Managers
 {
@@ -41,8 +42,9 @@ namespace Engine::Managers
 
     bool ModuleManager::CheckNoInit( const ModuleInfo* module_info )
     {
+#if IS_DLL
         // Ignore load/unload self
-        if ( module_info->m_filename_ == L"CoreModule" )
+        if ( module_info->m_handle_ == g_module_api->m_handle_ )
         {
             return true;
         }
@@ -66,12 +68,11 @@ namespace Engine::Managers
         }
 
         // Core libraries are loaded before the module manager.
-        if ( std::ranges::find_if( g_core_api,
-                                   [ &module_info ]( const std::unique_ptr<ModuleInfo>& elem )
-                                   { return module_info->m_handle_ == elem->m_handle_; } ) != g_core_api.end() )
+        if ( module_info->m_handle_ == g_core_api->m_handle_ )
         {
             return true;
         }
+#endif
 
         return false;
     }
@@ -84,12 +85,15 @@ namespace Engine::Managers
     void ModuleManager::Destroy()
     {
 #if IS_DLL
-        const auto& resolve = [ this, resolve ]( const std::wstring_view module_name, ModuleInfo& info )
+        const auto& resolve = [ this ]( const std::wstring_view module_name )
         {
-            if ( GetModuleHandleW( info.m_path_.c_str() ) && info.m_module_ )
+            auto it = m_module_loaded_.find( module_name.data() );
+            auto& module = it->second;
+
+            if ( GetModuleHandleW( module->m_path_.c_str() ) && module->m_module_ )
             {
                 bool                            found      = false;
-                const std::vector<std::string>& dependency = info.m_module_->GetDependencies();
+                const std::vector<std::string>& dependency = module->m_module_->GetDependencies();
 
                 for ( const std::string& name : dependency )
                 {
@@ -104,35 +108,49 @@ namespace Engine::Managers
 
                 if ( !found )
                 {
-                    info.m_module_->Shutdown();
-                    info.m_module_.reset();
+                    module->m_module_->Shutdown();
+                    module->m_module_.reset();
 
-                    if ( info.m_handle_ )
+                    if ( module->m_handle_ )
                     {
-                        FreeLibrary( static_cast<HMODULE>( info.m_handle_ ) );
+                        FreeLibrary( static_cast<HMODULE>( module->m_handle_ ) );
                     }
 
-                    return true;
+                    return m_module_loaded_.erase( it );
                 }
-
-                return false;
             }
+            else if ( CheckNoInit( module.get() ) )
+            {
+                return m_module_loaded_.erase( it );
+            }
+            else
+            {
+                // todo: third party library
+            }
+
+            return m_module_loaded_.end();
         };
 #endif
 
-        for ( auto it = m_module_loaded_.begin(); it != m_module_loaded_.end(); )
+        // Remove the dummy core module info.
+        for ( auto it = m_module_loaded_.begin(); it != m_module_loaded_.end();)
         {
-            auto& ptr = it->second;
-#if IS_DLL
-            if ( resolve( it->first, *it->second ) )
+            if ( CheckNoInit( it->second.get() ) )
             {
-                if ( m_lazy_modules_.contains( it->first ) )
-                {
-                    // todo: 
-                }
-
                 it = m_module_loaded_.erase( it );
             }
+            else
+            {
+                ++it;
+            }
+        }
+
+        // Unload the modules in the loaded order.
+        for ( auto it = m_module_load_order_.begin(); it != m_module_load_order_.end(); )
+        {
+#if IS_DLL
+            RemoveModule( *it );
+            it = m_module_load_order_.erase( it );
 #else
             if ( ptr->m_module_ )
             {
@@ -173,6 +191,7 @@ namespace Engine::Managers
                 {
                     module_info->m_module_->Initialize();
                     module_info->m_b_lazy = false;
+                    m_module_load_order_.emplace_back( name );
                     TryResolveLazyness( name );
                 }
 
@@ -299,6 +318,7 @@ namespace Engine::Managers
 
                         
                         module_info->m_module_->Initialize();
+                        m_module_load_order_.emplace_back( name.data() );
                     }
                 }
 
@@ -384,10 +404,26 @@ namespace Engine::Managers
 		
 		if (module_info)
 		{
-			HMODULE module_ptr = static_cast<HMODULE>(module_info->m_handle_);
+            if (
+#if IS_DLL
+                GetModuleHandleW( module_info->m_path_.c_str() ) && 
+#endif
+                module_info->m_module_ )
+            {
+                module_info->m_module_->Shutdown();
+            }
+
+#if IS_DLL
+            std::filesystem::path module_path = module_info->m_path_;
+            HMODULE               module_ptr  = static_cast<HMODULE>( module_info->m_handle_ );
+#endif
+
 			module_info.reset(); // Free the module information first to avoid the incomplete type.
 #if IS_DLL
-			FreeLibrary(module_ptr); // Free the library
+            if ( GetModuleHandleW( module_path.c_str() ) )
+            {
+                FreeLibrary( module_ptr ); // Free the library
+            }
 #endif
 		}
 		
