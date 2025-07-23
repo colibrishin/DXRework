@@ -1445,7 +1445,17 @@ public:
 
 	bool owner_before(const AllocationContext& other) const
 	{
-        return index() < other.index() && reinterpret_cast<uintptr_t>( allocator() ) < reinterpret_cast<uintptr_t>( other.allocator() );
+		if ( allocator() != other.allocator() )
+		{
+            return reinterpret_cast<uintptr_t>( allocator() ) < reinterpret_cast<uintptr_t>( other.allocator() );
+		}
+
+		if ( index() == other.index() )
+		{
+            return allocation_count() < other.allocation_count();
+		}
+
+        return index() < other.index();
 	}
 
 	bool owner_equals(const AllocationContext& other) const
