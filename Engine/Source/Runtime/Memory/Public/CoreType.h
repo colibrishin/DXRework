@@ -14,7 +14,9 @@
 #include <map>
 #include <memory>
 #include <mutex>
+#include <ranges>
 #include <type_traits>
+#include <typeindex>
 
 #include <boost/serialization/base_object.hpp>
 #include <boost/serialization/export.hpp>
@@ -1301,13 +1303,12 @@ struct ENGINE_MEMORY_API null_deleter : deleter_base
 class ENGINE_MEMORY_API pool_allocator_base
 {
 public:
-    virtual ~pool_allocator_base()                                                 = default;
-    virtual void                         destroy() const                           = 0;
-    virtual bool                         past( const AllocationContext& ) const    = 0;
-    virtual bool                         expired( const AllocationContext& ) const = 0;
-    virtual void*                        get_ptr( const AllocationContext& ) const = 0;
-    virtual size_t                       allocation_count() const                  = 0;
-    virtual void                         predicate_dealloc( void* ptr ) const      = 0;
+    virtual ~pool_allocator_base()                                                        = default;
+    virtual void                                destroy() const                           = 0;
+    virtual bool                                past( const AllocationContext& ) const    = 0;
+    virtual bool                                expired( const AllocationContext& ) const = 0;
+    virtual void*                               get_ptr( const AllocationContext& ) const = 0;
+    virtual size_t                              allocation_count() const                  = 0;
     virtual const std::function<void( void* )>& get_deleter() const                       = 0;
 };
 
@@ -1387,11 +1388,6 @@ public:
 		}
 
         return valid() && m_ptr_ == nullptr;
-	}
-
-	void predicate_dealloc( void* ptr ) const
-    {
-        m_allocator_->predicate_dealloc( ptr );
 	}
 
 	void* ptr() const
@@ -1477,8 +1473,40 @@ public:
 };
 
 template <typename T>
+object_pool_allocator<T>& get_instanced_pool_allocator()
+{
+    static object_pool_allocator<T> instanced;
+    return instanced;
+}
+
+class ENGINE_MEMORY_API PoolAllocatorStorage
+{
+private:
+    std::unordered_map<std::type_index, pool_allocator_base*> m_allocators_;
+
+public:
+    template <typename T>
+    object_pool_allocator<T>& get_allocator()
+    {
+        if ( !m_allocators_.contains( typeid( T ) ) )
+        {
+            auto& instanced = get_instanced_pool_allocator<T>();
+            m_allocators_.emplace( typeid( T ), &instanced );
+        }
+
+        return reinterpret_cast<object_pool_allocator<T>&>( *m_allocators_.at( typeid( T ) ) );
+    }
+
+    void        cleanup();
+    static void report_leakage();
+};
+
+extern ENGINE_MEMORY_API PoolAllocatorStorage g_allocator_storage;
+
+template <typename T>
 class object_pool_allocator : public pool_allocator_base
 {
+private:
     struct object_tag
     { };
 
@@ -1487,17 +1515,17 @@ class object_pool_allocator : public pool_allocator_base
                                            boost::default_user_allocator_new_delete,
                                            boost::details::pool::null_mutex>;
 
-    inline static T*                   m_start_ptr_ = nullptr;
-    inline static std::vector<__m256i> m_mask_{};
-    inline static std::vector<size_t>  m_local_allocation_count_{};
-    inline static size_t               m_reallocation_count_ = 0;
+    T*                   m_start_ptr_ = nullptr;
+    std::vector<__m256i> m_mask_{};
+    std::vector<size_t>  m_local_allocation_count_{};
+    size_t               m_reallocation_count_ = 0;
 
-    inline static std::atomic<bool> m_lock_        = false;
-    inline static bool              m_initialized_ = false;
+    std::atomic<bool> m_lock_        = false;
+    bool              m_initialized_ = false;
 
 	friend class PoolAllocatorStorage;
 
-    static void init()
+    void init()
     {
         if ( !m_initialized_ )
         {
@@ -1506,7 +1534,7 @@ class object_pool_allocator : public pool_allocator_base
         }
     }
 
-    static void reallocate()
+    void reallocate()
     {
         T* reallocated = static_cast<T*>( PoolType::ordered_malloc( (m_mask_.size() + 1) * ( 1 << 8 ) ) );
         if ( m_start_ptr_ )
@@ -1520,7 +1548,7 @@ class object_pool_allocator : public pool_allocator_base
         m_start_ptr_ = reallocated;
     }
 
-    static AllocationKey get_free_space()
+    AllocationKey get_free_space()
     {
         auto it = m_mask_.begin();
         while ( it != m_mask_.end() )
@@ -1575,7 +1603,7 @@ class object_pool_allocator : public pool_allocator_base
     const size_t offset  = ( dist - ( ( 1 << 8 ) * chunk ) ) - ( segment * std::numeric_limits<uint32_t>::digits );
 
     template <bool Allocate>
-    static void flip( T* ptr )
+    void flip( T* ptr )
     {
         UNWRAP( ptr )
 
@@ -1589,14 +1617,14 @@ class object_pool_allocator : public pool_allocator_base
         }
     }
 
-	static void increase( T* ptr )
+	void increase( T* ptr )
 	{
         const size_t dist    = ptr - m_start_ptr_;
         ++m_local_allocation_count_[ dist ];
 	}
 
     template <bool Allocate>
-    static void flip( const AllocationKey& pair )
+    void flip( const AllocationKey& pair )
     {
         if constexpr ( !Allocate )
         {
@@ -1608,7 +1636,7 @@ class object_pool_allocator : public pool_allocator_base
         }
     }
 
-	static bool peak(const AllocationKey& pair)
+	bool peak(const AllocationKey& pair) const
 	{
         const uint32_t shift = m_mask_[ pair.chunk ].m256i_i32[ pair.segment ] >> pair.offset;
         const size_t allocation_count = m_local_allocation_count_[ pair.to_raw_index() ];
@@ -1620,13 +1648,7 @@ class object_pool_allocator : public pool_allocator_base
         return m_start_ptr_;
     }
 
-	static const object_pool_allocator& get_instanced()
-	{
-        static object_pool_allocator instanced{};
-        return instanced;
-	}
-
-	static bool is_safe( T* ptr )
+	bool is_safe( T* ptr ) const
 	{
         return m_start_ptr_ <= ptr && m_start_ptr_ + ( m_mask_.size() * ( 1 << 8 ) ) > ptr;
 	}
@@ -1638,7 +1660,7 @@ public:
     }
 
     template <typename... Args>
-    static AllocationContext allocate( Args&&... arguments )
+    AllocationContext allocate( Args&&... arguments )
     {
         init();
         bool entry_expected  = false;
@@ -1648,8 +1670,7 @@ public:
         {
         }
         const AllocationKey          next_pair = get_free_space();
-        const object_pool_allocator& instanced = get_instanced();
-        AllocationContext            context( next_pair, m_reallocation_count_, &instanced );
+        AllocationContext            context( next_pair, m_reallocation_count_, this );
         flip<true>( next_pair );
         while ( !m_lock_.compare_exchange_strong( return_expected, false ) )
         {
@@ -1660,7 +1681,7 @@ public:
         return context;
     }
 
-    static void deallocate( T* ptr )
+    void deallocate( T* ptr )
     {
         assert( is_safe( ptr ) );
         bool entry_expected  = false;
@@ -1669,8 +1690,9 @@ public:
         while ( !m_lock_.compare_exchange_strong( entry_expected, true ) )
         {
         }
-        if ( !get_instanced().expired( get_context( ptr ) ) )
+        if ( !expired( get_context( ptr ) ) )
         {
+            ConstructorAccess::InternalPreDeconstruction( ptr );
             ConstructorAccess::InternalDeconstruct( ptr );
         }
         increase( ptr );
@@ -1679,15 +1701,6 @@ public:
         {
         }
     }
-
-	void predicate_dealloc( void* instance ) const override
-	{
-        boost::shared_ptr<T>* shared = static_cast<boost::shared_ptr<T>*>( instance );
-        if ( shared && *shared && shared->use_count() == 1 )
-		{
-            deallocate( shared->get() );
-		}
-	}
 
 	bool past( const AllocationContext& context ) const override
 	{
@@ -1721,69 +1734,32 @@ public:
         return nullptr;
 	}
 
-	static AllocationContext get_context( const T* ptr )
-	{
+	AllocationContext get_context( const T* ptr ) const
+    {
         UNWRAP( ptr )
         const size_t allocation_count = m_local_allocation_count_[ dist ];
-        const object_pool_allocator& instanced        = get_instanced();
 
-        return AllocationContext(
-                { allocation_count, chunk, ( uint8_t )segment, ( uint8_t )offset }, m_reallocation_count_, &instanced );
-	}
+        return AllocationContext( { allocation_count, chunk, ( uint8_t )segment, ( uint8_t )offset },
+                                  m_reallocation_count_,
+                                  this );
+    }
 
     virtual void destroy() const override
     {
         PoolType::ordered_free( m_start_ptr_, m_mask_.size() * ( 1 << 8 ) );
-        PoolType::release_memory();
-        PoolType::purge_memory();
     }
 
 private:
-    inline static std::function<void( void* )> m_deleter_ = []( void* ptr )
-    { object_pool_allocator<T>::deallocate( static_cast<T*>( ptr ) ); };
-
-public:
     const std::function<void( void* )>& get_deleter() const override
     {
-        return m_deleter_;
+        static std::function<void( void* )> deleter = []( void* ptr )
+        { g_allocator_storage.get_allocator<T>().deallocate( static_cast<T*>( ptr ) ); };
+
+        return deleter;
     }
 
 #undef UNWRAP
 };
-
-class ENGINE_MEMORY_API PoolAllocatorStorage
-{
-    std::unordered_set<const pool_allocator_base*> m_allocators_;
-
-public:
-	template <typename T>
-    void register_allocator()
-    {
-        const object_pool_allocator<T>& instanced = object_pool_allocator<T>::get_instanced();
-        m_allocators_.emplace( &instanced );
-    }
-
-	void cleanup() const
-    {
-	    for ( const pool_allocator_base* allocator : m_allocators_ )
-	    {
-            allocator->destroy();
-	    }
-	}
-
-    static void report_leakage()
-    {
-#if _WIN32 || _WIN64
-#define _CRTDBG_MAP_ALLOC
-#include <crtdbg.h>
-#include <stdlib.h>
-        _CrtSetDbgFlag( _CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF );
-        _CrtDumpMemoryLeaks();
-#endif
-	}
-};
-
-extern ENGINE_MEMORY_API PoolAllocatorStorage g_allocator_storage;
 
 namespace Engine
 {
@@ -1880,21 +1856,12 @@ class managed_shared_ptr : protected boost::shared_ptr<T>
         ar & static_cast<boost::shared_ptr<T>&>( *this );
 	}
 
-	void reachability_test()
-	{
-        if ( boost::shared_ptr<T>::use_count() == 1 )
-        {
-            ConstructorAccess::InternalPreDeconstruction( get() );
-        }
-	}
-
 public:
     using element_type = T;
 
 	~managed_shared_ptr()
 	{
         resolve();
-        reachability_test();
 	}
 
 	managed_shared_ptr( nullptr_t )
@@ -1913,11 +1880,6 @@ public:
     {
         resolve();
     }
-
-    managed_shared_ptr( const managed_shared_ptr& other ) : boost::shared_ptr<T>( other ), m_context_( other.m_context_ )
-	{
-        resolve();
-	}
 
 	explicit operator bool() const noexcept
     {
@@ -1942,7 +1904,6 @@ public:
 
 	void reset()
 	{
-        reachability_test();
         boost::shared_ptr<T>::reset();
         m_context_ = AllocationContext::get_null_context();
 	}
@@ -2213,17 +2174,15 @@ inline bool operator<( const managed_weak_ptr<T>& left, const managed_weak_ptr<U
 template <typename T, typename... Args>
 managed_shared_ptr<T> make_managed_shared( Args&&... arguments )
 {
-    g_allocator_storage.register_allocator<T>();
     static typename managed_shared_ptr<T>::init_tag tag{};
-    return managed_shared_ptr<T>( object_pool_allocator<T>::allocate( std::forward<Args>( arguments )... ), tag );
+    return managed_shared_ptr<T>( g_allocator_storage.get_allocator<T>().allocate( std::forward<Args>( arguments )... ), tag );
 }
 
 template <typename T, typename U, typename... Args>
 managed_shared_ptr<U> make_managed_shared( Args&&... arguments )
 {
-    g_allocator_storage.register_allocator<T>();
     static typename managed_shared_ptr<T>::init_tag tag{};
-    return managed_shared_ptr<U>( object_pool_allocator<T>::allocate( std::forward<Args>( arguments )... ), tag );
+    return managed_shared_ptr<U>( g_allocator_storage.get_allocator<T>().allocate( std::forward<Args>( arguments )... ), tag );
 }
 
 template <typename T>
