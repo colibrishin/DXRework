@@ -113,9 +113,8 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline
     if ( Engine::Managers::EngineEntryPoint::IsInitialized() )
     {
         Engine::Managers::EngineEntryPoint::Destroy();
+        Engine::Managers::ModuleManager::GetInstance().Shutdown();
     }
-
-    cleanup_seq( *g_module_api );
 
     // Clean up the graphic API.
     if ( g_graphic_api )
@@ -133,6 +132,9 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline
 
     g_allocator_storage.cleanup();
     PoolAllocatorStorage::report_leakage();
+    Engine::Managers::ModuleManager::GetInstance().Destroy();
+
+    cleanup_seq( *g_module_api );
 
     if ( g_core_mem )
     {

@@ -1305,6 +1305,7 @@ class ENGINE_MEMORY_API pool_allocator_base
 public:
     virtual ~pool_allocator_base()                                                        = default;
     virtual void                                destroy() const                           = 0;
+    virtual void                                purge() const                           = 0;
     virtual bool                                past( const AllocationContext& ) const    = 0;
     virtual bool                                expired( const AllocationContext& ) const = 0;
     virtual void*                               get_ptr( const AllocationContext& ) const = 0;
@@ -1503,6 +1504,41 @@ public:
 
 extern ENGINE_MEMORY_API PoolAllocatorStorage g_allocator_storage;
 
+#if defined( _DEBUG ) && defined( _WIN32 )
+#define _CRTDBG_MAP_ALLOC
+#include <crtdbg.h>
+#include <iostream>
+#include <stdlib.h>
+
+struct debug_new_delete
+{
+    typedef std::size_t size_type;
+    //!< An unsigned integral type that can represent the size of the largest object to be allocated.
+    typedef std::ptrdiff_t difference_type;
+    //!< A signed integral type that can represent the difference of any two pointers.
+
+    static char* malloc( const size_type bytes )
+    {
+        //! Attempts to allocate n bytes from the system. Returns 0 if out-of-memory
+#define DBG_NEW new ( _NORMAL_BLOCK, __FILE__, __LINE__ )
+        // Replace _NORMAL_BLOCK with _CLIENT_BLOCK if you want the
+        // allocations to be of _CLIENT_BLOCK type
+        return DBG_NEW char[ bytes ];
+#undef DBG_NEW
+    }
+
+    static void free( char* const block )
+    {
+        //! Attempts to de-allocate block.
+        //! \pre Block must have been previously returned from a call to UserAllocator::malloc.
+        delete[] block;
+    }
+};
+using user_allocator = debug_new_delete;
+#else
+using user_allocator = boost::default_user_allocator_new_delete;
+#endif
+
 template <typename T>
 class object_pool_allocator : public pool_allocator_base
 {
@@ -1511,8 +1547,8 @@ private:
     { };
 
     using PoolType = boost::singleton_pool<object_tag,
-                                           sizeof( T ),
-                                           boost::default_user_allocator_new_delete,
+                                           sizeof( T ), 
+										   user_allocator,
                                            boost::details::pool::null_mutex>;
 
     T*                   m_start_ptr_ = nullptr;
@@ -1748,6 +1784,12 @@ public:
     {
         PoolType::ordered_free( m_start_ptr_, m_mask_.size() * ( 1 << 8 ) );
     }
+
+	virtual void purge() const override
+    {
+        PoolType::release_memory();
+        PoolType::purge_memory();
+	}
 
 private:
     const std::function<void( void* )>& get_deleter() const override

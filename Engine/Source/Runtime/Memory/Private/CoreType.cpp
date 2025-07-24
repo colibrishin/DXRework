@@ -9,6 +9,11 @@ void PoolAllocatorStorage::cleanup()
         allocator->destroy();
     }
 
+    for ( const pool_allocator_base* allocator : m_allocators_ | std::views::values )
+    {
+        allocator->purge();
+    }
+
     m_allocators_.clear();
 }
 

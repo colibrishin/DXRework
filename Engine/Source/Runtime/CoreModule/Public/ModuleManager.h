@@ -55,11 +55,12 @@ namespace Engine::Managers
         ~ModuleManager();
 
         void                  Initialize();
+        void                  Shutdown();
         void                  Destroy();
         ModuleInfo*           FindModule( const std::wstring_view name );
         IModule*              LoadModule( const std::wstring_view name );
         void                  AddModule( const std::wstring_view name );
-        void                  RemoveModule( const std::wstring_view name );
+        void                  ShutdownModule( const std::wstring_view name );
         void                  LoadModuleAll();
         static ModuleManager& GetInstance();
 

@@ -82,56 +82,8 @@ namespace Engine::Managers
 		m_module_paths_.emplace(L"Default", "./");
     }
 
-    void ModuleManager::Destroy()
+    void ModuleManager::Shutdown()
     {
-#if IS_DLL
-        const auto& resolve = [ this ]( const std::wstring_view module_name )
-        {
-            auto it = m_module_loaded_.find( module_name.data() );
-            auto& module = it->second;
-
-            if ( GetModuleHandleW( module->m_path_.c_str() ) && module->m_module_ )
-            {
-                bool                            found      = false;
-                const std::vector<std::string>& dependency = module->m_module_->GetDependencies();
-
-                for ( const std::string& name : dependency )
-                {
-                    std::wstring conversion( name.begin(), name.end() );
-
-                    if ( m_module_loaded_.contains( conversion ) )
-                    {
-                        m_lazy_modules_[ conversion ].insert( module_name.data() );
-                        found = true;
-                    }
-                }
-
-                if ( !found )
-                {
-                    module->m_module_->Shutdown();
-                    module->m_module_.reset();
-
-                    if ( module->m_handle_ )
-                    {
-                        FreeLibrary( static_cast<HMODULE>( module->m_handle_ ) );
-                    }
-
-                    return m_module_loaded_.erase( it );
-                }
-            }
-            else if ( CheckNoInit( module.get() ) )
-            {
-                return m_module_loaded_.erase( it );
-            }
-            else
-            {
-                // todo: third party library
-            }
-
-            return m_module_loaded_.end();
-        };
-#endif
-
         // Remove the dummy core module info.
         for ( auto it = m_module_loaded_.begin(); it != m_module_loaded_.end();)
         {
@@ -149,7 +101,7 @@ namespace Engine::Managers
         for ( auto it = m_module_load_order_.begin(); it != m_module_load_order_.end(); )
         {
 #if IS_DLL
-            RemoveModule( *it );
+            ShutdownModule( *it );
             it = m_module_load_order_.erase( it );
 #else
             if ( ptr->m_module_ )
@@ -336,6 +288,31 @@ namespace Engine::Managers
         }
 	}
 
+    void ModuleManager::Destroy()
+    {
+        for ( auto it = m_module_load_order_.begin(); m_module_load_order_.end() != it; ++it )
+        {
+            if (!m_module_loaded_.contains(*it))
+            {
+                throw std::runtime_error( "Module does not loaded" );
+            }
+
+            if ( m_module_loaded_.at( *it )->m_module_ )
+            {
+                throw std::runtime_error( "Module does not shutdown" );
+            }
+
+#if IS_DLL
+#if _WIN32 || _WIN64
+            if (HMODULE module = static_cast<HMODULE>( m_module_loaded_.at(*it)->m_handle_ ) )
+            {
+                FreeLibrary( module );
+            }
+#endif
+#endif
+        }
+    }
+
 #if !IS_DLL
 	void ModuleManager::RegisterStaticModule(const std::wstring_view name, const ModuleInitializationFunction& func)
 	{
@@ -389,7 +366,7 @@ namespace Engine::Managers
 #endif
 	}
 
-	void ModuleManager::RemoveModule(const std::wstring_view name)
+	void ModuleManager::ShutdownModule(const std::wstring_view name)
 	{
 		{
 			std::lock_guard l(m_write_mutex_);
@@ -400,8 +377,8 @@ namespace Engine::Managers
 		}
 		
 		std::lock_guard l(m_read_mutex_);
-		std::unique_ptr<ModuleInfo> module_info = std::move(m_module_loaded_.at(name.data()));
-		
+        const ModuleInfoPtr& module_info = m_module_loaded_.at( name.data() );
+
 		if (module_info)
 		{
             if (
@@ -411,23 +388,9 @@ namespace Engine::Managers
                 module_info->m_module_ )
             {
                 module_info->m_module_->Shutdown();
+                const_cast<std::remove_cvref_t<decltype(module_info)>&>(module_info).reset();
             }
-
-#if IS_DLL
-            std::filesystem::path module_path = module_info->m_path_;
-            HMODULE               module_ptr  = static_cast<HMODULE>( module_info->m_handle_ );
-#endif
-
-			module_info.reset(); // Free the module information first to avoid the incomplete type.
-#if IS_DLL
-            if ( GetModuleHandleW( module_path.c_str() ) )
-            {
-                FreeLibrary( module_ptr ); // Free the library
-            }
-#endif
 		}
-		
-		m_module_loaded_.erase(name.data());
     }
 
 	void ModuleManager::LoadModuleAll()

@@ -117,7 +117,6 @@ namespace Engine::Managers
 
     void EngineEntryPoint::PreDeconstruction()
     {
-        ModuleManager::GetInstance().Destroy();
         m_timer.reset();
     }
 

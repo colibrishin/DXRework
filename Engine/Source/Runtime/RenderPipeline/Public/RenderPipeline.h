@@ -77,6 +77,9 @@ namespace Engine::Managers
 
 		[[nodiscard]] const Viewport& GetViewport() const;
 
+	protected:
+        void PreDeconstruction() override;
+
 	private:
 		friend struct SingletonDeleter;
 		RenderPipeline() = default;
