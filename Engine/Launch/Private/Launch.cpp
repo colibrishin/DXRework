@@ -130,6 +130,28 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline
         g_os_api.reset();
     }
 
+    for ( const Engine::alloc_base* alloc : g_static_alloc | std::views::values )
+    {
+        alloc->release_memory();
+        alloc->purge_memory();
+
+        auto& rebind_releases = alloc->get_rebind_release();
+        auto& rebind_purge    = alloc->get_rebind_purge();
+
+        for ( void ( *func )() : rebind_releases )
+        {
+            func();
+        }
+        for ( void ( *func )() : rebind_purge )
+        {
+            func();
+        }
+
+        rebind_releases.clear();
+        rebind_purge.clear();
+    }
+
+    g_static_alloc.clear();
     g_allocator_storage.cleanup();
     PoolAllocatorStorage::report_leakage();
     Engine::Managers::ModuleManager::GetInstance().Destroy();

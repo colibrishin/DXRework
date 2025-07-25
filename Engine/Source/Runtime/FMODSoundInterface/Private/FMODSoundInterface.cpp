@@ -41,7 +41,7 @@ void Engine::FMODSoundInterface::Update()
 
 Engine::ISound* Engine::FMODSoundInterface::NewSound(const std::filesystem::path& path)
 {
-	Engine::FMODSoundPrimitive* new_sound = m_instanced_primitives_.emplace_back(m_primitive_allocator_.allocate());
+	Engine::FMODSoundPrimitive* new_sound = m_instanced_primitives_.emplace_back(m_primitive_allocator_.allocate(1));
 	m_primitive_allocator_.construct(new_sound);
 
 	if (HandleFMODResult(m_audio_engine_->createSound(
