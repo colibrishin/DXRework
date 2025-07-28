@@ -62,7 +62,10 @@ namespace Engine
 				m_list4_ = nullptr;
 			}
 		}
-	}
+    }
+
+    CommandPair::~CommandPair()
+    { }
 
 	void CommandPair::SetDisposed()
 	{

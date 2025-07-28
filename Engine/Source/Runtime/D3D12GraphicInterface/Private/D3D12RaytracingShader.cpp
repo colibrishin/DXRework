@@ -9,6 +9,9 @@
 
 namespace Engine
 {
+    D3D12RaytracingShader::~D3D12RaytracingShader()
+    { }
+
     void D3D12RaytracingShader::Generate( const Resources::RaytracingShader* shader, void* pipeline_signature )
     {
         IRaytracingExtension& rgi = g_graphic_accessor.GetRaytracingInterface();

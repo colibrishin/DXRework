@@ -18,7 +18,10 @@ std::vector<std::tuple<Engine::eShaderType, std::string, std::string>> Engine::D
 
 namespace Engine
 {
-	D3D12ComputePrimitiveShader::D3D12ComputePrimitiveShader() {}
+    D3D12ComputePrimitiveShader::~D3D12ComputePrimitiveShader()
+    { }
+    D3D12ComputePrimitiveShader::D3D12ComputePrimitiveShader()
+    { }
 
 	void D3D12ComputePrimitiveShader::Generate(Resources::ComputeShader* shader, void* pipeline_signature)
 	{

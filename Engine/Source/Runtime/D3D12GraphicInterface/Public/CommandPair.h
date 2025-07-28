@@ -34,6 +34,7 @@ namespace Engine
 			DescriptorPtr&& heap
 		);
 
+		~CommandPair() override;
 		CommandPair(const CommandPair& other)            = delete;
 		CommandPair& operator=(const CommandPair& other) = delete;
 

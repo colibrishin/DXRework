@@ -18,6 +18,9 @@
 Engine::D3D12PrimitiveTexture::D3D12PrimitiveTexture()
 { }
 
+Engine::D3D12PrimitiveTexture::~D3D12PrimitiveTexture()
+{ }
+
 void Engine::D3D12PrimitiveTexture::Generate(Resources::Texture* texture)
 {
 	m_description_ = texture->GetDescription();

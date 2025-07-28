@@ -1,6 +1,9 @@
 #include "D3D12PrimitiveSampler.h"
 #include "D3D12GraphicInterface.h"
 
+Engine::D3D12PrimitiveSampler::~D3D12PrimitiveSampler()
+{ }
+
 void Engine::D3D12PrimitiveSampler::Generate( eShaderSamplerAddress  addr,
                                               eShaderSamplerFunction function,
                                               eSamplerFilter         filter )

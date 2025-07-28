@@ -11,6 +11,7 @@ namespace Engine
     {
         GENERATE_BODY
 
+        ~D3D12GraphicResourcePrimitive() override;
         void SetResource(void* resource) override;
 
         void Release() override;

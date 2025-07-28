@@ -3,7 +3,10 @@
 
 namespace Engine
 {
-    void D3D12GraphicResourcePrimitive::SetResource(void* resource)
+    D3D12GraphicResourcePrimitive::~D3D12GraphicResourcePrimitive()
+    { }
+
+    void D3D12GraphicResourcePrimitive::SetResource( void* resource )
     {
         IGraphicResource::SetResource( resource );
         m_raw_resources_ = static_cast<ID3D12Resource*>(resource);

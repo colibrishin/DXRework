@@ -9,6 +9,7 @@ namespace Engine
 {
 	struct ENGINE_D3D12GRAPHICINTERFACE_API D3D12PrimitiveMesh : public IMesh
 	{
+        ~D3D12PrimitiveMesh() override;
 		D3D12PrimitiveMesh() = default;
 		void                   Generate(Resources::Mesh* mesh) override;
 

@@ -15,6 +15,10 @@ static bool HandleFMODResult(FMOD_RESULT result)
 	return true;
 }
 
+Engine::FMODSoundInterface::~FMODSoundInterface()
+{
+}
+
 void Engine::FMODSoundInterface::Initialize()
 {
 	HandleFMODResult( System_Create( &m_audio_engine_ ) );
@@ -28,10 +32,7 @@ void Engine::FMODSoundInterface::Shutdown()
 	m_audio_engine_->update();
 	m_audio_engine_->release();
 
-	for ( auto& ptr : m_instanced_primitives_ )
-	{
-		m_primitive_allocator_.deallocate( ptr, 1 );
-	}
+	m_primitive_allocator_.deallocate( m_instanced_primitives_.front(), m_instanced_primitives_.size() );
 }
 
 void Engine::FMODSoundInterface::Update()
@@ -41,6 +42,7 @@ void Engine::FMODSoundInterface::Update()
 
 Engine::ISound* Engine::FMODSoundInterface::NewSound(const std::filesystem::path& path)
 {
+	// todo: fix allocation logic
 	Engine::FMODSoundPrimitive* new_sound = m_instanced_primitives_.emplace_back(m_primitive_allocator_.allocate(1));
 	m_primitive_allocator_.construct(new_sound);
 
@@ -135,7 +137,15 @@ void Engine::FMODSoundInterface::StopLoop(const ISound* sound, const SoundChanne
 	}
 }
 
-void Engine::FMODSoundPrimitive::SetMinDistance(float value)
+Engine::FMODSoundPrimitive::~FMODSoundPrimitive()
+{
+    if ( m_sound_ )
+    {
+        m_sound_->release();
+    }
+}
+
+void Engine::FMODSoundPrimitive::SetMinDistance( float value )
 {
 	m_min_distance_ = value;
 	HandleFMODResult( m_sound_->set3DMinMaxDistance( m_min_distance_, m_max_distance_ ) );

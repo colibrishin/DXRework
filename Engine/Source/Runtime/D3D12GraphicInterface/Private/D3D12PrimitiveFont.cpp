@@ -3,7 +3,10 @@
 #include "ToolkitAPI.h"
 #include "D3D12GraphicInterface.h"
 
-void Engine::D3D12PrimitiveFont::Generate(const Resources::Font* font)
+Engine::D3D12PrimitiveFont::~D3D12PrimitiveFont()
+{ }
+
+void Engine::D3D12PrimitiveFont::Generate( const Resources::Font* font )
 {
 	IGraphicAPI& gi = g_graphic_accessor.GetInterface();
 	D3D12GraphicInterface& dgi = static_cast<D3D12GraphicInterface&>(gi);

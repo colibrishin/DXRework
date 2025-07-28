@@ -15,7 +15,10 @@
 
 namespace Engine
 {
-	void D3D12PrimitiveMesh::Generate(Resources::Mesh* mesh)
+    D3D12PrimitiveMesh::~D3D12PrimitiveMesh()
+    { }
+
+    void D3D12PrimitiveMesh::Generate( Resources::Mesh* mesh )
     {
 		std::string generic_name = mesh->GetName();
 

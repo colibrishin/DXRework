@@ -15,6 +15,7 @@ namespace Engine
     class ENGINE_D3D12GRAPHICINTERFACE_API D3D12RaytracingShader : public IRaytracingShader
     {
     public:
+        ~D3D12RaytracingShader() override;
         void                Generate(const Resources::RaytracingShader* shader, void* pipeline_signature) override;
         [[nodiscard]] void* GetShaderRecord(const size_t idx) const override;
 

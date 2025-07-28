@@ -11,13 +11,7 @@ namespace Engine
 {
 	struct ENGINE_FMODSOUNDINTERFACE_API FMODSoundPrimitive : public ISound
 	{
-		virtual ~FMODSoundPrimitive()
-		{
-			if (m_sound_)
-			{
-				m_sound_->release();
-			}
-		}
+        virtual ~FMODSoundPrimitive();
 
 		void SetMinDistance(float value) override;
 		void SetMaxDistance(float value) override;
@@ -50,6 +44,8 @@ namespace Engine
     struct ENGINE_FMODSOUNDINTERFACE_API FMODSoundInterface : ISoundAPI
     {
         GENERATE_BODY
+        ~FMODSoundInterface() override;
+
         void    Initialize() override;
         void    Shutdown() override;
         void    Update() override;

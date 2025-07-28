@@ -199,6 +199,7 @@ namespace Engine
 	struct DescriptorHandler final : public DescriptorHandlerBase
 	{
 	public:
+        ~DescriptorHandler() override { }
         DescriptorPtr Acquire() override
         {
             UINT64 queue_offset   = 0;
