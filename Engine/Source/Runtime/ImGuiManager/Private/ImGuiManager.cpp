@@ -66,6 +66,18 @@ namespace Engine::Managers
 	void ImGuiManager::PreDeconstruction()
 	{
         WinAPI::WinAPIWrapper::UnregisterHandler( "ImGuiManager" );
+
+#if WITH_EDITOR
+#if USE_DX12
+        ImGui_ImplDX12_Shutdown();
+#endif
+
+#if _WIN32 || _WIN64
+        ImGui_ImplWin32_Shutdown();
+#endif
+
+        ImGui::DestroyContext();
+#endif
 	}
 
 	void ImGuiManager::OnUIUpdate(UIContext* const parent, const float dt)
@@ -113,17 +125,6 @@ namespace Engine::Managers
 	
 	ImGuiManager::~ImGuiManager()
 	{
-#if WITH_EDITOR
-#if USE_DX12
-		ImGui_ImplDX12_Shutdown();
-#endif
-
-#if PLATFORM == Windows
-		ImGui_ImplWin32_Shutdown();
-#endif
-		
-		ImGui::DestroyContext();
-#endif
 	}
 
 	void ImGuiManager::Update(const float dt) {}

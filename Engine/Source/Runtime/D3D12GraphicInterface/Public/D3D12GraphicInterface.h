@@ -45,6 +45,8 @@ namespace Engine
         INLINE_COMPILE_TIME_TYPENAME( D3D12GraphicInterface )
     public:
         D3D12GraphicInterface();
+        ~D3D12GraphicInterface();
+
         void Initialize() override;
         void Shutdown() override;
         void WaitForNextFrame() override;

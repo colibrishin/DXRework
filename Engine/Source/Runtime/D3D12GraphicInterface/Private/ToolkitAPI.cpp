@@ -156,6 +156,20 @@ namespace Engine::Managers
 	DirectX::DescriptorHeap* ToolkitAPI::GetDescriptorHeap() const
 	{
 		return m_descriptor_heap_.get();
+    }
+
+    void ToolkitAPI::PreDeconstruction()
+    {
+        m_descriptor_heap_.reset();
+        m_geometric_primitive_.reset();
+        m_sprite_batch_.reset();
+        m_resource_upload_batch_.reset();
+        m_sprite_pipeline_state_.reset();
+        m_basic_effect_.reset();
+        m_render_target_state_.reset();
+        m_graphics_memory_.reset();
+        m_font_.reset();
+		m_primitive_batch_.reset();
 	}
 
 	void ToolkitAPI::RegisterDebuggerFunction()

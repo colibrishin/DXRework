@@ -967,6 +967,9 @@ namespace Engine
 		virtual void SoftReset() = 0;
 		virtual void FlagReady(const std::function<void()>& post_function = {}) = 0;
 		virtual void Execute() = 0;
+
+    protected:
+        virtual void Close() = 0;
 	};
 
 	struct IGraphicContext;

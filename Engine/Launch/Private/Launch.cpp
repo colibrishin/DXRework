@@ -130,7 +130,7 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline
         g_os_api.reset();
     }
 
-    for ( const Engine::alloc_base* alloc : g_static_alloc | std::views::values )
+    for ( Engine::alloc_base* alloc : g_static_alloc | std::views::values )
     {
         alloc->release_memory();
         alloc->purge_memory();

@@ -1222,6 +1222,12 @@ struct AllocationKey
 
     [[nodiscard]] size_t to_raw_index() const
 	{
+		if (allocation_count == (size_t)-1 || chunk == (size_t)-1 || segment == (uint8_t)-1 || offset == (uint8_t)-1)
+		{
+			// todo: invalid index
+            return (size_t)-1;
+		}
+
         return ( chunk * ( 1 << 8 ) ) + ((size_t)segment * std::numeric_limits<uint32_t>::digits) + (size_t)offset;
 	}
 };
@@ -1305,12 +1311,13 @@ class ENGINE_MEMORY_API pool_allocator_base
 public:
     virtual ~pool_allocator_base()                                                        = default;
     virtual void                                destroy() const                           = 0;
-    virtual void                                purge() const                           = 0;
+    virtual void                                purge() const                             = 0;
     virtual bool                                past( const AllocationContext& ) const    = 0;
     virtual bool                                expired( const AllocationContext& ) const = 0;
     virtual void*                               get_ptr( const AllocationContext& ) const = 0;
     virtual size_t                              allocation_count() const                  = 0;
     virtual const std::function<void( void* )>& get_deleter() const                       = 0;
+    virtual void                                flag_dirty( const AllocationContext& )    = 0;
 };
 
 struct ENGINE_MEMORY_API AllocationContext
@@ -1653,7 +1660,7 @@ private:
         }
     }
 
-	void increase( T* ptr )
+	void flag_dirty( T* ptr )
 	{
         const size_t dist    = ptr - m_start_ptr_;
         ++m_local_allocation_count_[ dist ];
@@ -1731,7 +1738,7 @@ public:
             ConstructorAccess::InternalPreDeconstruction( ptr );
             ConstructorAccess::InternalDeconstruct( ptr );
         }
-        increase( ptr );
+        flag_dirty( ptr );
         flip<false>( ptr );
         while ( !m_lock_.compare_exchange_strong( return_expected, false ) )
         {
@@ -1791,11 +1798,37 @@ public:
         PoolType::purge_memory();
 	}
 
+	void flag_dirty( const AllocationContext& context ) override
+	{
+		if ( !context.valid() )
+		{
+			return;
+		}
+
+		if ( !is_safe( static_cast<T*>( context.ptr() ) ) )
+        {
+            return;
+        }
+
+        bool entry_expected  = false;
+        bool return_expected = true;
+
+        while ( !m_lock_.compare_exchange_strong( entry_expected, true ) )
+        {
+        }
+        flag_dirty( static_cast<T*>( context.ptr() ) );
+        while ( !m_lock_.compare_exchange_strong( return_expected, false ) )
+        {
+        }
+	}
+
 private:
     const std::function<void( void* )>& get_deleter() const override
     {
         static std::function<void( void* )> deleter = []( void* ptr )
-        { g_allocator_storage.get_allocator<T>().deallocate( static_cast<T*>( ptr ) ); };
+        {
+            g_allocator_storage.get_allocator<T>().deallocate( static_cast<T*>( ptr ) );
+        };
 
         return deleter;
     }
@@ -1902,7 +1935,7 @@ public:
     using element_type = T;
 
 	~managed_shared_ptr()
-	{
+    {
         resolve();
 	}
 
@@ -1946,8 +1979,12 @@ public:
 
 	void reset()
 	{
-        boost::shared_ptr<T>::reset();
-        m_context_ = AllocationContext::get_null_context();
+		if ( boost::shared_ptr<T>::unique() )
+		{
+            m_context_.allocator()->get_deleter()( resolve() );
+		}
+
+        *this = managed_shared_ptr<T>( boost::shared_ptr<T>(), AllocationContext::get_null_context() );
 	}
 
 	T* resolve() const noexcept

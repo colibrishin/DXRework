@@ -59,6 +59,8 @@ namespace Engine
 		[[nodiscard]] UINT64                      GetID() const;
 
 	private:
+        void Close() override;
+
 		friend struct CommandPairPool;
 		friend struct CommandPairTask;
         friend struct ConstructorAccess;
@@ -102,7 +104,10 @@ namespace Engine
 		void Initialize(ID3D12Device2* dev, const Weak<DescriptorHandlerBase>& handler, CommandPairTask* task);
 
 	private:
-		friend struct CommandPair;
+        friend struct CommandPair;
+        friend struct CommandPairTask;
+
+        void Cleanup();
 
 		std::mutex                m_mutex_;
 		CommandPairTask*          m_task_{};
@@ -111,7 +116,6 @@ namespace Engine
 
 		fast_pool_unordered_map<address_value, Strong<CommandPair>> m_pool_{};
 		std::unordered_map<address_value, bool>                     m_allocation_map_{};
-		u_fast_pool_allocator_single<CommandPair>					m_command_pair_pool_{};
 		Strong<DescriptorHandlerBase>                               m_heap_handler_{};
 
 		ComPtr<ID3D12Device2> m_dev_{};
@@ -159,6 +163,7 @@ namespace Engine
 
 	public:
 		CommandPairTask() = default;
+        ~CommandPairTask();
 
 		void Initialize(ID3D12Device2* dev, const Weak<DescriptorHandlerBase>& heap_handler, const size_t buffer_count);
 
@@ -170,12 +175,11 @@ namespace Engine
 		void WaitForCommandsCompletion() const;
 		void StopTask();
 		void StartTask();
+        void Cleanup();
 		void SwapBuffer(const uint32_t next_buffer);
 
 	private:
 		friend struct CommandPair;
-
-		void Cleanup();
 
 		void Execute(const Strong<CommandPair>& pair, const bool lock_consuming);
 		void Signal(const Strong<CommandPair>& in_pair) const;

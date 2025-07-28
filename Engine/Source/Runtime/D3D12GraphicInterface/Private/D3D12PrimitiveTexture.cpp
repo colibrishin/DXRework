@@ -1,4 +1,5 @@
 #include "D3D12PrimitiveTexture.h"
+#include "D3D12PrimitiveTexture.generated.h"
 
 #include <DirectXTex.h>
 #include <directxtk12/BufferHelpers.h>
@@ -14,7 +15,8 @@
 #include "CommandPair.h"
 #include "D3D12GraphicInterface.h"
 
-Engine::D3D12PrimitiveTexture::D3D12PrimitiveTexture() = default;
+Engine::D3D12PrimitiveTexture::D3D12PrimitiveTexture()
+{ }
 
 void Engine::D3D12PrimitiveTexture::Generate(Resources::Texture* texture)
 {
@@ -221,6 +223,16 @@ void Engine::D3D12PrimitiveTexture::LoadFromFile(Engine::Resources::Texture* tex
 	InitializeDescriptorHeaps();
 	InitializeResourceViews();
 	
+	if ( const std::string& name = texture->GetName(); name.empty() )
+    {
+        SET_NAME( m_dx12_texture_, L"Texture" )
+    }
+    else
+    {
+        const auto wname = L"Texture" + std::wstring( name.begin(), name.end() );
+        SET_NAME_RUNTIME( m_dx12_texture_, wname )
+    }
+
 	UpdateDescription(tex_desc);
 }
 

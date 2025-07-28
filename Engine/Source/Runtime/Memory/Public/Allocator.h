@@ -51,7 +51,7 @@ namespace Engine
     struct alloc_base;
 }
 
-extern ENGINE_MEMORY_API std::unordered_map<size_t, const Engine::alloc_base*> g_static_alloc;
+extern ENGINE_MEMORY_API std::unordered_map<size_t, Engine::alloc_base*> g_static_alloc;
 
 namespace Engine 
 {
@@ -116,7 +116,7 @@ namespace Engine
         alloc_base( no_init )
         { }
 
-        alloc_base( const alloc_base* alloc, const bool rebind, size_t hash )
+        alloc_base( alloc_base* alloc, const bool rebind, size_t hash )
         {
             if ( !rebind )
             {
@@ -132,8 +132,8 @@ namespace Engine
         virtual std::unordered_set<void ( * )()>& get_rebind_release() const = 0;
         virtual std::unordered_set<void ( * )()>& get_rebind_purge() const   = 0;
 
-        virtual void purge_memory() const   = 0;
-        virtual void release_memory() const = 0;
+        virtual void purge_memory()   = 0;
+        virtual void release_memory() = 0;
     };
 
 	template <typename T,
@@ -187,7 +187,7 @@ namespace Engine
             pool_type::is_from( 0 );
         }
 
-        static const tag_pool_alloc* get_instanced()
+        static tag_pool_alloc* get_instanced()
         {
             static tag_pool_alloc static_alloc{ no_init() };
             return &static_alloc;
@@ -303,12 +303,12 @@ namespace Engine
             }
         }
 
-        void release_memory() const override
+        void release_memory() override
         {
             pool_type::release_memory();
         }
 
-        void purge_memory() const override
+        void purge_memory() override
         {
             pool_type::purge_memory();
         }
@@ -324,11 +324,13 @@ namespace Engine
         }
 	};
 
-    /*
-    template <class T, std::size_t Alignment, typename RebindFrom = T>
-    class aligned_alloc : public alloc_base, public boost::alignment::aligned_allocator<T, Alignment>
+    template <class T, typename Alignment = std::integral_constant<size_t, 8>, typename RebindFrom = T>
+    class aligned_alloc : public alloc_base
     {
-        static_assert( Alignment );
+        static_assert( Alignment::value );
+
+    private:
+        std::unordered_map<T*, size_t> m_allocated_ptr_;
 
     public:
         inline static std::unordered_set<void ( * )()> s_rebind_release = {};
@@ -344,7 +346,18 @@ namespace Engine
             return s_rebind_purge;
         }
 
-        using pool_type = boost::alignment::aligned_allocator<T, Alignment>;
+        typedef T                                                    value_type;
+        typedef T*                                                   pointer;
+        typedef const T*                                             const_pointer;
+        typedef void*                                                void_pointer;
+        typedef const void*                                          const_void_pointer;
+        typedef typename boost::alignment::detail::add_lvalue_reference<T>::type       reference;
+        typedef typename boost::alignment::detail::add_lvalue_reference<const T>::type const_reference;
+        typedef std::size_t                                          size_type;
+        typedef std::ptrdiff_t                                       difference_type;
+        typedef boost::alignment::detail::true_type propagate_on_container_move_assignment;
+        typedef boost::alignment::detail::true_type is_always_equal;
+
 
         template <class U>
         struct rebind
@@ -354,7 +367,7 @@ namespace Engine
 
         struct no_init { };
 
-        static const aligned_alloc* get_instanced()
+        static aligned_alloc* get_instanced()
         {
             static aligned_alloc static_alloc{ no_init() };
             return &static_alloc;
@@ -380,19 +393,68 @@ namespace Engine
             origin_allocator::s_rebind_purge.emplace( &aligned_alloc::static_purge_memory );
         }
 
-        void release_memory() const override
+        pointer allocate( size_t size, const void* = 0 )
         {
-            for ( void ( *func )() : s_rebind_release )
+            enum
             {
-                func();
+                m = boost::alignment::detail::max_size<Alignment::value, boost::alignment_of<T>::value>::value
+            };
+            if ( size == 0 )
+            {
+                return 0;
+            }
+            void* p = boost::alignment::aligned_alloc( m, sizeof( T ) * size );
+            if ( !p )
+            {
+                boost::alignment::detail::throw_exception( std::bad_alloc() );
+            }
+
+            m_allocated_ptr_.insert_or_assign( static_cast<T*>( p ), size );
+            return static_cast<T*>( p );
+        }
+
+        void deallocate( pointer ptr, size_t )
+        {
+            boost::alignment::aligned_free( ptr );
+
+            if ( m_allocated_ptr_.contains( ptr ) )
+            {
+                m_allocated_ptr_.erase( ptr );
             }
         }
 
-        void purge_memory() const override
+        template <class U>
+        void construct( U* ptr )
         {
-            for ( void ( *func )() : s_rebind_purge )
+            ::new ( ( void* )ptr ) U();
+        }
+
+        template <class U>
+        void destroy( U* ptr )
+        {
+            ( void )ptr;
+            ptr->~U();
+        }
+
+        void release_memory() override
+        {
+            for (const auto& [ptr, size] : m_allocated_ptr_)
             {
-                func();
+                const size_t alignment =
+                        boost::alignment::detail::max_size<Alignment::value, boost::alignment_of<T>::value>::value;
+
+                for ( int i = 0; i < size; ++i )
+                {
+                    destroy<T>( reinterpret_cast<T*>( ( uintptr_t )ptr + ( alignment * i ) ) );
+                }
+            }
+        }
+
+        void purge_memory() override
+        {
+            for ( const auto& [ ptr, size ] : m_allocated_ptr_ )
+            {
+                deallocate( ptr, size );
             }
         }
 
@@ -406,9 +468,6 @@ namespace Engine
             get_instanced()->release_memory();
         }
     };
-    */
-
-	inline static constexpr size_t g_cache_alignment = 8;
 
 	template <typename KeyType, typename ValueType>
 	using u_fast_pool_allocator = tag_pool_alloc<std::pair<const KeyType, ValueType>, std::integral_constant<bool, true>>;
@@ -417,7 +476,7 @@ namespace Engine
 	using u_fast_pool_allocator_single = tag_pool_alloc<ValueType, std::integral_constant<bool, true>>;
 
 	template <typename ValueType>
-	using u_align_allocator = boost::alignment::aligned_allocator<ValueType, g_cache_alignment>;
+	using u_align_allocator = aligned_alloc<ValueType>;
 
 	template <typename ValueType>
 	using u_pool_allocator_single = tag_pool_alloc<ValueType, std::integral_constant<bool, false>>;

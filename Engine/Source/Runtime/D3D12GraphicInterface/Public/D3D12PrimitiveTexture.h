@@ -1,5 +1,5 @@
 #pragma once
-
+#include "IGraphicAPI.h"
 #include <wrl/client.h>
 #include <directx/d3d12.h>
 

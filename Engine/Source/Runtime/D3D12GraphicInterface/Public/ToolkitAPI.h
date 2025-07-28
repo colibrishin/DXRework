@@ -43,6 +43,9 @@ namespace Engine::Managers
 		DirectX::PrimitiveBatch<DirectX::VertexPositionColor>* GetPrimitiveBatch() const;
 		DirectX::DescriptorHeap*                      GetDescriptorHeap() const;
 
+	protected:
+        void PreDeconstruction() override;
+
 	private:
 		void RegisterDebuggerFunction();
 		

@@ -167,6 +167,15 @@ namespace Engine
 	UINT64 CommandPair::GetID() const
 	{
 		return m_command_id_;
+    }
+
+    void CommandPair::Close()
+    {
+        std::lock_guard l( m_critical_mutex_ );
+
+		m_allocator_.Reset();
+        m_list_.Reset();
+        m_assigned_heap_.reset();
 	}
 
 	Weak<CommandPair> CommandPairPool::Allocate(
@@ -250,9 +259,27 @@ namespace Engine
 				m_allocation_map_[address] = false;
 			}
 		}
+    }
+
+    void CommandPairPool::Cleanup()
+    { 
+		std::lock_guard l( m_mutex_ );
+        m_b_initialized_ = false;
+		m_task_ = nullptr;
+		
+		m_pool_.clear();
+        m_allocation_map_.clear();
+
+        m_heap_handler_.reset();
+        m_dev_.Reset();
 	}
 
-	void CommandPairTask::Initialize(ID3D12Device2* dev, const Weak<DescriptorHandlerBase>& heap_handler, const size_t buffer_count)
+	CommandPairTask::~CommandPairTask()
+    { }
+
+    void CommandPairTask::Initialize( ID3D12Device2*                     dev,
+                                      const Weak<DescriptorHandlerBase>& heap_handler,
+                                      const size_t                       buffer_count )
 	{
 		m_dev_ = dev;
 
@@ -266,12 +293,19 @@ namespace Engine
 					  IID_PPV_ARGS(m_queue_[i].GetAddressOf())
 					 )
 					);
+
+			std::string name = std::format(
+                    "CommandPairTask {}",
+                    magic_enum::enum_name( static_cast<std::remove_extent_t<decltype( available_ )>>( i ) ) );
+            std::wstring conversion( name.begin(), name.end() );
+			m_queue_[ i ]->SetName( conversion.c_str() );
 		}
 
 		m_buffer_count_ = buffer_count;
 
 		m_fence_nonce_ = std::unique_ptr<uint64_t>(new uint64_t[buffer_count]);
 		DX::ThrowIfFailed(dev->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(m_fence_.GetAddressOf())));
+        m_fence_->SetName( L"CommandPairTask Fence" );
 
 		m_pool_.Initialize(dev, heap_handler, this);
 	}
@@ -340,7 +374,6 @@ namespace Engine
 	{
 		std::lock_guard l(m_critical_mutex_);
 		m_running_ = false;
-		Cleanup();
 	}
 
 	void CommandPairTask::StartTask()
@@ -409,19 +442,24 @@ namespace Engine
 			if (const Strong<CommandPair> locked = pair.lock())
 			{
 				locked->HardReset();
+                locked->Close();
 				m_pool_.Deallocate(locked);
 			}
 		}
 
-		for (const ComPtr<ID3D12CommandQueue>& queue : m_queue_)
+		for ( ComPtr<ID3D12CommandQueue>& queue : m_queue_ )
 		{
-			queue->Release();
+			queue.Reset();
 		}
 
 		if (m_fence_event_ != nullptr)
 		{
 			CloseHandle(m_fence_event_);
 		}
+
+        m_fence_.Reset();
+		m_dev_.Reset();
+		m_pool_.Cleanup();
 	}
 
 	void CommandPairTask::Execute(const Strong<CommandPair>& pair, const bool lock_consuming)
