@@ -106,6 +106,8 @@ namespace Engine
         }
     };
 
+    using memory_clean_container = std::unordered_map<std::type_index, bool ( * )()>;
+
     struct alloc_base
     {
         struct no_init
@@ -129,11 +131,11 @@ namespace Engine
             return this == &other;
         }
 
-        virtual std::unordered_set<void ( * )()>& get_rebind_release() const = 0;
-        virtual std::unordered_set<void ( * )()>& get_rebind_purge() const   = 0;
+        virtual memory_clean_container& get_rebind_release() const = 0;
+        virtual memory_clean_container& get_rebind_purge() const   = 0;
 
-        virtual void purge_memory()   = 0;
-        virtual void release_memory() = 0;
+        virtual bool purge_memory()   = 0;
+        virtual bool release_memory() = 0;
     };
 
 	template <typename T,
@@ -150,15 +152,15 @@ namespace Engine
         { };
 
     public:
-        inline static std::unordered_set<void(*)()> s_rebind_release = {};
-        inline static std::unordered_set<void(*)()> s_rebind_purge   = {};
+        inline static memory_clean_container s_rebind_release = {};
+        inline static memory_clean_container s_rebind_purge   = {};
 
-        std::unordered_set<void (*)()>& get_rebind_release() const override
+        memory_clean_container& get_rebind_release() const override
         {
             return s_rebind_release;
         }
 
-        std::unordered_set<void ( * )()>& get_rebind_purge() const override
+        memory_clean_container& get_rebind_purge() const override
         {
             return s_rebind_release;
         }
@@ -222,8 +224,8 @@ namespace Engine
         {
             using origin_allocator =
                     tag_pool_alloc<RebindFrom, AllocateFast, UserAllocator, RebindFrom, Mutex, NextSize, MaxSize>;
-            origin_allocator::s_rebind_release.emplace( &tag_pool_alloc::static_release_memory );
-            origin_allocator::s_rebind_purge.emplace( &tag_pool_alloc::static_purge_memory );
+            origin_allocator::s_rebind_release.emplace( typeid(pool_type), & tag_pool_alloc::static_release_memory );
+            origin_allocator::s_rebind_purge.emplace( typeid( pool_type ), & tag_pool_alloc::static_purge_memory );
             pool_type::is_from( 0 );
         }
 
@@ -303,24 +305,24 @@ namespace Engine
             }
         }
 
-        void release_memory() override
+        bool release_memory() override
         {
-            pool_type::release_memory();
+            return pool_type::release_memory();
         }
 
-        void purge_memory() override
+        bool purge_memory() override
         {
-            pool_type::purge_memory();
+            return pool_type::purge_memory();
         }
 
-        static void static_release_memory()
+        static bool static_release_memory()
         {
-            get_instanced()->release_memory();
+            return get_instanced()->release_memory();
         }
 
-        static void static_purge_memory()
+        static bool static_purge_memory()
         {
-            get_instanced()->purge_memory();
+            return get_instanced()->purge_memory();
         }
 	};
 
@@ -333,19 +335,20 @@ namespace Engine
         std::unordered_map<T*, size_t> m_allocated_ptr_;
 
     public:
-        inline static std::unordered_set<void ( * )()> s_rebind_release = {};
-        inline static std::unordered_set<void ( * )()> s_rebind_purge   = {};
+        inline static memory_clean_container s_rebind_release = {};
+        inline static memory_clean_container s_rebind_purge   = {};
 
-        std::unordered_set<void (*)()>& get_rebind_release() const override
+        memory_clean_container& get_rebind_release() const override
         {
             return s_rebind_release;
         }
 
-        std::unordered_set<void (*)()>& get_rebind_purge() const override
+        memory_clean_container& get_rebind_purge() const override
         {
             return s_rebind_purge;
         }
 
+        using pool_type = aligned_alloc<T, Alignment, RebindFrom>;
         typedef T                                                    value_type;
         typedef T*                                                   pointer;
         typedef const T*                                             const_pointer;
@@ -389,8 +392,8 @@ namespace Engine
             : alloc_base( get_instanced(), true, packed_hash().operator()<U, Alignment, RebindFrom>() )
         {
             using origin_allocator = aligned_alloc<RebindFrom, Alignment, RebindFrom>;
-            origin_allocator::s_rebind_release.emplace( &aligned_alloc::static_release_memory );
-            origin_allocator::s_rebind_purge.emplace( &aligned_alloc::static_purge_memory );
+            origin_allocator::s_rebind_release.emplace( typeid(pool_type), & aligned_alloc::static_release_memory );
+            origin_allocator::s_rebind_purge.emplace( typeid( pool_type ), &aligned_alloc::static_purge_memory );
         }
 
         pointer allocate( size_t size, const void* = 0 )
@@ -436,8 +439,9 @@ namespace Engine
             ptr->~U();
         }
 
-        void release_memory() override
+        bool release_memory() override
         {
+            bool removed = false;
             for (const auto& [ptr, size] : m_allocated_ptr_)
             {
                 const size_t alignment =
@@ -446,26 +450,33 @@ namespace Engine
                 for ( int i = 0; i < size; ++i )
                 {
                     destroy<T>( reinterpret_cast<T*>( ( uintptr_t )ptr + ( alignment * i ) ) );
+                    removed = true;
                 }
             }
+
+            return removed;
         }
 
-        void purge_memory() override
+        bool purge_memory() override
         {
+            bool removed = false;
             for ( const auto& [ ptr, size ] : m_allocated_ptr_ )
             {
                 deallocate( ptr, size );
+                removed = true;
             }
+
+            return removed;
         }
 
-        static void static_release_memory()
+        static bool static_release_memory()
         {
-            get_instanced()->release_memory();
+            return get_instanced()->release_memory();
         }
 
-        static void static_purge_memory()
+        static bool static_purge_memory()
         {
-            get_instanced()->release_memory();
+            return get_instanced()->release_memory();
         }
     };
 

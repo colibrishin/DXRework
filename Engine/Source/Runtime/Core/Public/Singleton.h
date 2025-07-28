@@ -29,7 +29,7 @@ namespace Engine::Abstracts
 		{
 			std::lock_guard l(s_mutex_);
 
-			if (s_instance_ == nullptr || s_destroyed_)
+			if ( !IsInitializedInternal() )
 			{
 				s_instance_ = make_managed_shared<T>( SINGLETON_LOCK_TOKEN{} );
 				s_instance_->SetName(s_instance_->GetPrettyTypeName());
@@ -45,7 +45,7 @@ namespace Engine::Abstracts
 		static void Destroy()
 		{
 			std::lock_guard l(s_mutex_);
-			if (s_instance_ || !s_destroyed_)
+            if ( IsInitializedInternal() )
 			{
 				s_instance_.reset();
 				s_destroyed_ = true;
@@ -55,13 +55,19 @@ namespace Engine::Abstracts
 		static bool IsInitialized()
 		{
 			std::lock_guard l(s_mutex_);
-			return !s_destroyed_ || s_instance_ == nullptr;
+            return IsInitializedInternal();
 		}
 		
 		void OnSerialized() final {}
 		void OnDeserialized() final {}
 
 	protected:
+
+		static bool IsInitializedInternal()
+		{
+            return !s_destroyed_ || s_instance_ != nullptr;
+		}
+
 		Singleton() : SingletonBase()
 		{
 			static_assert(SingletonChecker::base, "Singleton must be derived from Singleton<T>");
@@ -73,7 +79,6 @@ namespace Engine::Abstracts
 		~Singleton() override
 		{
 			static_assert(SingletonChecker::dtor, "Singleton should not have destructor as public");
-			s_destroyed_ = true;
 		}
 
 		struct SINGLETON_LOCK_TOKEN final {};

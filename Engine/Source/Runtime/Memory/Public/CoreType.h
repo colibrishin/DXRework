@@ -1326,6 +1326,7 @@ private:
     AllocationKey              m_key_                     = null_pair;
     mutable size_t             m_type_reallocation_count_ = -1;
     const pool_allocator_base* m_allocator_               = nullptr;
+    std::type_index      m_allocator_type_          = typeid( void );
     mutable void*              m_ptr_				      = nullptr;
 
 	template <typename T>
@@ -1353,6 +1354,7 @@ public:
         m_key_                     = context.m_key_;
         m_allocator_               = context.m_allocator_;
         m_type_reallocation_count_ = context.m_type_reallocation_count_;
+        m_allocator_type_          = context.m_allocator_type_;
         m_ptr_                     = context.m_ptr_;
 	}
 
@@ -1418,13 +1420,15 @@ public:
 		return m_ptr_;
 	}
 
-	AllocationContext( const AllocationKey& key, size_t type_allocation_count, const pool_allocator_base* allocator )
+	template <typename T>
+	AllocationContext( const AllocationKey& key, const object_pool_allocator<T>* alloc )
 	{
-        assert( key != null_pair && allocator );
+        assert( key != null_pair && alloc );
         m_key_                     = key;
-        m_type_reallocation_count_ = type_allocation_count;
-        m_allocator_               = allocator;
-        m_ptr_                     = allocator->get_ptr( *this );   
+        m_allocator_               = alloc;
+        m_allocator_type_          = typeid( T );
+		m_type_reallocation_count_ = m_allocator_->allocation_count();
+        m_ptr_                     = m_allocator_->get_ptr( *this );   
 	}
 
 	size_t type_allocation_count() const
@@ -1445,6 +1449,11 @@ public:
 	const pool_allocator_base* allocator() const
 	{
         return m_allocator_;
+	}
+
+	std::type_index allocator_type() const 
+	{
+		return m_allocator_type_;
 	}
 
 	bool owner_before(const AllocationContext& other) const
@@ -1504,6 +1513,11 @@ public:
 
         return reinterpret_cast<object_pool_allocator<T>&>( *m_allocators_.at( typeid( T ) ) );
     }
+
+	bool is_allocator_live( const std::type_index& type ) const
+	{
+        return m_allocators_.contains( type );
+	}
 
     void        cleanup();
     static void report_leakage();
@@ -1713,7 +1727,7 @@ public:
         {
         }
         const AllocationKey          next_pair = get_free_space();
-        AllocationContext            context( next_pair, m_reallocation_count_, this );
+        AllocationContext            context( next_pair, this );
         flip<true>( next_pair );
         while ( !m_lock_.compare_exchange_strong( return_expected, false ) )
         {
@@ -1783,7 +1797,6 @@ public:
         const size_t allocation_count = m_local_allocation_count_[ dist ];
 
         return AllocationContext( { allocation_count, chunk, ( uint8_t )segment, ( uint8_t )offset },
-                                  m_reallocation_count_,
                                   this );
     }
 
@@ -1981,7 +1994,10 @@ public:
 	{
 		if ( boost::shared_ptr<T>::unique() )
 		{
-            m_context_.allocator()->get_deleter()( resolve() );
+			if ( g_allocator_storage.is_allocator_live( m_context_.allocator_type() ) )
+			{
+                m_context_.allocator()->get_deleter()( resolve() );
+			}
 		}
 
         *this = managed_shared_ptr<T>( boost::shared_ptr<T>(), AllocationContext::get_null_context() );
@@ -1989,6 +2005,11 @@ public:
 
 	T* resolve() const noexcept
     {
+		if ( !g_allocator_storage.is_allocator_live( m_context_.allocator_type() ) )
+		{
+			return nullptr;
+		}
+
 		if ( !m_context_.valid() )
 		{
             if ( boost::shared_ptr<T>::get() )

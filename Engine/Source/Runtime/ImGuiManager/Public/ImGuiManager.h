@@ -298,7 +298,9 @@ namespace Engine
     };
 
 #define IMGUI_INLINE_GETTER_DECL(Name) \
-    Name##Token* New##Name##(const void* context, const std::string_view name, const Name##Token::ArgumentTuple& arguments) override \
+    std::unique_ptr<IUITokenBase> New##Name##( const void*                       context,                            \
+                                                 const std::string_view            name,                               \
+                                                 const Name##Token::ArgumentTuple& arguments ) override \
     { \
 		return Generate<ImGui##Name##Token>(context, name, arguments); \
     }

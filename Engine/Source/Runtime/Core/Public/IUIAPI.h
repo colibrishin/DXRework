@@ -46,16 +46,16 @@ namespace Engine
         }
 
         // Add child and returns added child.
-        IUITokenBase& AddChild(IUITokenBase* child)
+        IUITokenBase& AddChild(std::unique_ptr<IUITokenBase>&& child)
         {
-            m_children_.push_back(std::unique_ptr<IUITokenBase>(child));
             child->m_parent_ = this;
+            m_children_.emplace_back( std::move( child ) );
         	return *child;
         }
 
-        IUITokenBase& operator+=(IUITokenBase* child)
+        IUITokenBase& operator+=(std::unique_ptr<IUITokenBase>&& child)
         {
-	        return AddChild(child);
+	        return AddChild( std::move( child ) );
         }
 
         IUITokenBase* GetParentInternal() const
@@ -188,9 +188,9 @@ namespace Engine
 
     struct ENGINE_CORE_API UIContext
     {
-        explicit UIContext(IUITokenBase* parent)
+        explicit UIContext(std::unique_ptr<IUITokenBase>&& parent)
         {
-	        m_parent_ = std::unique_ptr<IUITokenBase>(parent);
+	        m_parent_ = std::move( parent );
             m_active_child_ = nullptr;
         }
 
@@ -208,19 +208,19 @@ namespace Engine
         }
 
         // Add Child and return this
-        IUITokenBase& operator<<(IUITokenBase* child)
+        IUITokenBase& operator<<(std::unique_ptr<IUITokenBase>&& child)
         {
-            m_parent_->AddChild(child);
-            m_active_child_ = child;
+            m_active_child_ = child.get();
+            m_parent_->AddChild( std::move( child ) );
 	        return *m_parent_;
         }
 
-        // Add Child and return this
-        IUITokenBase& operator<=(IUITokenBase* child)
+        // Add Child and return new active children
+        IUITokenBase& operator<=( std::unique_ptr<IUITokenBase>&& child )
         {
-            m_parent_->AddChild(child);
-            m_active_child_ = child;
-            return *child;
+            m_active_child_ = child.get();
+            m_parent_->AddChild( std::move( child ) );
+            return *m_active_child_;
         }
 
         IUITokenBase& operator<<(const std::function<void()>& functor) const
@@ -230,34 +230,36 @@ namespace Engine
         }
 
         // Add Child and return child
-        IUITokenBase& operator+=(IUITokenBase* child)
+        IUITokenBase& operator+=(std::unique_ptr<IUITokenBase>&& child)
         {
             if (m_active_child_)
             {
                 IUITokenBase* old_active = m_active_child_;
-				old_active->AddChild(child);
-                m_active_child_ = child;
+                m_active_child_          = child.get();
+                old_active->AddChild( std::move( child ) );
                 return *old_active;
             }
             else
             {
-                operator<<(child);
+                operator<<( std::move( child ) );
                 return *m_parent_;
             }
         }
 
         // Add Child to active child without swapping active child.
-        IUITokenBase& operator|=(IUITokenBase* child) const
+        IUITokenBase& operator|=( std::unique_ptr<IUITokenBase>&& child ) const
         {
-	        if (m_active_child_)
-	        {
-		        m_active_child_->AddChild(child);
-                return *child;
-	        }
+            IUITokenBase* new_child = child.get();
+
+            if ( m_active_child_ )
+            {
+                m_active_child_->AddChild( std::move( child ) );
+                return *new_child;
+            }
             else
             {
-	            m_parent_->AddChild(child);
-                return *child;
+                m_parent_->AddChild( std::move( child ) );
+                return *new_child;
             }
         }
 
@@ -275,16 +277,17 @@ namespace Engine
             }
         }
 
-        IUITokenBase& operator>>(IUITokenBase* child) const
+        IUITokenBase& operator>>( std::unique_ptr<IUITokenBase>&& child ) const
         {
-            if (m_active_child_ && m_active_child_->GetParentInternal())
+            if ( m_active_child_ && m_active_child_->GetParentInternal() )
             {
-				m_active_child_->GetParentInternal()->AddChild(child);
-                return *child;
+                IUITokenBase* new_child = child.get();
+                m_active_child_->GetParentInternal()->AddChild( std::move( child ) );
+                return *new_child;
             }
             else
             {
-	            m_parent_->AddChild(child);
+                m_parent_->AddChild( std::move( child ) );
                 return *m_parent_;
             }
         }
@@ -301,15 +304,15 @@ namespace Engine
     };
 
 #define TOKEN_PURE_GETTER_DECL(Name) \
-    virtual IUITokenBase* New##Name##(const void* context, const std::string_view name, const Name##Token::ArgumentTuple& arguments) = 0;
+    virtual std::unique_ptr<IUITokenBase> New##Name##(const void* context, const std::string_view name, const Name##Token::ArgumentTuple& arguments) = 0;
 
     struct ENGINE_CORE_API IUIAPI
     {
         virtual ~IUIAPI() = default;
 
-        [[nodiscard]] static UIContext NewContext(IUITokenBase* root)
+        [[nodiscard]] static UIContext NewContext(std::unique_ptr<IUITokenBase>&& root)
         {
-            return UIContext(root);
+            return UIContext( std::move ( root ) );
         }
 
         TOKEN_PURE_GETTER_DECL(MainMenuBar)
@@ -346,15 +349,15 @@ namespace Engine
 
     protected:
         template <typename T>
-        T* Generate(const void* context, const std::string_view name, const typename T::ArgumentTuple& args)
+        std::unique_ptr<T> Generate(const void* context, const std::string_view name, const typename T::ArgumentTuple& args)
         {
             return NewForwardTuple<T>(context, name, args, std::make_index_sequence<T::ArgumentCount::value>{});
         }
 
         template <typename T, typename Tuple, size_t... Is>
-        T* NewForwardTuple(const void* context, const std::string_view name, const Tuple& t, std::index_sequence<Is...>)
+        std::unique_ptr<T> NewForwardTuple(const void* context, const std::string_view name, const Tuple& t, std::index_sequence<Is...>)
         {
-            return new T(context, name, std::get<Is>(t)...);
+            return std::make_unique<T>(context, name, std::get<Is>(t)...);
         }
 
         // todo: memory pool;
