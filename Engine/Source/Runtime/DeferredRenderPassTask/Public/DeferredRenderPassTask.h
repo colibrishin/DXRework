@@ -27,13 +27,23 @@ namespace Engine
         DeferredRenderPassTask( const DeferredRenderPassTask& ) = delete;
         DeferredRenderPassTask& operator=( const DeferredRenderPassTask& ) = delete;
 
-        DeferredRenderPassTask(DeferredRenderPassTask&& other) noexcept
-        : m_gi_ticket_( std::move( other.m_gi_ticket_ ) ),
-          m_local_param_pool_ticket_( std::move( other.m_local_param_pool_ticket_ ) ),
-          m_instance_pool_ticket_( std::move( other.m_instance_pool_ticket_ ) ),
-          m_texture_record_ticket_( std::move( other.m_texture_record_ticket_ ) )
+        DeferredRenderPassTask( DeferredRenderPassTask&& other ) noexcept
+            : m_gi_ticket_( std::move( other.m_gi_ticket_ ) ),
+              m_local_param_pool_ticket_( std::move( other.m_local_param_pool_ticket_ ) ),
+              m_instance_pool_ticket_( std::move( other.m_instance_pool_ticket_ ) ),
+              m_texture_record_ticket_( std::move( other.m_texture_record_ticket_ ) )
         {
-            operator=( std::move( other ) );
+            m_local_param_pool_     = std::move( other.m_local_param_pool_ );
+            m_instance_pool_        = std::move( other.m_instance_pool_ );
+            m_heaps_                = std::move( other.m_heaps_ );
+            m_used_shader_textures_ = std::move( other.m_used_shader_textures_ );
+
+            m_light_pass_shader_raw_ = std::move( other.m_light_pass_shader_raw_ );
+            for ( size_t i = 0; i < std::size( m_deferred_render_targets_raw_ ); ++i )
+            {
+                m_deferred_render_targets_raw_[ i ] = std::move( other.m_deferred_render_targets_raw_[ i ] );
+            }
+            m_deferred_depth_raw_ = std::move( other.m_deferred_depth_raw_ );
         }
 
         DeferredRenderPassTask& operator=(DeferredRenderPassTask&& other) noexcept

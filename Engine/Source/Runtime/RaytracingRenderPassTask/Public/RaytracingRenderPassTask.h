@@ -25,16 +25,22 @@ namespace Engine
 		GENERATE_BODY
 		RaytracingRenderPassTask();
 
-		RaytracingRenderPassTask(RaytracingRenderPassTask&& other) noexcept
-        : m_gi_ticket_( std::move( other.m_gi_ticket_ ) ),
-          m_local_param_pool_ticket_( std::move( other.m_local_param_pool_ticket_ ) ),
-          m_instance_pool_ticket_( std::move( other.m_instance_pool_ticket_ ) ),
-          m_texture_record_ticket_( std::move( other.m_texture_record_ticket_ ) ),
-	      m_heap_ticket_( std::move( other.m_heap_ticket_) ),				
-          m_byte_stream_ticket_( std::move( other.m_byte_stream_ticket_) )		
-		{
-            operator=( std::move( other ) );
-		}
+		RaytracingRenderPassTask( RaytracingRenderPassTask&& other ) noexcept
+            : m_gi_ticket_( std::move( other.m_gi_ticket_ ) ),
+              m_local_param_pool_ticket_( std::move( other.m_local_param_pool_ticket_ ) ),
+              m_instance_pool_ticket_( std::move( other.m_instance_pool_ticket_ ) ),
+              m_texture_record_ticket_( std::move( other.m_texture_record_ticket_ ) ),
+              m_heap_ticket_( std::move( other.m_heap_ticket_ ) ),
+              m_byte_stream_ticket_( std::move( other.m_byte_stream_ticket_ ) )
+        {
+            m_top_level_acceleration_buffer_ = std::move( other.m_top_level_acceleration_buffer_ );
+            m_local_heaps_                   = std::move( other.m_local_heaps_ );
+            m_byte_stream_                   = std::move( other.m_byte_stream_ );
+            m_byte_stream_usage_             = std::move( other.m_byte_stream_usage_ );
+            m_local_param_pool_              = std::move( other.m_local_param_pool_ );
+            m_instance_pool_                 = std::move( other.m_instance_pool_ );
+            m_used_shader_textures_          = std::move( other.m_used_shader_textures_ );
+        }
 
 		RaytracingRenderPassTask& operator=(RaytracingRenderPassTask&& other) noexcept
 		{
@@ -45,13 +51,14 @@ namespace Engine
 			m_heap_ticket_				= std::move(other.m_heap_ticket_);
 			m_byte_stream_ticket_		= std::move(other.m_byte_stream_ticket_);
 
-			m_top_level_acceleration_buffer_ = std::move( other.m_top_level_acceleration_buffer_ );
+            m_top_level_acceleration_buffer_ = std::move( other.m_top_level_acceleration_buffer_ );
             m_local_heaps_                   = std::move( other.m_local_heaps_ );
             m_byte_stream_                   = std::move( other.m_byte_stream_ );
             m_byte_stream_usage_             = std::move( other.m_byte_stream_usage_ );
             m_local_param_pool_              = std::move( other.m_local_param_pool_ );
             m_instance_pool_                 = std::move( other.m_instance_pool_ );
             m_used_shader_textures_          = std::move( other.m_used_shader_textures_ );
+			
 			return *this;
 		}
 
