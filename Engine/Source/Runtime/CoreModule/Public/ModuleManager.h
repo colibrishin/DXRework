@@ -9,6 +9,8 @@
 
 #include "CoreType.h"
 
+#include "ModuleManager.generated.h"
+
 extern ENGINE_COREMODULE_API std::unique_ptr<Engine::ModuleInfo> g_os_api;
 extern ENGINE_COREMODULE_API std::unique_ptr<Engine::ModuleInfo> g_graphic_api;
 extern ENGINE_COREMODULE_API std::unique_ptr<Engine::ModuleInfo> g_core_mem;

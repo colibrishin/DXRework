@@ -721,9 +721,9 @@ void Engine::D3D12GraphicInterface::Draw(const IGraphicContext* context, const R
 	{
         index_count = mesh->GetIndexCount();
         cmd->GetList()->IASetVertexBuffers(
-                0, 1, static_cast<D3D12_VERTEX_BUFFER_VIEW *>( mesh->GetPrimitive()->GetNativeVertexBuffer() ) );
+                0, 1, mesh->GetPrimitive()->GetNativeVertexBuffer<D3D12_VERTEX_BUFFER_VIEW>() );
         cmd->GetList()->IASetIndexBuffer(
-                static_cast<const D3D12_INDEX_BUFFER_VIEW *>( mesh->GetPrimitive()->GetNativeIndexBuffer() ) );
+                mesh->GetPrimitive()->GetNativeIndexBuffer<D3D12_INDEX_BUFFER_VIEW>() );
 	}
 	
 	if ( index_count == 0 )

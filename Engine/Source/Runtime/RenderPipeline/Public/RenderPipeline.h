@@ -2,9 +2,7 @@
 #include <memory>
 #include "ConstantBuffer.h"
 #include "Singleton.h"
-#include "RenderInstanceTask.h"
-#include "RenderPassTask.h"
-
+#include "IGraphicAPI.h"
 #include "ModuleManager.h"
 
 #include "RenderPipeline.generated.h"

@@ -1,4 +1,5 @@
-#include "RaycastExtension.hpp"
+#include "RaycastExtension.h"
+#include "RaycastExtension.generated.h"
 
 #include "Collider.h"
 #include "GenericBounding.hpp"
@@ -43,4 +44,19 @@ bool Engine::Physics::RaycastExtension::Intersects(
 	}
 	
 	return false;
+}
+
+bool Engine::RaycastExtensionModule::InitializeImpl()
+{
+    return true;
+}
+
+bool Engine::RaycastExtensionModule::ShutdownImpl()
+{
+    return true;
+}
+
+bool Engine::RaycastExtensionModule::DynamicLoadable()
+{
+    return true;
 }

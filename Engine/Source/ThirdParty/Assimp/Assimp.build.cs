@@ -22,7 +22,9 @@ public class Assimp : VCPKG
             @"poly2tri.lib",
             @"polyclipping.lib",
             @"minizip.lib",
-            @"draco.lib"
+            @"draco.lib",
+            @"polyclipping.lib",
+            @"pugixml.lib"
         );
 
         conf.AddPublicDependency<Pugixml>(target);
@@ -44,6 +46,7 @@ public class Assimp : VCPKG
             BinPath + @"/assimp-vc143-mtd.dll",
             BinPath + @"/poly2tri.dll",
             BinPath + @"/zlibd1.dll",
+            BinPath + @"/kubazip.dll",
             BinPath + @"/minizip.dll",
             BinPath + @"/draco.dll"
         );
@@ -67,6 +70,7 @@ public class Assimp : VCPKG
             BinPath + @"/poly2tri.dll",
             BinPath + @"/zlib1.dll",
             BinPath + @"/minizip.dll",
+            BinPath + @"/kubazip.dll",
             BinPath + @"/draco.dll"
         );
     }

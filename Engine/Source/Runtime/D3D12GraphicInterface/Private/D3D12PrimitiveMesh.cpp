@@ -159,9 +159,6 @@ namespace Engine
 		cmd->GetList()->ResourceBarrier(1, &vtx_trans);
 		cmd->GetList()->ResourceBarrier(1, &idx_trans);
 
-		SetNativeVertexBuffer(&m_vertex_buffer_view_);
-		SetNativeIndexBuffer(&m_index_buffer_view_);
-
 #if CFG_RAYTRACING
 	    IRaytracingExtension& rgi    = g_graphic_accessor.GetRaytracingInterface();
         auto                          rt_dev = static_cast<ID3D12Device5*>(rgi.GetRaytracingNativeInterface());
@@ -357,5 +354,13 @@ namespace Engine
     uint64_t D3D12PrimitiveMesh::GetNativeIndexBufferGPUAddress() const
 	{
 	    return m_index_buffer_view_.BufferLocation;
-	}
+    }
+    const void* D3D12PrimitiveMesh::GetNativeVertexBufferInternal() const
+    {
+        return &m_vertex_buffer_view_;
+    }
+    const void* D3D12PrimitiveMesh::GetNativeIndexBufferInternal() const
+    {
+        return &m_index_buffer_view_;
+    }
 }

@@ -16,6 +16,10 @@ namespace Engine
         [[nodiscard]] uint64_t GetNativeVertexBufferGPUAddress() const override;
         [[nodiscard]] uint64_t GetNativeIndexBufferGPUAddress() const override;
 
+    protected:
+        const void* GetNativeVertexBufferInternal() const override;
+        const void* GetNativeIndexBufferInternal() const override;
+
     private:
         ComPtr<ID3D12Resource>   m_native_vertex_buffer_;
         D3D12_VERTEX_BUFFER_VIEW m_vertex_buffer_view_{};

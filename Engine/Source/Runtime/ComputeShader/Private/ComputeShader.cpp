@@ -5,7 +5,7 @@
 #include "Debugger.h"
 #endif
 
-#include "RenderPipeline.h"
+#include "IGraphicAPI.h"
 #include "ResourceManager.h"
 
 namespace Engine::Resources

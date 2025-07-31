@@ -1,4 +1,5 @@
 #include "ModuleManager.h"
+#include "ModuleManager.generated.h"
 
 #include <iostream>
 #include <ranges>
@@ -98,24 +99,9 @@ namespace Engine::Managers
         }
 
         // Unload the modules in the loaded order.
-        for ( auto it = m_module_load_order_.begin(); it != m_module_load_order_.end(); )
+        for ( auto it = m_module_load_order_.begin(); it != m_module_load_order_.end(); ++it )
         {
-#if IS_DLL
             ShutdownModule( *it );
-            it = m_module_load_order_.erase( it );
-#else
-            if ( ptr->m_module_ )
-            {
-                ptr->m_module_.reset();
-            }
-
-            if ( ptr )
-            {
-                ptr.reset();
-            }
-
-            it = m_module_loaded_.erase( it );
-#endif
         }
 	}
 
@@ -143,6 +129,7 @@ namespace Engine::Managers
                 {
                     module_info->m_module_->Initialize();
                     module_info->m_b_lazy = false;
+
                     m_module_load_order_.emplace_back( name );
                     TryResolveLazyness( name );
                 }
@@ -290,11 +277,11 @@ namespace Engine::Managers
 
     void ModuleManager::Destroy()
     {
-        for ( auto it = m_module_load_order_.begin(); m_module_load_order_.end() != it; ++it )
+        for ( auto it = m_module_load_order_.rbegin(); m_module_load_order_.rend() != it; ++it )
         {
-            if (!m_module_loaded_.contains(*it))
+            if ( !m_module_loaded_.contains(*it) )
             {
-                throw std::runtime_error( "Module does not loaded" );
+                continue;
             }
 
             if ( m_module_loaded_.at( *it )->m_module_ )
@@ -302,15 +289,22 @@ namespace Engine::Managers
                 throw std::runtime_error( "Module does not shutdown" );
             }
 
+            if ( ModuleInfoPtr ptr = std::move( m_module_loaded_.at(*it) ) )
+            {
 #if IS_DLL
 #if _WIN32 || _WIN64
-            if (HMODULE module = static_cast<HMODULE>( m_module_loaded_.at(*it)->m_handle_ ) )
-            {
-                FreeLibrary( module );
+                if ( HMODULE module = static_cast<HMODULE>( ptr->m_handle_ ) )
+                {
+                    FreeLibrary( module );
+                }
+#endif
+#endif
+                ptr.reset();
+                m_module_loaded_.erase( *it );
             }
-#endif
-#endif
         }
+
+        m_module_load_order_.clear();
     }
 
 #if !IS_DLL
@@ -388,7 +382,7 @@ namespace Engine::Managers
                 module_info->m_module_ )
             {
                 module_info->m_module_->Shutdown();
-                const_cast<std::remove_cvref_t<decltype(module_info)>&>(module_info).reset();
+                module_info->m_module_.reset();
             }
 		}
     }
@@ -396,14 +390,14 @@ namespace Engine::Managers
 	void ModuleManager::LoadModuleAll()
 	{
 #if IS_DLL
-		for (const auto& directory : m_module_paths_)
+		for ( const auto& directory : m_module_paths_ )
 		{
 			for (const auto& entry : std::filesystem::directory_iterator(directory.second))
 			{
 				if (const std::wstring& file_name = entry.path().stem().generic_wstring();
 					entry.is_regular_file() && entry.path().extension() == ".dll")
 				{
-					LoadModule(file_name);
+                    LoadModule( file_name );
 				}
 			}
 		}

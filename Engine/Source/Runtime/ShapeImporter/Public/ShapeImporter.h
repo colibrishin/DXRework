@@ -1,12 +1,24 @@
 #pragma once
 #include <assimp/Importer.hpp>
+#include "IModule.h"
 
 #include "TypeLibrary.h"
 #include <filesystem>
 
+#include "ShapeImporter.generated.h"
+
 namespace Engine 
 {
-    struct ShapeImporter
+    ECLASS( module )
+    struct ENGINE_SHAPEIMPORTER_API ShapeImporterModule : IModule
+    {
+        GENERATE_BODY
+        bool InitializeImpl() override;
+        bool ShutdownImpl() override;
+        bool DynamicLoadable() override;
+    };
+
+    struct ENGINE_SHAPEIMPORTER_API ShapeImporter
     {
         static bool Import
         (

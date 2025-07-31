@@ -5,6 +5,12 @@
 #include "InstancePair.h"
 #include "Object.h"
 
+namespace Engine::Resources
+{
+    class Mesh;
+    class ShaderBase;
+}
+
 namespace Engine 
 {
 	using MeshMap = concurrent_fast_pool_map<Strong<Resources::Mesh>, aligned_vector<InstancePair>>;

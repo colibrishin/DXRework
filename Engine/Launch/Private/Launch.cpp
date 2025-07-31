@@ -132,20 +132,14 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline
 
     for ( Engine::alloc_base* alloc : g_static_alloc | std::views::values )
     {
-        if ( alloc->release_memory() )
-        {
-            alloc->purge_memory();
-        }
+        alloc->purge_memory();
 
         auto& rebind_releases = alloc->get_rebind_release();
         auto& rebind_purge    = alloc->get_rebind_purge();
 
-        for ( const auto& [type, func] : rebind_releases )
+        for ( const auto& [type, func] : rebind_purge )
         {
-            if ( func() )
-            {
-                rebind_purge[ type ]();
-            }
+            func();
         }
 
         rebind_releases.clear();
