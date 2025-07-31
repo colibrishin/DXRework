@@ -67,7 +67,6 @@ namespace Engine
         FMOD::ChannelControl* m_channel_control_      = nullptr;
 
         std::array<FMOD::Channel*, g_max_sound_channel>  m_channel_map_{};
-        u_fast_pool_allocator_single<FMODSoundPrimitive> m_primitive_allocator_{};
-        std::vector<FMODSoundPrimitive*>                 m_instanced_primitives_{};
+        aligned_vector<FMODSoundPrimitive> m_instanced_primitives_{};
     };
 }

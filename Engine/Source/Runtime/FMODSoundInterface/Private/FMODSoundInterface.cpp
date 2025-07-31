@@ -31,8 +31,7 @@ void Engine::FMODSoundInterface::Shutdown()
 {
 	m_audio_engine_->update();
 	m_audio_engine_->release();
-
-	m_primitive_allocator_.deallocate( m_instanced_primitives_.front(), m_instanced_primitives_.size() );
+    m_instanced_primitives_.clear();
 }
 
 void Engine::FMODSoundInterface::Update()
@@ -40,30 +39,26 @@ void Engine::FMODSoundInterface::Update()
 	m_audio_engine_->update();
 }
 
-Engine::ISound* Engine::FMODSoundInterface::NewSound(const std::filesystem::path& path)
+Engine::ISound* Engine::FMODSoundInterface::NewSound( const std::filesystem::path& path )
 {
-	// todo: fix allocation logic
-	Engine::FMODSoundPrimitive* new_sound = m_instanced_primitives_.emplace_back(m_primitive_allocator_.allocate(1));
-	m_primitive_allocator_.construct(new_sound);
+    // todo: fix allocation logic
+    Engine::FMODSoundPrimitive new_sound;
 
-	if (HandleFMODResult(m_audio_engine_->createSound(
-		path.generic_string().c_str(),
-		FMOD_3D | FMOD_3D_LINEARROLLOFF,
-		nullptr,
-		new_sound->GetAddressOf())))
-	{
-		return new_sound;
-	}
+    if ( HandleFMODResult( m_audio_engine_->createSound(
+                 path.generic_string().c_str(), FMOD_3D | FMOD_3D_LINEARROLLOFF, nullptr, new_sound.GetAddressOf() ) ) )
+    {
+        return &m_instanced_primitives_.emplace_back( new_sound );
+    }
 
-	return nullptr;
+    return nullptr;
 }
 
-void Engine::FMODSoundInterface::ReleaseSound(ISound* primitive)
+void Engine::FMODSoundInterface::ReleaseSound( ISound* primitive )
 {
-	if ( auto* ptr = static_cast<FMODSoundPrimitive*>(primitive ) )
-	{
-		m_primitive_allocator_.destroy( ptr );
-	}
+    if ( auto* ptr = static_cast<FMODSoundPrimitive*>( primitive ) )
+    {
+        std::ranges::remove_if( m_instanced_primitives_, [ & ]( FMODSoundPrimitive elem ) { return ptr == &elem; } );
+    }
 }
 
 void Engine::FMODSoundInterface::UpdatePosition(const SoundChannelID id, const Vector3& position)

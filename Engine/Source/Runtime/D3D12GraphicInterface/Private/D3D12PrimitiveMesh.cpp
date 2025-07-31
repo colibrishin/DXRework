@@ -16,7 +16,19 @@
 namespace Engine
 {
     D3D12PrimitiveMesh::~D3D12PrimitiveMesh()
-    { }
+    {
+        m_native_vertex_buffer_.Reset();
+        m_native_index_buffer_.Reset();
+        m_native_vertex_upload_buffer_.Reset();
+        m_native_index_upload_buffer_.Reset();
+
+#if CFG_RAYTRACING
+        m_raytracing_vertex_buffer_.Reset();
+        m_raytracing_index_buffer_.Reset();
+        m_raytracing_vertex_buffer_upload_.Reset();
+		m_raytracing_index_buffer_upload_.Reset();
+#endif
+	}
 
     void D3D12PrimitiveMesh::Generate( Resources::Mesh* mesh )
     {

@@ -894,24 +894,20 @@ namespace Engine
         template <typename T>
         T* GetResource()
         {
-            return static_cast<T*>(m_resource_);
+            return static_cast<T*>( GetResourceInternal() );
         }
 
         template <typename T>
         T** GetAddressOf()
         {
-            return reinterpret_cast<T**>(&m_resource_);
-        }
-
-        virtual void SetResource(void* resource)
-        {
-            m_resource_ = resource;
+            return reinterpret_cast<T**>( GetAddressOfInternal() );
         }
 
         virtual void Release() = 0;
 		
-    private:
-        void* m_resource_ = nullptr;
+	protected:
+        virtual void* GetResourceInternal() = 0;
+        virtual void** GetAddressOfInternal() = 0;
     };
 
 	struct ENGINE_CORE_API IFont

@@ -244,6 +244,8 @@ namespace Engine
             {
                 InitializeBuffer( count, stride );
                 m_allocated_size_ = count;
+                assert( m_resource_ );
+                assert( m_resource_->GetResource<void>() );
             }
 
             if ( !src_data )
