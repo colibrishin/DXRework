@@ -1838,9 +1838,14 @@ public:
 private:
     const std::function<void( void* )>& get_deleter() const override
     {
+		// simple deallocation mapping lambda function
         static std::function<void( void* )> deleter = []( void* ptr )
         {
-            g_allocator_storage.get_allocator<T>().deallocate( static_cast<T*>( ptr ) );
+			// if there is no instanced allocator, it is undefined behaviour so dismiss the calling deallocation.
+            if ( g_allocator_storage.is_allocator_live( typeid( T ) ) )
+            {
+                g_allocator_storage.get_allocator<T>().deallocate( static_cast<T*>( ptr ) );
+            }
         };
 
         return deleter;
@@ -2007,6 +2012,7 @@ public:
     {
 		if ( !g_allocator_storage.is_allocator_live( m_context_.allocator_type() ) )
 		{
+            // there is nothing it can do
 			return nullptr;
 		}
 
