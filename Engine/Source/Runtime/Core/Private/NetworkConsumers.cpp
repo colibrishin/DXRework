@@ -6,6 +6,11 @@ Engine::NetworkConsumers::NetworkConsumers()
 {
 }
 
+Engine::NetworkConsumers::~NetworkConsumers()
+{
+    Cleanup();
+}
+
 Engine::INetworkTask* Engine::NetworkConsumers::GetConsumer( const NetMessageHeaderType& header ) const
 {
     std::lock_guard l( m_mutex_ );

@@ -52,8 +52,6 @@ namespace Engine
         std::unordered_map<NetID, bool>                                  m_challenge_status_{};
         std::unordered_map<NetID, std::chrono::steady_clock::time_point> m_last_challenge_{};
 
-        std::condition_variable m_challenge_sleeper_;
-        mutable std::mutex      m_sleeper_mtx_;
         std::future<void>       m_challenge_task_;
         std::atomic<bool>       m_challenge_task_running_;
     };

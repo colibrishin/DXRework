@@ -31,7 +31,6 @@ void Engine::NetworkChallengeTask::Cleanup()
     g_network_accessor.GetMessageTask().onHostRemoved.Remove( get_bound_remove() );
 
     m_challenge_task_running_ = false;
-    m_challenge_sleeper_.notify_all();
     m_challenge_task_.wait();
 
     m_challenge_status_.clear();
@@ -112,9 +111,6 @@ void Engine::NetworkChallengeTask::KeepChallenge()
 
             ++it;
         }
-
-        std::unique_lock l( m_sleeper_mtx_ );
-        m_challenge_sleeper_.wait_for( l, sleeping );
     }
 }
 

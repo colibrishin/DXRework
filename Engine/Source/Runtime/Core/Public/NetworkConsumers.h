@@ -14,7 +14,7 @@ namespace Engine
     struct ENGINE_CORE_API NetworkConsumers final
     {
         NetworkConsumers();
-        ~NetworkConsumers() = default;
+        ~NetworkConsumers();
 
         INetworkTask* GetConsumer( const NetMessageHeaderType& message ) const;
         INetworkTask* GetConsumer( const HashType hash ) const;
