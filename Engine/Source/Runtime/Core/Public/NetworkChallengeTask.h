@@ -34,6 +34,7 @@ namespace Engine
     private:
         bool HaveAck( const NetID id ) const;
         bool NeedAck( const NetID id ) const;
+        bool IsWaitDone( const NetID id ) const;
         void KeepChallenge();
 
         auto get_bound_challenge()
