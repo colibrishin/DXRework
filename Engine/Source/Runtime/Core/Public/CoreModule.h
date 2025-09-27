@@ -1,4 +1,5 @@
 #pragma once
+#include "IModule.h"
 #include "Debugger.h"
 #include "ModuleManager.h"
 #include "ResourceManager.h"

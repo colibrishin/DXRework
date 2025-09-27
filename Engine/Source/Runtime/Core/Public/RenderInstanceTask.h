@@ -1,8 +1,7 @@
 #pragma once
 #include <memory>
 
-#include "IGraphicAPI.h"
-#include "RenderType.h"
+#include "IGraphicAPI_Extensions.h"
 #include "TypeLibrary.h"
 
 #include "RenderInstanceTask.generated.h"

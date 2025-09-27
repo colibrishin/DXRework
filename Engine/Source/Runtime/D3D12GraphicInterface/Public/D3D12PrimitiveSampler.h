@@ -6,6 +6,7 @@ namespace Engine
 {
     struct D3D12PrimitiveSampler : public ISampler
     {
+        ~D3D12PrimitiveSampler() override;
         void Generate( eShaderSamplerAddress addr, eShaderSamplerFunction function, eSamplerFilter filter ) override;
         virtual bool IsValid() override;
 

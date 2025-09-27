@@ -3,7 +3,11 @@
 
 #include "Transform.h"
 
-Engine::Resources::Sound::Sound(const Sound& other) : Resource(other)
+Engine::Resources::Sound::~Sound()
+{
+}
+
+Engine::Resources::Sound::Sound( const Sound& other ) : Resource( other )
 {
 	m_roll_off_ = other.m_roll_off_;
 	m_min_distance_ = other.m_min_distance_;

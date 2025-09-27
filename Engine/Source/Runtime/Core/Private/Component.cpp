@@ -95,4 +95,12 @@ namespace Engine::Abstracts
 			m_owner_ = owner;
 		}
 	}
+
+    void Component::SetLocalID( LocalComponentID id )
+    {
+        if (const auto locked = m_owner_.lock())
+        {
+            m_local_id_ = id;
+        }
+    }
 } // namespace Engine::Abstract

@@ -25,6 +25,13 @@ public class DirectXTex : VCPKG
         (
             @"DirectXTex.lib"
         );
+
+        string BinPath = GetVCPKGBinPath(target);
+
+        conf.TargetCopyFiles.Add
+        (
+            BinPath + @"/DirectXTex.dll"
+        );
     }
 
     public override void ConfigureRelease(Configuration conf, EngineTarget target)
@@ -34,6 +41,14 @@ public class DirectXTex : VCPKG
         conf.LibraryFiles.Add
         (
             @"DirectXTex.lib"
+        );
+
+        
+        string BinPath = GetVCPKGBinPath(target);
+
+        conf.TargetCopyFiles.Add
+        (
+            BinPath + @"/DirectXTex.dll"
         );
     }
 }

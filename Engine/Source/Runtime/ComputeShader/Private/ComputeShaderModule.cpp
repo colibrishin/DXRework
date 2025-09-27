@@ -36,5 +36,11 @@ namespace Engine
 	bool ComputeShaderModule::DynamicLoadable()
 	{
 		return true;
-	}
+    }
+
+    const std::vector<std::string>& ComputeShaderModule::LoadAfter() const
+    {
+        static std::vector<std::string> load_after = { "RenderPipeline" };
+        return load_after;
+    }
 } // namespace Engine::Resources

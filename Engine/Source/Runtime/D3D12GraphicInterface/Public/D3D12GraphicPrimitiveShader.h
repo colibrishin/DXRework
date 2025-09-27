@@ -10,6 +10,7 @@ namespace Engine
 {
 	struct ENGINE_D3D12GRAPHICINTERFACE_API D3D12GraphicPrimitiveShader : public IGraphicShader
 	{
+        ~D3D12GraphicPrimitiveShader() override;
 		D3D12GraphicPrimitiveShader() = default;
 		void Generate(const Resources::Shader* shader, void* pipeline_signature) override;
 		[[nodiscard]] ID3D12PipelineState* GetPSO() const;

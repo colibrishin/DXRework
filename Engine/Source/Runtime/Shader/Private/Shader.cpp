@@ -1,7 +1,7 @@
 #include "Shader.h"
 #include "Shader.generated.h"
 
-#include "RenderPipeline.h"
+#include "IGraphicAPI.h"
 #include "ResourceManager.h"
 
 namespace Engine::Resources

@@ -387,7 +387,7 @@ namespace Engine
 	    m_objects_.clear();
 		m_concurrent_weak_objects_cache_.clear();
 		m_weak_objects_cache_.clear();
-	}
+    }
 
     Layer::Layer() :
 		m_layer_type_(0),

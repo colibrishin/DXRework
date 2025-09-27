@@ -319,7 +319,6 @@ namespace Engine
                 }
             }
 
-            m_socket_.cancel();
             m_socket_.close();
             m_work_gurad_.reset();
             m_context_.stop();
@@ -333,7 +332,7 @@ namespace Engine
                                        }
                                    } );
 
-            for ( auto& buffer : m_recv_buffers_ )
+            for ( auto& buffer : m_recv_buffers_ | std::views::reverse )
             {
                 BoostNetwork::deallocate<protocol_to_enum<Protocol>::value>( ( uint8_t* )buffer.data(),
                                                                              buffer.size() );

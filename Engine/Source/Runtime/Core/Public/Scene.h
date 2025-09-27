@@ -11,7 +11,7 @@
 #include "Octree.hpp"
 #include "Delegation.hpp"
 #include "SingletonSpinLock.h"
-
+#include "Layer.h"
 
 #include "Scene.generated.h"
 
@@ -101,7 +101,7 @@ namespace Engine
 		Weak<T> CreateGameObject(const LayerSizeType layer, Args&&... args)
 		{
 			// Create object, dynamic allocation from scene due to the access limitation.
-			const auto& obj_t = Strong<T>(new T(std::forward<Args>(args)...));
+			const auto& obj_t = make_managed_shared<T>( std::forward<Args>(args)... );
 			const auto& obj   = obj_t->template GetSharedPtr<Abstracts::ObjectBase>();
 
 			// Set internal information as this scene and layer, segmenting this process for

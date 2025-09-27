@@ -369,12 +369,6 @@ namespace Engine::Graphics
 
 namespace Engine
 {
-	template <typename T>
-	using Weak = boost::weak_ptr<T>;
-
-	template <typename T>
-	using Strong = boost::shared_ptr<T>;
-
 	template <typename T, typename Deleter = typename std::unique_ptr<T>::deleter_type>
 	using Unique = std::unique_ptr<T, Deleter>;
 	

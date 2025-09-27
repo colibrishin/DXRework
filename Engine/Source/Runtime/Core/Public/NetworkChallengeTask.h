@@ -34,14 +34,25 @@ namespace Engine
     private:
         bool HaveAck( const NetID id ) const;
         bool NeedAck( const NetID id ) const;
+        bool IsWaitDone( const NetID id ) const;
         void KeepChallenge();
+
+        auto get_bound_challenge()
+        {
+            static auto bounded = std::bind( &NetworkChallengeTask::Challenge, this, std::placeholders::_1 );
+            return bounded;
+        }
+
+        auto get_bound_remove()
+        {
+            static auto bounded = std::bind( &NetworkChallengeTask::Remove, this, std::placeholders::_1 );
+            return bounded;
+        }
 
         mutable std::recursive_mutex                                     m_mtx_;
         std::unordered_map<NetID, bool>                                  m_challenge_status_{};
         std::unordered_map<NetID, std::chrono::steady_clock::time_point> m_last_challenge_{};
 
-        std::condition_variable m_challenge_sleeper_;
-        mutable std::mutex      m_sleeper_mtx_;
         std::future<void>       m_challenge_task_;
         std::atomic<bool>       m_challenge_task_running_;
     };

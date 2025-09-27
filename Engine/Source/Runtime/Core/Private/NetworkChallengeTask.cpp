@@ -8,10 +8,8 @@
 
 Engine::NetworkChallengeTask::NetworkChallengeTask()
 {
-    const auto& challenge_func = std::bind_front( &NetworkChallengeTask::Challenge, this );
-    const auto& removal_func   = std::bind_front( &NetworkChallengeTask::Remove, this );
-    g_network_accessor.GetMessageTask().onHostAdded.Listen( challenge_func );
-    g_network_accessor.GetMessageTask().onHostRemoved.Listen( removal_func );
+    g_network_accessor.GetMessageTask().onHostAdded.Listen( get_bound_challenge() );
+    g_network_accessor.GetMessageTask().onHostRemoved.Listen( get_bound_remove() );
    
     m_challenge_task_running_ = true;
     m_challenge_task_ = std::async( std::launch::async, &NetworkChallengeTask::KeepChallenge, this );
@@ -29,13 +27,10 @@ bool Engine::NetworkChallengeTask::Validate( const RawNetMessage& message ) cons
 
 void Engine::NetworkChallengeTask::Cleanup()
 {
-    const auto& challenge_func = std::bind_front( &NetworkChallengeTask::Challenge, this );
-    const auto& removal_func   = std::bind_front( &NetworkChallengeTask::Remove, this );
-    g_network_accessor.GetMessageTask().onHostAdded.Remove( challenge_func );
-    g_network_accessor.GetMessageTask().onHostRemoved.Remove( removal_func );
+    g_network_accessor.GetMessageTask().onHostAdded.Remove( get_bound_challenge() );
+    g_network_accessor.GetMessageTask().onHostRemoved.Remove( get_bound_remove() );
 
     m_challenge_task_running_ = false;
-    m_challenge_sleeper_.notify_all();
     m_challenge_task_.wait();
 
     m_challenge_status_.clear();
@@ -97,13 +92,20 @@ void Engine::NetworkChallengeTask::KeepChallenge()
         {
             const decltype( m_challenge_status_ )::value_type& pair = *it;
 
-            if ( NeedAck( pair.first ) && !HaveAck( pair.first ) )
+            if ( NeedAck( pair.first ) && !HaveAck( pair.first ) && IsWaitDone( pair.first ) )
             {
                 CONSOLE_OUT( GetTypeName(), "Liveness check failed for {}, Removing from host...", pair.first );
                 const auto next_it = std::next( it );
                 Remove( pair.first );
                 it = next_it;
                 continue;
+            }
+
+            if ( NeedAck( pair.first ) && HaveAck( pair.first ) )
+            {
+                CONSOLE_OUT( GetTypeName(), "Liveness check success with {}", pair.first );
+                std::lock_guard l( m_mtx_ );
+                m_challenge_status_[ pair.first ] = true;
             }
 
             if ( NeedAck( pair.first ) )
@@ -116,9 +118,6 @@ void Engine::NetworkChallengeTask::KeepChallenge()
 
             ++it;
         }
-
-        std::unique_lock l( m_sleeper_mtx_ );
-        m_challenge_sleeper_.wait_for( l, sleeping );
     }
 }
 
@@ -135,12 +134,26 @@ bool Engine::NetworkChallengeTask::HaveAck( const NetID id ) const
 bool Engine::NetworkChallengeTask::NeedAck( const NetID id ) const
 {
     constexpr static std::chrono::minutes interval( 1 );
-    const std::chrono::steady_clock::time_point& checktime = std::chrono::high_resolution_clock::now();
+    const std::chrono::steady_clock::time_point& current_time = std::chrono::high_resolution_clock::now();
 
     if (std::lock_guard l(m_mtx_); m_last_challenge_.contains(id))
     {
-        return interval < checktime - m_last_challenge_.at( id );
+        return interval < current_time - m_last_challenge_.at( id );
     }
       
+    return false;
+}
+
+bool Engine::NetworkChallengeTask::IsWaitDone( const NetID id ) const
+{
+    // handshake start time 1 minutes + handshake wait time 30 seconds
+    constexpr static std::chrono::duration<long long> interval = std::chrono::minutes(1) + std::chrono::seconds(30);
+    const std::chrono::steady_clock::time_point&      current_time = std::chrono::high_resolution_clock::now();
+
+    if ( std::lock_guard l(m_mtx_); m_last_challenge_.contains( id ) )
+    {
+        return interval < current_time - m_last_challenge_.at( id );
+    }
+
     return false;
 }

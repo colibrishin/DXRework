@@ -3,7 +3,7 @@
 #include "Camera.h"
 #include "Scene.h"
 #include "Transform.h"
-#include "IGraphicAPI.h"
+#include "IGraphicAPI_Extensions.h"
 
 #if WITH_DEBUG
 #include "Debugger.h"

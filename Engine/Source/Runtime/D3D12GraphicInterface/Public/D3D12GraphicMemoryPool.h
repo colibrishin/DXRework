@@ -13,6 +13,7 @@ namespace Engine
     class D3D12GraphicMemoryPool : public GraphicMemoryPool
     {
     public:
+        ~D3D12GraphicMemoryPool() override { }
         void Map(const void* src_data, const size_t count, const size_t stride) override
         {
             char*      data          = nullptr;
@@ -41,18 +42,12 @@ namespace Engine
             const auto& buffer_desc = CD3DX12_RESOURCE_DESC::Buffer(Align(count * stride, Alignment), Flags);
             const auto& dev = static_cast<ID3D12Device2*>(g_graphic_accessor.GetInterface().GetNativeInterface());
 
-            DX::ThrowIfFailed
-                (
-                 dev->CreateCommittedResource
-                 (
-                  &heap_desc,
-                  D3D12_HEAP_FLAG_CREATE_NOT_ZEROED,
-                  &buffer_desc,
-                  ResourceState,
-                  nullptr,
-                  IID_PPV_ARGS(GetAddressOf<ID3D12Resource>())
-                 )
-                );
+            DX::ThrowIfFailed( dev->CreateCommittedResource( &heap_desc,
+                                                             D3D12_HEAP_FLAG_CREATE_NOT_ZEROED,
+                                                             &buffer_desc,
+                                                             ResourceState,
+                                                             nullptr,
+                                                             IID_PPV_ARGS( GetAddressOf<ID3D12Resource>() ) ) );
         }
     };
 }

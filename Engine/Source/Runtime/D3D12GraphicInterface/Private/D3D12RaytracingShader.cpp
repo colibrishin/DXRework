@@ -1,7 +1,7 @@
 ﻿#if CFG_RAYTRACING
 #include "D3D12RaytracingShader.h"
-#include <directx-dxc/dxcapi.h>
 #include <directx-dxc/d3d12shader.h>
+#include <directx-dxc/dxcapi.h>
 
 #include "SIMDExtension.hpp"
 #include "RaytracingShader.h"
@@ -9,190 +9,169 @@
 
 namespace Engine
 {
-    void D3D12RaytracingShader::Generate(const Resources::RaytracingShader* shader, void* pipeline_signature)
+    D3D12RaytracingShader::~D3D12RaytracingShader()
+    { }
+
+    void D3D12RaytracingShader::Generate( const Resources::RaytracingShader* shader, void* pipeline_signature )
     {
         IRaytracingExtension& rgi = g_graphic_accessor.GetRaytracingInterface();
-        const auto& dev = static_cast<ID3D12Device5*>(rgi.GetRaytracingNativeInterface());
-        const auto& raytracing_root_pipeline = static_cast<ID3D12RootSignature*>(pipeline_signature);
+        const auto&           dev = static_cast<ID3D12Device5*>( rgi.GetRaytracingNativeInterface() );
+        const auto&           raytracing_root_pipeline = static_cast<ID3D12RootSignature*>( pipeline_signature );
 
-        InitializeLocalSignature(dev);
-        
-		// Compile shader.
-		ComPtr<IDxcLibrary> library;
-		DX::ThrowIfFailed(DxcCreateInstance(CLSID_DxcLibrary, IID_PPV_ARGS(library.ReleaseAndGetAddressOf())));
+        InitializeLocalSignature( dev );
 
-		// Compiler
-		ComPtr<IDxcCompiler3> compiler;
-		DX::ThrowIfFailed(DxcCreateInstance(CLSID_DxcCompiler, IID_PPV_ARGS(compiler.ReleaseAndGetAddressOf())));
+        // Compile shader.
+        ComPtr<IDxcLibrary> library;
+        DX::ThrowIfFailed( DxcCreateInstance( CLSID_DxcLibrary, IID_PPV_ARGS( library.ReleaseAndGetAddressOf() ) ) );
 
-		// Reading shader file with encoding.
-		uint32_t                 code_page = CP_UTF8;
-		ComPtr<IDxcBlobEncoding> source;
-		DX::ThrowIfFailed(library->CreateBlobFromFile(shader->GetPath().c_str(), &code_page, source.ReleaseAndGetAddressOf()));
+        // Compiler
+        ComPtr<IDxcCompiler3> compiler;
+        DX::ThrowIfFailed( DxcCreateInstance( CLSID_DxcCompiler, IID_PPV_ARGS( compiler.ReleaseAndGetAddressOf() ) ) );
 
-		// Arguments
-		ComPtr<IDxcCompilerArgs> args;
-		ComPtr<IDxcUtils>        utils;
-		DX::ThrowIfFailed(DxcCreateInstance(CLSID_DxcUtils, IID_PPV_ARGS(utils.ReleaseAndGetAddressOf())));
-        
-		DX::ThrowIfFailed(utils->BuildArguments(
-		    shader->GetPath().c_str(),
-		    nullptr,
-		    L"lib_6_3",
-		    nullptr,
-		    0,
-		    nullptr,
-		    0,
-		    args.GetAddressOf()));
+        // Reading shader file with encoding.
+        uint32_t                 code_page = CP_UTF8;
+        ComPtr<IDxcBlobEncoding> source;
+        DX::ThrowIfFailed(
+                library->CreateBlobFromFile( shader->GetPath().c_str(), &code_page, source.ReleaseAndGetAddressOf() ) );
 
-		// Include handler for includes.
-		ComPtr<IDxcIncludeHandler> include_handler;
-		DX::ThrowIfFailed(library->CreateIncludeHandler(include_handler.GetAddressOf()));
+        // Arguments
+        ComPtr<IDxcCompilerArgs> args;
+        ComPtr<IDxcUtils>        utils;
+        DX::ThrowIfFailed( DxcCreateInstance( CLSID_DxcUtils, IID_PPV_ARGS( utils.ReleaseAndGetAddressOf() ) ) );
 
-		const DxcBuffer source_buffer
-		{
-			.Ptr = source->GetBufferPointer(),
-			.Size = source->GetBufferSize(),
-			.Encoding = code_page
-		};
+        DX::ThrowIfFailed( utils->BuildArguments(
+                shader->GetPath().c_str(), nullptr, L"lib_6_3", nullptr, 0, nullptr, 0, args.GetAddressOf() ) );
 
-		ComPtr<IDxcOperationResult> result;
-		DX::ThrowIfFailed
-				(
-				 compiler->Compile
-				 (
-				  &source_buffer,
-				  args->GetArguments(),
-				  args->GetCount(),
-				  include_handler.Get(),
-				  IID_PPV_ARGS(result.ReleaseAndGetAddressOf())
-				 )
-				);
+        // Include handler for includes.
+        ComPtr<IDxcIncludeHandler> include_handler;
+        DX::ThrowIfFailed( library->CreateIncludeHandler( include_handler.GetAddressOf() ) );
 
-		ComPtr<IDxcBlob> blob;
-		DX::ThrowIfFailed(result->GetResult(blob.GetAddressOf()));
+        const DxcBuffer source_buffer{ .Ptr      = source->GetBufferPointer(),
+                                       .Size     = source->GetBufferSize(),
+                                       .Encoding = code_page };
 
-		HRESULT shader_result;
-		DX::ThrowIfFailed(result->GetStatus(&shader_result));
+        ComPtr<IDxcOperationResult> result;
 
-		if (FAILED(shader_result))
-		{
-			ComPtr<IDxcBlobEncoding> errors;
-			if (SUCCEEDED(result->GetErrorBuffer(errors.ReleaseAndGetAddressOf())))
-			{
-				OutputDebugStringA(static_cast<const char*>(errors->GetBufferPointer()));
-			}
-		}
+        DX::ThrowIfFailed( compiler->Compile( &source_buffer,
+                                              args->GetArguments(),
+                                              args->GetCount(),
+                                              include_handler.Get(),
+                                              IID_PPV_ARGS( result.ReleaseAndGetAddressOf() ) ) );
 
-		// Building pipeline state object.
-		CD3DX12_STATE_OBJECT_DESC raytracing_pipeline_desc(D3D12_STATE_OBJECT_TYPE_RAYTRACING_PIPELINE);
+        ComPtr<IDxcBlob> blob;
+        DX::ThrowIfFailed( result->GetResult( blob.GetAddressOf() ) );
 
-		// Sets the shader libraries
-		const auto&                 lib = raytracing_pipeline_desc.CreateSubobject<CD3DX12_DXIL_LIBRARY_SUBOBJECT>();
-		const D3D12_SHADER_BYTECODE lib_dxil =
-		{
-			blob->GetBufferPointer(),
-			blob->GetBufferSize()
-		};
+        HRESULT shader_result;
+        DX::ThrowIfFailed( result->GetStatus( &shader_result ) );
 
-		lib->SetDXILLibrary(&lib_dxil);
-
-		// Add RayGen, Miss, and Hit groups
-        std::vector<const wchar_t*> exporting_names;
-        const std::array<bool, 4>& to_export = shader->GetHasExport();
-        
-        for (size_t i = 0; i < to_export.size(); ++i)
+        if ( FAILED( shader_result ) )
         {
-            if (to_export[i])
+            ComPtr<IDxcBlobEncoding> errors;
+            if ( SUCCEEDED( result->GetErrorBuffer( errors.ReleaseAndGetAddressOf() ) ) )
             {
-                exporting_names.push_back(g_raytracing_export_names[i]);
+                OutputDebugStringA( static_cast<const char*>( errors->GetBufferPointer() ) );
             }
         }
-        
-		lib->DefineExports(exporting_names.data(), exporting_names.size());
-        
-        if (to_export[RAY_SHADER_CLOSEST_HIT])
+
+        // Building pipeline state object.
+        CD3DX12_STATE_OBJECT_DESC raytracing_pipeline_desc( D3D12_STATE_OBJECT_TYPE_RAYTRACING_PIPELINE );
+
+        // Sets the shader libraries
+        const auto&                 lib = raytracing_pipeline_desc.CreateSubobject<CD3DX12_DXIL_LIBRARY_SUBOBJECT>();
+        const D3D12_SHADER_BYTECODE lib_dxil = { blob->GetBufferPointer(), blob->GetBufferSize() };
+
+        lib->SetDXILLibrary( &lib_dxil );
+
+        // Add RayGen, Miss, and Hit groups
+        std::vector<const wchar_t*> exporting_names;
+        const std::array<bool, 4>&  to_export = shader->GetHasExport();
+
+        for ( size_t i = 0; i < to_export.size(); ++i )
+        {
+            if ( to_export[ i ] )
+            {
+                exporting_names.push_back( g_raytracing_export_names[ i ] );
+            }
+        }
+
+        lib->DefineExports( exporting_names.data(), exporting_names.size() );
+
+        if ( to_export[ RAY_SHADER_CLOSEST_HIT ] )
         {
             // Hit group
             const auto& hitgroup = raytracing_pipeline_desc.CreateSubobject<CD3DX12_HIT_GROUP_SUBOBJECT>();
-            hitgroup->SetClosestHitShaderImport(g_raytracing_export_names[RAY_SHADER_CLOSEST_HIT]);
-            if (to_export[RAY_SHADER_ANY_HIT])
+            hitgroup->SetClosestHitShaderImport( g_raytracing_export_names[ RAY_SHADER_CLOSEST_HIT ] );
+            if ( to_export[ RAY_SHADER_ANY_HIT ] )
             {
-                hitgroup->SetAnyHitShaderImport(g_raytracing_export_names[RAY_SHADER_ANY_HIT]);
+                hitgroup->SetAnyHitShaderImport( g_raytracing_export_names[ RAY_SHADER_ANY_HIT ] );
             }
-            hitgroup->SetHitGroupExport(shader->GetHitGroupName().data());
-            hitgroup->SetHitGroupType(D3D12_HIT_GROUP_TYPE_TRIANGLES);
+            hitgroup->SetHitGroupExport( shader->GetHitGroupName().data() );
+            hitgroup->SetHitGroupType( D3D12_HIT_GROUP_TYPE_TRIANGLES );
         }
 
-		// Shader payload and attribute size
-		const auto& shader_config = raytracing_pipeline_desc.CreateSubobject<
-			CD3DX12_RAYTRACING_SHADER_CONFIG_SUBOBJECT>();
-		shader_config->Config(sizeof(float[6]), sizeof(Vector2)); // barycentrics
+        // Shader payload and attribute size
+        const auto& shader_config =
+                raytracing_pipeline_desc.CreateSubobject<CD3DX12_RAYTRACING_SHADER_CONFIG_SUBOBJECT>();
+        shader_config->Config( sizeof( float[ 6 ] ), sizeof( Vector2 ) ); // barycentrics
 
-		// global root signature
-		const auto& global_root_sign = raytracing_pipeline_desc.CreateSubobject<
-			CD3DX12_GLOBAL_ROOT_SIGNATURE_SUBOBJECT>();
-		global_root_sign->SetRootSignature(raytracing_root_pipeline);
+        // global root signature
+        const auto& global_root_sign =
+                raytracing_pipeline_desc.CreateSubobject<CD3DX12_GLOBAL_ROOT_SIGNATURE_SUBOBJECT>();
+        global_root_sign->SetRootSignature( raytracing_root_pipeline );
 
         // local root signature
-		const auto& local_root_sign = raytracing_pipeline_desc.CreateSubobject<
-			CD3DX12_LOCAL_ROOT_SIGNATURE_SUBOBJECT>();
-		local_root_sign->SetRootSignature(m_local_root_signature_.Get());
+        const auto& local_root_sign =
+                raytracing_pipeline_desc.CreateSubobject<CD3DX12_LOCAL_ROOT_SIGNATURE_SUBOBJECT>();
+        local_root_sign->SetRootSignature( m_local_root_signature_.Get() );
 
-		const auto& local_root_export = raytracing_pipeline_desc.CreateSubobject<
-			CD3DX12_SUBOBJECT_TO_EXPORTS_ASSOCIATION_SUBOBJECT>();
-		local_root_export->SetSubobjectToAssociate(*local_root_sign);
+        const auto& local_root_export =
+                raytracing_pipeline_desc.CreateSubobject<CD3DX12_SUBOBJECT_TO_EXPORTS_ASSOCIATION_SUBOBJECT>();
+        local_root_export->SetSubobjectToAssociate( *local_root_sign );
 
-        if (to_export[RAY_SHADER_ANY_HIT] || to_export[RAY_SHADER_CLOSEST_HIT])
+        if ( to_export[ RAY_SHADER_ANY_HIT ] || to_export[ RAY_SHADER_CLOSEST_HIT ] )
         {
-            local_root_export->AddExport(shader->GetHitGroupName().data());
+            local_root_export->AddExport( shader->GetHitGroupName().data() );
         }
 
         SetExports( shader->GetHasExport() );
 
-		// Pipeline config, Recursion depth
-		const auto& pipeline_config = raytracing_pipeline_desc.CreateSubobject<
-			CD3DX12_RAYTRACING_PIPELINE_CONFIG_SUBOBJECT>();
-		pipeline_config->Config(1 + (2 * CFG_MAX_DIRECTIONAL_LIGHT)); // Default recursion + shadow rays (light counts)
+        // Pipeline config, Recursion depth
+        const auto& pipeline_config =
+                raytracing_pipeline_desc.CreateSubobject<CD3DX12_RAYTRACING_PIPELINE_CONFIG_SUBOBJECT>();
+        pipeline_config->Config( 1 +
+                                 ( 2 * CFG_MAX_DIRECTIONAL_LIGHT ) ); // Default recursion + shadow rays (light counts)
 
-		DX::ThrowIfFailed(
-				 dev->CreateStateObject(
-				     raytracing_pipeline_desc,
-				     IID_PPV_ARGS(m_raytracing_pso_.ReleaseAndGetAddressOf() ) ) );
+        DX::ThrowIfFailed( dev->CreateStateObject( raytracing_pipeline_desc,
+                                                   IID_PPV_ARGS( m_raytracing_pso_.ReleaseAndGetAddressOf() ) ) );
 
-		DX::ThrowIfFailed(
-				 m_raytracing_pso_->QueryInterface(
-				     IID_PPV_ARGS(m_raytracing_pso_properties_.ReleaseAndGetAddressOf())));
+        DX::ThrowIfFailed( m_raytracing_pso_->QueryInterface(
+                IID_PPV_ARGS( m_raytracing_pso_properties_.ReleaseAndGetAddressOf() ) ) );
 
-		const D3D12_SAMPLER_DESC sampler
-		{
-			.Filter = static_cast<D3D12_FILTER>(shader->GetSamplerFilter()),
-			.AddressU = static_cast<D3D12_TEXTURE_ADDRESS_MODE>(shader->GetSamplerAddressMode()),
-			.AddressV = static_cast<D3D12_TEXTURE_ADDRESS_MODE>(shader->GetSamplerAddressMode()),
-			.AddressW = static_cast<D3D12_TEXTURE_ADDRESS_MODE>(shader->GetSamplerAddressMode()),
-			.MipLODBias = 0,
-			.MaxAnisotropy = 0,
-			.ComparisonFunc = static_cast<D3D12_COMPARISON_FUNC>(shader->GetSamplerFunction()),
-			.BorderColor = D3D12_STATIC_BORDER_COLOR_TRANSPARENT_BLACK,
-			.MinLOD = 0,
-			.MaxLOD = D3D12_FLOAT32_MAX
-		};
-
-        constexpr D3D12_DESCRIPTOR_HEAP_DESC desc
-        {
-            .Type = D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER,
-            .NumDescriptors = 1,
-            .Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE,
-            .NodeMask = 0
+        const D3D12_SAMPLER_DESC sampler{
+            .Filter         = static_cast<D3D12_FILTER>( shader->GetSamplerFilter() ),
+            .AddressU       = static_cast<D3D12_TEXTURE_ADDRESS_MODE>( shader->GetSamplerAddressMode() ),
+            .AddressV       = static_cast<D3D12_TEXTURE_ADDRESS_MODE>( shader->GetSamplerAddressMode() ),
+            .AddressW       = static_cast<D3D12_TEXTURE_ADDRESS_MODE>( shader->GetSamplerAddressMode() ),
+            .MipLODBias     = 0,
+            .MaxAnisotropy  = 0,
+            .ComparisonFunc = static_cast<D3D12_COMPARISON_FUNC>( shader->GetSamplerFunction() ),
+            .BorderColor    = D3D12_STATIC_BORDER_COLOR_TRANSPARENT_BLACK,
+            .MinLOD         = 0,
+            .MaxLOD         = D3D12_FLOAT32_MAX
         };
-    
-        dev->CreateDescriptorHeap(&desc, IID_PPV_ARGS(m_sampler_heap_.GetAddressOf()));
-		dev->CreateSampler(&sampler, m_sampler_heap_->GetCPUDescriptorHandleForHeapStart());
 
-        InitializeShaderTable(shader, dev);
-        
-        SetNativeShader(m_raytracing_pso_.Get());
-        SetNativeSampler(m_sampler_heap_.Get());
+        constexpr D3D12_DESCRIPTOR_HEAP_DESC desc{ .Type           = D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER,
+                                                   .NumDescriptors = 1,
+                                                   .Flags          = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE,
+                                                   .NodeMask       = 0 };
+
+        dev->CreateDescriptorHeap( &desc, IID_PPV_ARGS( m_sampler_heap_.GetAddressOf() ) );
+        dev->CreateSampler( &sampler, m_sampler_heap_->GetCPUDescriptorHandleForHeapStart() );
+
+        InitializeShaderTable( shader, dev );
+
+        SetNativeShader( m_raytracing_pso_.Get() );
+        SetNativeSampler( m_sampler_heap_.Get() );
     }
 
     void* D3D12RaytracingShader::GetShaderRecord(const size_t idx) const

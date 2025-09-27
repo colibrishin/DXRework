@@ -107,13 +107,13 @@ namespace Engine::Abstracts
 		template <typename T>
 		Weak<T> GetWeakPtr()
 		{
-			return boost::static_pointer_cast<T>(shared_from_this());
+            return managed_static_pointer_cast<T>( from_native( weak_from_this() ) );
 		}
 
 		template <typename T>
 		Strong<T> GetSharedPtr()
 		{
-			return boost::static_pointer_cast<T>(shared_from_this());
+            return managed_static_pointer_cast<T>( from_native( weak_from_this() ) );
 		}
 
 		virtual void Initialize();
@@ -135,6 +135,8 @@ namespace Engine::Abstracts
 #endif
 			m_b_initialized_(false),
 			m_b_garbage_(false) {}
+
+		virtual void PreDeconstruction() { }
 
 	private:
 		EPROPERTY()
@@ -162,7 +164,7 @@ inline static Engine::Strong<Derived> Cast(const Engine::Strong<Base>& castee)
 	{
 		return {};
 	}
-	return boost::static_pointer_cast<Derived>(castee);
+	return managed_static_pointer_cast<Derived>(castee);
 }
 
 template <typename Derived, typename Base> requires (std::is_base_of_v<Base, Derived>, std::is_base_of_v<Engine::Abstracts::Entity, Base>)

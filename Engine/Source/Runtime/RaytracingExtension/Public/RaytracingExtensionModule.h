@@ -1,6 +1,6 @@
 #pragma once
 #if CFG_RAYTRACING
-#include "CoreType.h"
+#include "IModule.h"
 #include "ModuleManager.h"
 #include "RaytracingExtensionModule.generated.h"
 

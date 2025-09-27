@@ -7,7 +7,7 @@
 // Cloning component declaration macro
 #define COMP_CLONE_DECL Engine::Strong<Engine::Abstracts::Component> cloneImpl() const override;
 // Cloning component implementation macro
-#define COMP_CLONE_IMPL(CLASS) Engine::Strong<Engine::Abstracts::Component> CLASS::cloneImpl() const { return boost::make_shared<CLASS>(*this); }
+#define COMP_CLONE_IMPL(CLASS) Engine::Strong<Engine::Abstracts::Component> CLASS::cloneImpl() const { return make_managed_shared<CLASS>(*this); }
 
 namespace Engine
 {
@@ -61,15 +61,9 @@ namespace Engine::Abstracts
 
 		void SetOwner(const Weak<ObjectBase>& owner);
 
-		void SetLocalID(LocalComponentID id)
-		{
-			if (const auto locked = m_owner_.lock())
-			{
-				m_local_id_ = id;
-			}
-		}
+		void SetLocalID(LocalComponentID id);
 
-	private:
+    private:
 		EPROPERTY()
 		LocalComponentID m_local_id_{};
 

@@ -2,7 +2,6 @@
 #include <directx/d3d12.h>
 #include <wrl/client.h>
 
-
 #include "IGraphicAPI.h"
 
 #include "DescriptorPtrImpl.h"
@@ -24,7 +23,7 @@ namespace Engine
         virtual void Initialize(ID3D12Device2* dev, ID3D12RootSignature* root_signature)
         {
             m_dev_           = dev;
-            m_root_signature = root_signature;
+            m_root_signature_ = root_signature;
 
             AppendNewHeaps();
             m_buffer_size_  = m_dev_->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
@@ -85,7 +84,7 @@ namespace Engine
 		}
         [[nodiscard]] ID3D12RootSignature* GetRootSignature() const
         {
-            return m_root_signature.Get();
+            return m_root_signature_.Get();
         }
 
     private:
@@ -177,13 +176,16 @@ namespace Engine
         {
             return Unique<DescriptorPtrImpl>(new PolymorphicPointerImpl(std::forward<Args>(args)...));
         }
+
+    protected:
+        void PreDeconstruction();
         
         static constexpr size_t s_element_size = std::numeric_limits<unsigned int>::digits;
         static constexpr size_t s_segment_size = sizeof(__m256i) / sizeof(unsigned int);
         std::deque<__m256i>                                m_used_slots_{};
 
         ComPtr<ID3D12Device2>                              m_dev_{};
-        ComPtr<ID3D12RootSignature>                        m_root_signature{};
+        ComPtr<ID3D12RootSignature>                        m_root_signature_{};
         UINT                                               m_size_{};
 
         aligned_vector<ComPtr<ID3D12DescriptorHeap>> m_main_descriptor_heap_{};
@@ -197,6 +199,7 @@ namespace Engine
 	struct DescriptorHandler final : public DescriptorHandlerBase
 	{
 	public:
+        ~DescriptorHandler() override { }
         DescriptorPtr Acquire() override
         {
             UINT64 queue_offset   = 0;
@@ -268,7 +271,7 @@ namespace Engine
         {
             m_heap_binder_.BindGraphic
                 (
-                 m_root_signature.Get(), context, buffer_heap, sampler_heap, buffer_handle, sampler_handle, m_buffer_size_,
+                 m_root_signature_.Get(), context, buffer_heap, sampler_heap, buffer_handle, sampler_handle, m_buffer_size_,
                  m_sampler_size_
                 );
         }
@@ -281,7 +284,7 @@ namespace Engine
         {
             m_heap_binder_.BindCompute
                 (
-                 m_root_signature.Get(), context, buffer_heap, sampler_heap, buffer_handle, sampler_handle, m_buffer_size_,
+                 m_root_signature_.Get(), context, buffer_heap, sampler_heap, buffer_handle, sampler_handle, m_buffer_size_,
                  m_sampler_size_
                 );
         }

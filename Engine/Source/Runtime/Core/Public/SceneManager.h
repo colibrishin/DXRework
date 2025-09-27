@@ -2,6 +2,7 @@
 #include "Singleton.h"
 #include "Delegation.hpp"
 #include "TaskScheduler.h"
+#include "Scene.h"
 
 #include "UIHelpers.h"
 #include "SceneManager.generated.h"
@@ -49,6 +50,9 @@ namespace Engine::Managers
 	    [[nodiscard]] bool IsPlaying() const;
 	    void Play();
 	    void Stop();
+
+	protected:
+        void PreDeconstruction() override;
 	    
 #if WITH_EDITOR
 		void RegisterNewMenuItem(std::string_view name, const UIHelpers::ManagedBooleanSignature& predicate);

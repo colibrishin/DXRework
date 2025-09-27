@@ -63,6 +63,9 @@ namespace Engine::Managers
 
 		tbb::concurrent_vector<CollisionInfo>& GetCollisionInfo();
 
+	protected:
+        void PreDeconstruction() override;
+
 	private:
 		friend struct SingletonDeleter;
 		~CollisionDetector() override;

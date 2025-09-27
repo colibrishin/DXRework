@@ -105,6 +105,9 @@ namespace Engine::Managers
 		float           GetDeltaTime() const;
 		uint32_t        GetFPS() const;
 
+	protected:
+        void PreDeconstruction() override;
+
 	private:
 		friend struct SingletonDeleter;
 		~EngineEntryPoint() override;
@@ -122,10 +125,6 @@ namespace Engine::Managers
 		void PostUpdate(const float dt) override;
 
 		void tickInternal();
-
-		static void handleSIGTERM();
-
-		HWND m_hWnd = nullptr;
 
 		// Time
 		std::unique_ptr<DX::StepTimer> m_timer;

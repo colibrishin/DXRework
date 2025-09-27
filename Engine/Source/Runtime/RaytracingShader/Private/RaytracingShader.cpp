@@ -1,6 +1,8 @@
 ﻿#include "RaytracingShader.h"
 #include "RaytracingShader.generated.h"
 
+#include "IGraphicAPI_Extensions.h"
+
 Engine::Resources::RaytracingShader::RaytracingShader(
     const std::filesystem::path& path,
     const eShaderDomain domain,

@@ -7,6 +7,7 @@
 #include "RenderPassTaskFactory.h"
 #include "SingletonSpinLock.h"
 #include "Texture.h"
+#include "TexturePair.h"
 #include "TypeLibrary.h"
 
 #include "ForwardRenderPassTask.generated.h"
@@ -20,13 +21,16 @@ namespace Engine
         ForwardRenderPassTask();
 
         ForwardRenderPassTask( ForwardRenderPassTask&& other ) noexcept
-        : m_gi_ticket_( std::move( other.m_gi_ticket_ ) ),
-          m_local_param_pool_ticket_( std::move( other.m_local_param_pool_ticket_ ) ),
-          m_instance_pool_ticket_( std::move( other.m_instance_pool_ticket_ ) ),
-          m_texture_record_ticket_( std::move( other.m_texture_record_ticket_ ) )
+            : m_gi_ticket_( std::move( other.m_gi_ticket_ ) ),
+              m_local_param_pool_ticket_( std::move( other.m_local_param_pool_ticket_ ) ),
+              m_instance_pool_ticket_( std::move( other.m_instance_pool_ticket_ ) ),
+              m_texture_record_ticket_( std::move( other.m_texture_record_ticket_ ) )
         {
-            operator=( std::move( other ) );
-		}
+            m_local_param_pool_     = std::move( other.m_local_param_pool_ );
+            m_instance_pool_        = std::move( other.m_instance_pool_ );
+            m_heaps_                = std::move( m_heaps_ );
+            m_used_shader_textures_ = std::move( m_used_shader_textures_ );
+        }
 
 		ForwardRenderPassTask& operator=(ForwardRenderPassTask&& other) noexcept
 		{

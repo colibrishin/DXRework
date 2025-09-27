@@ -30,7 +30,7 @@ return obj;\
 // Cloning resource declaration macro
 #define RES_CLONE_DECL Engine::Strong<Engine::Abstracts::Resource> cloneImpl() const override;
 // Cloning resource implementation macro
-#define RES_CLONE_IMPL(CLASS) Engine::Strong<Engine::Abstracts::Resource> CLASS::cloneImpl() const { return boost::make_shared<CLASS>(*this); }
+#define RES_CLONE_IMPL(CLASS) Engine::Strong<Engine::Abstracts::Resource> CLASS::cloneImpl() const { return make_managed_shared<CLASS>(*this); }
 
 namespace Engine
 {

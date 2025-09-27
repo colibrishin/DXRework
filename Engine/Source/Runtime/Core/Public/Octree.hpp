@@ -1017,14 +1017,23 @@ namespace Engine
             void operator()(octree_impl* ptr);
         };
 
-        inline static u_pool_allocator_single<unique_octree>    s_ptr_allocator_  = {};
-        inline static u_fast_pool_allocator_single<octree_impl> s_impl_allocator_ = {};
+        static u_pool_allocator_single<unique_octree>& get_ptr_allocator()
+        {
+            static u_pool_allocator_single<unique_octree> s_ptr_allocator_;
+            return s_ptr_allocator_;
+        }
 
+        static u_fast_pool_allocator_single<octree_impl>& get_impl_allocator()
+        {
+            static u_fast_pool_allocator_single<octree_impl> s_impl_allocator_;
+            return s_impl_allocator_;
+        }
+        
         template <typename... Args>
         unique_octree&& allocate(Args&&... args)
         {
-            unique_octree* ptr  = s_ptr_allocator_.allocate( 1 );
-            octree_impl*   impl = s_impl_allocator_.allocate( 1 );
+            unique_octree* ptr  = get_ptr_allocator().allocate( 1 );
+            octree_impl*   impl = get_impl_allocator().allocate( 1 );
             new(ptr) unique_octree(new(impl) octree_impl(std::forward<Args>(args)...));
             impl->m_pointer_ = ptr;
             return std::move(*ptr);
@@ -1049,9 +1058,9 @@ namespace Engine
     {
         if ( ptr->m_pointer_ )
         {
-            s_ptr_allocator_.deallocate( ptr->m_pointer_, 1 );
-            s_impl_allocator_.destroy( ptr );
-            s_impl_allocator_.deallocate( ptr, 1 );   
+            get_ptr_allocator().deallocate( ptr->m_pointer_, 1 );
+            get_impl_allocator().destroy( ptr );
+            get_impl_allocator().deallocate( ptr, 1 );
         }
     }
 }

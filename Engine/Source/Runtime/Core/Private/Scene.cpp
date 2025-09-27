@@ -91,9 +91,9 @@ namespace Engine
 	    Renderable::Initialize();
 	}
 
-    Strong<Scene> Scene::cloneImpl()
+    managed_shared_ptr<Scene> Scene::cloneImpl()
 	{
-        auto copy_scene = Strong<Scene>(new Scene());
+        auto copy_scene = make_managed_shared<Scene>();
 	    copy_scene->initializeForce();
 	    copy_scene->deepCopy( GetSharedPtr<Scene>() );
 	    copy_scene->SetName( GetName() + "_Clone" );
@@ -105,7 +105,7 @@ namespace Engine
 #if WITH_EDITOR
 	    for (int i = 0; i < RESERVED_LAYER_MAX + CFG_LAYER_COUNT; ++i)
 	    {
-	        m_layers_.emplace_back(boost::make_shared<Layer>(i));
+	        m_layers_.emplace_back(make_managed_shared<Layer>(i));
 
 	        if (i < std::size(g_reserved_layer_name))
 	        {
@@ -469,7 +469,7 @@ namespace Engine
 			UINT idx = 0;
             for ( const auto &layer : scene->m_layers_)
             {
-				m_layers_.push_back( boost::make_shared<Layer>( idx ) );
+				m_layers_.push_back( make_managed_shared<Layer>( idx ) );
 				m_layers_.back()->SetName( layer->GetName() );
 
                 for ( const auto &obj : layer->GetGameObjects() )
@@ -864,7 +864,7 @@ namespace Engine
 		return m_layers_[layer]->GetGameObjects();
 	}
 
-	Weak<Objects::Camera> Scene::GetMainCamera() const
+    managed_weak_ptr<Objects::Camera> Scene::GetMainCamera() const
 	{
 		return m_main_camera_;
 	}

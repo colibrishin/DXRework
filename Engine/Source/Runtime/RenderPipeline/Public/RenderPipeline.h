@@ -2,9 +2,7 @@
 #include <memory>
 #include "ConstantBuffer.h"
 #include "Singleton.h"
-#include "RenderInstanceTask.h"
-#include "RenderPassTask.h"
-
+#include "IGraphicAPI.h"
 #include "ModuleManager.h"
 
 #include "RenderPipeline.generated.h"
@@ -76,6 +74,9 @@ namespace Engine::Managers
 		}
 
 		[[nodiscard]] const Viewport& GetViewport() const;
+
+	protected:
+        void PreDeconstruction() override;
 
 	private:
 		friend struct SingletonDeleter;

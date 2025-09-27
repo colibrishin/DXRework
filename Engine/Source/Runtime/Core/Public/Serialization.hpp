@@ -9,6 +9,12 @@ namespace Engine
 	class Serializer
 	{
 	public:
+		template <typename T>
+		static bool Serialize(const std::string& filename, const managed_shared_ptr<T>& object)
+		{
+            return Serialize( filename, object.native() );
+		}
+
 		// Serialize the object. Use when the object is nested, and if nested objects are required to be serialized.
 		template <typename T>
 		static bool Serialize(const std::string& filename, const boost::shared_ptr<T>& object)
@@ -124,7 +130,7 @@ namespace Engine
 			}
 			
 			object->OnDeserialized();
-			out_ptr = boost::static_pointer_cast<T>(object);
+			out_ptr = managed_static_pointer_cast<T>(object);
 			return true;
 		}
 	};

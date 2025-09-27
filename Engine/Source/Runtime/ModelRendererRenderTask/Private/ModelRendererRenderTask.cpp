@@ -192,7 +192,7 @@ namespace Engine
             return m_instance_generated_[ m_used_count_++ ];
         }
 
-        Graphics::SBs::InstanceSB* generated = m_instance_allocator_.allocate();
+        Graphics::SBs::InstanceSB* generated = m_instance_allocator_.allocate( 1 );
 
         std::memset( generated, 0, sizeof( decltype( *generated ) ) );
         m_instance_allocator_.construct( generated );

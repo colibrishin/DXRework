@@ -1,5 +1,6 @@
 ﻿#pragma once
 #include "CoreType.h"
+#include "IModule.h"
 #include "ModuleManager.h"
 
 #include "ProjectionFrustumModule.generated.h"

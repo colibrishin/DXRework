@@ -1,13 +1,21 @@
 #include "ModuleManager.h"
+#include "ModuleManager.generated.h"
 
 #include <iostream>
 #include <ranges>
 
-#include "NetworkType.h"
+#include "ModuleInfo.h"
+#include "IModule.h"
 
-#if Platform == Windows
+#if _WIN32 || _WIN64
 #include <Windows.h>
 #endif
+
+std::unique_ptr<Engine::ModuleInfo>              g_os_api      = nullptr;
+std::unique_ptr<Engine::ModuleInfo>              g_graphic_api = nullptr;
+std::unique_ptr<Engine::ModuleInfo>              g_core_mem    = nullptr;
+std::unique_ptr<Engine::ModuleInfo>              g_module_api  = nullptr;
+std::unique_ptr<Engine::ModuleInfo>              g_core_api    = nullptr;
 
 namespace Engine::Managers
 {
@@ -31,35 +39,73 @@ namespace Engine::Managers
 
 			++it;
 		}
-	}
+    }
+
+    bool ModuleManager::CheckNoInit( const ModuleInfo* module_info )
+    {
+#if IS_DLL
+        // Ignore load/unload self
+        if ( module_info->m_handle_ == g_module_api->m_handle_ )
+        {
+            return true;
+        }
+
+        // OS API handle is loaded before the module manager.
+        if ( module_info->m_handle_ == g_os_api->m_handle_ )
+        {
+            return true;
+        }
+
+        // Graphic API is loaded before the module manager.
+        if ( module_info->m_handle_ == g_graphic_api->m_handle_ )
+        {
+            return true;
+        }
+
+        // Memory and type management moudle should be loaded before the module manager.
+        if ( module_info->m_handle_ == g_core_mem->m_handle_ )
+        {
+            return true;
+        }
+
+        // Core libraries are loaded before the module manager.
+        if ( module_info->m_handle_ == g_core_api->m_handle_ )
+        {
+            return true;
+        }
+#endif
+
+        return false;
+    }
 
 	void ModuleManager::Initialize()
 	{
 		m_module_paths_.emplace(L"Default", "./");
-        LoadModule( L"CoreModuleManager" );
     }
 
-    void ModuleManager::Destroy()
+    void ModuleManager::Shutdown()
     {
-        for ( auto &ptr : m_module_loaded_ | std::views::reverse | std::views::values )
+        // Remove the dummy core module info.
+        for ( auto it = m_module_loaded_.begin(); it != m_module_loaded_.end();)
         {
-            if ( ptr->m_module_ )
+            if ( CheckNoInit( it->second.get() ) )
             {
-                ptr->m_module_.reset();
+                it = m_module_loaded_.erase( it );
             }
-
-#if IS_DLL
-            if ( ptr->m_handle_ )
+            else
             {
-                FreeLibrary( static_cast<HMODULE>( ptr->m_handle_ ) );
+                ++it;
             }
-#endif
+        }
 
-            ptr.reset();
+        // Unload the modules in the loaded order.
+        for ( auto it = m_module_load_order_.begin(); it != m_module_load_order_.end(); ++it )
+        {
+            ShutdownModule( *it );
         }
 	}
 
-	ModuleManager::ModuleInfo* ModuleManager::FindModule(const std::wstring_view name)
+	ModuleInfo* ModuleManager::FindModule(const std::wstring_view name)
 	{
 		std::lock_guard l(m_write_mutex_);
 
@@ -68,7 +114,7 @@ namespace Engine::Managers
 			return nullptr;
 		}
 
-		return m_module_loaded_.at(name.data()).get();
+		return m_module_loaded_.at( name.data() ).get();
 	}
 
 	Engine::IModule* ModuleManager::LoadModule(const std::wstring_view name)
@@ -79,6 +125,15 @@ namespace Engine::Managers
 		{
 			if (IModule* module = module_info->m_module_.get())
 			{
+                if ( module_info->m_b_lazy )
+                {
+                    module_info->m_module_->Initialize();
+                    module_info->m_b_lazy = false;
+
+                    m_module_load_order_.emplace_back( name );
+                    TryResolveLazyness( name );
+                }
+
 				return module;
 			}
 		}
@@ -158,55 +213,99 @@ namespace Engine::Managers
                 return nullptr;
             }
 
-            const ModuleInitializationFunctionCStyle &init_func = ( ModuleInitializationFunctionCStyle )GetProcAddress(
-                    static_cast<HMODULE>( module_info->m_handle_ ), "InitializeModule" );
-
-            if ( init_func )
+            if ( !CheckNoInit(module_info) )
             {
-                module_info->m_module_ = std::unique_ptr<IModule>( init_func() );
+                const ModuleInitializationFunctionCStyle& init_func =
+                        ( ModuleInitializationFunctionCStyle )GetProcAddress(
+                                static_cast<HMODULE>( module_info->m_handle_ ), "InitializeModule" );
 
-                if ( module_info->m_module_ )
+                if ( init_func )
                 {
-                    for ( const std::string_view required : module_info->m_module_->LoadAfter() )
-                    {
-                        std::wstring conversion( required.begin(), required.end() );
+                    module_info->m_module_ = std::unique_ptr<IModule>( init_func() );
+                    // Assuming that the dependent libraries are loaded.
+                    module_info->m_b_lazy  = false;
 
-                        if ( !FindModule( conversion ) )
+                    if ( module_info->m_module_ )
+                    {
+                        for ( const std::string_view required : module_info->m_module_->LoadAfter() )
                         {
-                            m_lazy_modules_[ name.data() ].insert( conversion );
+                            std::wstring conversion( required.begin(), required.end() );
+
+                            if ( !FindModule( conversion ) )
+                            {
+                                m_lazy_modules_[ name.data() ].insert( conversion );
+                                module_info->m_b_lazy = true;
+                            }
                         }
-                    }
 
-                    for ( const std::string_view dependency : module_info->m_module_->GetDependencies() )
-                    {
-                        std::wstring conversion( dependency.begin(), dependency.end() );
-
-                        if ( !FindModule( conversion ) )
+                        for ( const std::string_view dependency : module_info->m_module_->GetDependencies() )
                         {
-                            m_lazy_modules_[ name.data() ].insert( conversion );
-                        }
-                    }
+                            std::wstring conversion( dependency.begin(), dependency.end() );
 
-                    if ( m_lazy_modules_.contains( name.data() ) )
-                    {
-                        RemoveModule( name );
-                        return nullptr;
+                            if ( !FindModule( conversion ) )
+                            {
+                                m_lazy_modules_[ name.data() ].insert( conversion );
+                                module_info->m_b_lazy = true;
+                            }
+                        }
+
+                        if ( m_lazy_modules_.contains( name.data() ) )
+                        {
+                            module_info->m_b_lazy = true;
+                            return nullptr;
+                        }
+
+                        
+                        module_info->m_module_->Initialize();
+                        m_module_load_order_.emplace_back( name.data() );
                     }
                 }
 
-				CONSOLE_OUT( "ModuleManager", "Module {} loaded", name.data() )
-                module_info->m_module_->Initialize();
+                // todo: dll whitelist
+            }
+#endif
+            if ( !module_info->m_b_lazy )
+            {
+                CONSOLE_OUT( "ModuleManager", "Module {} loaded", name.data() );
                 TryResolveLazyness( name );
                 return module_info->m_module_.get();
             }
-            else
-            {
-                FreeLibrary( static_cast<HMODULE>( module_info->m_handle_ ) );
-                return nullptr;
-            }
-#endif
+
+            return nullptr;
         }
 	}
+
+    void ModuleManager::Destroy()
+    {
+        for ( auto it = m_module_load_order_.rbegin(); m_module_load_order_.rend() != it; ++it )
+        {
+            if ( !m_module_loaded_.contains(*it) )
+            {
+                continue;
+            }
+
+            if ( m_module_loaded_.at( *it )->m_module_ )
+            {
+                throw std::runtime_error( "Module does not shutdown" );
+            }
+
+            if ( ModuleInfoPtr ptr = std::move( m_module_loaded_.at(*it) ) )
+            {
+#if IS_DLL
+#if _WIN32 || _WIN64
+                if ( HMODULE module = static_cast<HMODULE>( ptr->m_handle_ ) )
+                {
+                    FreeLibrary( module );
+                }
+#endif
+#endif
+                ptr.reset();
+                m_module_loaded_.erase( *it );
+            }
+        }
+
+        m_module_load_order_.clear();
+    }
 
 #if !IS_DLL
 	void ModuleManager::RegisterStaticModule(const std::wstring_view name, const ModuleInitializationFunction& func)
@@ -219,14 +318,14 @@ namespace Engine::Managers
 	void ModuleManager::AddModule(const std::wstring_view name)
 	{
 		{
-			std::lock_guard l(m_write_mutex_);
+            std::lock_guard l( m_write_mutex_ );
 			if (m_module_loaded_.contains(name.data()))
 			{
 				return;
 			}
 		}
 		
-		std::lock_guard l(m_read_mutex_);
+		std::lock_guard l( m_read_mutex_ );
 		m_module_loaded_.emplace(name, std::make_unique<ModuleInfo>());
 
 		ModuleInfo* module_info = m_module_loaded_.at(name.data()).get();
@@ -261,7 +360,7 @@ namespace Engine::Managers
 #endif
 	}
 
-	void ModuleManager::RemoveModule(const std::wstring_view name)
+	void ModuleManager::ShutdownModule(const std::wstring_view name)
 	{
 		{
 			std::lock_guard l(m_write_mutex_);
@@ -272,31 +371,33 @@ namespace Engine::Managers
 		}
 		
 		std::lock_guard l(m_read_mutex_);
-		std::unique_ptr<ModuleInfo> module_info = std::move(m_module_loaded_.at(name.data()));
-		
+        const ModuleInfoPtr& module_info = m_module_loaded_.at( name.data() );
+
 		if (module_info)
 		{
-			HMODULE module_ptr = static_cast<HMODULE>(module_info->m_handle_);
-			module_info.reset(); // Free the module information first to avoid the incomplete type.
+            if (
 #if IS_DLL
-			FreeLibrary(module_ptr); // Free the library
+                GetModuleHandleW( module_info->m_path_.c_str() ) && 
 #endif
+                module_info->m_module_ )
+            {
+                module_info->m_module_->Shutdown();
+                module_info->m_module_.reset();
+            }
 		}
-		
-		m_module_loaded_.erase(name.data());
-	}
+    }
 
 	void ModuleManager::LoadModuleAll()
 	{
 #if IS_DLL
-		for (const auto& directory : m_module_paths_)
+		for ( const auto& directory : m_module_paths_ )
 		{
 			for (const auto& entry : std::filesystem::directory_iterator(directory.second))
 			{
 				if (const std::wstring& file_name = entry.path().stem().generic_wstring();
 					entry.is_regular_file() && entry.path().extension() == ".dll")
 				{
-					LoadModule(file_name);
+                    LoadModule( file_name );
 				}
 			}
 		}
@@ -320,8 +421,5 @@ namespace Engine::Managers
 		return *instance;
 	}
 
-    ModuleManager::~ModuleManager()
-	{
-        Destroy();
-	}
-}
+    ModuleManager::~ModuleManager() {}
+} // namespace Engine::Managers

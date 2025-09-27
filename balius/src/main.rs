@@ -3,6 +3,7 @@ use std::collections::HashSet;
 use lazy_static::lazy_static;
 use std::sync::Mutex;
 use std::io::BufRead;
+use std::fs::TryLockError;
 
 lazy_static!{
     static ref target_files: Mutex<HashSet<String>> = Mutex::new(HashSet::new());
@@ -233,7 +234,7 @@ fn acquire_lock() -> Result<std::fs::File, std::io::Error>
     {
         match lockfile.try_lock()
         {
-            Ok(true) => 
+            Ok(_) => 
             {
                 let mut reader = std::io::BufReader::new(&lockfile);
                 let mut pid = String::new();
@@ -273,8 +274,18 @@ fn acquire_lock() -> Result<std::fs::File, std::io::Error>
                     }
                 }
             },
-            Ok(false) => continue,
-            Err(_) => panic!("unable to acquire a lock file")
+            Err(e) => 
+            {
+                match e
+                {
+                    TryLockError::WouldBlock => 
+                    {
+                        std::thread::sleep(std::time::Duration::from_millis(100));
+                        continue;
+                    },
+                    TryLockError::Error(error) => return Err(error)
+                }
+            }
         }
     }
 
@@ -336,7 +347,10 @@ fn main()
     let lockfile = match acquire_lock()
     {
         Ok(file) => file,
-        Err(_) => panic!("Unable to lock the file"),
+        Err(e) =>
+        {
+            panic!("Unable to lock the file. Reason: {e}");
+        }
     };
 
     match prepare_and_commit(&engine_dir, &project_dir, &git_dir, &intermediate_path, &configuration)

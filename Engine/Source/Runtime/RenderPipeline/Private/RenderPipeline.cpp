@@ -55,12 +55,14 @@ namespace Engine::Managers
     const Viewport& RenderPipeline::GetViewport() const
 	{
 		return m_viewport_;
+    }
+
+    void RenderPipeline::PreDeconstruction()
+    {
+        Renderer::GetInstance().UnregisterStructuredBuffer( &m_light_buffer_sb_ );
 	}
 	
-	RenderPipeline::~RenderPipeline()
-	{
-	    Renderer::GetInstance().UnregisterStructuredBuffer(&m_light_buffer_sb_);
-	}
+	RenderPipeline::~RenderPipeline() {}
 
 	void RenderPipeline::ConstantBufferGuard()
 	{

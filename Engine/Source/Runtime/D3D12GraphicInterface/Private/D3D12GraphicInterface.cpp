@@ -1,7 +1,9 @@
 #include "D3D12GraphicInterface.h"
 #include "D3D12GraphicInterface.generated.h"
 
+#if WITH_DEBUG
 #include <dxgidebug.h>
+#endif
 
 #include "D3D12GraphicPrimitiveShader.h"
 #include "D3D12PrimitiveMesh.h"
@@ -30,6 +32,7 @@
 
 #include "CoreModule.h"
 #include "EngineEntryPoint.h"
+
 
 MODULE_IMPL(Engine::D3D12GraphicInterfaceModule, D3D12GraphicInterface)
 
@@ -62,14 +65,16 @@ bool Engine::D3D12GraphicInterfaceModule::DynamicLoadable()
 }
 const std::vector<std::string>& Engine::D3D12GraphicInterfaceModule::LoadAfter() const
 {
-#if Platform == Windows
-	static std::vector<std::string> load_after{ "WinAPIWrapper" };
-#endif
+	static std::vector<std::string> load_after{};
 	return load_after;
 }
 
 
-Engine::D3D12GraphicInterface::D3D12GraphicInterface() {}
+Engine::D3D12GraphicInterface::D3D12GraphicInterface()
+{ }
+
+Engine::D3D12GraphicInterface::~D3D12GraphicInterface()
+{ }
 
 void Engine::D3D12GraphicInterface::Initialize()
 {
@@ -105,6 +110,32 @@ void Engine::D3D12GraphicInterface::Initialize()
 void Engine::D3D12GraphicInterface::Shutdown()
 {
 	m_command_pair_task_.StopTask();
+    m_command_pair_task_.Cleanup();
+
+	for ( ComPtr<ID3D12Resource>& resource : m_render_targets_ )
+	{
+        resource.Reset();
+	}
+
+	m_render_targets_.clear();
+    m_rtv_heap_.Reset();
+
+	m_depth_stencil_.Reset();
+    m_dsv_heap_.Reset();
+    m_pipeline_root_signature_.Reset();
+    m_heap_handler_.reset();
+
+#if CFG_RAYTRACING
+    m_raytracing_heap_handler_.reset();
+    m_raytracing_root_pipeline_.Reset();
+    m_raytracing_sampler_heap_.Reset();
+    m_output_buffer_.Reset();
+    m_output_heap_.Reset();
+    m_raytracing_dev_.Reset();
+#endif
+
+	m_swap_chain_.Reset();
+	m_dev_.Reset();
 
 #if WITH_DEBUG
 	HMODULE hModule = GetModuleHandleW(L"dxgidebug.dll");
@@ -114,7 +145,7 @@ void Engine::D3D12GraphicInterface::Shutdown()
 
 	IDXGIDebug* pDXGIDebug;
 	DXGIGetDebugInterfaceFunc(IID_PPV_ARGS(&pDXGIDebug));
-	pDXGIDebug->ReportLiveObjects(DXGI_DEBUG_D3D12, DXGI_DEBUG_RLO_DETAIL);
+    pDXGIDebug->ReportLiveObjects( DXGI_DEBUG_D3D12, DXGI_DEBUG_RLO_DETAIL );
 #endif // WITH_DEBUG
 }
 
@@ -494,7 +525,7 @@ void Engine::D3D12GraphicInterface::QueryDevice()
 
 void Engine::D3D12GraphicInterface::InitializeRaytracingDescriptorHeaps()
 {
-    m_raytracing_heap_handler_ = boost::make_shared<decltype(m_raytracing_heap_handler_)::element_type>();
+    m_raytracing_heap_handler_ = make_managed_shared<decltype(m_raytracing_heap_handler_)::element_type>();
 	m_raytracing_heap_handler_->Initialize(m_dev_.Get(), m_raytracing_root_pipeline_.Get());
 }
 
@@ -551,6 +582,8 @@ void Engine::D3D12GraphicInterface::InitializeGlobalRootSignature()
 		signature->GetBufferPointer(),
 		signature->GetBufferSize(),
 		IID_PPV_ARGS( m_raytracing_root_pipeline_.ReleaseAndGetAddressOf() ) ) );
+
+	SET_NAME( m_raytracing_root_pipeline_, L"Raytracing Root Signature" )
 }
 
 void Engine::D3D12GraphicInterface::InitializeOutputBuffer()
@@ -566,6 +599,8 @@ void Engine::D3D12GraphicInterface::InitializeOutputBuffer()
           D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
           nullptr,
           IID_PPV_ARGS( m_output_buffer_.ReleaseAndGetAddressOf() ) ) );
+
+    SET_NAME( m_output_buffer_, L"Raytracing Output Buffer" )
 
     constexpr D3D12_DESCRIPTOR_HEAP_DESC desc
     {
@@ -686,9 +721,9 @@ void Engine::D3D12GraphicInterface::Draw(const IGraphicContext* context, const R
 	{
         index_count = mesh->GetIndexCount();
         cmd->GetList()->IASetVertexBuffers(
-                0, 1, static_cast<D3D12_VERTEX_BUFFER_VIEW *>( mesh->GetPrimitive()->GetNativeVertexBuffer() ) );
+                0, 1, mesh->GetPrimitive()->GetNativeVertexBuffer<D3D12_VERTEX_BUFFER_VIEW>() );
         cmd->GetList()->IASetIndexBuffer(
-                static_cast<const D3D12_INDEX_BUFFER_VIEW *>( mesh->GetPrimitive()->GetNativeIndexBuffer() ) );
+                mesh->GetPrimitive()->GetNativeIndexBuffer<D3D12_INDEX_BUFFER_VIEW>() );
 	}
 	
 	if ( index_count == 0 )
@@ -1310,6 +1345,7 @@ void Engine::D3D12GraphicInterface::InitializeDevice()
 		)
 	);
 
+	SET_NAME( m_rtv_heap_, L"Render Target Heap" )
 	m_rtv_heap_size_ = m_dev_->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 
 	CD3DX12_CPU_DESCRIPTOR_HANDLE rtv_handle(m_rtv_heap_->GetCPUDescriptorHandleForHeapStart());
@@ -1332,8 +1368,7 @@ void Engine::D3D12GraphicInterface::InitializeDevice()
 		);
 
 		const std::wstring name = L"Render Target " + std::to_wstring(i);
-
-		DX::ThrowIfFailed(m_render_targets_[i]->SetName(name.c_str()));
+		SET_NAME_RUNTIME( m_render_targets_[i], name );
 
 		m_dev_->CreateRenderTargetView
 		(
@@ -1391,6 +1426,8 @@ void Engine::D3D12GraphicInterface::InitializeDevice()
 	(
 		m_depth_stencil_.Get(), nullptr, m_dsv_heap_->GetCPUDescriptorHandleForHeapStart()
 	);
+
+	SET_NAME( m_depth_stencil_, L"Render Target Depth Stencil Texture" );
 
 #if WITH_DEBUG
 	ComPtr<ID3D12InfoQueue> info_queue;
@@ -1486,7 +1523,9 @@ void Engine::D3D12GraphicInterface::InitializePipeline()
 		)
 	);
 
-	m_heap_handler_ = boost::make_shared<decltype(m_heap_handler_)::element_type>();
+	SET_NAME( m_pipeline_root_signature_, L"Rasterizer Root Signature" )
+
+	m_heap_handler_ = make_managed_shared<decltype(m_heap_handler_)::element_type>();
 	m_heap_handler_->Initialize(m_dev_.Get(), m_pipeline_root_signature_.Get());
 }
 

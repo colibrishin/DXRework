@@ -6,14 +6,6 @@
 #include "CoreType.h"
 #include "TypeLibrary.h"
 
-#if SERVER
-#define CONSOLE_OUT(PREFIX, FMT, ...) \
-    std::cout << std::format("[{} | {}]: ", std::chrono::duration_cast<std::chrono::nanoseconds>( std::chrono::high_resolution_clock::now().time_since_epoch() ), PREFIX ); \
-    std::cout << std::format(FMT, __VA_ARGS__) << '\n';
-#else
-#define CONSOLE_OUT(PREFIX, FMT, ...)
-#endif
-
 namespace Engine
 {
     struct INetworkTask;

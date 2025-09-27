@@ -5,7 +5,7 @@
 
 #include "Collider.h"
 #include "Rigidbody.h"
-
+#include "Transform.h"
 #include "ObjectBase.h"
 
 #include "Scene.h"

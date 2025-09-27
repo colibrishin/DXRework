@@ -6,7 +6,7 @@
 #include "Camera.h"
 #include "SceneManager.h"
 
-#include "IGraphicAPI.h"
+#include "IGraphicAPI_Extensions.h"
 
 namespace Engine::Managers
 {

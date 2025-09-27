@@ -17,7 +17,10 @@ std::vector<std::tuple<Engine::eShaderType, std::string, std::string>> Engine::D
 
 namespace Engine
 {
-	void D3D12GraphicPrimitiveShader::Generate(const Resources::Shader* shader, void* pipeline_signature)
+    D3D12GraphicPrimitiveShader::~D3D12GraphicPrimitiveShader()
+    { }
+
+    void D3D12GraphicPrimitiveShader::Generate( const Resources::Shader* shader, void* pipeline_signature )
 	{
 		ConvertShader(shader);
 

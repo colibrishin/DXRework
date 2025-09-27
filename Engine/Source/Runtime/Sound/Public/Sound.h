@@ -10,8 +10,9 @@ namespace Engine::Resources
 	ECLASS(resource, serialize)
 	class ENGINE_SOUND_API Sound : public Abstracts::Resource
 	{
-		GENERATE_BODY
+        GENERATE_BODY
 
+        ~Sound() override;
 		Sound(const Sound& other);
 		Sound& operator=(const Sound& other);
 
@@ -44,9 +45,9 @@ namespace Engine::Resources
 
 		struct SoundDeleter 
 		{
-			void operator()(ISound* ptr) const
+			void operator()( void* ptr ) const
 			{
-				g_sound_accessor.GetInterface().ReleaseSound( ptr );
+                g_sound_accessor.GetInterface().ReleaseSound( static_cast<ISound*>( ptr ) );
 			}
 		};
 

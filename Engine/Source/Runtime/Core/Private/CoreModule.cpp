@@ -31,9 +31,9 @@ bool Engine::CoreModule::ShutdownImpl()
 	CoreLoop::RemoveManager
 			(
 			    CoreLoop::LOOP_TYPE_LOGIC,
-			    &Managers::ResourceManager::GetInstance,
-			    &Managers::SceneManager::GetInstance,
-				&Managers::TaskScheduler::GetInstance
+                &Managers::TaskScheduler::GetInstance,
+				&Managers::SceneManager::GetInstance,
+			    &Managers::ResourceManager::GetInstance
 			);
 
 #if WITH_DEBUG

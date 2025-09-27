@@ -11,9 +11,12 @@ namespace Engine
     {
         GENERATE_BODY
 
-        void SetResource(void* resource) override;
-
+        ~D3D12GraphicResourcePrimitive() override;
         void Release() override;
+
+    protected:
+        void* GetResourceInternal() override;
+        void** GetAddressOfInternal() override;
 
     private:
         ComPtr<ID3D12Resource> m_raw_resources_;

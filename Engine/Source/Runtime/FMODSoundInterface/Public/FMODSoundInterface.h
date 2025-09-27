@@ -3,7 +3,7 @@
 #include "Allocator.h"
 #include <Public/fmod.hpp>
 #include <Public/fmod_common.h>
-#include <magic_enum.hpp>
+#include <magic_enum/magic_enum.hpp>
 
 #include "FMODSoundInterface.generated.h"
 
@@ -11,13 +11,7 @@ namespace Engine
 {
 	struct ENGINE_FMODSOUNDINTERFACE_API FMODSoundPrimitive : public ISound
 	{
-		virtual ~FMODSoundPrimitive()
-		{
-			if (m_sound_)
-			{
-				m_sound_->release();
-			}
-		}
+        virtual ~FMODSoundPrimitive();
 
 		void SetMinDistance(float value) override;
 		void SetMaxDistance(float value) override;
@@ -50,6 +44,8 @@ namespace Engine
     struct ENGINE_FMODSOUNDINTERFACE_API FMODSoundInterface : ISoundAPI
     {
         GENERATE_BODY
+        ~FMODSoundInterface() override;
+
         void    Initialize() override;
         void    Shutdown() override;
         void    Update() override;
@@ -71,7 +67,6 @@ namespace Engine
         FMOD::ChannelControl* m_channel_control_      = nullptr;
 
         std::array<FMOD::Channel*, g_max_sound_channel>  m_channel_map_{};
-        u_fast_pool_allocator_single<FMODSoundPrimitive> m_primitive_allocator_{};
-        std::vector<FMODSoundPrimitive*>                 m_instanced_primitives_{};
+        aligned_vector<FMODSoundPrimitive> m_instanced_primitives_{};
     };
 }

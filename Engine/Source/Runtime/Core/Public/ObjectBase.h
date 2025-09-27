@@ -18,7 +18,7 @@ DEFINE_DELEGATE(OnComponentRemoved, Engine::Weak<Engine::Abstracts::Component>);
 // Cloning object declaration macro
 #define OBJ_CLONE_DECL Engine::Strong<Engine::Abstracts::ObjectBase> cloneImpl() const override;
 // Cloning object implementation macro
-#define OBJ_CLONE_IMPL(CLASS) Engine::Strong<Engine::Abstracts::ObjectBase> CLASS::cloneImpl() const { return boost::make_shared<CLASS>(*this); }
+#define OBJ_CLONE_IMPL(CLASS) Engine::Strong<Engine::Abstracts::ObjectBase> CLASS::cloneImpl() const { return make_managed_shared<CLASS>(*this); }
 
 namespace Engine
 {
@@ -72,11 +72,11 @@ namespace Engine::Abstracts
 
 			if (const auto comp = checkComponent(type).lock())
 			{
-				return boost::static_pointer_cast<T>(comp);
+				return managed_static_pointer_cast<T>( comp );
 			}
 
 			const auto thisObject = GetSharedPtr<ObjectBase>();
-			Strong<T> component = boost::make_shared<T>(thisObject, std::forward<Args>(args)...);
+			Strong<T> component = make_managed_shared<T>(thisObject, std::forward<Args>(args)...);
 			component->Initialize();
 
 			addComponentImpl(component, type);
@@ -98,7 +98,7 @@ namespace Engine::Abstracts
 
 				const auto& comp = m_components_[T::StaticTypeHash()];
 
-				return boost::static_pointer_cast<T>(comp);
+				return managed_static_pointer_cast<T>( comp );
 			}
 
 #pragma warning(disable: 4702)

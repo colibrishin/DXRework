@@ -1,5 +1,6 @@
 #include "TaskScheduler.h"
 #include "TaskScheduler.generated.h"
+#include "EngineEntryPoint.h"
 
 namespace Engine::Managers
 {
@@ -58,8 +59,13 @@ namespace Engine::Managers
                 ( m_injected_funcs_[ type ],
                   [&func]( const TaskSchedulerFunc &elem )
                   {
-                      return elem.target<void( * )( const std::vector<std::any> &, float )>() ==
-                          func.target<void( * )(const std::vector<std::any> &, float)>();
+                      return elem.target<void( const std::vector<std::any> &, float )>() ==
+                          func.target<void(const std::vector<std::any> &, float)>();
                   } );
-	}
+    }
+    void TaskScheduler::PreDeconstruction()
+    {
+        m_injected_funcs_.clear();
+        m_tasks_.clear();
+    }
 }

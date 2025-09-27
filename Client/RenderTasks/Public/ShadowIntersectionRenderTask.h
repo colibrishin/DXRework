@@ -19,6 +19,24 @@ struct ENGINE_CLIENT_API ShadowIntersectionRenderTask : Engine::RenderPassTask
     ShadowIntersectionRenderTask();
     ShadowIntersectionRenderTask& operator=(ShadowIntersectionRenderTask&) = delete;
     ShadowIntersectionRenderTask(ShadowIntersectionRenderTask&) = delete;
+
+    ShadowIntersectionRenderTask& operator=(ShadowIntersectionRenderTask&& other) noexcept
+    {
+        m_tmp_shadow_depth_      = std::move( other.m_tmp_shadow_depth_ );
+        m_intersection_compute_  = std::move( other.m_intersection_compute_ );
+        m_shadow_shader_         = std::move( other.m_shadow_shader_ );
+        m_intensity_test_shader_ = std::move( other.m_intensity_test_shader_ );
+
+        return *this;
+    }
+
+    ShadowIntersectionRenderTask( ShadowIntersectionRenderTask&& other ) noexcept
+    {
+        m_tmp_shadow_depth_      = std::move( other.m_tmp_shadow_depth_ );
+        m_intersection_compute_  = std::move( other.m_intersection_compute_ );
+        m_shadow_shader_         = std::move( other.m_shadow_shader_ );
+        m_intensity_test_shader_ = std::move( other.m_intensity_test_shader_ );
+    }
     
     void Run( float dt,
             bool shader_bypass,

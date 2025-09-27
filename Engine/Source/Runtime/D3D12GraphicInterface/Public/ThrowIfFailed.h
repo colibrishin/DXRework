@@ -3,6 +3,22 @@
 #include <Windows.h>
 #include "CoreType.h"
 
+#if WITH_DEBUG
+#define SET_NAME( Variable, String )                                                                                   \
+    {                                                                                                                  \
+        Variable##->SetName( String );                                                                                 \
+        Variable##->SetPrivateData(##WKPDID_D3DDebugObjectName##, std::size( String ) - 1, String );                   \
+    }
+#define SET_NAME_RUNTIME( Variable, String )                                                                     \
+    {                                                                                                                  \
+        Variable##->SetName( String.c_str() );                                                                         \
+        Variable##->SetPrivateData(##WKPDID_D3DDebugObjectName##, std::size( String ), String.c_str() );               \
+    }
+#else
+#define SET_NAME( Variable, String ) Variable##->SetName( String.c_str() );
+#define SET_NAME_RUNTIME( Variable, String ) Variable##->SetName( String.c_str() );
+#endif
+
 namespace DX
 {
 	// Helper class for COM exceptions

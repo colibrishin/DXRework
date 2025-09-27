@@ -165,16 +165,16 @@ namespace Engine::Managers
 		resource->SetName(name);
 	}
 
-	void ResourceManager::AddResource(const Strong<Abstracts::Resource>& resource, const ResourceType type)
-	{
-		if (!resource->GetMetadataPath().empty() &&
-			SearchResourceByMetadata(resource->GetMetadataPath(), type).lock())
-		{
-			return;
-		}
+	void ResourceManager::AddResource( const Strong<Abstracts::Resource>& resource, const ResourceType type )
+    {
+        if ( !resource->GetMetadataPath().empty() &&
+             SearchResourceByMetadata( resource->GetMetadataPath(), type ).lock() )
+        {
+            return;
+        }
 
-		m_resources_[type].insert(resource);
-	}
+        m_resources_[ type ].emplace( resource );
+    }
 
 	inline Weak<Abstracts::Resource> ResourceManager::GetResource(const std::string_view name, ResourceType type)
 	{
@@ -268,19 +268,23 @@ namespace Engine::Managers
 	}
 #endif
 
-	ResourceManager::~ResourceManager()
-	{
-		m_resource_cache_.clear();
-		m_resource_ids_.clear();
+	void ResourceManager::PreDeconstruction()
+    {
+        m_resource_cache_.clear();
+        m_resource_ids_.clear();
 
-		for (auto& set : m_resources_ | std::views::values)
-		{
-			for (boost::shared_ptr<Abstracts::Resource> resource : set)
-			{
-				resource->Unload();
-				resource.reset();
-			}
-		}
+        for ( auto& set : m_resources_ | std::views::values )
+        {
+            for ( Engine::Strong<Abstracts::Resource> resource : set )
+            {
+                resource->Unload();
+                resource.reset();
+            }
+        }
+	}
+
+    ResourceManager::~ResourceManager()
+	{
 	}
 
 	Weak<Abstracts::Resource> ResourceManager::SearchResourceByMetadata(

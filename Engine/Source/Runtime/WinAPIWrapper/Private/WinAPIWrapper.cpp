@@ -1,10 +1,13 @@
 #include "WinAPIWrapper.hpp"
 #include "EngineEntryPoint.h"
+#include "CoreType.h"
+#include "ModuleInfo.h"
 
 std::unique_ptr<WinAPI::WinAPIWrapper> WinAPI::WinAPIWrapper::s_instance_         = nullptr;
 std::wstring                           WinAPI::WinAPIWrapper::s_application_name_ = L"Engine";
 HINSTANCE                              WinAPI::WinAPIWrapper::s_hinstance_        = nullptr;
 HWND                                   WinAPI::WinAPIWrapper::s_hwnd_             = nullptr;
+bool                                   WinAPI::WinAPIWrapper::s_alt_pressed_      = false;
 
 namespace WinAPI
 {
@@ -18,11 +21,35 @@ namespace WinAPI
 		// Check if the window is being destroyed.
 		case WM_DESTROY:
 		case WM_CLOSE:
-			{
-				PostQuitMessage(0);
-				return 0;
-			}
-
+		{
+			PostQuitMessage(0);
+			return 0;
+		}
+		case WM_SYSKEYDOWN:
+		{
+            if ( wparam == VK_MENU )
+            {
+                WinAPIWrapper::s_alt_pressed_ = true;
+            }
+			break;
+		}
+		case WM_SYSKEYUP:
+		{
+            if ( wparam == VK_MENU )
+            {
+                WinAPIWrapper::s_alt_pressed_ = false;
+            }
+			break;
+		}
+		case WM_KEYDOWN:
+		{
+            if ( wparam == VK_F4 && WinAPIWrapper::s_alt_pressed_ )
+            {
+                PostQuitMessage( 0 );
+                return 0;
+            }
+			break;
+		}
 		// All other messages pass to the message handler in the system class.
 		default:
 			{
@@ -141,8 +168,13 @@ namespace WinAPI
 
 	HWND WinAPIWrapper::Initialize(HINSTANCE hInstance)
 	{
-		s_instance_ = std::unique_ptr<WinAPIWrapper>(new WinAPIWrapper());
-		return InitializeWindow(hInstance);
+        if ( !s_instance_ )
+        {
+            s_instance_ = std::unique_ptr<WinAPIWrapper>( new WinAPIWrapper() );
+            InitializeWindow( hInstance );
+        }
+
+		return s_hwnd_;
 	}
 
 	void WinAPIWrapper::UpdateWindowSize(const uint32_t width, const uint32_t height)
@@ -176,7 +208,7 @@ namespace WinAPI
 
 				if (msg.message == WM_QUIT)
 				{
-					return;
+                    return;
 				}
 			}
 			else

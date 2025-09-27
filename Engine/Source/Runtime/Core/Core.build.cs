@@ -4,7 +4,6 @@ using Sharpmake;
 [module: Include("%EngineDir%/Build/CommonProject.build.cs")]
 [module: Include("%EngineDir%/Engine/Source/ThirdParty/Boost/Boost.build.cs")]
 [module: Include("%EngineDir%/Engine/Source/ThirdParty/TBB/TBB.build.cs")]
-[module: Include("%EngineDir%/Engine/Source/ThirdParty/DirectXTK/DirectXTK.build.cs")]
 [module: Include("%EngineDir%/Engine/Source/ThirdParty/GCEM/GCEM.build.cs")]
 
 [Generate]
@@ -19,5 +18,7 @@ public class Core : EngineCommonProject
         conf.AddPublicDependency<Boost>(target);
         conf.AddPublicDependency<TBB>(target);
         conf.AddPublicDependency<GCEM>(target);
+        conf.AddPublicDependency<Memory>(target);
+        conf.AddPublicDependency<CoreModule>(target);
     }
 }

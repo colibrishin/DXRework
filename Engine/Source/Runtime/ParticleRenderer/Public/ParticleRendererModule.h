@@ -1,4 +1,5 @@
 #pragma once
+#include "IModule.h"
 #include "ModuleManager.h"
 
 #include "ParticleRendererModule.generated.h"

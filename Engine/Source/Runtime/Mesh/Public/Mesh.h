@@ -1,5 +1,5 @@
 #pragma once
-#include "IGraphicAPI.h"
+#include "IGraphicAPI_Extensions.h"
 #include "Resource.h"
 #include "VertexElement.h"
 #include "ResourceManager.h"

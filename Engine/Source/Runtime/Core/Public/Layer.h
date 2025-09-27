@@ -47,44 +47,44 @@ namespace Engine
 		void clear();
 
 		auto begin() noexcept
-		{
-			return m_objects_.begin();
-		}
+        {
+            return m_objects_.begin();
+        }
 
-		auto end() noexcept
-		{
-			return m_objects_.end();
-		}
+        auto end() noexcept
+        {
+            return m_objects_.end();
+        }
 
-		auto begin() const noexcept
-		{
-			return m_objects_.begin();
-		}
+        auto begin() const noexcept
+        {
+            return m_objects_.begin();
+        }
 
-		auto end() const noexcept
-		{
-			return m_objects_.end();
-		}
+        auto end() const noexcept
+        {
+            return m_objects_.end();
+        }
 
-		auto cbegin() const noexcept
-		{
-			return m_objects_.cbegin();
-		}
+        auto cbegin() const noexcept
+        {
+            return m_objects_.cbegin();
+        }
 
-		auto cend() const noexcept
-		{
-			return m_objects_.cend();
-		}
+        auto cend() const noexcept
+        {
+            return m_objects_.cend();
+        }
 
-		auto size() const noexcept
-		{
-			return m_objects_.size();
-		}
+        auto size() const noexcept
+        {
+            return m_objects_.size();
+        }
 
-		size_t Empty() const noexcept 
-		{
-			return m_objects_.empty();
-		}
+        size_t Empty() const noexcept
+        {
+            return m_objects_.empty();
+        }
 
 	private:
 		Layer();

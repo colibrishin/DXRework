@@ -95,138 +95,134 @@ void Engine::CoreLoop::PostRender(const float dt)
 
 namespace Engine::Managers
 {
-	EngineEntryPoint::EngineEntryPoint(SINGLETON_LOCK_TOKEN)
-		: Singleton()
-	{
-		if (s_instantiated_)
-		{
-			throw std::runtime_error("EngineEntryPoint is already instantiated");
-		}
+    EngineEntryPoint::EngineEntryPoint( SINGLETON_LOCK_TOKEN ) : Singleton()
+    {
+        if ( s_instantiated_ )
+        {
+            throw std::runtime_error( "EngineEntryPoint is already instantiated" );
+        }
 
-		s_instantiated_ = true;
-        std::set_terminate( handleSIGTERM );
-	}
+        s_instantiated_ = true;
+    }
 
-	float EngineEntryPoint::GetDeltaTime() const
-	{
-		return static_cast<float>(m_timer->GetElapsedSeconds());
-	}
+    float EngineEntryPoint::GetDeltaTime() const
+    {
+        return static_cast<float>( m_timer->GetElapsedSeconds() );
+    }
 
-	uint32_t EngineEntryPoint::GetFPS() const
-	{
-		return m_timer->GetFramesPerSecond();
-	}
+    uint32_t EngineEntryPoint::GetFPS() const
+    {
+        return m_timer->GetFramesPerSecond();
+    }
 
-	EngineEntryPoint::~EngineEntryPoint()
-	{
-		handleSIGTERM();
-	}
+    void EngineEntryPoint::PreDeconstruction()
+    {
+        m_timer.reset();
+    }
 
-	void EngineEntryPoint::Initialize()
-	{
-		m_timer = std::make_unique<DX::StepTimer>();
-		ModuleManager::GetInstance().Initialize();
-		ModuleManager::GetInstance().LoadModuleAll();
-	}
+    EngineEntryPoint::~EngineEntryPoint()
+    { }
 
-	void EngineEntryPoint::Tick()
-	{
-		static auto internal_tick = std::bind_front(&EngineEntryPoint::tickInternal, this);
-		m_timer->Tick(internal_tick);
-	}
+    void EngineEntryPoint::Initialize()
+    {
+        m_timer = std::make_unique<DX::StepTimer>();
+        ModuleManager::GetInstance().Initialize();
+        ModuleManager::GetInstance().LoadModuleAll();
+    }
 
-#if WITH_EDITOR
-	void EngineEntryPoint::OnUIUpdate(UIContext* const parent, const float dt)
-	{
-		CoreLoop::OnUIUpdate(parent, dt);
-	}
-#endif
-
-	void EngineEntryPoint::PreUpdate(const float dt)
-	{
-		CoreLoop::PreUpdate(dt);
-	}
-
-	void EngineEntryPoint::FixedUpdate(const float dt)
-	{
-		CoreLoop::FixedUpdate(dt);
-	}
-
-	void EngineEntryPoint::Update(const float dt)
-	{
-		CoreLoop::Update(dt);
-	}
-
-	void EngineEntryPoint::PreRender(const float dt)
-	{
-		CoreLoop::PreRender(dt);
-	}
-
-	void EngineEntryPoint::Render(const float dt)
-	{
-		CoreLoop::Render(dt);
-	}
-
-	void EngineEntryPoint::PostRender(const float dt)
-	{
-		CoreLoop::PostRender(dt);
-	}
-
-	void EngineEntryPoint::PostUpdate(const float dt)
-	{
-		CoreLoop::PostUpdate(dt);
-	}
-
-	void EngineEntryPoint::tickInternal()
-	{
-		static float elapsed = 0.f;
-
-		float dt = GetDeltaTime();
-
-		if (s_paused)
-		{
-			elapsed = 0.f;
-			dt      = 0.f;
-		}
+    void EngineEntryPoint::Tick()
+    {
+        static auto internal_tick = std::bind_front( &EngineEntryPoint::tickInternal, this );
+        m_timer->Tick( internal_tick );
+    }
 
 #if WITH_EDITOR
-		if (g_ui_accessor.IsValid())
-		{
-			g_ui_accessor.NewFrame();
-		}
+    void EngineEntryPoint::OnUIUpdate( UIContext* const parent, const float dt )
+    {
+        CoreLoop::OnUIUpdate( parent, dt );
+    }
 #endif
-		
-		while (elapsed >= s_fixed_update_interval)
-		{
-			FixedUpdate(s_fixed_update_interval);
-			elapsed -= s_fixed_update_interval;
-		}
+
+    void EngineEntryPoint::PreUpdate( const float dt )
+    {
+        CoreLoop::PreUpdate( dt );
+    }
+
+    void EngineEntryPoint::FixedUpdate( const float dt )
+    {
+        CoreLoop::FixedUpdate( dt );
+    }
+
+    void EngineEntryPoint::Update( const float dt )
+    {
+        CoreLoop::Update( dt );
+    }
+
+    void EngineEntryPoint::PreRender( const float dt )
+    {
+        CoreLoop::PreRender( dt );
+    }
+
+    void EngineEntryPoint::Render( const float dt )
+    {
+        CoreLoop::Render( dt );
+    }
+
+    void EngineEntryPoint::PostRender( const float dt )
+    {
+        CoreLoop::PostRender( dt );
+    }
+
+    void EngineEntryPoint::PostUpdate( const float dt )
+    {
+        CoreLoop::PostUpdate( dt );
+    }
+
+    void EngineEntryPoint::tickInternal()
+    {
+        static float elapsed = 0.f;
+
+        float dt = GetDeltaTime();
+
+        if ( s_paused )
+        {
+            elapsed = 0.f;
+            dt      = 0.f;
+        }
 
 #if WITH_EDITOR
-		if (g_ui_accessor.IsValid())
-		{
-			OnUIUpdate(nullptr, dt);
-		}
+        if ( g_ui_accessor.IsValid() )
+        {
+            g_ui_accessor.NewFrame();
+        }
 #endif
 
-		if ( g_network_accessor.IsValid() )
-		{
+        while ( elapsed >= s_fixed_update_interval )
+        {
+            FixedUpdate( s_fixed_update_interval );
+            elapsed -= s_fixed_update_interval;
+        }
+
+#if WITH_EDITOR
+        if ( g_ui_accessor.IsValid() )
+        {
+            OnUIUpdate( nullptr, dt );
+        }
+#endif
+
+        if ( g_network_accessor.IsValid() )
+        {
             g_network_accessor.GetMessageTask().Poll();
-		}
-		
-		PreUpdate(dt);
-		Update(dt);
-		PostUpdate(dt);
+        }
 
-		PreRender(dt);
-		Render(dt);
-		PostRender(dt);
+        PreUpdate( dt );
+        Update( dt );
+        PostUpdate( dt );
 
-		elapsed += dt;
-	}
+        PreRender( dt );
+        Render( dt );
+        PostRender( dt );
 
-	void EngineEntryPoint::handleSIGTERM()
-	{
-		ModuleManager::GetInstance().Destroy();
-	}
-} // namespace Engine::Manager
+        elapsed += dt;
+    }
+} // namespace Engine::Managers

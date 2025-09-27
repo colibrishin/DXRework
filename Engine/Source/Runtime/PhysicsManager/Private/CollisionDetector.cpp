@@ -46,7 +46,7 @@ namespace Engine::Managers
 	void CollisionDetector::Initialize()
 	{
 		UpdateLayerMask(SceneManager::GetInstance().GetActiveScene());
-		SceneManager::GetInstance().onSceneActive.Listen(GetSharedPtr<CollisionDetector>(), &CollisionDetector::UpdateScene);
+		SceneManager::GetInstance().onSceneActive.Listen(GetWeakPtr<CollisionDetector>(), &CollisionDetector::UpdateScene);
 
 #ifdef PHYSX_ENABLED
 		for (int i = 0; i < LAYER_MAX; ++i)
@@ -60,7 +60,7 @@ namespace Engine::Managers
 
 #if WITH_EDITOR
 		UpdateLayerNames(SceneManager::GetInstance().GetActiveScene());
-		SceneManager::GetInstance().onSceneActive.Listen(GetSharedPtr<CollisionDetector>(), &CollisionDetector::UpdateLayerNames);
+		SceneManager::GetInstance().onSceneActive.Listen(GetWeakPtr<CollisionDetector>(), &CollisionDetector::UpdateLayerNames);
 #endif
 
 	}
@@ -589,6 +589,17 @@ namespace Engine::Managers
 	tbb::concurrent_vector<CollisionInfo>& CollisionDetector::GetCollisionInfo()
 	{
 		return m_collision_produce_queue_;
+    }
+
+    void CollisionDetector::PreDeconstruction()
+    {
+        SceneManager::GetInstance().onSceneActive.Remove( GetWeakPtr<CollisionDetector>(),
+                                                          &CollisionDetector::UpdateScene );
+
+#if WITH_EDITOR
+        SceneManager::GetInstance().onSceneActive.Remove( GetWeakPtr<CollisionDetector>(),
+                                                          &CollisionDetector::UpdateLayerNames );
+#endif
 	}
 
 	CollisionDetector::~CollisionDetector()

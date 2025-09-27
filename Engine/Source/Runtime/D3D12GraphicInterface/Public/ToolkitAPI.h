@@ -14,11 +14,16 @@
 #include <directxtk12/EffectPipelineStateDescription.h>
 #include <directxtk12/SpriteFont.h>
 
+#include "ToolkitAPI.generated.h"
+
 namespace Engine::Managers
 {
+    ECLASS()
 	class ENGINE_D3D12GRAPHICINTERFACE_API ToolkitAPI final : public Abstracts::Singleton<ToolkitAPI>
 	{
 	public:
+		GENERATE_BODY
+
 		explicit ToolkitAPI(SINGLETON_LOCK_TOKEN) {}
 
 		void Initialize() override;
@@ -38,9 +43,12 @@ namespace Engine::Managers
 		DirectX::PrimitiveBatch<DirectX::VertexPositionColor>* GetPrimitiveBatch() const;
 		DirectX::DescriptorHeap*                      GetDescriptorHeap() const;
 
+	protected:
+        void PreDeconstruction() override;
+
 	private:
 		void RegisterDebuggerFunction();
-
+		
 		friend struct SingletonDeleter;
 		~ToolkitAPI() override;
 
