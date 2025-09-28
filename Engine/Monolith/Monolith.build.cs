@@ -108,12 +108,5 @@ public class Monolith : Project
         FastBuildSettings.FastBuildMakeCommand = FastBuildPath;
 
         Utils.AddDefines(conf, target);
-
-	    if (target.GraphicAPI == EGraphicAPI.D3D12)
-        {
-            conf.AddPublicDependency<DirectXTK>(target);
-            conf.Defines.Add("DIRECTX_TOOLKIT_IMPORT");
-            conf.Defines.Add("USE_D3D12");
-        }
     }
 }

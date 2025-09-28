@@ -5,7 +5,7 @@
 #include <Windows.h>
 #endif
 
-#if USE_DX12
+#if USE_D3D12
 #include <directxtk12/Mouse.h>
 #include <directxtk12/Keyboard.h>
 #endif

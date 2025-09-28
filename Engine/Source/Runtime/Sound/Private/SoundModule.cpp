@@ -46,6 +46,11 @@ bool Engine::SoundModule::DynamicLoadable()
 
 const std::vector<std::string>& Engine::SoundModule::LoadAfter() const
 {
-    static const std::vector<std::string> load_after = { "SoundManager" };
+    static const std::vector<std::string> load_after = {
+        "SoundManager",
+#if USE_FMOD
+        "FMODSoundInterface"
+#endif
+    };
     return load_after;
 }
