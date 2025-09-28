@@ -11,11 +11,14 @@
 #include <Windows.h>
 #endif
 
+#if IS_DLL
 std::unique_ptr<Engine::ModuleInfo>              g_os_api      = nullptr;
-std::unique_ptr<Engine::ModuleInfo>              g_graphic_api = nullptr;
 std::unique_ptr<Engine::ModuleInfo>              g_core_mem    = nullptr;
 std::unique_ptr<Engine::ModuleInfo>              g_module_api  = nullptr;
 std::unique_ptr<Engine::ModuleInfo>              g_core_api    = nullptr;
+#endif
+
+std::unique_ptr<Engine::ModuleInfo> g_graphic_api = nullptr;
 
 namespace Engine::Managers
 {
@@ -41,9 +44,22 @@ namespace Engine::Managers
 		}
     }
 
+#if !IS_DLL
+    bool ModuleManager::CheckNoInit( const std::wstring_view module_name )
+    {
+        if ( module_name.find( L"GraphicInterface" ) )
+        {
+            assert( g_graphic_api );
+            return true;
+        }
+
+        return false;
+    }
+#endif
+
+#if IS_DLL
     bool ModuleManager::CheckNoInit( const ModuleInfo* module_info )
     {
-#if IS_DLL
         // Ignore load/unload self
         if ( module_info->m_handle_ == g_module_api->m_handle_ )
         {
@@ -62,7 +78,7 @@ namespace Engine::Managers
             return true;
         }
 
-        // Memory and type management moudle should be loaded before the module manager.
+        // Memory and type management module should be loaded before the module manager.
         if ( module_info->m_handle_ == g_core_mem->m_handle_ )
         {
             return true;
@@ -73,10 +89,9 @@ namespace Engine::Managers
         {
             return true;
         }
-#endif
-
         return false;
     }
+#endif
 
 	void ModuleManager::Initialize()
 	{
@@ -88,7 +103,13 @@ namespace Engine::Managers
         // Remove the dummy core module info.
         for ( auto it = m_module_loaded_.begin(); it != m_module_loaded_.end();)
         {
-            if ( CheckNoInit( it->second.get() ) )
+            if (
+#if IS_DLL
+                CheckNoInit( it->second.get() )
+#else
+                CheckNoInit(it->first )
+#endif
+            )
             {
                 it = m_module_loaded_.erase( it );
             }
@@ -149,6 +170,11 @@ namespace Engine::Managers
             // Static Library
             if ( m_module_initializer_.contains( name.data() ) )
             {
+                if ( CheckNoInit( name.data() ) )
+                {
+                    return nullptr;
+                }
+
                 if ( const ModuleInitializationFunction &func = m_module_initializer_.at( name.data() ) )
                 {
                     module_info->m_module_ = std::unique_ptr<IModule>( func() );
@@ -177,7 +203,7 @@ namespace Engine::Managers
 
                         if ( m_lazy_modules_.contains( name.data() ) )
                         {
-                            RemoveModule( name );
+                            module_info->m_b_lazy = true;
                             return nullptr;
                         }
                     }

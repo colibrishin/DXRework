@@ -11,11 +11,14 @@
 
 #include "ModuleManager.generated.h"
 
+#if IS_DLL
 extern ENGINE_COREMODULE_API std::unique_ptr<Engine::ModuleInfo> g_os_api;
-extern ENGINE_COREMODULE_API std::unique_ptr<Engine::ModuleInfo> g_graphic_api;
 extern ENGINE_COREMODULE_API std::unique_ptr<Engine::ModuleInfo> g_core_mem;
 extern ENGINE_COREMODULE_API std::unique_ptr<Engine::ModuleInfo> g_module_api;
 extern ENGINE_COREMODULE_API std::unique_ptr<Engine::ModuleInfo> g_core_api;
+#endif
+
+extern ENGINE_COREMODULE_API std::unique_ptr<Engine::ModuleInfo> g_graphic_api;
 
 #if !IS_DLL
 #define MODULE_IMPL( ModuleType, Name )                                                                                \
@@ -50,8 +53,11 @@ namespace Engine::Managers
         using ModuleMap     = std::unordered_map<std::wstring, ModuleInfoPtr>;
 
         void TryResolveLazyness( const std::wstring_view name );
+#if IS_DLL
         bool CheckNoInit( const ModuleInfo* module_info );
-
+#else
+        bool CheckNoInit( const std::wstring_view module_name );
+#endif
     public:
         ModuleManager() = default;
         ~ModuleManager();

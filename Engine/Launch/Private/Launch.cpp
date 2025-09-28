@@ -3,9 +3,9 @@
 #else
 #include "WinAPIWrapper.hpp"
 #include "EngineEntryPoint.h"
-#endif
 #include "ModuleInfo.h"
 #include "ModuleManager.h"
+#endif
 
 #if _WIN32 || _WIN64
 int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline, int iCmdshow )

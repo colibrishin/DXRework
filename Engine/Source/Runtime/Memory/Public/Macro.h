@@ -22,7 +22,11 @@
 
 #include "boost/preprocessor/facilities/is_empty.hpp"
 
-#define IS_DLL !BOOST_PP_IS_EMPTY( ENGINE_CORE_API )
+#if BOOST_PP_IS_EMPTY( ENGINE_MEMORY_API )
+#define IS_DLL 0
+#else
+#define IS_DLL 1
+#endif
 
 #ifdef _UNICODE
 #ifndef UNICODE

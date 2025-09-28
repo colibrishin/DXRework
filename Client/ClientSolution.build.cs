@@ -26,6 +26,8 @@ public class ClientProject : CommonProject
         conf.SolutionFolder = @"Client";
 
         conf.AddPublicDependency<Core>(target);
+        conf.AddPublicDependency<CoreModule>(target);
+        conf.AddPublicDependency<Memory>(target);
         conf.AddPublicDependency<Boost>(target);
         conf.AddPublicDependency<TextRenderer>(target);
         conf.AddPublicDependency<Shape>(target);
@@ -34,7 +36,7 @@ public class ClientProject : CommonProject
         conf.AddPublicDependency<ShadowTexture>(target);
         conf.AddPublicDependency<ComputeShader>(target);
         conf.AddPublicDependency<RenderComponent>(target);
-        
+
         conf.AddPrivateDependency<BoneAnimation>(target);
         conf.AddPrivateDependency<Animator>(target);
         conf.AddPrivateDependency<AnimationTexture>(target);

@@ -1,5 +1,5 @@
 #pragma once
-#if Platform == Windowss
+#if _WIN32 || _WIN64
 #include <Windows.h>
 #endif
 

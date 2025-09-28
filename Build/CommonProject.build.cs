@@ -278,6 +278,7 @@ public abstract class CommonProject : Project
         {
             conf.AddPublicDependency<DirectXTK>(target);
             conf.Defines.Add("DIRECTX_TOOLKIT_IMPORT");
+            conf.Defines.Add("USE_D3D12");
         }
     }
 }
