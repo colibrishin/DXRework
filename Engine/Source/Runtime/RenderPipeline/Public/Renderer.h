@@ -438,9 +438,11 @@ namespace Engine::Managers
         
         RenderPassTaskInstantiatedContainer m_render_pass_tasks_[ SHADER_DOMAIN_MAX ];
         RenderPassTaskUsageContainer        m_render_pass_tasks_usage_[ SHADER_DOMAIN_MAX ];
-        
+
+#if IS_DLL
         using BorrowedRenderTasksContainer = std::unordered_map<RenderTaskTraits, BorrowedRenderPassFactories>;
         BorrowedRenderTasksContainer m_render_task_resolvers_;
+#endif
 
 		RenderMap m_render_candidates_[SHADER_DOMAIN_MAX];
 	};

@@ -77,7 +77,8 @@ public class Utils
             OutputType.Lib,
             EGraphicAPI.D3D12,
             ERenderType.Deferred,
-            ERaytracing.On
+            ERaytracing.On,
+            ESoundInterface.FMOD
         );
     }
 
@@ -86,12 +87,20 @@ public class Utils
         if (target.Platform == Platform.win64 || target.Platform == Platform.win32)
         {
             conf.Defines.Add("WIN32_LEAN_AND_MEAN");
+            conf.Defines.Add("PLATFORM=Windows");
         }
 
         conf.Defines.Add("NOMINMAX=1");
+        
         if (target.GraphicAPI == EGraphicAPI.D3D12) 
         {
-            conf.Defines.Add("USE_DX12");
+            conf.Defines.Add("USE_D3D12");
+            conf.AddPublicDependency<DirectXTK>(target);
+            conf.Defines.Add("DIRECTX_TOOLKIT_IMPORT");
+        }
+        if (target.SoundInterface == ESoundInterface.FMOD)
+        {
+            conf.Defines.Add("USE_FMOD");
         }
 
         conf.Defines.Add($"CFG_RAYTRACING={Convert.ToInt32(target.Raytracing == ERaytracing.On)}");

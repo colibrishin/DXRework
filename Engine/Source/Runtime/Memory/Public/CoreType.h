@@ -1525,7 +1525,7 @@ public:
 
 extern ENGINE_MEMORY_API PoolAllocatorStorage g_allocator_storage;
 
-#if defined( _DEBUG ) && defined( _WIN32 )
+#if defined( _DEBUG ) && Platform == Windows
 #define _CRTDBG_MAP_ALLOC
 #include <crtdbg.h>
 #include <iostream>

@@ -61,7 +61,7 @@ namespace Engine
         static constexpr size_t value = 65535;
     };
 
-#ifdef _WIN32
+#if PLATFORM == Windows
     struct winsock_udp_connreset
     {
         unsigned long value = 0;
@@ -179,7 +179,7 @@ namespace Engine
                 return false;
             }
 
-#if _WIN32
+#if PLATFORM == Windows
             static winsock_udp_connreset conn_reset_flag{};
             m_socket_.set_option( boost::asio::socket_base::reuse_address( true ) );
             m_socket_.io_control( conn_reset_flag );

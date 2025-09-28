@@ -7,15 +7,18 @@
 #include "ModuleInfo.h"
 #include "IModule.h"
 
-#if _WIN32 || _WIN64
+#if PLATFORM == Windows
 #include <Windows.h>
 #endif
 
+#if IS_DLL
 std::unique_ptr<Engine::ModuleInfo>              g_os_api      = nullptr;
-std::unique_ptr<Engine::ModuleInfo>              g_graphic_api = nullptr;
 std::unique_ptr<Engine::ModuleInfo>              g_core_mem    = nullptr;
 std::unique_ptr<Engine::ModuleInfo>              g_module_api  = nullptr;
 std::unique_ptr<Engine::ModuleInfo>              g_core_api    = nullptr;
+#endif
+
+std::unique_ptr<Engine::ModuleInfo> g_graphic_api = nullptr;
 
 namespace Engine::Managers
 {
@@ -41,9 +44,39 @@ namespace Engine::Managers
 		}
     }
 
+#if !IS_DLL
+    bool ModuleManager::CheckNoInit( const std::wstring_view module_name )
+    {
+        if ( module_name.find( L"GraphicInterface" ) != std::wstring::npos )
+        {
+            assert( g_graphic_api );
+            return true;
+        }
+
+        if ( module_name == L"Memory" )
+        {
+            return true;
+        }
+
+        if ( module_name == L"CoreModule" )
+        {
+            return true;
+        }
+
+#if PLATFORM == Windows
+        if ( module_name == L"WinAPIWrapper" )
+        {
+            return true;
+        }
+#endif
+
+        return false;
+    }
+#endif
+
+#if IS_DLL
     bool ModuleManager::CheckNoInit( const ModuleInfo* module_info )
     {
-#if IS_DLL
         // Ignore load/unload self
         if ( module_info->m_handle_ == g_module_api->m_handle_ )
         {
@@ -62,7 +95,7 @@ namespace Engine::Managers
             return true;
         }
 
-        // Memory and type management moudle should be loaded before the module manager.
+        // Memory and type management module should be loaded before the module manager.
         if ( module_info->m_handle_ == g_core_mem->m_handle_ )
         {
             return true;
@@ -73,10 +106,9 @@ namespace Engine::Managers
         {
             return true;
         }
-#endif
-
         return false;
     }
+#endif
 
 	void ModuleManager::Initialize()
 	{
@@ -88,7 +120,13 @@ namespace Engine::Managers
         // Remove the dummy core module info.
         for ( auto it = m_module_loaded_.begin(); it != m_module_loaded_.end();)
         {
-            if ( CheckNoInit( it->second.get() ) )
+            if (
+#if IS_DLL
+                CheckNoInit( it->second.get() )
+#else
+                CheckNoInit(it->first )
+#endif
+            )
             {
                 it = m_module_loaded_.erase( it );
             }
@@ -149,49 +187,72 @@ namespace Engine::Managers
             // Static Library
             if ( m_module_initializer_.contains( name.data() ) )
             {
-                if ( const ModuleInitializationFunction &func = m_module_initializer_.at( name.data() ) )
+                if ( !CheckNoInit( name.data() ) )
                 {
-                    module_info->m_module_ = std::unique_ptr<IModule>( func() );
-
-                    if ( module_info->m_module_ )
+                    if ( const ModuleInitializationFunction& func = m_module_initializer_.at( name.data() ) )
                     {
-                        for ( const std::string_view required : module_info->m_module_->LoadAfter() )
-                        {
-                            std::wstring conversion( required.begin(), required.end() );
+                        module_info->m_module_ = std::unique_ptr<IModule>( func() );
+                        // Assuming that the dependent libraries are loaded.
+                        module_info->m_b_lazy = false;
 
-                            if ( !FindModule( conversion ) )
+                        if ( module_info->m_module_ )
+                        {
+                            for ( const std::string_view required : module_info->m_module_->LoadAfter() )
                             {
-                                m_lazy_modules_[ name.data() ].insert( conversion );
+                                std::wstring conversion( required.begin(), required.end() );
+
+                                if ( CheckNoInit( conversion ) )
+                                {
+                                    continue;
+                                }
+
+                                if ( !FindModule( conversion ) )
+                                {
+                                    m_lazy_modules_[ name.data() ].insert( conversion );
+                                    module_info->m_b_lazy = true;
+                                }
                             }
-                        }
 
-                        for ( const std::string_view dependency : module_info->m_module_->GetDependencies() )
-                        {
-                            std::wstring conversion( dependency.begin(), dependency.end() );
-
-                            if ( !FindModule( conversion ) )
+                            for ( const std::string_view dependency : module_info->m_module_->GetDependencies() )
                             {
-                                m_lazy_modules_[ name.data() ].insert( conversion );
-                            }
-                        }
+                                std::wstring conversion( dependency.begin(), dependency.end() );
 
-                        if ( m_lazy_modules_.contains( name.data() ) )
-                        {
-                            RemoveModule( name );
-                            return nullptr;
+                                if ( CheckNoInit( conversion ) )
+                                {
+                                    continue;
+                                }
+
+                                if ( !FindModule( conversion ) )
+                                {
+                                    m_lazy_modules_[ name.data() ].insert( conversion );
+                                    module_info->m_b_lazy = true;
+                                }
+                            }
+
+                            if ( m_lazy_modules_.contains( name.data() ) )
+                            {
+                                module_info->m_b_lazy = true;
+                                return nullptr;
+                            }
+
+
+                            module_info->m_module_->Initialize();
+                            m_module_load_order_.emplace_back( name.data() );
                         }
                     }
+                    else
+                    {
+                        return nullptr;
+                    }
+                }
 
-					std::string conversion( name.begin(), name.end() );
-					CONSOLE_OUT( "ModuleManager", "Module {} loaded", conversion.c_str() )
+                if ( !module_info->m_b_lazy )
+                {
+                    std::string conversion( name.begin(), name.end() );
+                    CONSOLE_OUT( "ModuleManager", "Module {} loaded", conversion.c_str() )
 
-                    module_info->m_module_->Initialize();
                     TryResolveLazyness( name );
                     return module_info->m_module_.get();
-                }
-                else
-                {
-                    return nullptr;
                 }
             }
 #else
@@ -292,7 +353,7 @@ namespace Engine::Managers
             if ( ModuleInfoPtr ptr = std::move( m_module_loaded_.at(*it) ) )
             {
 #if IS_DLL
-#if _WIN32 || _WIN64
+#if PLATFORM == Windows
                 if ( HMODULE module = static_cast<HMODULE>( ptr->m_handle_ ) )
                 {
                     FreeLibrary( module );

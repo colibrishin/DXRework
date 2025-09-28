@@ -17,7 +17,7 @@ void PoolAllocatorStorage::cleanup()
     m_allocators_.clear();
 }
 
-inline void PoolAllocatorStorage::report_leakage()
+void PoolAllocatorStorage::report_leakage()
 {
 #if _WIN32 || _WIN64
 #define _CRTDBG_MAP_ALLOC

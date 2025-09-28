@@ -47,12 +47,18 @@ public enum ERaytracing
     On = 1 << 1
 }
 
+public enum ESoundInterface 
+{
+    FMOD = 1 << 0,
+}
+
 public class EngineTarget : Target
 {
     public ELaunchType LaunchType;
     public EGraphicAPI GraphicAPI;
     public ERenderType RenderType;
     public ERaytracing Raytracing;
+    public ESoundInterface SoundInterface;
 
     public EngineTarget() { }
     public EngineTarget(
@@ -64,6 +70,7 @@ public class EngineTarget : Target
         EGraphicAPI graphicAPI = EGraphicAPI.D3D12,
         ERenderType renderType = ERenderType.Deferred,
         ERaytracing raytracing = ERaytracing.On,
+        ESoundInterface soundInterface = ESoundInterface.FMOD,
         Blob blob = Blob.NoBlob,
         BuildSystem buildSystem = BuildSystem.FastBuild,
         DotNetFramework framework = DotNetFramework.v3_5) 
@@ -73,6 +80,7 @@ public class EngineTarget : Target
         GraphicAPI = graphicAPI;
         RenderType = renderType;
         Raytracing = raytracing;
+        SoundInterface = soundInterface;
     }
 }
 
@@ -273,11 +281,5 @@ public abstract class CommonProject : Project
         conf.CustomProperties.Add("CustomOptimizationProperty", $"Custom-{target.Optimization}");
 
         Utils.AddDefines(conf, target);
-
-        if (target.GraphicAPI == EGraphicAPI.D3D12)
-        {
-            conf.AddPublicDependency<DirectXTK>(target);
-            conf.Defines.Add("DIRECTX_TOOLKIT_IMPORT");
-        }
     }
 }

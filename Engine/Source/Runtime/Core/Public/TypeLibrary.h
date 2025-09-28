@@ -8,7 +8,7 @@
 #include "Allocator.h"
 #include "CoreType.h"
 
-#if defined(USE_DX12)
+#if defined(USE_D3D12)
 #include <directxtk12/SimpleMath.h>
 #include <directxtk12/SimpleMath.inl>
 #include <wrl/client.h>

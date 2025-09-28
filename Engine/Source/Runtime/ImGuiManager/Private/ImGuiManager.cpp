@@ -5,7 +5,7 @@
 #include "imgui_stdlib.h"
 #include "IUIAPI.h"
 
-#if USE_DX12
+#if USE_D3D12
 #include "imgui_impl_dx12.h"
 #include "CommandPair.h"
 #endif
@@ -45,7 +45,7 @@ namespace Engine::Managers
 		ImGui_ImplWin32_Init(WinAPI::WinAPIWrapper::GetHWND());
 #endif
 		
-#if USE_DX12
+#if USE_D3D12
 		const auto& cpu_handle = *static_cast<D3D12_CPU_DESCRIPTOR_HANDLE*>(m_imgui_descriptor_->GetNativeCPUHandle());
 		const auto& gpu_handle = *static_cast<D3D12_GPU_DESCRIPTOR_HANDLE*>(m_imgui_descriptor_->GetNativeGPUHandle());
 		
@@ -68,11 +68,11 @@ namespace Engine::Managers
         WinAPI::WinAPIWrapper::UnregisterHandler( "ImGuiManager" );
 
 #if WITH_EDITOR
-#if USE_DX12
+#if USE_D3D12
         ImGui_ImplDX12_Shutdown();
 #endif
 
-#if _WIN32 || _WIN64
+#if PLATFORM == Windows
         ImGui_ImplWin32_Shutdown();
 #endif
 
@@ -103,7 +103,7 @@ namespace Engine::Managers
 		gi.SetViewport(&primitive, RenderPipeline::GetInstance().GetViewport());
 		m_imgui_descriptor_->BindGraphic(&primitive);
 
-#if USE_DX12
+#if USE_D3D12
 		const auto cmd = static_cast<CommandPair*>(primitive.commandList);
 		
 		ImGui_ImplDX12_RenderDrawData
@@ -477,7 +477,7 @@ void Engine::ImGuiUIInterface::NewFrame()
 {
 #if WITH_EDITOR
 		
-#if USE_DX12
+#if USE_D3D12
 	ImGui_ImplDX12_NewFrame();
 #endif
 		

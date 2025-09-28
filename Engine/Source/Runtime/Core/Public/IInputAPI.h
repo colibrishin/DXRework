@@ -16,7 +16,7 @@ namespace Engine
 	};
 
 #if Platform == Windows
-#if USE_DX12
+#if USE_D3D12
 	// Direct definition import from DirectXTK Inputs
 	enum ENGINE_CORE_API MouseMode : uint32_t
 	{

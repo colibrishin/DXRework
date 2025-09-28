@@ -32,11 +32,7 @@ bool Engine::CameraManagerModule::DynamicLoadable()
 
 const std::vector<std::string>& Engine::CameraManagerModule::LoadAfter() const
 {
-    static const std::vector<std::string> load_after = {
-#ifdef USE_DX12
-        "RenderPipeline",
-#endif
-    };
+    static const std::vector<std::string> load_after = { "RenderPipeline" };
 
     return load_after;
 }
