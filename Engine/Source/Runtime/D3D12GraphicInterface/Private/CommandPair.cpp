@@ -240,8 +240,7 @@ namespace Engine
 
 	void CommandPairPool::Initialize(ID3D12Device2* dev, const Weak<DescriptorHandlerBase>& handler, CommandPairTask* task)
 	{
-		if (bool expected = false; 
-			m_b_initialized_.compare_exchange_strong(expected, true))
+		if ( !m_b_initialized_.exchange( true ) )
 		{
 			m_dev_ = dev;
 			m_task_ = task;
@@ -538,8 +537,7 @@ namespace Engine
 
 		pair->m_b_ready_    = false;
 
-		if (bool expected = false;
-			pair->m_b_executed_.compare_exchange_strong(expected, true))
+		if ( !pair->m_b_executed_.exchange( true ) )
 		{
 			pair->m_b_executed_.notify_all();
 		}

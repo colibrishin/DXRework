@@ -28,24 +28,19 @@ Engine::SpinLockTicket Engine::SingletonSpinLock::Register()
 
 Engine::SpinLockToken Engine::SingletonSpinLock::Lock(const SpinLockTicket& ticket)
 {
+	Engine::Strong<std::atomic<bool>> lock_ptr;
 	SelfLock();
-	if (!m_spin_locks_.contains(ticket.m_idx_))
+	if ( !m_spin_locks_.contains( ticket.m_idx_ ) )
 	{
-		return SpinLockToken{(size_t)-1};
-	}
-	SelfUnlock();
-	
-
-	while (true)
-	{
-		bool success = false;
-		SelfLock();
-		bool expected = false;
-		success = m_spin_locks_[ticket.m_idx_]->compare_exchange_strong(expected, true);
 		SelfUnlock();
-
-		if (success) return SpinLockToken{ticket.m_idx_};
+		return SpinLockToken{ (size_t)-1 };
 	}
+	lock_ptr = m_spin_locks_[ticket.m_idx_];
+	SelfUnlock();
+
+	while ( lock_ptr->exchange( true ) )
+	{ }
+	return SpinLockToken{ ticket.m_idx_ };
 }
 
 Engine::SingletonSpinLock::~SingletonSpinLock() {}
@@ -62,38 +57,27 @@ void Engine::SingletonSpinLock::Unregister(const size_t idx)
 
 void Engine::SingletonSpinLock::Unlock(const size_t idx)
 {
+	Engine::Strong<std::atomic<bool>> lock_ptr;
 	SelfLock();
-	if (!m_spin_locks_.contains(idx))
+	if ( !m_spin_locks_.contains( idx ) )
 	{
+		SelfUnlock();
 		return;
 	}
+	lock_ptr = m_spin_locks_[idx];
 	SelfUnlock();
-	
 
-	while (true)
-	{
-		bool success = false;
-		SelfLock();
-		bool expected = true;
-		success = m_spin_locks_[idx]->compare_exchange_strong(expected, false);
-		SelfUnlock();
-
-		if (success) return;
-	}
+	if ( lock_ptr )
+		lock_ptr->store( false );
 }
 
 void Engine::SingletonSpinLock::SelfLock()
 {
-	{
-		bool expected = false;
-		while (!m_critical_lock_.compare_exchange_strong(expected, true)) {}
-	}
+	while ( m_critical_lock_.exchange( true ) )
+	{ }
 }
 
 void Engine::SingletonSpinLock::SelfUnlock()
 {
-	{
-		bool expected = true;
-		while (!m_critical_lock_.compare_exchange_strong(expected, false)) {}
-	}
+	m_critical_lock_.store( false );
 }

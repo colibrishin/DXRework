@@ -264,8 +264,7 @@ namespace Engine
                                                              std::placeholders::_1,
                                                              std::placeholders::_2 ) );
 
-                    bool expected = false;
-                    while ( !m_recv_running_[ idx ].compare_exchange_strong( expected, true ) )
+                    while ( m_recv_running_[ idx ].exchange( true ) )
                     { }
 
                     CONSOLE_OUT( "BoostContext", "Start the receiving thread {}", idx )
@@ -311,12 +310,7 @@ namespace Engine
 
             for ( std::atomic<bool>& flag : m_recv_running_ )
             {
-                if ( flag )
-                {
-                    bool expected = true;
-                    while ( !flag.compare_exchange_strong( expected, false ) )
-                    { }
-                }
+                flag.store( false );
             }
 
             m_socket_.close();
