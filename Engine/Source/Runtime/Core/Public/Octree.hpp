@@ -4,9 +4,7 @@
 #include <stack>
 #include <vector>
 #include <queue>
-#include <map>
 #include <memory>
-#include <set>
 
 #include "Debugger.h"
 
@@ -323,15 +321,15 @@ namespace Engine
         {
             unsigned attempt = 0;
 
-            // todo: check whether the node is orphan.
-            std::stack<octree_impl*>     stack;
-            std::map<octree_impl*, bool> visited;
-
-            stack.push(this);
+            // Traversal is predictable: go down to terminal then back up. Use (node, phase) on stack
+            // instead of a map; phase true = post-visit (coming back up).
+            using stack_frame = std::pair<octree_impl*, bool>;
+            std::stack<stack_frame> stack;
+            stack.emplace(this, false);
 
             while ( !stack.empty() )
             {
-                const auto node = stack.top();
+                auto [node, post_visit] = stack.top();
 
                 auto&       life_count           = node->m_life_count_;
                 auto&       node_value           = node->m_values_;
@@ -341,7 +339,7 @@ namespace Engine
                 const auto& node_extent          = node->Extent();
                 const auto& node_center          = node->WorldCenter();
 
-                if ( visited.contains(node) && visited[ node ] )
+                if ( post_visit )
                 {
                     if ( !node_value.empty() )
                     {
@@ -406,7 +404,7 @@ namespace Engine
                     continue;
                 }
 
-                if ( !visited.contains(node) && !visited[ node ] )
+                // First visit (going down): process node, then push post-visit frame and children
                 {
                     if ( !node->m_b_initialized_ )
                     {
@@ -497,15 +495,14 @@ namespace Engine
                         }
                     }
 
+                    stack.emplace(node, true); // post-visit after children
                     for ( int i = 0; i < octant_count; ++i )
                     {
                         if ( node_children[ i ] )
                         {
-                            stack.push(node_children[ i ].get());
+                            stack.emplace(node_children[ i ].get(), false);
                         }
                     }
-
-                    visited[ node ] = true;
                 }
             }
         }
@@ -573,25 +570,23 @@ namespace Engine
 
         [[nodiscard]] std::vector<WeakT> Nearest(const Vector3& point, float distance) const
         {
-            std::stack<const octree_impl*> q;
-            std::set<const octree_impl*>   visited;
-            std::vector<WeakT>             result;
-            const BoundingSphere           search_sphere(point,
-                                                         distance);
+            using query_frame = std::pair<const octree_impl*, bool>;
+            std::stack<query_frame> q;
+            std::vector<WeakT>      result;
+            const BoundingSphere    search_sphere(point, distance);
 
-            q.push(this);
+            q.emplace(this, false);
 
             while ( !q.empty() )
             {
-                const auto node = q.top();
+                auto [node, expanded] = q.top();
+                q.pop();
 
                 const auto& value    = node->m_values_;
                 const auto& children = node->m_children_;
 
-                if ( visited.contains(node) )
+                if ( expanded )
                 {
-                    q.pop();
-
                     for ( const auto& v : value )
                     {
                         if ( const auto& locked = v.lock() )
@@ -603,17 +598,15 @@ namespace Engine
                             }
                         }
                     }
-
                     continue;
                 }
 
-                visited.insert(node);
-
+                q.emplace(node, true);
                 for ( const auto& child : children )
                 {
                     if ( child && child->Intersects(search_sphere) )
                     {
-                        q.push(child.get());
+                        q.emplace(child.get(), false);
                     }
                 }
             }
@@ -626,24 +619,23 @@ namespace Engine
                                                  size_t         count    = 0,
                                                  float          distance = 0.f) const
         {
-            std::stack<const octree_impl*> q;
-            std::set<const octree_impl*>   visited;
-            std::vector<WeakT>             result;
-            float                          dist = 0.f;
+            using query_frame = std::pair<const octree_impl*, bool>;
+            std::stack<query_frame> q;
+            std::vector<WeakT>     result;
+            float                  dist = 0.f;
 
-            q.push(this);
+            q.emplace(this, false);
 
             while ( !q.empty() )
             {
-                const auto node = q.top();
+                auto [node, expanded] = q.top();
+                q.pop();
 
                 const auto& value    = node->m_values_;
                 const auto& children = node->m_children_;
 
-                if ( visited.contains(node) )
+                if ( expanded )
                 {
-                    q.pop();
-
                     for ( const auto& v : value )
                     {
                         if ( const auto& locked = v.lock() )
@@ -671,19 +663,15 @@ namespace Engine
                             }
                         }
                     }
-
                     continue;
                 }
 
-                visited.insert(node);
-
+                q.emplace(node, true);
                 for ( const auto& child : children )
                 {
-                    if ( child && child->Intersects(point,
-                                                    direction,
-                                                    dist) )
+                    if ( child && child->Intersects(point, direction, dist) )
                     {
-                        q.push(child.get());
+                        q.emplace(child.get(), false);
                     }
                 }
             }
