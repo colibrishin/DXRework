@@ -1020,11 +1020,40 @@ namespace Engine
         template <typename... Args>
         unique_octree&& allocate(Args&&... args)
         {
-            unique_octree* ptr  = get_ptr_allocator().allocate( 1 );
-            octree_impl*   impl = get_impl_allocator().allocate( 1 );
-            new(ptr) unique_octree(new(impl) octree_impl(std::forward<Args>(args)...));
+            unique_octree* ptr = get_ptr_allocator().allocate( 1 );
+            octree_impl*   impl = nullptr;
+            try
+            {
+                impl = get_impl_allocator().allocate( 1 );
+            }
+            catch ( ... )
+            {
+                get_ptr_allocator().deallocate( ptr, 1 );
+                throw;
+            }
+            try
+            {
+                new ( impl ) octree_impl( std::forward<Args>( args )... );
+            }
+            catch ( ... )
+            {
+                get_impl_allocator().deallocate( impl, 1 );
+                get_ptr_allocator().deallocate( ptr, 1 );
+                throw;
+            }
+            try
+            {
+                new ( ptr ) unique_octree( impl );
+            }
+            catch ( ... )
+            {
+                get_impl_allocator().destroy( impl );
+                get_impl_allocator().deallocate( impl, 1 );
+                get_ptr_allocator().deallocate( ptr, 1 );
+                throw;
+            }
             impl->m_pointer_ = ptr;
-            return std::move(*ptr);
+            return std::move( *ptr );
         }
 
         unique_octree*                                      m_pointer_;
