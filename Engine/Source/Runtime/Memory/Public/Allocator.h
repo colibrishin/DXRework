@@ -1,5 +1,6 @@
 #pragma once
 #include <set>
+#include <tuple>
 #include <unordered_map>
 #include <map>
 #include <queue>
@@ -53,8 +54,17 @@ namespace Engine
 
 extern ENGINE_MEMORY_API std::unordered_map<size_t, Engine::alloc_base*> g_static_alloc;
 
-namespace Engine 
+namespace Engine
 {
+    // RTTI-free type key: unique address per type for hashing and map keys.
+    template <typename T>
+    struct type_key
+    {
+        static const int id;
+    };
+    template <typename T>
+    const int type_key<T>::id = 0;
+
     template <typename... Args>
     struct identify
     {
@@ -75,8 +85,7 @@ namespace Engine
         template <typename T, template <typename T> typename Identity>
         size_t predicate_hash( Identity<T> )
         {
-            size_t value = typeid( T ).hash_code();
-            return value;
+            return std::hash<const void*>{}( static_cast<const void*>( &type_key<T>::id ) );
         }
 
         template <size_t Index, typename... Args >
@@ -106,7 +115,7 @@ namespace Engine
         }
     };
 
-    using memory_clean_container = std::unordered_map<std::type_index, bool ( * )()>;
+    using memory_clean_container = std::unordered_map<const void*, bool ( * )()>;
 
     struct alloc_base
     {
@@ -162,7 +171,7 @@ namespace Engine
 
         memory_clean_container& get_rebind_purge() const override
         {
-            return s_rebind_release;
+            return s_rebind_purge;
         }
 
 		using pool_type       = boost::singleton_pool<crowded_tag<RebindFrom, AllocateFast::value>,
@@ -224,8 +233,8 @@ namespace Engine
         {
             using origin_allocator =
                     tag_pool_alloc<RebindFrom, AllocateFast, UserAllocator, RebindFrom, Mutex, NextSize, MaxSize>;
-            origin_allocator::s_rebind_release.emplace( typeid(pool_type), & tag_pool_alloc::static_release_memory );
-            origin_allocator::s_rebind_purge.emplace( typeid( pool_type ), & tag_pool_alloc::static_purge_memory );
+            origin_allocator::s_rebind_release.emplace( static_cast<const void*>( &type_key<pool_type>::id ), & tag_pool_alloc::static_release_memory );
+            origin_allocator::s_rebind_purge.emplace( static_cast<const void*>( &type_key<pool_type>::id ), & tag_pool_alloc::static_purge_memory );
             pool_type::is_from( 0 );
         }
 
@@ -326,6 +335,7 @@ namespace Engine
         }
 	};
 
+    // Alignment: use e.g. std::integral_constant<size_t, 64> for L1 cache-line alignment.
     template <class T, typename Alignment = std::integral_constant<size_t, 8>, typename RebindFrom = T>
     class aligned_alloc : public alloc_base
     {
@@ -333,6 +343,17 @@ namespace Engine
 
     private:
         std::unordered_map<T*, size_t> m_allocated_ptr_;
+
+        static constexpr size_t alloc_alignment()
+        {
+            constexpr size_t a = Alignment::value;
+            constexpr size_t t = boost::alignment_of<T>::value;
+            return a >= t ? a : t;
+        }
+        static size_t align_up( size_t size, size_t alignment )
+        {
+            return ( size + alignment - 1 ) & ~( alignment - 1 );
+        }
 
     public:
         inline static memory_clean_container s_rebind_release = {};
@@ -392,21 +413,19 @@ namespace Engine
             : alloc_base( get_instanced(), true, packed_hash().operator()<U, Alignment, RebindFrom>() )
         {
             using origin_allocator = aligned_alloc<RebindFrom, Alignment, RebindFrom>;
-            origin_allocator::s_rebind_release.emplace( typeid(pool_type), & aligned_alloc::static_release_memory );
-            origin_allocator::s_rebind_purge.emplace( typeid( pool_type ), &aligned_alloc::static_purge_memory );
+            origin_allocator::s_rebind_release.emplace( static_cast<const void*>( &type_key<pool_type>::id ), & aligned_alloc::static_release_memory );
+            origin_allocator::s_rebind_purge.emplace( static_cast<const void*>( &type_key<pool_type>::id ), &aligned_alloc::static_purge_memory );
         }
 
         pointer allocate( size_t size, const void* = 0 )
         {
-            enum
-            {
-                m = boost::alignment::detail::max_size<Alignment::value, boost::alignment_of<T>::value>::value
-            };
             if ( size == 0 )
             {
                 return 0;
             }
-            void* p = boost::alignment::aligned_alloc( m, sizeof( T ) * size );
+            const size_t region_bytes = sizeof( T ) * size;
+            const size_t aligned_region = align_up( region_bytes, Alignment::value );
+            void* p = boost::alignment::aligned_alloc( alloc_alignment(), aligned_region );
             if ( !p )
             {
                 boost::alignment::detail::throw_exception( std::bad_alloc() );
@@ -442,31 +461,25 @@ namespace Engine
         bool release_memory() override
         {
             bool removed = false;
-            for (const auto& [ptr, size] : m_allocated_ptr_)
+            for ( const auto& [ ptr, size ] : m_allocated_ptr_ )
             {
-                const size_t alignment =
-                        boost::alignment::detail::max_size<Alignment::value, boost::alignment_of<T>::value>::value;
-
-                for ( int i = 0; i < size; ++i )
+                for ( size_t i = 0; i < size; ++i )
                 {
-                    destroy<T>( reinterpret_cast<T*>( ( uintptr_t )ptr + ( alignment * i ) ) );
+                    destroy<T>( reinterpret_cast<T*>( ( uintptr_t )ptr + ( sizeof( T ) * i ) ) );
                     removed = true;
                 }
             }
-
             return removed;
         }
 
         bool purge_memory() override
         {
-            bool removed = false;
-            for ( const auto& [ ptr, size ] : m_allocated_ptr_ )
+            std::vector<std::pair<pointer, size_t>> copy( m_allocated_ptr_.begin(), m_allocated_ptr_.end() );
+            for ( const auto& [ ptr, size ] : copy )
             {
                 deallocate( ptr, size );
-                removed = true;
             }
-
-            return removed;
+            return !copy.empty();
         }
 
         static bool static_release_memory()
@@ -476,7 +489,7 @@ namespace Engine
 
         static bool static_purge_memory()
         {
-            return get_instanced()->release_memory();
+            return get_instanced()->purge_memory();
         }
     };
 

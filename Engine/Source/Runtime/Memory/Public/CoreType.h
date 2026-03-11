@@ -16,7 +16,6 @@
 #include <mutex>
 #include <ranges>
 #include <type_traits>
-#include <typeindex>
 
 #include <boost/serialization/base_object.hpp>
 #include <boost/serialization/export.hpp>
@@ -1026,6 +1025,14 @@ BOOST_CLASS_EXPORT_KEY(HashTypeImpl)
 using HashTypeValue = const HashTypeImpl;
 using HashType = const HashTypeValue*;
 
+struct HashTypeHash
+{
+	size_t operator()( HashType p ) const noexcept
+	{
+		return std::hash<const void*>{}( static_cast<const void*>( p ) );
+	}
+};
+
 template <typename T> struct type_hash;
 
 template <size_t Count>
@@ -1152,16 +1159,11 @@ struct polymorphic_type_hash<##Type##>\
 	{\
 		HashArray<upcast_count> ret{&type_hash<##Type##>::value};\
 		std::copy_n(polymorphic_type_hash<##Base##>::upcast_array.begin(),  polymorphic_type_hash<##Base##>::upcast_array.size(), ret.data() + 1);\
-		std::ranges::sort(ret, [](const auto lhs, const auto rhs) {return *lhs < *rhs;});\
 		return ret;\
 	}();\
 	constexpr static bool is_derived_of(const HashType base)\
 	{\
-		if constexpr ((upcast_count * sizeof(HashTypeValue)) < (1 << 7))\
-		{\
-			return std::ranges::find_if(upcast_array, [&base](const auto other){return base->Equal(*other);}) != upcast_array.end();\
-		}\
-		return std::ranges::binary_search(upcast_array, base, [](const auto lhs, const auto rhs){return *lhs < *rhs;});\
+		return std::ranges::find_if(upcast_array, [&base](const auto other){ return base->Equal(*other); }) != upcast_array.end();\
 	}\
 };
 
@@ -1170,6 +1172,31 @@ struct is_hash_type : std::false_type {};
 
 template <typename T>
 struct is_hash_type<T, std::void_t<decltype(&T::StaticTypeHash)>> : std::true_type {};
+
+// RTTI-free replacement for dynamic_cast<T*>(ptr). Uses HashType + IsDerivedOf (no vtable comparison).
+// Requires: U has GetTypeHash() (e.g. INLINE_COMPILE_TIME_TYPENAME) and POLYMORPHIC_TYPE_MAP(U, ...) for the hierarchy.
+template <typename T, typename U>
+T* safe_cast( U* ptr ) noexcept
+{
+	if ( !ptr )
+		return nullptr;
+	if constexpr ( is_hash_type<std::remove_cv_t<U>>::value )
+	{
+		if ( ptr->GetTypeHash()->IsDerivedOf( &type_hash<T>::value ) )
+			return static_cast<T*>( ptr );
+	}
+	return nullptr;
+}
+
+// RTTI-free replacement for dynamic_cast<T&>(*ptr). Throws std::bad_cast if the cast fails.
+template <typename T, typename U>
+T& safe_cast_ref( U* ptr )
+{
+	T* p = safe_cast<T>( ptr );
+	if ( !p )
+		throw std::bad_cast();
+	return *p;
+}
 
 template <typename T, typename = void>
 struct is_predtor_defined : std::false_type
@@ -1189,9 +1216,14 @@ std::atomic<bool>& get_spinlock()
 
 inline void do_lock( std::atomic<bool>& mtx, const bool value )
 {
-    bool expected = !value;
-    while ( !mtx.compare_exchange_strong( expected, value ) )
+    if ( value )
     {
+        while ( mtx.exchange( true ) )
+        { }
+    }
+    else
+    {
+        mtx.store( false );
     }
 }
 
@@ -1326,7 +1358,7 @@ private:
     AllocationKey              m_key_                     = null_pair;
     mutable size_t             m_type_reallocation_count_ = -1;
     const pool_allocator_base* m_allocator_               = nullptr;
-    std::type_index      m_allocator_type_          = typeid( void );
+    HashType                   m_allocator_type_          = nullptr;
     mutable void*              m_ptr_				      = nullptr;
 
 	template <typename T>
@@ -1426,7 +1458,7 @@ public:
         assert( key != null_pair && alloc );
         m_key_                     = key;
         m_allocator_               = alloc;
-        m_allocator_type_          = typeid( T );
+	m_allocator_type_          = &type_hash<T>::value;
 		m_type_reallocation_count_ = m_allocator_->allocation_count();
         m_ptr_                     = m_allocator_->get_ptr( *this );   
 	}
@@ -1451,7 +1483,7 @@ public:
         return m_allocator_;
 	}
 
-	std::type_index allocator_type() const 
+	HashType allocator_type() const 
 	{
 		return m_allocator_type_;
 	}
@@ -1499,22 +1531,23 @@ object_pool_allocator<T>& get_instanced_pool_allocator()
 class ENGINE_MEMORY_API PoolAllocatorStorage
 {
 private:
-    std::unordered_map<std::type_index, pool_allocator_base*> m_allocators_;
+    std::unordered_map<HashType, pool_allocator_base*, HashTypeHash> m_allocators_;
 
 public:
     template <typename T>
     object_pool_allocator<T>& get_allocator()
     {
-        if ( !m_allocators_.contains( typeid( T ) ) )
+        const HashType key = &type_hash<T>::value;
+        if ( !m_allocators_.contains( key ) )
         {
             auto& instanced = get_instanced_pool_allocator<T>();
-            m_allocators_.emplace( typeid( T ), &instanced );
+            m_allocators_.emplace( key, &instanced );
         }
 
-        return reinterpret_cast<object_pool_allocator<T>&>( *m_allocators_.at( typeid( T ) ) );
+        return reinterpret_cast<object_pool_allocator<T>&>( *m_allocators_.at( key ) );
     }
 
-	bool is_allocator_live( const std::type_index& type ) const
+	bool is_allocator_live( HashType type ) const
 	{
         return m_allocators_.contains( type );
 	}
@@ -1720,18 +1753,12 @@ public:
     AllocationContext allocate( Args&&... arguments )
     {
         init();
-        bool entry_expected  = false;
-        bool return_expected = true;
-
-        while ( !m_lock_.compare_exchange_strong( entry_expected, true ) )
-        {
-        }
+        while ( m_lock_.exchange( true ) )
+        { }
         const AllocationKey          next_pair = get_free_space();
         AllocationContext            context( next_pair, this );
         flip<true>( next_pair );
-        while ( !m_lock_.compare_exchange_strong( return_expected, false ) )
-        {
-        }
+        m_lock_.store( false );
         ConstructorAccess::InternalConstruct<T>( m_start_ptr_ + next_pair.to_raw_index(),
                                                  std::forward<Args>( arguments )... );
 
@@ -1741,12 +1768,8 @@ public:
     void deallocate( T* ptr )
     {
         assert( is_safe( ptr ) );
-        bool entry_expected  = false;
-        bool return_expected = true;
-
-        while ( !m_lock_.compare_exchange_strong( entry_expected, true ) )
-        {
-        }
+        while ( m_lock_.exchange( true ) )
+        { }
         if ( !expired( get_context( ptr ) ) )
         {
             ConstructorAccess::InternalPreDeconstruction( ptr );
@@ -1754,9 +1777,7 @@ public:
         }
         flag_dirty( ptr );
         flip<false>( ptr );
-        while ( !m_lock_.compare_exchange_strong( return_expected, false ) )
-        {
-        }
+        m_lock_.store( false );
     }
 
 	bool past( const AllocationContext& context ) const override
@@ -1823,16 +1844,10 @@ public:
             return;
         }
 
-        bool entry_expected  = false;
-        bool return_expected = true;
-
-        while ( !m_lock_.compare_exchange_strong( entry_expected, true ) )
-        {
-        }
+        while ( m_lock_.exchange( true ) )
+        { }
         flag_dirty( static_cast<T*>( context.ptr() ) );
-        while ( !m_lock_.compare_exchange_strong( return_expected, false ) )
-        {
-        }
+        m_lock_.store( false );
 	}
 
 private:
@@ -1842,7 +1857,7 @@ private:
         static std::function<void( void* )> deleter = []( void* ptr )
         {
 			// if there is no instanced allocator, it is undefined behaviour so dismiss the calling deallocation.
-            if ( g_allocator_storage.is_allocator_live( typeid( T ) ) )
+            if ( g_allocator_storage.is_allocator_live( &type_hash<T>::value ) )
             {
                 g_allocator_storage.get_allocator<T>().deallocate( static_cast<T*>( ptr ) );
             }
