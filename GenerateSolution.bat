@@ -1,5 +1,7 @@
 @echo off
+setlocal enabledelayedexpansion
 
+set SHARPMAKE_DOTNET_VERSION=net8.0
 set EngineDir=%cd%
 IF NOT "%~1"=="" set "EngineDir=%~1"
 echo EngineDir: %EngineDir%
@@ -20,13 +22,25 @@ set SharpMakeSolutionDir=%cd%
 IF NOT "%~4"=="" set SharpMakeSolutionDir="%~4"
 echo SharpMakeSolutionDir: %SharpMakeSolutionDir%
 
-IF EXIST "%EngineDir%\Programs\Sharpmake\Sharpmake.Application\bin\Release\net6.0\Sharpmake.Application.exe" (
-SET SharpmakeDir="%EngineDir%\Programs\Sharpmake\Sharpmake.Application\bin\Release\net6.0\Sharpmake.Application.exe") ELSE IF EXIST "%EngineDir%\Programs\Sharpmake\Sharpmake.Application\bin\x64\Release\net6.0\Sharpmake.Application.exe" (
-SET SharpmakeDir="%EngineDir%\Programs\Sharpmake\Sharpmake.Application\bin\x64\Release\net6.0\Sharpmake.Application.exe") ELSE (
-echo Unable to find the sharpmake
-exit /b)
-echo SharpmakeDir: %SharpmakeDir%
+set "SHARPMAKE_APP_PATH=%EngineDir%\Programs\Sharpmake\Sharpmake.Application\bin\Release\%SHARPMAKE_DOTNET_VERSION%\Sharpmake.Application.exe"
+set "SHARPMAKE_APP_PATH_X64=%EngineDir%\Programs\Sharpmake\Sharpmake.Application\bin\x64\Release\%SHARPMAKE_DOTNET_VERSION%\Sharpmake.Application.exe"
 
-"%SharpmakeDir%" /sources(@'%TargetCS%') /verbose
-IF EXIST "%ClientCS%" "%SharpmakeDir%" /sources(@'%ClientCS%') /verbose
-"%SharpmakeDir%" /sources(@'%FrontendTargetCS%') /verbose
+:: Use dir instead of if exist (more reliable on some drives e.g. I:)
+dir /b "!SHARPMAKE_APP_PATH!" >nul 2>&1
+if !errorlevel! equ 0 (
+  set "SharpmakeDir=!SHARPMAKE_APP_PATH!"
+) else (
+  dir /b "!SHARPMAKE_APP_PATH_X64!" >nul 2>&1
+  if !errorlevel! equ 0 (
+    set "SharpmakeDir=!SHARPMAKE_APP_PATH_X64!"
+  ) else (
+    echo Unable to find the sharpmake (expected %SHARPMAKE_DOTNET_VERSION%)
+    echo Tried: !SHARPMAKE_APP_PATH!
+    exit /b 1
+  )
+)
+echo SharpmakeDir: !SharpmakeDir!
+
+"!SharpmakeDir!" /sources(@'%TargetCS%') /verbose
+IF EXIST "%ClientCS%" "!SharpmakeDir!" /sources(@'%ClientCS%') /verbose
+"!SharpmakeDir!" /sources(@'%FrontendTargetCS%') /verbose

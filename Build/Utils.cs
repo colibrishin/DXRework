@@ -72,7 +72,7 @@ public class Utils
         return new EngineTarget(
             ELaunchType.Editor | ELaunchType.Client | ELaunchType.Server,
             Platform.win64,
-            DevEnv.vs2022,
+            DevEnv.vs2026,
             Optimization.Debug | Optimization.Release,
             OutputType.Lib,
             EGraphicAPI.D3D12,
