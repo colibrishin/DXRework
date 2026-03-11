@@ -180,11 +180,26 @@ namespace Engine
         }
 
         Graphics::SBs::InstanceSB* generated = m_instance_allocator_.allocate( 1 );
-
-        std::memset(generated, 0, sizeof(decltype(*generated)));
-        m_instance_allocator_.construct(generated);
-        m_instance_generated_.push_back(generated);
-
+        try
+        {
+            std::memset(generated, 0, sizeof(decltype(*generated)));
+            m_instance_allocator_.construct(generated);
+        }
+        catch ( ... )
+        {
+            m_instance_allocator_.deallocate(generated, 1);
+            throw;
+        }
+        try
+        {
+            m_instance_generated_.push_back(generated);
+        }
+        catch ( ... )
+        {
+            m_instance_allocator_.destroy(generated);
+            m_instance_allocator_.deallocate(generated, 1);
+            throw;
+        }
         ++m_allocation_count_;
         ++m_used_count_;
         return generated;
