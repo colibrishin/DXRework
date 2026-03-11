@@ -45,10 +45,11 @@ namespace Engine
 
     ModelRendererRenderInstanceTask::~ModelRendererRenderInstanceTask()
     {
+        auto& alloc = get_instance_sb_pool_allocator();
         for ( auto* ptr : m_instance_generated_ )
         {
-            m_instance_allocator_.destroy( ptr );
-            m_instance_allocator_.deallocate( ptr );
+            alloc.destroy( ptr );
+            alloc.deallocate( ptr );
         }
     }
 
@@ -192,15 +193,16 @@ namespace Engine
             return m_instance_generated_[ m_used_count_++ ];
         }
 
-        Graphics::SBs::InstanceSB* generated = m_instance_allocator_.allocate( 1 );
+        auto& alloc = get_instance_sb_pool_allocator();
+        Graphics::SBs::InstanceSB* generated = alloc.allocate( 1 );
         try
         {
             std::memset( generated, 0, sizeof( decltype( *generated ) ) );
-            m_instance_allocator_.construct( generated );
+            alloc.construct( generated );
         }
         catch ( ... )
         {
-            m_instance_allocator_.deallocate( generated, 1 );
+            alloc.deallocate( generated, 1 );
             throw;
         }
         try
@@ -209,8 +211,8 @@ namespace Engine
         }
         catch ( ... )
         {
-            m_instance_allocator_.destroy( generated );
-            m_instance_allocator_.deallocate( generated, 1 );
+            alloc.destroy( generated );
+            alloc.deallocate( generated, 1 );
             throw;
         }
         ++m_allocation_count_;
