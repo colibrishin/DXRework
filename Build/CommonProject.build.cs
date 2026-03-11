@@ -73,7 +73,7 @@ public class EngineTarget : Target
         ESoundInterface soundInterface = ESoundInterface.FMOD,
         Blob blob = Blob.NoBlob,
         BuildSystem buildSystem = BuildSystem.FastBuild,
-        DotNetFramework framework = DotNetFramework.v3_5) 
+        DotNetFramework framework = DotNetFramework.v4_7) 
     : base(platform, devEnv, optimization, outputType, blob, buildSystem, framework)
     {
         LaunchType = launchType;
@@ -151,6 +151,12 @@ public abstract class CommonProject : Project
         {
             AddTargets(Utils.GetDefinedTarget());
         }
+
+        string solutionDir = Utils.GetSolutionDir();
+        if (!string.IsNullOrEmpty(solutionDir))
+        {
+            AdditionalSourceRootPaths.Add(solutionDir + @"/Intermediate/HeaderParser/HeaderGenerated/" + Name);
+        }
     }
 
     [Configure]
@@ -227,6 +233,7 @@ public abstract class CommonProject : Project
             conf.IsFastBuild = true;
             string FastBuildPath = SolutionDir + @"/Programs\Sharpmake\tools\FastBuild\Windows-x64\FBuild.exe";
             FastBuildSettings.FastBuildMakeCommand = FastBuildPath;
+            FastBuildSettings.FastBuildAllowDBMigration = true;
 
             // Include
             {
@@ -265,11 +272,14 @@ public abstract class CommonProject : Project
         string EngineDir = Utils.GetEngineDir();
         string GitDir = @"C:\Program Files\Git"; // todo: find git directory with where git
 
+        string baliusExe = Path.Combine(EngineDir, "balius", "target", "release", "balius.exe");
+        string baliusArgs = $@"""{EngineDir}"" ""[project.Name]"" ""[project.SourceRootPath]"" ""{GitDir}"" ""[conf.Name]""";
+
         Configuration.BuildStepExecutable Exec = new Configuration.BuildStepExecutable(
-            $@"{EngineDir}\balius\target\release\balius.exe",
-            $@"",
+            baliusExe,
+            "",
             $@"{EngineDir}\Intermediate\log\[project.Name]-headerparser.log",
-            $@"""{EngineDir}"" [project.Name] ""[project.SourceRootPath]"" ""{GitDir}"" ""{conf.Name}""",
+            baliusArgs,
             EngineDir,
             true,
             true
