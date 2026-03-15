@@ -589,7 +589,7 @@ So: **generated headers** are “discovered” by the **compiler** using **inclu
 
 ## Plan: Git commit chunks
 
-**Status**: Executed. Fixes 1–2 and features 3–6 were committed (submodule commits in Programs/Sharpmake and Programs/header-parser; root commits for submodule refs, build files, docs). Items 2+5 and 3+4 were combined in single commits to avoid splitting main.cc and CommonProject.build.cs.
+**Status**: Executed. Fixes 1–2 and features 3–6 were committed (submodule commits in Programs/Sharpmake and Programs/header-parser; root commits for submodule refs, build files, docs). Items 2+5 and 3+4 were combined in single commits to avoid splitting main.cc and CommonProject.build.cs. **Graceful module cleanup** (separate chunk): fix(Launch) align deinit order, docs(module) teardown sequence and status (ModuleRegistration.h, tasks.md, progress.md).
 
 Split and chunk commits into **fixes** (small, targeted) then **features** (by area). Order so the tree keeps building.
 
