@@ -52,6 +52,12 @@ public enum ESoundInterface
     FMOD = 1 << 0,
 }
 
+/// <summary>Interface for engine project configuration; use Project.Configuration so implementations match.</summary>
+public interface IEngineProjectConfigure
+{
+    void ConfigureAll(Project.Configuration conf, EngineTarget target);
+}
+
 public class EngineTarget : Target
 {
     public ELaunchType LaunchType;
@@ -97,7 +103,7 @@ public abstract class EngineCommonProject : CommonProject
     }
 }
 
-public abstract class CommonProject : Project
+public abstract class CommonProject : Project, IEngineProjectConfigure
 {
     private static FileInfo GetSharpmakeFilePathImpl()
     {
@@ -135,9 +141,11 @@ public abstract class CommonProject : Project
         return fileInfo.Directory.ToString();
     }
 
-    protected CommonProject(bool bAddTarget = true) : base(typeof(EngineTarget))
+    /// <param name="bAddTarget">Add default targets.</param>
+    /// <param name="name">Project name; also used for HeaderParser path (must match [project.Name] for balius). If null, use GetType().Name.</param>
+    protected CommonProject(bool bAddTarget = true, string name = null) : base(typeof(EngineTarget))
     {
-        Name = GetType().Name;
+        Name = name ?? GetType().Name;
 
         IsFileNameToLower = false;
         IsTargetFileNameToLower = false;
@@ -145,18 +153,30 @@ public abstract class CommonProject : Project
         SourceRootPath = GetSharpmakeFilePath();
 
         SourceFilesExtensions.Add(".cs");
-        //SourceFilesCompileExtensions.Add(".ixx");
 
         if (bAddTarget == true)
         {
             AddTargets(Utils.GetDefinedTarget());
         }
 
+        // Use EngineDir so generated-header path matches where balius (prebuild) writes; fallback to SolutionDir.
+        string engineDir = Utils.GetEngineDir();
         string solutionDir = Utils.GetSolutionDir();
-        if (!string.IsNullOrEmpty(solutionDir))
-        {
-            AdditionalSourceRootPaths.Add(solutionDir + @"/Intermediate/HeaderParser/HeaderGenerated/" + Name);
-        }
+        string headerGeneratedRoot = !string.IsNullOrEmpty(engineDir) ? engineDir : solutionDir;
+
+        // Per-project: Intermediate/HeaderParser/<Name>/HeaderGenerated (Name must match [project.Name] used by balius).
+        string headerGeneratedPath = Path.Combine(headerGeneratedRoot, "Intermediate", "HeaderParser", Name, "HeaderGenerated");
+        AdditionalSourceRootPaths.Add(headerGeneratedPath);
+    }
+
+    [Configure(Optimization.Debug)]
+    public virtual void ConfigureDebug(Configuration conf, EngineTarget target)
+    {
+    }
+
+    [Configure(Optimization.Release)]
+    public virtual void ConfigureRelease(Configuration conf, EngineTarget target)
+    {
     }
 
     [Configure]
@@ -239,8 +259,15 @@ public abstract class CommonProject : Project
             {
                 conf.IncludePrivatePaths.Add(conf.ProjectPath + @"/Private");
 
-                string HeaderParserTargetDir = SolutionDir + @"/Intermediate/HeaderParser/HeaderGenerated/[project.Name]";
+                // Use EngineDir so include path matches where balius (prebuild) writes generated headers.
+                // header-parser writes to HeaderGenerated/Public/ and HeaderGenerated/Private/; code uses #include "X.generated.h"
+                // and "Public/..." / "Private/..." for tracking headers (same path rule as normal generated headers).
+                string engineDir = Utils.GetEngineDir();
+                string headerParserRoot = !string.IsNullOrEmpty(engineDir) ? engineDir : SolutionDir;
+                string HeaderParserTargetDir = headerParserRoot + @"/Intermediate/HeaderParser/[project.Name]/HeaderGenerated";
                 conf.IncludePaths.Add(HeaderParserTargetDir);
+                conf.IncludePaths.Add(HeaderParserTargetDir + @"/Public");
+                conf.IncludePaths.Add(HeaderParserTargetDir + @"/Private");
                 conf.IncludePaths.Add(@"[project.SourceRootPath]");
                 conf.IncludePaths.Add(@"[project.SourceRootPath]/Public");
                 conf.IncludePaths.Add(SolutionDir + @"/Engine");
@@ -288,6 +315,17 @@ public abstract class CommonProject : Project
         Exec.FastBuildExecAlways = true;
 
         conf.EventCustomPrebuildExecute.Add(@"[project.Name]-headerparser", Exec);
+
+        // Build header-parser before this project so the prebuild can use an up-to-date header-parser.exe.
+        string headerParserVcxproj = Path.Combine(Utils.GetSolutionDir(), "Programs", "header-parser", "header-parser.vcxproj");
+        conf.ProjectReferencesByPath.Add(headerParserVcxproj);
+
+        // Generated headers: Sharpmake emits PropertyGroup + ClCompile discovery in vcxproj when HeaderGeneratedRoot is set; Clean via AdditionalNMakeCleanCommands.
+        string headerParserRootForTargets = !string.IsNullOrEmpty(Utils.GetEngineDir()) ? Utils.GetEngineDir() : Utils.GetSolutionDir();
+        conf.CustomProperties.Add("HeaderGeneratedRoot", headerParserRootForTargets);
+        string headerGeneratedPath = Path.Combine(headerParserRootForTargets, "Intermediate", "HeaderParser", Name, "HeaderGenerated");
+        conf.AdditionalNMakeCleanCommands = "if exist \"" + headerGeneratedPath + "\" rmdir /s /q \"" + headerGeneratedPath + "\"";
+
         conf.CustomProperties.Add("CustomOptimizationProperty", $"Custom-{target.Optimization}");
 
         Utils.AddDefines(conf, target);
