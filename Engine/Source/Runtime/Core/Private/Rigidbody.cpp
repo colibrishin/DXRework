@@ -3,7 +3,6 @@
 #endif
 
 #include "Rigidbody.h"
-#include "Rigidbody.generated.h"
 #include "ObjectBase.h"
 #include "Collider.h"
 #include "Transform.h"

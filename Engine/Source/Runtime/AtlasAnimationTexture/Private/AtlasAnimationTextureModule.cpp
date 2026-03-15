@@ -1,9 +1,8 @@
 #include "AtlasAnimationTextureModule.h"
-#include "AtlasAnimationTextureModule.generated.h"
 
-#include "AtlasAnimationTexture.h"
 #include "AtlasAnimation.h"
-
+#include "AtlasAnimationTexture.h"
+#include "ModuleRegistration.h"
 #include "ResourceManager.h"
 #include "Texture2D.h"
 
@@ -24,7 +23,7 @@ bool Engine::AtlasAnimationTextureModule::InitializeImpl()
                 {},
                 load_callback,
                 {});
-        });
+        } ENGINE_MODULE_SCOPE );
 
     Managers::ResourceManager::GetInstance().RegisterNewResource(Resources::AtlasAnimationTexture::StaticTypeName(), [](bool& managing_flag)
         {
@@ -191,7 +190,7 @@ bool Engine::AtlasAnimationTextureModule::InitializeImpl()
                 ui_callback, 
                 load_callback,
                 cleanup_callback);
-        });
+        } ENGINE_MODULE_SCOPE );
 #endif
     return true;
 }

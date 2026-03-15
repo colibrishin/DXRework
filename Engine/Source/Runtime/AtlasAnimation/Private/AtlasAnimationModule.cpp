@@ -1,5 +1,4 @@
 #include "AtlasAnimationModule.h"
-#include "AtlasAnimationModule.generated.h"
 
 MODULE_IMPL( Engine::AtlasAnimtionModule, AtlasAnimation )
 

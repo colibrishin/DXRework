@@ -1,5 +1,4 @@
 #include "SimpleParticleComputeShader.h"
-#include "SimpleParticleComputeShader.generated.h"
 
 #include "ParticleRenderer.h"
 #include "Texture2D.h"

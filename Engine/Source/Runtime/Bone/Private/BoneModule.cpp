@@ -1,5 +1,4 @@
 #include "BoneModule.h"
-#include "BoneModule.generated.h"
 
 MODULE_IMPL( Engine::BoneModule, Bone )
 

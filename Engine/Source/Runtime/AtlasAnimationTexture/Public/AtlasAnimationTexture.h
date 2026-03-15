@@ -1,13 +1,9 @@
 #pragma once
 #include "Texture3D.h"
+#include "AtlasAnimation.h"
+#include "Texture2D.h"
 
 #include "AtlasAnimationTexture.generated.h"
-
-namespace Engine::Resources
-{
-	class AtlasAnimation;
-	class Texture2D;
-}
 
 namespace Engine::Resources
 {

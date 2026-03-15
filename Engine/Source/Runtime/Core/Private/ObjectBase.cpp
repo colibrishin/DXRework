@@ -1,5 +1,4 @@
 #include "ObjectBase.h"
-#include "ObjectBase.generated.h"
 
 #include <any>
 

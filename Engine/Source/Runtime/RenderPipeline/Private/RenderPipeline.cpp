@@ -1,5 +1,4 @@
 #include "RenderPipeline.h"
-#include "RenderPipeline.generated.h"
 
 #include "CoreModule.h"
 

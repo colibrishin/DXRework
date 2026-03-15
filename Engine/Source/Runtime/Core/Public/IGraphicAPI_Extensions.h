@@ -1,6 +1,6 @@
 #pragma once
+#include <tbb/tbb.h>
 #include "IGraphicAPI.h"
-#include "RenderType.h"
 
 namespace Engine
 {
@@ -9,12 +9,6 @@ namespace Engine
 
     template <typename T>
     class StructuredBufferMemoryPool;
-
-    struct ENGINE_CORE_API RaytracingInstancePair
-    {
-        std::array<Strong<Resources::Texture>, g_max_texture_per_material> textures;
-        StructuredBufferTypeProxy<Graphics::SBs::InstanceSB>               instance;
-    };
 
     template <typename T>
     class StructuredBufferMemoryPool

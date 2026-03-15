@@ -15,6 +15,6 @@ public class ShadowTexture : EngineCommonProject
         conf.AddPublicDependency<Core>(target);
         conf.AddPublicDependency<TBB>(target);
         conf.AddPublicDependency<Boost>(target);
-        conf.AddPublicDependency<Texture2D>(target);
+        conf.AddPublicDependency<Texture>(target);
     }
 }

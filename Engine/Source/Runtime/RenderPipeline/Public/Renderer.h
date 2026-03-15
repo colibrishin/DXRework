@@ -1,7 +1,8 @@
 #pragma once
 #include <atomic>
-#include <ranges>
 #include <mutex>
+#include <ranges>
+#include <unordered_set>
 
 #include "Allocator.h"
 #include "ConcurrentTypeLibrary.h"
@@ -22,12 +23,12 @@ namespace Engine
 {
     struct RenderTaskTraits
     {
-        const std::type_info& rtti;
-        const eShaderDomain   domain;
+        HashType             type;
+        const eShaderDomain  domain;
 
-        bool operator==(const RenderTaskTraits& other) const noexcept
+        bool operator==( const RenderTaskTraits& other ) const noexcept
         {
-            return rtti.name() == other.rtti.name() && domain == other.domain;
+            return type == other.type && domain == other.domain;
         }
     };
 }
@@ -37,9 +38,9 @@ struct std::hash<Engine::RenderTaskTraits>
 {
     size_t operator()( const Engine::RenderTaskTraits& target ) const
     {
-        static std::hash<uint32_t> domain_hasher;
-        size_t                     return_value = domain_hasher( target.domain );
-        boost::hash_combine( return_value, target.rtti.hash_code() );
+        HashTypeHash type_hasher;
+        size_t       return_value = type_hasher( target.type );
+        boost::hash_combine( return_value, static_cast<size_t>( target.domain ) );
         return return_value;
     }
 };
@@ -69,12 +70,13 @@ namespace Engine::Managers
 		void Initialize() override;
 		
 		void RegisterRenderInstance(const std::wstring_view name, RenderInstanceTask* task);
-        void RegisterRenderPass( const std::wstring_view name, IRenderPassTaskFactory *task );
-        void RenderPassWith( const std::wstring_view name, const eShaderDomain domain );
+        void RegisterRenderPass( const std::wstring_view name, IRenderPassTaskFactory *task, const std::wstring_view module_name = {} );
+        void RenderPassWith( const std::wstring_view name, const eShaderDomain domain, const std::wstring_view module_name = {} );
 
         void UnregisterRenderInstance( const std::wstring_view name );
         void UnregisterRenderPass( const std::wstring_view name );
         void RenderPassWithout( const std::wstring_view name, const eShaderDomain domain );
+        void UnregisterModule( std::wstring_view module_name );
 
 		void RegisterStructuredBuffer(const StructuredBufferDecorator* sb);
 		void UnregisterStructuredBuffer(const StructuredBufferDecorator* sb);
@@ -262,7 +264,7 @@ namespace Engine::Managers
                                 onRenderTaskDirty.Listen( func );
                             } );
 #else
-            static RenderTaskTraits                     traits{ typeid( PredicationT ), Domain };
+            static RenderTaskTraits                     traits{ &type_hash<PredicationT>::value, Domain };
             static std::vector<IRenderPassTaskFactory*> borrowed_factories_ =
                     GetRenderTasks( traits, PredicationT::GetValue(), PredicationT::Inclusion );
 #endif
@@ -307,7 +309,7 @@ namespace Engine::Managers
                                 onRenderTaskDirty.Listen( func );
                             } );
 #else
-            static RenderTaskTraits                     traits{ typeid( PredicationT ), Domain };
+            static RenderTaskTraits                     traits{ &type_hash<PredicationT>::value, Domain };
             static std::vector<IRenderPassTaskFactory*> borrowed_factories_ =
                     GetRenderTasks( traits, PredicationT::GetValue(), PredicationT::Inclusion );
 #endif
@@ -425,7 +427,7 @@ namespace Engine::Managers
 		friend class RayTracer;
 		~Renderer() override;
 		
-		bool m_b_ready_ = false;
+	    bool m_b_ready_ = false;
 		std::unordered_map<std::string_view, ContextSetupFunction> m_prerender_funcs_;
 		std::unordered_map<std::string_view, ContextSetupFunction> m_postrender_funcs_;
 		aligned_vector<const StructuredBufferDecorator*> m_additional_sbs_;
@@ -434,6 +436,9 @@ namespace Engine::Managers
 	    
 		std::unordered_map<std::wstring, Unique<RenderInstanceTask>>  m_render_instance_tasks_;
         RenderPassTaskFactoryContainer                                m_unique_render_pass_task_factories_;
+#if IS_DLL
+        std::unordered_map<std::wstring, std::unordered_set<std::wstring>> m_render_pass_names_by_module_;
+#endif
         RenderPassTaskBorrowedContainer                               m_render_pass_tasks_factories_[ SHADER_DOMAIN_MAX ];
         
         RenderPassTaskInstantiatedContainer m_render_pass_tasks_[ SHADER_DOMAIN_MAX ];

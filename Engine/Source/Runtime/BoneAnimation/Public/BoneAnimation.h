@@ -6,6 +6,7 @@
 
 namespace Engine::Resources
 {
+	class Bone;
 	using namespace Graphics;
 
 	ECLASS(resource, serialize)

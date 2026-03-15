@@ -2,12 +2,15 @@
 #include "Font.h"
 #include "ToolkitAPI.h"
 #include "D3D12GraphicInterface.h"
+#include "ResourceTypeValidation.h"
 
 Engine::D3D12PrimitiveFont::~D3D12PrimitiveFont()
 { }
 
-void Engine::D3D12PrimitiveFont::Generate( const Resources::Font* font )
+void Engine::D3D12PrimitiveFont::Generate( const Abstracts::Resource* resource )
 {
+	D3D12::ExpectFont( resource );
+	auto* font = static_cast<const Resources::Font*>(resource);
 	IGraphicAPI& gi = g_graphic_accessor.GetInterface();
 	D3D12GraphicInterface& dgi = static_cast<D3D12GraphicInterface&>(gi);
 	ID3D12Device* dev = static_cast<ID3D12Device*>(gi.GetNativeInterface());

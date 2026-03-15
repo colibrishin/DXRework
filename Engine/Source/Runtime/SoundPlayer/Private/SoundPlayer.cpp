@@ -1,5 +1,4 @@
 #include "Public/SoundPlayer.h"
-#include "SoundPlayer.generated.h"
 #include "ObjectBase.h"
 #include "Transform.h"
 #include "Rigidbody.h"

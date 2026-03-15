@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <!--
+    Generated-header cleanup and discovery are driven by Sharpmake:
+    CommonProject sets conf.AdditionalNMakeCleanCommands (clean) and conf.CustomProperties["HeaderGeneratedRoot"];
+    the generated vcxproj contains PropertyGroup + ClCompile discovery for **\*.generated.cpp. Build/HeaderGenerated.targets is no longer imported.
+  -->
+</Project>

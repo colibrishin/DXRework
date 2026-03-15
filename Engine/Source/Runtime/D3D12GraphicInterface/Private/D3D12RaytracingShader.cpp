@@ -1,4 +1,4 @@
-﻿#if CFG_RAYTRACING
+#if CFG_RAYTRACING
 #include "D3D12RaytracingShader.h"
 #include <directx-dxc/d3d12shader.h>
 #include <directx-dxc/dxcapi.h>
@@ -6,14 +6,16 @@
 #include "SIMDExtension.hpp"
 #include "RaytracingShader.h"
 #include "ThrowIfFailed.h"
+#include "ResourceTypeValidation.h"
 
 namespace Engine
 {
     D3D12RaytracingShader::~D3D12RaytracingShader()
     { }
 
-    void D3D12RaytracingShader::Generate( const Resources::RaytracingShader* shader, void* pipeline_signature )
+    void D3D12RaytracingShader::Generate( const Abstracts::Resource* resource, void* pipeline_signature )
     {
+        D3D12::ExpectRaytracingShader( resource );
         IRaytracingExtension& rgi = g_graphic_accessor.GetRaytracingInterface();
         const auto&           dev = static_cast<ID3D12Device5*>( rgi.GetRaytracingNativeInterface() );
         const auto&           raytracing_root_pipeline = static_cast<ID3D12RootSignature*>( pipeline_signature );
@@ -31,6 +33,7 @@ namespace Engine
         // Reading shader file with encoding.
         uint32_t                 code_page = CP_UTF8;
         ComPtr<IDxcBlobEncoding> source;
+        const auto* shader = static_cast<const Resources::RaytracingShader*>( resource );
         DX::ThrowIfFailed(
                 library->CreateBlobFromFile( shader->GetPath().c_str(), &code_page, source.ReleaseAndGetAddressOf() ) );
 

@@ -1,7 +1,7 @@
 #include "DeferredRenderPassTaskModule.h"
-#include "DeferredRenderPassTaskModule.generated.h"
 
 #include "DeferredRenderPassTask.h"
+#include "ModuleRegistration.h"
 #include "Renderer.h"
 #include "Shader.h"
 #include "Texture2D.h"
@@ -14,9 +14,6 @@ bool Engine::DeferredRenderPassTaskModule::InitializeImpl()
     auto               factory = new DeferredRenderPassTaskFactory();
     const std::string  name ( DeferredRenderPassTask::StaticTypeName() );
     const std::wstring name_wstr( name.begin(), name.end() );
-
-    Managers::Renderer::GetInstance().RegisterRenderPass( name_wstr, factory );
-    Managers::Renderer::GetInstance().RenderPassWith( name_wstr, SHADER_DOMAIN_OPAQUE );
 
     Resources::Shader::Create( "DeferredMaterialPass",
                                "deferred_default_firstpass.hlsl",
@@ -163,6 +160,9 @@ bool Engine::DeferredRenderPassTaskModule::InitializeImpl()
                                                                             .MipSlice = 0
                                                                          }
                                                                      } } ) );
+
+    Managers::Renderer::GetInstance().RegisterRenderPass( name_wstr, factory ENGINE_MODULE_SCOPE );
+    Managers::Renderer::GetInstance().RenderPassWith( name_wstr, SHADER_DOMAIN_OPAQUE ENGINE_MODULE_SCOPE );
 #endif
     return true;
 }

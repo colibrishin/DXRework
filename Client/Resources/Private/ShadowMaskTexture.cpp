@@ -1,5 +1,4 @@
 #include "Resources/Public/ShadowMaskTexture.h"
-#include "ShadowMaskTexture.generated.h"
 
 ShadowMaskTexture::ShadowMaskTexture( const std::filesystem::path &path )
     : Texture2D( "",

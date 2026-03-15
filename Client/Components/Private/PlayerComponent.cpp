@@ -1,5 +1,4 @@
 #include "Components/Public/PlayerComponent.h"
-#include "PlayerComponent.generated.h"
 
 #define _USE_MATH_DEFINES
 #include <math.h>

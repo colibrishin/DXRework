@@ -1,5 +1,4 @@
 #include "DirectInputInterfaceModule.h"
-#include "DirectInputInterfaceModule.generated.h"
 
 #include "IInputAPI.h"
 #include "DirectInputInterface.h"

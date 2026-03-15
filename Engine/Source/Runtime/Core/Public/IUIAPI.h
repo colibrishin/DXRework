@@ -1,4 +1,5 @@
-﻿#pragma once
+#pragma once
+#include <cassert>
 #include <filesystem>
 #include <functional>
 #include <memory>
@@ -18,6 +19,11 @@ namespace Engine
         bool        dialogOpened = false;
         std::unordered_map<std::string, std::string> temporaryStrings{};
     };
+
+    struct IUITokenBase;
+
+    /** Type-erased unique_ptr for UI tokens; supports pool and default delete. */
+    using IUITokenBasePtr = std::unique_ptr<IUITokenBase, std::function<void( IUITokenBase* )>>;
 
 	struct ENGINE_CORE_API IUITokenBase
     {
@@ -46,14 +52,14 @@ namespace Engine
         }
 
         // Add child and returns added child.
-        IUITokenBase& AddChild(std::unique_ptr<IUITokenBase>&& child)
+        IUITokenBase& AddChild( IUITokenBasePtr&& child )
         {
             child->m_parent_ = this;
             m_children_.emplace_back( std::move( child ) );
-        	return *child;
+        	return *m_children_.back();
         }
 
-        IUITokenBase& operator+=(std::unique_ptr<IUITokenBase>&& child)
+        IUITokenBase& operator+=( IUITokenBasePtr&& child )
         {
 	        return AddChild( std::move( child ) );
         }
@@ -76,9 +82,9 @@ namespace Engine
         std::string                               m_name_;
         std::function<void()>                     m_function_;
         IUITokenBase*                              m_parent_ = nullptr;
-        std::vector<std::unique_ptr<IUITokenBase>> m_children_;
+        std::vector<IUITokenBasePtr> m_children_;
     };
-    
+
     template <typename... Args>
     struct IUIToken : public IUITokenBase
     {
@@ -102,7 +108,7 @@ namespace Engine
                     m_function_();
                 }
 
-                for ( const std::unique_ptr<IUITokenBase> &context : m_children_ )
+                for ( const IUITokenBasePtr &context : m_children_ )
                 {
                     context->Do();
                 }
@@ -188,7 +194,7 @@ namespace Engine
 
     struct ENGINE_CORE_API UIContext
     {
-        explicit UIContext(std::unique_ptr<IUITokenBase>&& parent)
+        explicit UIContext( IUITokenBasePtr&& parent )
         {
 	        m_parent_ = std::move( parent );
             m_active_child_ = nullptr;
@@ -197,6 +203,7 @@ namespace Engine
         UIContext(UIContext&) = delete;
         UIContext& operator=(UIContext&) = delete;
 
+        /** Destructor runs the UI tree (m_parent_->Do()). Do not rely on other destructors having run; avoid using objects that may already be destroyed. */
         ~UIContext()
         {
         	m_parent_->Do();
@@ -208,7 +215,7 @@ namespace Engine
         }
 
         // Add Child and return this
-        IUITokenBase& operator<<(std::unique_ptr<IUITokenBase>&& child)
+        IUITokenBase& operator<<( IUITokenBasePtr&& child )
         {
             m_active_child_ = child.get();
             m_parent_->AddChild( std::move( child ) );
@@ -216,7 +223,7 @@ namespace Engine
         }
 
         // Add Child and return new active children
-        IUITokenBase& operator<=( std::unique_ptr<IUITokenBase>&& child )
+        IUITokenBase& operator<=( IUITokenBasePtr&& child )
         {
             m_active_child_ = child.get();
             m_parent_->AddChild( std::move( child ) );
@@ -230,7 +237,7 @@ namespace Engine
         }
 
         // Add Child and return child
-        IUITokenBase& operator+=(std::unique_ptr<IUITokenBase>&& child)
+        IUITokenBase& operator+=( IUITokenBasePtr&& child )
         {
             if (m_active_child_)
             {
@@ -247,7 +254,7 @@ namespace Engine
         }
 
         // Add Child to active child without swapping active child.
-        IUITokenBase& operator|=( std::unique_ptr<IUITokenBase>&& child ) const
+        IUITokenBase& operator|=( IUITokenBasePtr&& child ) const
         {
             IUITokenBase* new_child = child.get();
 
@@ -277,7 +284,7 @@ namespace Engine
             }
         }
 
-        IUITokenBase& operator>>( std::unique_ptr<IUITokenBase>&& child ) const
+        IUITokenBase& operator>>( IUITokenBasePtr&& child ) const
         {
             if ( m_active_child_ && m_active_child_->GetParentInternal() )
             {
@@ -294,25 +301,30 @@ namespace Engine
 
         IUITokenBase& operator--()
         {
-	        m_active_child_ = m_active_child_->GetParentInternal();
+            if (!m_active_child_)
+                return *m_parent_;
+            IUITokenBase* parent = m_active_child_->GetParentInternal();
+            if (!parent)
+                return *m_parent_;
+            m_active_child_ = parent;
             return *m_active_child_;
         }
 
     private:
-        std::unique_ptr<IUITokenBase> m_parent_;
-        IUITokenBase* m_active_child_ = nullptr;
+        IUITokenBasePtr m_parent_;
+        IUITokenBase*   m_active_child_ = nullptr;
     };
 
 #define TOKEN_PURE_GETTER_DECL(Name) \
-    virtual std::unique_ptr<IUITokenBase> New##Name##(const void* context, const std::string_view name, const Name##Token::ArgumentTuple& arguments) = 0;
+    virtual IUITokenBasePtr New##Name##( const void* context, const std::string_view name, const Name##Token::ArgumentTuple& arguments ) = 0;
 
     struct ENGINE_CORE_API IUIAPI
     {
         virtual ~IUIAPI() = default;
 
-        [[nodiscard]] static UIContext NewContext(std::unique_ptr<IUITokenBase>&& root)
+        [[nodiscard]] static UIContext NewContext(IUITokenBasePtr&& root)
         {
-            return UIContext( std::move ( root ) );
+            return UIContext( std::move( root ) );
         }
 
         TOKEN_PURE_GETTER_DECL(MainMenuBar)
@@ -349,19 +361,24 @@ namespace Engine
 
     protected:
         template <typename T>
-        std::unique_ptr<T> Generate(const void* context, const std::string_view name, const typename T::ArgumentTuple& args)
+        IUITokenBasePtr Generate( const void* context, const std::string_view name, const typename T::ArgumentTuple& args )
         {
-            return NewForwardTuple<T>(context, name, args, std::make_index_sequence<T::ArgumentCount::value>{});
+            return NewForwardTuple<T>( context, name, args, std::make_index_sequence<T::ArgumentCount::value>{} );
         }
 
         template <typename T, typename Tuple, size_t... Is>
-        std::unique_ptr<T> NewForwardTuple(const void* context, const std::string_view name, const Tuple& t, std::index_sequence<Is...>)
+        IUITokenBasePtr NewForwardTuple( const void* context, const std::string_view name, const Tuple& t, std::index_sequence<Is...> )
         {
-            return std::make_unique<T>(context, name, std::get<Is>(t)...);
+            object_pool_allocator<T>& alloc = g_allocator_storage.get_allocator<T>();
+            AllocationContext          ctx  = alloc.allocate( context, name, std::get<Is>( t )... );
+            T*                         p    = static_cast<T*>( ctx.ptr() );
+            if ( !p )
+            {
+                auto ptr = std::make_unique<T>( context, name, std::get<Is>( t )... );
+                return IUITokenBasePtr( ptr.release(), []( IUITokenBase* p ) { delete static_cast<T*>( p ); } );
+            }
+            return IUITokenBasePtr( p, [&alloc]( IUITokenBase* p ) { alloc.deallocate( static_cast<T*>( p ) ); } );
         }
-
-        // todo: memory pool;
-        std::tuple<> a;
     };
 
     struct ENGINE_CORE_API IUIAPIAccessor final
@@ -390,6 +407,7 @@ namespace Engine
 
         [[nodiscard]] IUIAPI& GetInterface()
         {
+            assert(m_ui_interface_ != nullptr && "UI interface not set; ensure SetInterface<T>() was called (e.g. ImGuiManager::Initialize()).");
             return *m_ui_interface_;
         }
 

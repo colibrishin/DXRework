@@ -36,14 +36,14 @@ public class Assimp : VCPKG
 
         conf.LibraryFiles.Add
         (
-            @"assimp-vc143-mtd.lib",
+            @"assimp-vc145-mtd.lib",
             @"zlibd.lib"
         );
 
         string BinPath = GetVCPKGBinPath(target);
         conf.TargetCopyFiles.Add
         (
-            BinPath + @"/assimp-vc143-mtd.dll",
+            BinPath + @"/assimp-vc145-mtd.dll",
             BinPath + @"/poly2tri.dll",
             BinPath + @"/zlibd1.dll",
             BinPath + @"/kubazip.dll",
@@ -58,7 +58,7 @@ public class Assimp : VCPKG
 
         conf.LibraryFiles.Add
         (
-            @"assimp-vc143-mt.lib",
+            @"assimp-vc145-mt.lib",
             @"zlib.lib"
         );
 
@@ -66,7 +66,7 @@ public class Assimp : VCPKG
 
         conf.TargetCopyFiles.Add
         (
-            BinPath + @"/assimp-vc143-mt.dll",
+            BinPath + @"/assimp-vc145-mt.dll",
             BinPath + @"/poly2tri.dll",
             BinPath + @"/zlib1.dll",
             BinPath + @"/minizip.dll",

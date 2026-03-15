@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <!--
+    Behaviour merged into Sharpmake: when conf.CustomProperties["HeaderGeneratedRoot"] is set,
+    the generated vcxproj contains the PropertyGroup (_GeneratedCppDir) and ItemGroup (ClCompile
+    for **\*.generated.cpp). Clean is conf.AdditionalNMakeCleanCommands. This file is no longer imported.
+  -->
+</Project>

@@ -1,8 +1,7 @@
 #include "ForwardRenderPassTaskModule.h"
-#include "ForwardRenderPassTaskModule.generated.h"
-#include "Renderer.h"
-
 #include "ForwardRenderPassTask.h"
+#include "ModuleRegistration.h"
+#include "Renderer.h"
 
 MODULE_IMPL( Engine::ForwardRenderPassTaskModule, ForwardRenderPassTask )
 
@@ -13,12 +12,12 @@ namespace Engine
         std::string_view typename_str = ForwardRenderPassTask::StaticTypeName();
         std::wstring     typename_wstr( typename_str.begin(), typename_str.end() );
 
-        Managers::Renderer::GetInstance().RegisterRenderPass( typename_wstr, new RenderPassTaskFactory<ForwardRenderPassTask>() );
+        Managers::Renderer::GetInstance().RegisterRenderPass( typename_wstr, new RenderPassTaskFactory<ForwardRenderPassTask>() ENGINE_MODULE_SCOPE );
 
 #if CFG_RENDERTYPE_FORWARDONLY
         for ( size_t i = 0; i < SHADER_DOMAIN_MAX; ++i )
         {
-            Managers::Renderer::GetInstance().RenderPassWith( typename_wstr.data(), ( eShaderDomain )i );
+            Managers::Renderer::GetInstance().RenderPassWith( typename_wstr.data(), ( eShaderDomain )i ENGINE_MODULE_SCOPE );
         }
 #endif
 		return true;

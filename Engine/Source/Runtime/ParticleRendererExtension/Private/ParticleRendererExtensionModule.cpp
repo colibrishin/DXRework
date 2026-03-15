@@ -1,5 +1,4 @@
-﻿#include "ParticleRendererExtensionModule.h"
-#include "ParticleRendererExtensionModule.generated.h"
+#include "ParticleRendererExtensionModule.h"
 
 #include "AtlasAnimation.h"
 #include "AtlasAnimationTexture.h"

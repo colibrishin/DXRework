@@ -1,5 +1,7 @@
 #pragma once
 #include <ranges>
+#include <unordered_map>
+#include <unordered_set>
 #include "Resource.h"
 #include "Singleton.h"
 #include "Allocator.h"
@@ -75,14 +77,19 @@ namespace Engine::Managers
 		Weak<Abstracts::Resource> GetResourceByMetadataPath(const std::filesystem::path& path, ResourceType type);
 
 #if WITH_EDITOR
-		void RegisterLoadResource(const std::string_view name, const UIHelpers::ManagedBooleanSignature& functor);
+		void RegisterLoadResource(const std::string_view name, const UIHelpers::ManagedBooleanSignature& functor, const std::wstring_view module_name = {});
 		void UnregisterLoadResource(const std::string_view name);
-		auto RegisterNewResource(const std::string_view name, const UIHelpers::ManagedBooleanSignature& functor) -> void;
+		void RegisterNewResource(const std::string_view name, const UIHelpers::ManagedBooleanSignature& functor, const std::wstring_view module_name = {});
 		void UnregisterNewResource(const std::string_view name);
-		
+		void UnregisterModule( std::wstring_view module_name );
+
 	private:
 		UIHelpers::ManagedBoolAndFuncMap<std::string_view> m_ui_load_functions_;
 		UIHelpers::ManagedBoolAndFuncMap<std::string_view> m_ui_new_functions_;
+#if IS_DLL
+		std::unordered_map<std::wstring, std::unordered_set<std::string>> m_load_resource_names_by_module_;
+		std::unordered_map<std::wstring, std::unordered_set<std::string>> m_new_resource_names_by_module_;
+#endif
 #endif
     protected:
         void PreDeconstruction() override;

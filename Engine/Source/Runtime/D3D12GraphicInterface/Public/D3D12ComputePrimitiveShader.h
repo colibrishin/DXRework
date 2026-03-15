@@ -11,7 +11,7 @@ namespace Engine
 	{
         ~D3D12ComputePrimitiveShader() override;
 		D3D12ComputePrimitiveShader();
-		void Generate(Resources::ComputeShader* shader, void* pipeline_signature) override;
+		void Generate(Abstracts::Resource* shader, void* pipeline_signature) override;
 		
 	private:
 		static std::vector<std::tuple<eShaderType, std::string, std::string>> s_main_version;

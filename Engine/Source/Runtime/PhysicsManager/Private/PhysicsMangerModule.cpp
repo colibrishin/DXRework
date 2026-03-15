@@ -1,5 +1,4 @@
-﻿#include "PhysicsManagerModule.h"
-#include "PhysicsManagerModule.generated.h"
+#include "PhysicsManagerModule.h"
 
 #include "CollisionDetector.h"
 #include "ConstraintSolver.h"

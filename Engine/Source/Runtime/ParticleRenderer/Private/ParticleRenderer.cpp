@@ -1,9 +1,6 @@
 #include "ParticleRenderer.h"
 
 #include "ParticleComputeShader.h"
-#include "ParticleRenderer.generated.h"
-
-
 
 #include "RenderPipeline.h"
 #include "ComputeShader.h"

@@ -128,8 +128,6 @@ namespace Engine::Components
 		Collider();
 
 	private:
-		friend class Managers::LerpManager;
-
 		static VertexCollection s_cube_vertices_;
 		static IndexCollection s_cube_indices_;
 		static VertexCollection s_sphere_vertices_;

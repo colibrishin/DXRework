@@ -1,9 +1,8 @@
 #if CLIENT || WITH_EDITOR
 #include "RenderTasks/Public/ShadowIntersectionRenderTask.h"
 
+#include <array>
 #include "RenderPipeline.h"
-#include "ShadowIntersectionRenderTask.generated.h"
-
 
 #include "Renderer.h"
 #include "Shader.h"
@@ -36,9 +35,7 @@ ShadowIntersectionRenderTask::ShadowIntersectionRenderTask()
     }
     else
     {
-        const auto &new_cs = ShadowIntensityComputeShader::Create( "IntersectionCompute", "cs_intensity_test.hlsl");
-
-        m_intersection_compute_ = new_cs;
+        m_intersection_compute_ = ShadowIntensityComputeShader::Create( "IntersectionCompute", "cs_intensity_test.hlsl" );
     }
 
     m_tmp_shadow_depth_ = Resources::Texture2D::Create
@@ -162,8 +159,8 @@ void ShadowIntersectionRenderTask::FirstPass(float dt,
              {
                  gi.SetViewport( context, m_viewport_ );
                  gi.BindGraphic( context, m_shadow_shader_.get() );
-                 Resources::Texture* tmp_arr[] = { component->m_shadow_mask_texs_[i].get() };
-                 gi.BindMultiple( context, tmp_arr, 1, component->m_shadow_texs_[i].get() );
+                 const Abstracts::Resource* rtv_ptrs[] = { component->m_shadow_mask_texs_[i].get() };
+                 gi.BindMultiple( context, rtv_ptrs, 1, component->m_shadow_texs_[i].get() );
              }, {}, {}, {}
 		);
 	}
@@ -202,8 +199,8 @@ void ShadowIntersectionRenderTask::FirstPass(float dt,
              {
                  gi.SetViewport( context, m_viewport_ );
                  gi.BindGraphic( context, m_shadow_shader_.get() );
-                 Resources::Texture* tmp_arr[] = { component->m_shadow_mask_texs_[i].get() };
-                 gi.BindMultiple( context, tmp_arr, 1, component->m_shadow_texs_[i].get() );
+                 const Abstracts::Resource* rtv_ptrs[] = { component->m_shadow_mask_texs_[i].get() };
+                 gi.BindMultiple( context, rtv_ptrs, 1, component->m_shadow_texs_[i].get() );
              }, {}, {}, {}
         );
 	}
@@ -302,29 +299,25 @@ void ShadowIntersectionRenderTask::SecondPass( const float dt,
                       gi.SetViewport( context, m_viewport_ );
                       gi.BindGraphic( context, m_intensity_test_shader_.get() );
 
-                      Resources::Texture *rtvs[ ]{ component->m_intensity_test_texs_[ i ].get(),
-                                                   component->m_intensity_position_texs_[ i ].get() };
+                      const Abstracts::Resource* rtvs[] = { component->m_intensity_test_texs_[ i ].get(),
+                                                           component->m_intensity_position_texs_[ i ].get() };
 
                       gi.BindMultiple( context, rtvs, 2, m_tmp_shadow_depth_.get() );
-                      gi.BindMultiple
-                              ( context,
-                                component->m_shadow_texs_raw_.data(),
-                                BIND_TYPE_SRV,
-                                BIND_SLOT_TEX,
-                                0,
-                                component->m_shadow_texs_raw_.size() );
-                      gi.BindMultiple
-                              ( context,
-                                component->m_shadow_mask_texs_raw_.data(),
-                                BIND_TYPE_SRV,
-                                RESERVED_TEX_SHADOW_MAP,
-                                0,
-                                CFG_MAX_DIRECTIONAL_LIGHT );
+
+                      std::array<const Abstracts::Resource*, CFG_MAX_DIRECTIONAL_LIGHT> shadow_res{};
+                      std::array<const Abstracts::Resource*, CFG_MAX_DIRECTIONAL_LIGHT> shadow_mask_res{};
+                      for ( size_t k = 0; k < CFG_MAX_DIRECTIONAL_LIGHT; ++k )
+                      {
+                          shadow_res[ k ] = component->m_shadow_texs_raw_[ k ];
+                          shadow_mask_res[ k ] = component->m_shadow_mask_texs_raw_[ k ];
+                      }
+                      gi.BindMultiple( context, shadow_res.data(), BIND_TYPE_SRV, BIND_SLOT_TEX, 0, shadow_res.size() );
+                      gi.BindMultiple( context, shadow_mask_res.data(), BIND_TYPE_SRV, RESERVED_TEX_SHADOW_MAP, 0, shadow_mask_res.size() );
                   },
                   [this, i, &component, &gi]( const IGraphicContext *context )
                   {
-                      Resources::Texture *rtvs[ ]{ component->m_intensity_test_texs_[ i ].get(),
-                                                   component->m_intensity_position_texs_[ i ].get() };
+                      const Abstracts::Resource* rtvs[] = { component->m_intensity_test_texs_[ i ].get(),
+                                                           component->m_intensity_position_texs_[ i ].get() };
 
                       gi.TransitBackMultiple( context, rtvs, 2, BIND_TYPE_RTV );
                   },

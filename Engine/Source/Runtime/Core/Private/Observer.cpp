@@ -1,5 +1,4 @@
 #include "Observer.h"
-#include "Observer.generated.h"
 #include "ObjectBase.h"
 
 #include "Transform.h"

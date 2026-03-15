@@ -1,5 +1,4 @@
 #include "Camera.h"
-#include "Camera.generated.h"
 #include "Transform.h"
 
 namespace Engine::Objects

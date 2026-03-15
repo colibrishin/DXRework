@@ -1,8 +1,8 @@
 #include "MaterialModule.h"
-#include "MaterialModule.generated.h"
 #include "Material.h"
-#include "SceneManager.h"
+#include "ModuleRegistration.h"
 #include "ResourceManager.h"
+#include "SceneManager.h"
 
 MODULE_IMPL(Engine::MaterialModule, Material)
 
@@ -13,7 +13,7 @@ bool Engine::MaterialModule::InitializeImpl()
 		{
 			Resources::Material::Create("NewMaterial", Graphics::MaterialPrimitive{});
 			managing_flag = false;
-		});
+		} ENGINE_MODULE_SCOPE );
 
 	Managers::ResourceManager::GetInstance().RegisterLoadResource(Resources::Material::StaticTypeName(), [](bool& managing_flag)
 		{
@@ -23,8 +23,7 @@ bool Engine::MaterialModule::InitializeImpl()
 				};
 
 			UIHelpers::OpenLoadDialog<Resources::Material, Managers::ResourceManager>(managing_flag, {}, load_callback, {});
-			
-		});
+		} ENGINE_MODULE_SCOPE );
 #endif 
 
 	return true;

@@ -1,5 +1,4 @@
-﻿#include "ParticleRendererRenderInstanceTaskModule.h"
-#include "ParticleRendererRenderInstanceTaskModule.generated.h"
+#include "ParticleRendererRenderInstanceTaskModule.h"
 
 
 #include "ParticleRendererRenderTask.h"

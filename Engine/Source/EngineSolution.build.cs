@@ -90,9 +90,6 @@ public class EngineSolution : Solution
             conf.AddProject<Shape>(target);
             conf.AddProject<ShapeImporter>(target);
             conf.AddProject<Texture>(target);
-            conf.AddProject<Texture1D>(target);
-            conf.AddProject<Texture2D>(target);
-            conf.AddProject<Texture3D>(target);
             conf.AddProject<Font>(target);
             conf.AddProject<Sound>(target);
 
@@ -102,6 +99,7 @@ public class EngineSolution : Solution
 
         if (target.LaunchType == ELaunchType.Editor)
         {
+            conf.AddProject<ImGui>(target);
             conf.AddProject<ImGuiManager>(target);
         }
         

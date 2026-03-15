@@ -1,5 +1,4 @@
 #include "Component.h"
-#include "Component.generated.h"
 
 namespace Engine
 {

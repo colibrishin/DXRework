@@ -12,6 +12,7 @@
 #include "CommandPair.h"
 #include "D3D12GraphicMemoryPool.h"
 #include "D3D12GraphicResourcePrimitive.h"
+#include "ResourceTypeValidation.h"
 
 namespace Engine
 {
@@ -30,8 +31,10 @@ namespace Engine
 #endif
 	}
 
-    void D3D12PrimitiveMesh::Generate( Resources::Mesh* mesh )
+    void D3D12PrimitiveMesh::Generate( Abstracts::Resource* resource )
     {
+		D3D12::ExpectMesh( resource );
+		auto* mesh = static_cast<Resources::Mesh*>(resource);
 		std::string generic_name = mesh->GetName();
 
 		const std::wstring vertex_name = std::wstring(generic_name.begin(), generic_name.end()) + L"VertexBuffer";

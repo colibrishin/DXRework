@@ -1,5 +1,4 @@
 #include "AnimationTextureModule.h"
-#include "AnimationTextureModule.generated.h"
 
 MODULE_IMPL( Engine::AnimationTextureModule, AnimationTexture )
 

@@ -1,11 +1,9 @@
 #include "FontModule.h"
-#include "FontModule.generated.h"
 
 #include "Font.h"
 
-
-
 #if WITH_EDITOR
+#include "ModuleRegistration.h"
 #include "UIHelpersResourceManager.h"
 #endif
 
@@ -28,7 +26,7 @@ bool Engine::FontModule::InitializeImpl()
                 load_callback,
                 {}
             );
-        });
+        } ENGINE_MODULE_SCOPE );
 #endif
     return true;
 }

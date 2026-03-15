@@ -4,7 +4,6 @@
 #include <ranges>
 
 #include "Shape.h"
-#include "Shape.generated.h"
 
 #include "Collider.h"
 

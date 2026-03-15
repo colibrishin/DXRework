@@ -1,5 +1,4 @@
 #include "ReflectionEvaluator.h"
-#include "ReflectionEvaluator.generated.h"
 
 #include "Renderer.h"
 
@@ -22,8 +21,8 @@ namespace Engine::Managers
 	void ReflectionEvaluator::Initialize()
 	{
 		m_copy_ = Resources::Texture2D::Create(
-			"Evaluated Reflection", 
-			"", 
+			"Evaluated Reflection",
+			"",
 			GenericTextureDescription {
 				   .Alignment = 0,
 				   .Width = CFG_WIDTH,

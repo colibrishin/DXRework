@@ -1,8 +1,10 @@
 #if CFG_RAYTRACING
 #include "RaytracingExtension.h"
-#include "RaytracingExtension.generated.h"
+
+#include <functional>
 
 #include "IGraphicAPI.h"
+#include "IRaytracingExtension.h"
 #include "RaytracingRenderPassTask.h"
 #include "Renderer.h"
 
@@ -11,13 +13,21 @@
 #endif
 #include "ForwardRenderPassTask.h"
 
-auto RenderPass(const bool go)
+using RenderPassFn = std::function<void( std::wstring_view, Engine::eShaderDomain )>;
+
+RenderPassFn RenderPass( const bool go )
 {
-    if (go)
+    if ( go )
     {
-        return std::bind_front( &Engine::Managers::Renderer::RenderPassWith, &Engine::Managers::Renderer::GetInstance() );
+        return []( std::wstring_view name, Engine::eShaderDomain domain )
+        {
+            Engine::Managers::Renderer::GetInstance().RenderPassWith( name, domain, {} );
+        };
     }
-    return std::bind_front( &Engine::Managers::Renderer::RenderPassWithout, &Engine::Managers::Renderer::GetInstance() );
+    return []( std::wstring_view name, Engine::eShaderDomain domain )
+    {
+        Engine::Managers::Renderer::GetInstance().RenderPassWithout( name, domain );
+    };
 }
 
 void Engine::RaytracingExtension::SetRaytracing( const bool flag )

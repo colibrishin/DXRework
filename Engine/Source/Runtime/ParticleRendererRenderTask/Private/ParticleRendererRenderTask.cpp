@@ -1,5 +1,4 @@
 #include "ParticleRendererRenderTask.h"
-#include "ParticleRendererRenderTask.generated.h"
 #include <tbb/parallel_for_each.h>
 
 #include "ParticleRenderer.h"
@@ -16,10 +15,11 @@ namespace Engine
 {
     ParticleRendererRenderInstanceTask::~ParticleRendererRenderInstanceTask()
     {
-        for (auto* ptr : m_instance_generated_)
+        auto& alloc = get_instance_sb_pool_allocator();
+        for ( auto* ptr : m_instance_generated_ )
         {
-            m_instance_allocator_.destroy(ptr);
-            m_instance_allocator_.deallocate(ptr);
+            alloc.destroy( ptr );
+            alloc.deallocate( ptr );
         }
     }
 
@@ -172,19 +172,35 @@ namespace Engine
 
     Graphics::SBs::InstanceSB* ParticleRendererRenderInstanceTask::GetInstance()
     {
-        SpinLockToken token = SingletonSpinLock::GetInstance().Lock(m_instance_ticket_);
+        SpinLockToken token = SingletonSpinLock::GetInstance().Lock( m_instance_ticket_ );
 
-        if (m_allocation_count_ > m_used_count_)
+        if ( m_allocation_count_ > m_used_count_ )
         {
-            return m_instance_generated_[m_used_count_++];
+            return m_instance_generated_[ m_used_count_++ ];
         }
 
-        Graphics::SBs::InstanceSB* generated = m_instance_allocator_.allocate( 1 );
-
-        std::memset(generated, 0, sizeof(decltype(*generated)));
-        m_instance_allocator_.construct(generated);
-        m_instance_generated_.push_back(generated);
-
+        auto& alloc = get_instance_sb_pool_allocator();
+        Graphics::SBs::InstanceSB* generated = alloc.allocate( 1 );
+        try
+        {
+            std::memset(generated, 0, sizeof(decltype(*generated)));
+            alloc.construct( generated );
+        }
+        catch ( ... )
+        {
+            alloc.deallocate( generated, 1 );
+            throw;
+        }
+        try
+        {
+            m_instance_generated_.push_back( generated );
+        }
+        catch ( ... )
+        {
+            alloc.destroy( generated );
+            alloc.deallocate( generated, 1 );
+            throw;
+        }
         ++m_allocation_count_;
         ++m_used_count_;
         return generated;

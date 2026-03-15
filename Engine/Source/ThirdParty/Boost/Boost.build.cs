@@ -24,30 +24,28 @@ public class Boost : VCPKG
 
         conf.LibraryFiles.Add
         (
-            @"boost_atomic-vc143-mt-gd-x64-1_88.lib", 
-            @"boost_chrono-vc143-mt-gd-x64-1_88.lib", 
-            @"boost_container-vc143-mt-gd-x64-1_88.lib",
-            @"boost_context-vc143-mt-gd-x64-1_88.lib",
-            @"boost_date_time-vc143-mt-gd-x64-1_88.lib",
-            @"boost_serialization-vc143-mt-gd-x64-1_88.lib",
-            @"boost_system-vc143-mt-gd-x64-1_88.lib",
-            @"boost_thread-vc143-mt-gd-x64-1_88.lib",
-            @"boost_wserialization-vc143-mt-gd-x64-1_88.lib"
+            @"boost_atomic-vc145-mt-gd-x64-1_90.lib",
+            @"boost_chrono-vc145-mt-gd-x64-1_90.lib",
+            @"boost_container-vc145-mt-gd-x64-1_90.lib",
+            @"boost_context-vc145-mt-gd-x64-1_90.lib",
+            @"boost_date_time-vc145-mt-gd-x64-1_90.lib",
+            @"boost_serialization-vc145-mt-gd-x64-1_90.lib",
+            @"boost_thread-vc145-mt-gd-x64-1_90.lib",
+            @"boost_wserialization-vc145-mt-gd-x64-1_90.lib"
         );
 
         string BinPath = GetVCPKGBinPath(target);
 
         conf.TargetCopyFiles.Add
         (
-            BinPath + @"/boost_atomic-vc143-mt-gd-x64-1_88.dll", 
-            BinPath + @"/boost_chrono-vc143-mt-gd-x64-1_88.dll", 
-            BinPath + @"/boost_container-vc143-mt-gd-x64-1_88.dll",
-            BinPath + @"/boost_context-vc143-mt-gd-x64-1_88.dll",
-            BinPath + @"/boost_date_time-vc143-mt-gd-x64-1_88.dll",
-            BinPath + @"/boost_serialization-vc143-mt-gd-x64-1_88.dll",
-            BinPath + @"/boost_system-vc143-mt-gd-x64-1_88.dll",
-            BinPath + @"/boost_thread-vc143-mt-gd-x64-1_88.dll",
-            BinPath + @"/boost_wserialization-vc143-mt-gd-x64-1_88.dll"
+            BinPath + @"/boost_atomic-vc145-mt-gd-x64-1_90.dll",
+            BinPath + @"/boost_chrono-vc145-mt-gd-x64-1_90.dll",
+            BinPath + @"/boost_container-vc145-mt-gd-x64-1_90.dll",
+            BinPath + @"/boost_context-vc145-mt-gd-x64-1_90.dll",
+            BinPath + @"/boost_date_time-vc145-mt-gd-x64-1_90.dll",
+            BinPath + @"/boost_serialization-vc145-mt-gd-x64-1_90.dll",
+            BinPath + @"/boost_thread-vc145-mt-gd-x64-1_90.dll",
+            BinPath + @"/boost_wserialization-vc145-mt-gd-x64-1_90.dll"
         );
     }
 
@@ -57,30 +55,28 @@ public class Boost : VCPKG
 
         conf.LibraryFiles.Add
         (
-            @"boost_atomic-vc143-mt-x64-1_88.lib", 
-            @"boost_chrono-vc143-mt-x64-1_88.lib", 
-            @"boost_container-vc143-mt-x64-1_88.lib",
-            @"boost_context-vc143-mt-x64-1_88.lib",
-            @"boost_date_time-vc143-mt-x64-1_88.lib",
-            @"boost_serialization-vc143-mt-x64-1_88.lib",
-            @"boost_system-vc143-mt-x64-1_88.lib",
-            @"boost_thread-vc143-mt-x64-1_88.lib",
-            @"boost_wserialization-vc143-mt-x64-1_88.lib"
+            @"boost_atomic-vc145-mt-x64-1_90.lib",
+            @"boost_chrono-vc145-mt-x64-1_90.lib",
+            @"boost_container-vc145-mt-x64-1_90.lib",
+            @"boost_context-vc145-mt-x64-1_90.lib",
+            @"boost_date_time-vc145-mt-x64-1_90.lib",
+            @"boost_serialization-vc145-mt-x64-1_90.lib",
+            @"boost_thread-vc145-mt-x64-1_90.lib",
+            @"boost_wserialization-vc145-mt-x64-1_90.lib"
         );
 
         string BinPath = GetVCPKGBinPath(target);
 
         conf.TargetCopyFiles.Add
         (
-            BinPath + @"/boost_atomic-vc143-mt-x64-1_88.dll", 
-            BinPath + @"/boost_chrono-vc143-mt-x64-1_88.dll", 
-            BinPath + @"/boost_container-vc143-mt-x64-1_88.dll",
-            BinPath + @"/boost_context-vc143-mt-x64-1_88.dll",
-            BinPath + @"/boost_date_time-vc143-mt-x64-1_88.dll",
-            BinPath + @"/boost_serialization-vc143-mt-x64-1_88.dll",
-            BinPath + @"/boost_system-vc143-mt-x64-1_88.dll",
-            BinPath + @"/boost_thread-vc143-mt-x64-1_88.dll",
-            BinPath + @"/boost_wserialization-vc143-mt-x64-1_88.dll"
+            BinPath + @"/boost_atomic-vc145-mt-x64-1_90.dll",
+            BinPath + @"/boost_chrono-vc145-mt-x64-1_90.dll",
+            BinPath + @"/boost_container-vc145-mt-x64-1_90.dll",
+            BinPath + @"/boost_context-vc145-mt-x64-1_90.dll",
+            BinPath + @"/boost_date_time-vc145-mt-x64-1_90.dll",
+            BinPath + @"/boost_serialization-vc145-mt-x64-1_90.dll",
+            BinPath + @"/boost_thread-vc145-mt-x64-1_90.dll",
+            BinPath + @"/boost_wserialization-vc145-mt-x64-1_90.dll"
         );
     }
 }

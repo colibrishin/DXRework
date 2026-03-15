@@ -1,5 +1,4 @@
 #include "TextRenderer.h"
-#include "TextRenderer.generated.h"
 
 #include "Font.h"
 

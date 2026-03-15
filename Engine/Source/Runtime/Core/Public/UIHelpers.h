@@ -18,6 +18,13 @@ namespace Engine::UIHelpers
     template <typename Key>
     using ManagedBoolAndFuncMap = std::unordered_map<Key, std::pair<bool, ManagedBooleanSignature> >;
 
+    struct NamePathDialogState
+    {
+        bool        pressed = false;
+        std::string name{};
+        std::string path{};
+    };
+
     template <bool UseName, bool UsePath>
     bool NamePathDialogTemplate(
         const void*                                pointer,
@@ -29,22 +36,24 @@ namespace Engine::UIHelpers
         const UICleanupCallbackSignature&          cleanup_callback
     )
     {
-        IUIAPI& ui = g_ui_accessor.GetInterface();
+        if (!g_ui_accessor.IsValid())
+            return false;
 
-        static bool        pressed = false;
-        static std::string name{};
-        static std::string path{};
+        static std::unordered_map<std::string, NamePathDialogState> state_by_title;
+        NamePathDialogState& state = state_by_title[std::string(title)];
+
+        IUIAPI& ui = g_ui_accessor.GetInterface();
 
         if ( UIContext context = IUIAPI::NewContext( ui.NewDialog( pointer, "NewPathDialog", { title, flag } ) ) )
         {
             if constexpr ( UseName )
             {
-                context |= ui.NewLabelAndText( pointer, "NamePathDialogName", { "Name", name, true } );
+                context |= ui.NewLabelAndText( pointer, "NamePathDialogName", { "Name", state.name, true } );
             }
 
             if constexpr ( UsePath )
             {
-                context |= ui.NewLabelAndText( pointer, "NamePathDialogPath", { "Path", path, true } );
+                context |= ui.NewLabelAndText( pointer, "NamePathDialogPath", { "Path", state.path, true } );
             }
 
             if ( ui_callback )
@@ -55,8 +64,8 @@ namespace Engine::UIHelpers
             ( context |= ui.NewButton( pointer, "NewPathDialogConfirmButton", { confirm_button_label } ) ).SetFunction(
                     [&]()
                     {
-                        pressed = true;
-                        flag    = false;
+                        state.pressed = true;
+                        flag          = false;
                     }
                     );
 
@@ -66,20 +75,20 @@ namespace Engine::UIHelpers
             } );
         }
 
-        if ( pressed )
+        if ( state.pressed )
         {
             if ( confirm_callback )
             {
-                confirm_callback( name, path );
+                confirm_callback( state.name, state.path );
             }
             if ( cleanup_callback )
             {
                 cleanup_callback();
             }
-            name    = {};
-            path    = {};
-            flag    = false;
-            pressed = false;
+            state.name.clear();
+            state.path.clear();
+            state.pressed = false;
+            flag          = false;
             return false;
         }
 
@@ -89,8 +98,8 @@ namespace Engine::UIHelpers
             {
                 cleanup_callback();
             }
-            name = {};
-            path = {};
+            state.name.clear();
+            state.path.clear();
             return false;
         }
 
@@ -173,6 +182,9 @@ namespace Engine::UIHelpers
             const std::function<bool( const Strong<U> & )> &predicate      = {},
             const std::function<bool( const HashType )> &   type_predicate = {} )
     {
+        if (!g_ui_accessor.IsValid())
+            return false;
+
         bool                       window = true;
         static TypeSelectionMap<U> selection{};
 
@@ -225,6 +237,9 @@ namespace Engine::UIHelpers
             const std::function<bool( const Strong<U> & )> &predicate      = {},
             const std::function<bool( const HashType )> &   type_predicate = {} )
     {
+        if (!g_ui_accessor.IsValid())
+            return false;
+
         bool                       window = true;
         static TypeSelectionMap<U> selection{};
 

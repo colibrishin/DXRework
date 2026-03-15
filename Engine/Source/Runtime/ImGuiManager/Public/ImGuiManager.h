@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 #if WITH_EDITOR
 #include "IGraphicAPI.h"
 #include "Singleton.h"
@@ -298,11 +298,9 @@ namespace Engine
     };
 
 #define IMGUI_INLINE_GETTER_DECL(Name) \
-    std::unique_ptr<IUITokenBase> New##Name##( const void*                       context,                            \
-                                                 const std::string_view            name,                               \
-                                                 const Name##Token::ArgumentTuple& arguments ) override \
+    IUITokenBasePtr New##Name##( const void* context, const std::string_view name, const Name##Token::ArgumentTuple& arguments ) override \
     { \
-		return Generate<ImGui##Name##Token>(context, name, arguments); \
+        return Generate<ImGui##Name##Token>( context, name, arguments ); \
     }
 
     struct ENGINE_IMGUIMANAGER_API ImGuiUIInterface final : IUIAPI
@@ -337,7 +335,7 @@ namespace Engine
         IMGUI_INLINE_GETTER_DECL(TableColumn)
         IMGUI_INLINE_GETTER_DECL(LabelAndVec2)
 
-        void               NewFrame() override;
+        void NewFrame() override;
     };
 }
 

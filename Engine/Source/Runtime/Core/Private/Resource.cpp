@@ -1,5 +1,4 @@
 #include "Resource.h"
-#include "Resource.generated.h"
 
 namespace Engine::Abstracts
 {

@@ -4,7 +4,7 @@ using Microsoft.Win32;
 using Sharpmake;
 
 [Sharpmake.Export]
-public abstract class ExportProject : Project
+public abstract class ExportProject : Project, IEngineProjectConfigure
 {
     protected ExportProject() : base(typeof(EngineTarget))
     {

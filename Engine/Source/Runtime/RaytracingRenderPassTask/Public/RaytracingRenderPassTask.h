@@ -3,6 +3,7 @@
 
 #include "ConcurrentTypeLibrary.h"
 #include "IGraphicAPI.h"
+#include "RaytracingShader.h"
 #include "RenderPassTask.h"
 #include "RenderPassTaskFactory.h"
 #include "SingletonSpinLock.h"

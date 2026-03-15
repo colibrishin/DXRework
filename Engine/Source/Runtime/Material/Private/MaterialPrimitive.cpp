@@ -1,5 +1,4 @@
 #include "MaterialPrimitive.h"
-#include "MaterialPrimitive.generated.h"
 #include "StructuredBuffer.h"
 
 #include "SIMDExtension.hpp"

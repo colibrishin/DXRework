@@ -5,6 +5,8 @@
 #include "RenderPassTask.h"
 #include "RenderPassTaskFactory.h"
 #include "SingletonSpinLock.h"
+#include "Texture.h"
+#include "Texture2D.h"
 #include "TexturePair.h"
 
 #include "DeferredRenderPassTask.generated.h"

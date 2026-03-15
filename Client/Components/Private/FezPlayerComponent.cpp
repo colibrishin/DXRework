@@ -1,5 +1,4 @@
 #include "Components/Public/FezPlayerComponent.h"
-#include "FezPlayerComponent.generated.h"
 
 #include "MathExtension.hpp"
 #include "Rigidbody.h"

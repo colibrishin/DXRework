@@ -3,6 +3,8 @@
 
 #include "TextRenderer.generated.h"
 
+namespace Engine { namespace Resources { class Font; } }
+
 namespace Engine::Components
 {
     ECLASS(component, serialize)

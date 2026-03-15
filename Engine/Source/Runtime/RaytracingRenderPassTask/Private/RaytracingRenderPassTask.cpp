@@ -1,8 +1,10 @@
 #include "RaytracingRenderPassTask.h"
 
 #include <ranges>
+#include <vector>
 #include <tbb/parallel_for_each.h>
 
+#include "IRaytracingExtension.h"
 #include "RenderPipeline.h"
 #include "Renderer.h"
 
@@ -84,7 +86,7 @@ namespace Engine
                          meshes.reserve(pair.second.size());
                          for (const auto& [mesh, instances] : pair.second)
                          {
-                             meshes.emplace_back(mesh.get(), instances.size());
+                             meshes.emplace_back(static_cast<Resources::Mesh*>(mesh.get()), instances.size());
                          }
 
                          if (const Strong<Resources::RaytracingShader>& locked_shader =
@@ -117,7 +119,8 @@ namespace Engine
                                                 0 );
 		    if (m_used_shader_textures_.size() > 0 && m_used_shader_textures_[0] != nullptr)
 		    {
-			    gi.TransitBackMultiple(&primitive, m_used_shader_textures_.data(), unique_idx, BIND_TYPE_SRV);
+			    std::vector<const Abstracts::Resource*> res_ptrs( m_used_shader_textures_.begin(), m_used_shader_textures_.begin() + unique_idx );
+			    gi.TransitBackMultiple( &primitive, res_ptrs.data(), unique_idx, BIND_TYPE_SRV );
                 std::ranges::fill( m_used_shader_textures_, nullptr );
 		    }
             rgi.CopyRaytracingToRenderTarget( &primitive );
@@ -267,7 +270,8 @@ namespace Engine
 
 	            // Manual Release
 	            auto token = SingletonSpinLock::GetInstance().Lock(m_heap_ticket_);
-	            const auto& heap = m_local_heaps_.emplace_back(rgi.GetRaytracingHeap()).get();
+	            m_local_heaps_.push_back( rgi.GetRaytracingHeap() );
+	            IHeapBase* heap = m_local_heaps_.back().get();
 	            token.Release();
 
 	            const IGraphicContext local_sig_context

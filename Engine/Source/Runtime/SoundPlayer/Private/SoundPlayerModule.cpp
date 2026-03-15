@@ -1,5 +1,4 @@
 #include "SoundPlayerModule.h"
-#include "SoundPlayerModule.generated.h"
 
 #include "SoundPlayer.h"
 

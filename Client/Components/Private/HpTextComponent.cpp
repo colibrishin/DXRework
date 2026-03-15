@@ -1,5 +1,4 @@
 #include "Components/Public/HpTextComponent.h"
-#include "HpTextComponent.generated.h"
 
 #include "ObjectBase.h"
 #include "Scene.h"

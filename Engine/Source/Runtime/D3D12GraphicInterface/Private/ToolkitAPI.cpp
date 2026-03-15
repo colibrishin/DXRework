@@ -16,7 +16,11 @@ namespace Engine::Managers
 	{
 		auto& gi = reinterpret_cast<D3D12GraphicInterface&>(g_graphic_accessor.GetInterface());
 		auto dev = static_cast<ID3D12Device2*>(gi.GetNativeInterface());
-		
+
+		// DirectXTK12 GraphicsMemory is a per-device singleton; create it first before any other
+		// DirectXTK object (ResourceUploadBatch, SpriteBatch, etc.) that may use it.
+		m_graphics_memory_ = std::make_unique<DirectX::GraphicsMemory>(dev);
+
 		m_descriptor_heap_ = std::make_unique<DirectX::DescriptorHeap>(dev, 1);
 
 		m_states_                = std::make_unique<DirectX::CommonStates>(dev);
@@ -24,7 +28,6 @@ namespace Engine::Managers
 		m_render_target_state_   = std::make_unique<DirectX::RenderTargetState>(DXGI_FORMAT_R8G8B8A8_UNORM, DXGI_FORMAT_D24_UNORM_S8_UINT);
 		m_sprite_pipeline_state_ = std::make_unique<DirectX::SpriteBatchPipelineStateDescription>(*m_render_target_state_.get());
 		m_primitive_batch_ = std::make_unique<DirectX::PrimitiveBatch<DirectX::VertexPositionColor>>(dev);
-		m_graphics_memory_ = std::make_unique<DirectX::GraphicsMemory>(dev);
 		m_geometric_primitive_ = DirectX::GeometricPrimitive::CreateTeapot();
 		m_effect_pipeline_state_ = std::make_unique<DirectX::EffectPipelineStateDescription>
 				(

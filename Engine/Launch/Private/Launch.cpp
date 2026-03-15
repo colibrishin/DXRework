@@ -1,10 +1,14 @@
 #ifdef CFG_MONOLITH
 #include "Monolith/Monolith.h"
 #else
+#if PLATFORM == Windows
+#include <Windows.h>
+#endif
 #include "WinAPIWrapper.hpp"
 #include "EngineEntryPoint.h"
 #include "ModuleInfo.h"
 #include "ModuleManager.h"
+#include "ModuleRegistration.h"
 #endif
 
 #if PLATFORM == Windows
@@ -80,11 +84,12 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline
             }
         }
 
-        // Memory and type management module
+        // Core (manual) load order follows kCoreModuleLoadOrder (ELoadPhase::Core).
+        static_assert( kCoreModuleLoadOrder[0] == L"Memory" && kCoreModuleLoadOrder[3] == L"WinAPIWrapper" );
+
         g_core_mem = std::make_unique<Engine::ModuleInfo>();
         load_seq( *g_core_mem, L"Memory.dll", "./Memory.dll" );
 
-        // Load core modules and graphic API, and OS API wrapper.
         g_module_api = std::make_unique<Engine::ModuleInfo>();
         load_seq( *g_module_api, L"CoreModule.dll", "./CoreModule.dll" );
 
@@ -104,19 +109,20 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline
     }
     catch ( std::exception& e )
     {
-        // todo: alert
+#if PLATFORM == Windows
+        MessageBoxA( nullptr, e.what(), "Launch Exception", MB_OK | MB_ICONERROR );
+#endif
     }
 
-    // Clean up core libraries
-    cleanup_seq( *g_core_api );
-
+    // Teardown order per ModuleRegistration.h: Destroy → Shutdown → Core → Graphic → OS → alloc → Destroy → CoreModule → Memory
     if ( Engine::Managers::EngineEntryPoint::IsInitialized() )
     {
         Engine::Managers::EngineEntryPoint::Destroy();
         Engine::Managers::ModuleManager::GetInstance().Shutdown();
     }
 
-    // Clean up the graphic API.
+    cleanup_seq( *g_core_api );
+
     if ( g_graphic_api )
     {
         cleanup_seq( *g_graphic_api );
@@ -132,11 +138,16 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline
 
     for ( Engine::alloc_base* alloc : g_static_alloc | std::views::values )
     {
+        alloc->release_memory();
         alloc->purge_memory();
 
         auto& rebind_releases = alloc->get_rebind_release();
         auto& rebind_purge    = alloc->get_rebind_purge();
 
+        for ( const auto& [type, func] : rebind_releases )
+        {
+            func();
+        }
         for ( const auto& [type, func] : rebind_purge )
         {
             func();

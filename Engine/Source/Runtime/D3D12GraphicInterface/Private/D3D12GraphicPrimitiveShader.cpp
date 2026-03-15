@@ -4,6 +4,7 @@
 
 #include "ThrowIfFailed.h"
 #include "Shader.h"
+#include "ResourceTypeValidation.h"
 
 std::vector<std::tuple<Engine::eShaderType, std::string, std::string>> Engine::D3D12GraphicPrimitiveShader::s_main_version =
 		{
@@ -20,8 +21,10 @@ namespace Engine
     D3D12GraphicPrimitiveShader::~D3D12GraphicPrimitiveShader()
     { }
 
-    void D3D12GraphicPrimitiveShader::Generate( const Resources::Shader* shader, void* pipeline_signature )
+    void D3D12GraphicPrimitiveShader::Generate( const Abstracts::Resource* resource, void* pipeline_signature )
 	{
+		D3D12::ExpectShader( resource );
+		auto* shader = static_cast<const Resources::Shader*>(resource);
 		ConvertShader(shader);
 
 		ComPtr<ID3DBlob> blob;

@@ -1,5 +1,8 @@
 using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using Sharpmake;
 
@@ -33,6 +36,182 @@ public class Utils
     public static string GetProjectDir()
     {
         return Environment.GetEnvironmentVariable("ProjectFilesDir");
+    }
+
+    /// <summary>Rust/cargo bin directory for FastBuild PATH.</summary>
+    public static string GetRustPathForFastBuild()
+    {
+        string cargoHome = Environment.GetEnvironmentVariable("CARGO_HOME");
+        if (!string.IsNullOrEmpty(cargoHome))
+        {
+            string bin = Path.Combine(cargoHome, "bin");
+            if (Directory.Exists(bin))
+                return Path.GetFullPath(bin);
+        }
+        string userProfile = Environment.GetEnvironmentVariable("USERPROFILE");
+        if (!string.IsNullOrEmpty(userProfile))
+        {
+            string bin = Path.Combine(userProfile, ".cargo", "bin");
+            if (Directory.Exists(bin))
+                return Path.GetFullPath(bin);
+        }
+        return string.Empty;
+    }
+
+    /// <summary>VC tools bin directory (link.exe) for FastBuild PATH. Uses vswhere then VC\Tools\MSVC\*\bin\Hostx64\x64.</summary>
+    public static string GetVCToolsPathForFastBuild()
+    {
+        string vsWhere = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86),
+            "Microsoft Visual Studio", "Installer", "vswhere.exe");
+        if (!File.Exists(vsWhere))
+            return string.Empty;
+        try
+        {
+            var psi = new ProcessStartInfo
+            {
+                FileName = vsWhere,
+                Arguments = "-latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath",
+                RedirectStandardOutput = true,
+                UseShellExecute = false,
+                CreateNoWindow = true
+            };
+            using (var p = Process.Start(psi))
+            {
+                if (p == null)
+                    return string.Empty;
+                string vsPath = p.StandardOutput?.ReadToEnd()?.Trim();
+                if (string.IsNullOrEmpty(vsPath) || !Directory.Exists(vsPath))
+                    return string.Empty;
+                string msvcRoot = Path.Combine(vsPath, "VC", "Tools", "MSVC");
+                if (!Directory.Exists(msvcRoot))
+                    return string.Empty;
+                string latestVer = Directory.GetDirectories(msvcRoot)
+                    .OrderByDescending(d => d, StringComparer.Ordinal)
+                    .FirstOrDefault();
+                if (string.IsNullOrEmpty(latestVer))
+                    return string.Empty;
+                string binPath = Path.Combine(latestVer, "bin", "Hostx64", "x64");
+                return Directory.Exists(binPath) ? Path.GetFullPath(binPath) : string.Empty;
+            }
+        }
+        catch
+        {
+            return string.Empty;
+        }
+    }
+
+    /// <summary>Rust + VC path segment for FastBuild. SDK is appended by Sharpmake (no override).</summary>
+    public static string GetFastBuildPathRustAndVCTools()
+    {
+        string rust = GetRustPathForFastBuild();
+        string vc = GetVCToolsPathForFastBuild();
+        var parts = new[] { rust, vc }.Where(s => !string.IsNullOrEmpty(s));
+        return string.Join(";", parts);
+    }
+
+    /// <summary>Windows SDK Lib path (um\x64 and ucrt\x64) so link.exe can find ntdll.lib etc. Note: libs are under Lib\, not bin\.</summary>
+    public static string GetWindowsSdkLibPathForFastBuild()
+    {
+        string programFilesX86 = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86);
+        string kitsRoot = Path.Combine(programFilesX86, "Windows Kits", "10", "Lib");
+        string kitsBin = Path.Combine(programFilesX86, "Windows Kits", "10", "bin");
+
+        // Prefer: use version from Lib folder (latest).
+        if (Directory.Exists(kitsRoot))
+        {
+            string latestVer = Directory.GetDirectories(kitsRoot)
+                .OrderByDescending(d => d, StringComparer.Ordinal)
+                .FirstOrDefault();
+            if (!string.IsNullOrEmpty(latestVer))
+            {
+                string um = Path.Combine(latestVer, "um", "x64");
+                string ucrt = Path.Combine(latestVer, "ucrt", "x64");
+                var parts = new List<string>();
+                if (Directory.Exists(um))
+                    parts.Add(Path.GetFullPath(um));
+                if (Directory.Exists(ucrt))
+                    parts.Add(Path.GetFullPath(ucrt));
+                if (parts.Count > 0)
+                    return string.Join(";", parts);
+            }
+        }
+
+        // Fallback: use same SDK version as bin (PATH). Lib path = Lib\<ver>\um\x64 and ucrt\x64.
+        if (Directory.Exists(kitsBin))
+        {
+            string binVer = Directory.GetDirectories(kitsBin)
+                .OrderByDescending(d => d, StringComparer.Ordinal)
+                .FirstOrDefault();
+            if (!string.IsNullOrEmpty(binVer))
+            {
+                string verName = Path.GetFileName(binVer);
+                string libVer = Path.Combine(programFilesX86, "Windows Kits", "10", "Lib", verName);
+                string um = Path.Combine(libVer, "um", "x64");
+                string ucrt = Path.Combine(libVer, "ucrt", "x64");
+                var parts = new List<string>();
+                if (Directory.Exists(um))
+                    parts.Add(Path.GetFullPath(um));
+                if (Directory.Exists(ucrt))
+                    parts.Add(Path.GetFullPath(ucrt));
+                if (parts.Count > 0)
+                    return string.Join(";", parts);
+            }
+        }
+
+        return string.Empty;
+    }
+
+    /// <summary>VC lib path (MSVC\*\lib\x64) for link.exe.</summary>
+    public static string GetVCLibPathForFastBuild()
+    {
+        string vsWhere = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86),
+            "Microsoft Visual Studio", "Installer", "vswhere.exe");
+        if (!File.Exists(vsWhere))
+            return string.Empty;
+        try
+        {
+            var psi = new ProcessStartInfo
+            {
+                FileName = vsWhere,
+                Arguments = "-latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath",
+                RedirectStandardOutput = true,
+                UseShellExecute = false,
+                CreateNoWindow = true
+            };
+            using (var p = Process.Start(psi))
+            {
+                if (p == null)
+                    return string.Empty;
+                string vsPath = p.StandardOutput?.ReadToEnd()?.Trim();
+                if (string.IsNullOrEmpty(vsPath) || !Directory.Exists(vsPath))
+                    return string.Empty;
+                string msvcRoot = Path.Combine(vsPath, "VC", "Tools", "MSVC");
+                if (!Directory.Exists(msvcRoot))
+                    return string.Empty;
+                string latestVer = Directory.GetDirectories(msvcRoot)
+                    .OrderByDescending(d => d, StringComparer.Ordinal)
+                    .FirstOrDefault();
+                if (string.IsNullOrEmpty(latestVer))
+                    return string.Empty;
+                string libPath = Path.Combine(latestVer, "lib", "x64");
+                return Directory.Exists(libPath) ? Path.GetFullPath(libPath) : string.Empty;
+            }
+        }
+        catch
+        {
+            return string.Empty;
+        }
+    }
+
+    /// <summary>LIB for FastBuild so link.exe finds ntdll.lib and other SDK/VC libs. Append only (do not override existing LIB).</summary>
+    public static string GetFastBuildLib()
+    {
+        string sdk = GetWindowsSdkLibPathForFastBuild();
+        string vc = GetVCLibPathForFastBuild();
+        var parts = new[] { sdk, vc }.Where(s => !string.IsNullOrEmpty(s));
+        return string.Join(";", parts);
     }
 
     public static void MakeConfiturationNameDefine(Solution.Configuration conf, EngineTarget target)
@@ -72,7 +251,7 @@ public class Utils
         return new EngineTarget(
             ELaunchType.Editor | ELaunchType.Client | ELaunchType.Server,
             Platform.win64,
-            DevEnv.vs2022,
+            DevEnv.vs2026,
             Optimization.Debug | Optimization.Release,
             OutputType.Lib,
             EGraphicAPI.D3D12,
@@ -104,8 +283,6 @@ public class Utils
         }
 
         conf.Defines.Add($"CFG_RAYTRACING={Convert.ToInt32(target.Raytracing == ERaytracing.On)}");
-
-        //conf.Defines.Add("SNIFF_DEVICE_REMOVAL");
 
         conf.Defines.Add("CFG_CASCADE_SHADOW_COUNT=3");
         conf.Defines.Add("CFG_CASCADE_SHADOW_TEX_WIDTH=500");

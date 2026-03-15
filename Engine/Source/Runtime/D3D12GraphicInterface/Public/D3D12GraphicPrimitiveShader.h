@@ -12,7 +12,7 @@ namespace Engine
 	{
         ~D3D12GraphicPrimitiveShader() override;
 		D3D12GraphicPrimitiveShader() = default;
-		void Generate(const Resources::Shader* shader, void* pipeline_signature) override;
+		void Generate(const Abstracts::Resource* shader, void* pipeline_signature) override;
 		[[nodiscard]] ID3D12PipelineState* GetPSO() const;
 		[[nodiscard]] ID3D12DescriptorHeap* GetSamplerHeap() const;
 

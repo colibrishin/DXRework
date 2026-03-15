@@ -2,7 +2,6 @@
 #include "RaytracingExtensionModule.h"
 
 #include "RaytracingExtension.h"
-#include "RaytracingExtensionModule.generated.h"
 #include "TaskScheduler.h"
 
 MODULE_IMPL( Engine::RaytracingExtensionModule, RaytracingExtension )
@@ -35,10 +34,5 @@ namespace Engine
 		return true;
 	}
 
-    const std::vector<std::string> & RaytracingExtensionModule::LoadAfter() const
-    {
-        static const std::vector<std::string> load_after = { "RenderPipeline" };
-        return load_after;
-    }
 }
 #endif

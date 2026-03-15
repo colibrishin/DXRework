@@ -1,5 +1,4 @@
 #include "FMODSoundInterfaceModule.h"
-#include "FMODSoundInterfaceModule.generated.h"
 
 #include "FMODSoundInterface.h"
 #include "ISoundAPI.h"

@@ -1,5 +1,4 @@
 #include "ClientModule/Public/ClientModule.h"
-#include "ClientModule.generated.h"
 
 #if CLIENT || WITH_EDITOR
 #include "Renderer.h"

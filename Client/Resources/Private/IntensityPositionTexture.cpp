@@ -1,5 +1,4 @@
-﻿#include "Resources/Public/IntensityPositionTexture.h"
-#include "IntensityPositionTexture.generated.h"
+#include "Resources/Public/IntensityPositionTexture.h"
 
 IntensityPositionTexture::IntensityPositionTexture( const std::filesystem::path &path )
     : Texture2D( "",

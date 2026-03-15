@@ -1,5 +1,4 @@
 #include "CoreModule.h"
-#include "CoreModule.generated.h"
 #include "EngineEntryPoint.h"
 #include "IInputAPI.h"
 

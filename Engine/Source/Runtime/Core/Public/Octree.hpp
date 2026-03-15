@@ -2,11 +2,10 @@
 #include <array>
 #include <bitset>
 #include <stack>
+#include <unordered_set>
 #include <vector>
 #include <queue>
-#include <map>
 #include <memory>
-#include <set>
 
 #include "Debugger.h"
 
@@ -323,15 +322,16 @@ namespace Engine
         {
             unsigned attempt = 0;
 
-            // todo: check whether the node is orphan.
-            std::stack<octree_impl*>     stack;
-            std::map<octree_impl*, bool> visited;
-
-            stack.push(this);
+            // Traversal is predictable: go down to terminal then back up. Use (node, phase) on stack
+            // instead of a map; phase true = post-visit (coming back up).
+            using stack_frame = std::pair<octree_impl*, bool>;
+            std::stack<stack_frame> stack;
+            stack.emplace(this, false);
 
             while ( !stack.empty() )
             {
-                const auto node = stack.top();
+                auto [node, post_visit] = stack.top();
+                stack.pop();
 
                 auto&       life_count           = node->m_life_count_;
                 auto&       node_value           = node->m_values_;
@@ -341,7 +341,7 @@ namespace Engine
                 const auto& node_extent          = node->Extent();
                 const auto& node_center          = node->WorldCenter();
 
-                if ( visited.contains(node) && visited[ node ] )
+                if ( post_visit )
                 {
                     if ( !node_value.empty() )
                     {
@@ -361,14 +361,21 @@ namespace Engine
                             if ( bound_check != DirectX::ContainmentType::CONTAINS )
                             {
                                 auto* cursor = node->parent();
-
+                                std::unordered_set<octree_impl*> seen_ancestors;
+                                constexpr unsigned max_parent_walk = 65536u;
+                                unsigned walk_steps = 0;
                                 while ( cursor )
                                 {
+                                    if ( walk_steps++ >= max_parent_walk || !seen_ancestors.insert(cursor).second )
+                                    {
+                                        // Cycle or unreasonably deep parent chain: rebuild tree to recover.
+                                        root()->Panic();
+                                        return;
+                                    }
                                     if ( cursor->Insert(obj) )
                                     {
                                         break;
                                     }
-
                                     cursor = cursor->parent();
                                 }
 
@@ -402,11 +409,10 @@ namespace Engine
                     Managers::Debugger::GetInstance().Draw(node_bound,
                                                            { 1.f, 1.f, 1.f, 1.f });
 #endif
-                    stack.pop();
                     continue;
                 }
 
-                if ( !visited.contains(node) && !visited[ node ] )
+                // First visit (going down): process node, then push post-visit frame and children
                 {
                     if ( !node->m_b_initialized_ )
                     {
@@ -497,15 +503,14 @@ namespace Engine
                         }
                     }
 
+                    stack.emplace(node, true); // post-visit after children
                     for ( int i = 0; i < octant_count; ++i )
                     {
                         if ( node_children[ i ] )
                         {
-                            stack.push(node_children[ i ].get());
+                            stack.emplace(node_children[ i ].get(), false);
                         }
                     }
-
-                    visited[ node ] = true;
                 }
             }
         }
@@ -573,25 +578,23 @@ namespace Engine
 
         [[nodiscard]] std::vector<WeakT> Nearest(const Vector3& point, float distance) const
         {
-            std::stack<const octree_impl*> q;
-            std::set<const octree_impl*>   visited;
-            std::vector<WeakT>             result;
-            const BoundingSphere           search_sphere(point,
-                                                         distance);
+            using query_frame = std::pair<const octree_impl*, bool>;
+            std::stack<query_frame> q;
+            std::vector<WeakT>      result;
+            const BoundingSphere    search_sphere(point, distance);
 
-            q.push(this);
+            q.emplace(this, false);
 
             while ( !q.empty() )
             {
-                const auto node = q.top();
+                auto [node, expanded] = q.top();
+                q.pop();
 
                 const auto& value    = node->m_values_;
                 const auto& children = node->m_children_;
 
-                if ( visited.contains(node) )
+                if ( expanded )
                 {
-                    q.pop();
-
                     for ( const auto& v : value )
                     {
                         if ( const auto& locked = v.lock() )
@@ -603,17 +606,15 @@ namespace Engine
                             }
                         }
                     }
-
                     continue;
                 }
 
-                visited.insert(node);
-
+                q.emplace(node, true);
                 for ( const auto& child : children )
                 {
                     if ( child && child->Intersects(search_sphere) )
                     {
-                        q.push(child.get());
+                        q.emplace(child.get(), false);
                     }
                 }
             }
@@ -626,24 +627,23 @@ namespace Engine
                                                  size_t         count    = 0,
                                                  float          distance = 0.f) const
         {
-            std::stack<const octree_impl*> q;
-            std::set<const octree_impl*>   visited;
-            std::vector<WeakT>             result;
-            float                          dist = 0.f;
+            using query_frame = std::pair<const octree_impl*, bool>;
+            std::stack<query_frame> q;
+            std::vector<WeakT>     result;
+            float                  dist = 0.f;
 
-            q.push(this);
+            q.emplace(this, false);
 
             while ( !q.empty() )
             {
-                const auto node = q.top();
+                auto [node, expanded] = q.top();
+                q.pop();
 
                 const auto& value    = node->m_values_;
                 const auto& children = node->m_children_;
 
-                if ( visited.contains(node) )
+                if ( expanded )
                 {
-                    q.pop();
-
                     for ( const auto& v : value )
                     {
                         if ( const auto& locked = v.lock() )
@@ -671,19 +671,15 @@ namespace Engine
                             }
                         }
                     }
-
                     continue;
                 }
 
-                visited.insert(node);
-
+                q.emplace(node, true);
                 for ( const auto& child : children )
                 {
-                    if ( child && child->Intersects(point,
-                                                    direction,
-                                                    dist) )
+                    if ( child && child->Intersects(point, direction, dist) )
                     {
-                        q.push(child.get());
+                        q.emplace(child.get(), false);
                     }
                 }
             }
@@ -859,9 +855,10 @@ namespace Engine
                 // Resolve the insertion queue and clear dirty flag
                 while ( !m_insertion_queue_.empty() )
                 {
-                    if ( auto obj = m_insertion_queue_.front().lock() )
+                    auto obj = m_insertion_queue_.front().lock();
+                    m_insertion_queue_.pop();
+                    if ( obj )
                     {
-                        m_insertion_queue_.pop();
                         Insert(obj);
                     }
                 }
@@ -1032,11 +1029,40 @@ namespace Engine
         template <typename... Args>
         unique_octree&& allocate(Args&&... args)
         {
-            unique_octree* ptr  = get_ptr_allocator().allocate( 1 );
-            octree_impl*   impl = get_impl_allocator().allocate( 1 );
-            new(ptr) unique_octree(new(impl) octree_impl(std::forward<Args>(args)...));
+            unique_octree* ptr = get_ptr_allocator().allocate( 1 );
+            octree_impl*   impl = nullptr;
+            try
+            {
+                impl = get_impl_allocator().allocate( 1 );
+            }
+            catch ( ... )
+            {
+                get_ptr_allocator().deallocate( ptr, 1 );
+                throw;
+            }
+            try
+            {
+                new ( impl ) octree_impl( std::forward<Args>( args )... );
+            }
+            catch ( ... )
+            {
+                get_impl_allocator().deallocate( impl, 1 );
+                get_ptr_allocator().deallocate( ptr, 1 );
+                throw;
+            }
+            try
+            {
+                new ( ptr ) unique_octree( impl );
+            }
+            catch ( ... )
+            {
+                get_impl_allocator().destroy( impl );
+                get_impl_allocator().deallocate( impl, 1 );
+                get_ptr_allocator().deallocate( ptr, 1 );
+                throw;
+            }
             impl->m_pointer_ = ptr;
-            return std::move(*ptr);
+            return std::move( *ptr );
         }
 
         unique_octree*                                      m_pointer_;

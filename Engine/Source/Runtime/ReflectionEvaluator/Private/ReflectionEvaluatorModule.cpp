@@ -1,7 +1,6 @@
-﻿#include "ReflectionEvaluatorModule.h"
+#include "ReflectionEvaluatorModule.h"
 
 #include "EngineEntryPoint.h"
-#include "ReflectionEvaluatorModule.generated.h"
 #include "ReflectionEvaluator.h"
 #include "Renderer.h"
 
@@ -42,10 +41,4 @@ bool Engine::ReflectionEvaluatorModule::ShutdownImpl()
 bool Engine::ReflectionEvaluatorModule::DynamicLoadable()
 {
     return true;
-}
-
-const std::vector<std::string> & Engine::ReflectionEvaluatorModule::LoadAfter() const
-{
-    static const std::vector<std::string> load_after = { "RenderPipeline" };
-    return load_after;
 }

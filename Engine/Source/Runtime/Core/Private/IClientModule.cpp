@@ -20,8 +20,4 @@ namespace Engine
 		return true;
 	}
 
-	const std::vector<std::string>& IClientModule::LoadAfter() const
-	{
-		return GetDependencies();
-	}
 }

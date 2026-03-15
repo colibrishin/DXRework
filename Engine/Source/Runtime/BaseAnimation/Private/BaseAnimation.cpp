@@ -1,6 +1,5 @@
 #include "BaseAnimation.h"
 #include "ResourceManager.h"
-#include "BaseAnimation.generated.h"
 
 namespace Engine::Resources
 {

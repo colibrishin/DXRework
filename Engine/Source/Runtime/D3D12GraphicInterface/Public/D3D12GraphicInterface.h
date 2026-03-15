@@ -16,6 +16,7 @@
 
 #if CFG_RAYTRACING
 #include "IGraphicAPI_Extensions.h"
+#include "IRaytracingExtension.h"
 
 #include "raytracing_heap_allocator.hpp"
 #include "raytracing_heap_binder.hpp"
@@ -33,7 +34,6 @@ namespace Engine
         bool                            InitializeImpl() override;
         bool                            ShutdownImpl() override;
         bool                            DynamicLoadable() override;
-        const std::vector<std::string>& LoadAfter() const override;
     };
 
 #if CFG_RAYTRACING
@@ -122,60 +122,60 @@ namespace Engine
         void SetDefaultComputePipeline( const IGraphicContext* context ) override;
 
         void Draw( const IGraphicContext* context,
-                   const Resources::Mesh* mesh,
+                   const Abstracts::Resource* mesh,
                    UINT                   instance_count,
                    UINT                   instance_offset ) override;
         void Dispatch( const IGraphicContext*             context,
-                       const Resources::ComputeShader*    shader,
+                       const Abstracts::Resource*         shader,
                        const Graphics::SBs::LocalParamSB& local_param,
                        const UINT                         group_count[ 3 ] ) override;
-        void BindGraphic( const IGraphicContext* context, const Resources::Shader* shader ) override;
-        void BindCompute( const IGraphicContext* context, const Resources::ComputeShader* shader ) override;
+        void BindGraphic( const IGraphicContext* context, const Abstracts::Resource* shader ) override;
+        void BindCompute( const IGraphicContext* context, const Abstracts::Resource* shader ) override;
 
         inline void Transit( const IGraphicContext*      context,
-                             const Resources::Texture*   tex,
+                             const Abstracts::Resource* tex,
                              const D3D12_RESOURCE_STATES before,
                              const D3D12_RESOURCE_STATES after );
         void
-        TransitTo( const IGraphicContext* context, const Resources::Texture* tex, const eBindType bind_type ) override;
+        TransitTo( const IGraphicContext* context, const Abstracts::Resource* tex, const eBindType bind_type ) override;
         void TransitBack( const IGraphicContext*    context,
-                          const Resources::Texture* tex,
+                          const Abstracts::Resource* tex,
                           const eBindType           bind_type ) override;
 
-        inline void TransitMultiple( const IGraphicContext*           context,
-                                     const Resources::Texture* const* texes,
-                                     const size_t                     count,
-                                     D3D12_RESOURCE_STATES            before,
-                                     D3D12_RESOURCE_STATES            after );
+        inline void TransitMultiple( const IGraphicContext* context,
+                                     const Abstracts::Resource* const* texes,
+                                     const size_t count,
+                                     D3D12_RESOURCE_STATES before,
+                                     D3D12_RESOURCE_STATES after );
         void        TransitToMultiple( const IGraphicContext*           context,
-                                       const Resources::Texture* const* texes,
+                                       const Abstracts::Resource* const* texes,
                                        const size_t                     count,
                                        const eBindType                  bind_type ) override;
         void        TransitBackMultiple( const IGraphicContext*           context,
-                                         const Resources::Texture* const* texes,
+                                         const Abstracts::Resource* const* texes,
                                          const size_t                     count,
                                          const eBindType                  bind_type ) override;
 
         void Bind( const IGraphicContext*    context,
-                   const Resources::Texture* tex,
+                   const Abstracts::Resource* tex,
                    const eBindType           bind_type,
                    const UINT                slot,
                    const UINT                offset ) override;
         void BindMultiple( const IGraphicContext*           context,
-                           const Resources::Texture* const* rtvs,
+                           const Abstracts::Resource* const* rtvs,
                            const size_t                     rtv_count,
-                           Resources::Texture*              dsv ) override;
+                           Abstracts::Resource*              dsv ) override;
         void BindMultiple( const IGraphicContext*           context,
-                           const Resources::Texture* const* textures,
+                           const Abstracts::Resource* const* textures,
                            const eBindType                  bind_type,
                            const UINT                       slot,
                            const UINT                       offset,
                            const size_t                     count ) override;
 
         void
-        Clear( const IGraphicContext* context, const Resources::Texture* tex, const eBindType clear_type ) override;
+        Clear( const IGraphicContext* context, const Abstracts::Resource* tex, const eBindType clear_type ) override;
         void ClearRenderTarget() override;
-        void CopyRenderTarget( const IGraphicContext* context, const Resources::Texture* tex ) override;
+        void CopyRenderTarget( const IGraphicContext* context, const Abstracts::Resource* tex ) override;
 
         Matrix GetProjectionMatrix() override;
         Matrix GetOrthogonalMatrix() override;

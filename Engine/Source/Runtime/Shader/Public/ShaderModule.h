@@ -15,6 +15,6 @@ namespace Engine
         bool DynamicLoadable() override;
 
         void                            StockShaderPrecompile();
-        const std::vector<std::string>& LoadAfter() const;
+        ELoadPhase GetLoadPhase() const override { return ELoadPhase::Graphic; }
     };
 } // namespace Engine

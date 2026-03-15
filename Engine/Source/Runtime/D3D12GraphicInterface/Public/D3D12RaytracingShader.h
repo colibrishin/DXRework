@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 #if CFG_RAYTRACING
 #include "D3D12GraphicPrimitiveShader.h"
 
@@ -16,7 +16,7 @@ namespace Engine
     {
     public:
         ~D3D12RaytracingShader() override;
-        void                Generate(const Resources::RaytracingShader* shader, void* pipeline_signature) override;
+        void                Generate(const Abstracts::Resource* shader, void* pipeline_signature) override;
         [[nodiscard]] void* GetShaderRecord(const size_t idx) const override;
 
         void UpdateShaderRecords(eRaytracingShaderRecordType type, const byte_stream& records) override;

@@ -1,5 +1,4 @@
 #include "AnimatorPrimitive.h"
-#include "AnimatorPrimitive.generated.h"
 #include "RenderType.h"
 
 #include "SIMDExtension.hpp"

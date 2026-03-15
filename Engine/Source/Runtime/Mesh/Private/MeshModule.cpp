@@ -1,5 +1,4 @@
-﻿#include "MeshModule.h"
-#include "MeshModule.generated.h"
+#include "MeshModule.h"
 #include "Mesh.h"
 
 #include "Generator.hpp"
@@ -35,10 +34,4 @@ bool Engine::MeshModule::ShutdownImpl()
 bool Engine::MeshModule::DynamicLoadable()
 {
     return true;
-}
-
-const std::vector<std::string>& Engine::MeshModule::LoadAfter() const
-{
-    static std::vector<std::string> load_after = { "RenderPipeline" };
-    return load_after;
 }

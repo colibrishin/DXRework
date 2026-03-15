@@ -1,5 +1,4 @@
 #include "D3D12PrimitiveTexture.h"
-#include "D3D12PrimitiveTexture.generated.h"
 
 #include <DirectXTex.h>
 #include <directxtk12/BufferHelpers.h>
@@ -14,6 +13,7 @@
 
 #include "CommandPair.h"
 #include "D3D12GraphicInterface.h"
+#include "ResourceTypeValidation.h"
 
 Engine::D3D12PrimitiveTexture::D3D12PrimitiveTexture()
 { }
@@ -21,8 +21,10 @@ Engine::D3D12PrimitiveTexture::D3D12PrimitiveTexture()
 Engine::D3D12PrimitiveTexture::~D3D12PrimitiveTexture()
 { }
 
-void Engine::D3D12PrimitiveTexture::Generate(Resources::Texture* texture)
+void Engine::D3D12PrimitiveTexture::Generate(Abstracts::Resource* resource)
 {
+	D3D12::ExpectTexture( resource );
+	auto* texture = static_cast<Resources::Texture*>(resource);
 	m_description_ = texture->GetDescription();
 
 	if ((m_description_.Flags & RESOURCE_FLAG_ALLOW_DEPTH_STENCIL) &&
@@ -124,8 +126,10 @@ void Engine::D3D12PrimitiveTexture::Generate(Resources::Texture* texture)
 	SetPrimitiveTexture(m_dx12_texture_.Get());
 }
 
-void Engine::D3D12PrimitiveTexture::LoadFromFile(Engine::Resources::Texture* texture, const std::filesystem::path& path)
+void Engine::D3D12PrimitiveTexture::LoadFromFile(Engine::Abstracts::Resource* resource, const std::filesystem::path& path)
 {
+	D3D12::ExpectTexture( resource );
+	auto* texture = static_cast<Resources::Texture*>(resource);
 	const auto dev    = static_cast<ID3D12Device2*>(g_graphic_accessor.GetInterface().GetNativeInterface());
 	auto&      native = reinterpret_cast<D3D12GraphicInterface&>(g_graphic_accessor.GetInterface());
 

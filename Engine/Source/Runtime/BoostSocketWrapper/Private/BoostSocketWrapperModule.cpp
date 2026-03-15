@@ -1,7 +1,6 @@
 #pragma once
 #include "BoostSocketWrapper.h"
 #include "BoostSocketWrapperModule.h"
-#include "BoostSocketWrapperModule.generated.h"
 
 MODULE_IMPL(Engine::BoostSocketWrapperModule, BoostSocketWrapper);
 

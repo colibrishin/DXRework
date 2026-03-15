@@ -7,7 +7,6 @@
 
 #include "Scene.h"
 #include "Light.h"
-#include "SceneManager.generated.h"
 #include "Serialization.hpp"
 
 #if WITH_DEBUG

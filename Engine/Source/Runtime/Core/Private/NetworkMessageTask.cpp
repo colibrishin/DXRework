@@ -1,5 +1,4 @@
 #include "NetworkMessageTask.h"
-#include "NetworkMessageTask.generated.h"
 
 #include "INetworkAPI.h"
 #include "NetworkTask.h"

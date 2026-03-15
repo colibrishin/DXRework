@@ -1,5 +1,4 @@
 #include "Entity.h"
-#include "Entity.generated.h"
 
 #if WITH_EDITOR
 #include "IUIAPI.h"

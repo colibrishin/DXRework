@@ -1,5 +1,4 @@
 #include "RaycastExtension.h"
-#include "RaycastExtension.generated.h"
 
 #include "Collider.h"
 #include "GenericBounding.hpp"

@@ -417,3 +417,5 @@ balius/target/.rustc_info.json
 *.dep
 
 Programs/vcpkg
+
+.cursor

@@ -695,27 +695,14 @@ namespace Engine
 	{
 		class Light;
 		class Camera;
-		class Text;
 		class Observer;
 	} // namespace Objects
 
 	namespace Components
 	{
-		namespace Abstracts
-		{
-			class RenderComponent;
-			class ShapeRenderComponent;
-		}
-
 		class Collider;
 		class Transform;
 		class Rigidbody;
-		class ObserverController;
-		class TextRenderer;
-		class SoundPlayer;
-		class ModelRenderer;
-		class Animator;
-		class ParticleRenderer;
 	} // namespace Component
 
 	class Script;
@@ -724,17 +711,11 @@ namespace Engine
 
 	namespace Graphics
 	{
-		struct AnimationPrimitive;
-		struct BonePrimitive;
-		struct BoneAnimationPrimitive;
 		struct VertexElement;
 
 		namespace SBs
 		{
 			struct InstanceSB;
-			struct InstanceParticleSB;
-			struct LocalParamSB;
-			struct InstanceModelSB;
 		} // namespace SBs
 	} // namespace Graphic
 
@@ -744,24 +725,12 @@ namespace Engine
 	namespace Resources
 	{
 		class Prefab;
-		class Font;
 		class Mesh;
-		class Sound;
-		class Texture;
-		class BoneAnimation;
 		class Shape;
-		class Bone;
-		class BaseAnimation;
-		class Material;
-		class Shader;
-	    class ShaderBase;
-	    class RaytracingShader;
 		class AnimationTexture;
-		class ShadowTexture;
-		class Texture1D;
-		class Texture2D;
-		class Texture3D;
-		class ComputeShader;
+		class ShaderBase;
+		class Shader;
+		class BaseAnimation;
 	} // namespace Resources
 
 	namespace Abstracts
@@ -774,31 +743,12 @@ namespace Engine
 
 	namespace Managers
 	{
-		class RaytracingPipeline;
-		class Raytracer;
-		class ToolkitAPI;
-		class RenderPipeline;
-		class ShadowManager;
-		class ReflectionEvaluator;
-		class Renderer;
-		class ImGuiManager;
-		class SoundManager;
-		class InputManager;
-		class CameraManager;
-
-		class PhysicsManager;
-		class LerpManager;
-		class ConstraintSolver;
-		class CollisionDetector;
-		class Graviton;
-
-		class ProjectionFrustum;
 		class EngineEntryPoint;
 		class ResourceManager;
 		class SceneManager;
 		class Debugger;
-		class InputManager;
 		class TaskScheduler;
+		class Renderer;
 	} // namespace Managers
 
 	template <typename WeakT, typename BoundingValueGetter, float Epsilon>

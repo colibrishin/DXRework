@@ -4,7 +4,17 @@
 #include <boost/serialization/access.hpp>
 #include "ConstantBuffer.h"
 #include "StructuredBuffer.h"
-#include "RenderType.h"
+#include "CoreType.h"
+
+namespace Engine
+{
+	struct IGraphicAPIBase;
+	struct IGraphicAPI;
+	struct IRaytracingExtension;
+}
+
+POLYMORPHIC_TYPE_MAP( Engine::IGraphicAPI, Engine::IGraphicAPIBase )
+POLYMORPHIC_TYPE_MAP( Engine::IRaytracingExtension, Engine::IGraphicAPIBase )
 
 namespace Engine
 {
@@ -720,8 +730,8 @@ namespace Engine
 	struct ENGINE_CORE_API ITexture
 	{
 		virtual      ~ITexture() = default;
-		virtual void Generate(Resources::Texture* texture) = 0;
-		virtual void LoadFromFile(Resources::Texture* texture, const std::filesystem::path& path) = 0;
+		virtual void Generate(Abstracts::Resource* texture) = 0;
+		virtual void LoadFromFile(Abstracts::Resource* texture, const std::filesystem::path& path) = 0;
 		virtual void SaveAsFile(const std::filesystem::path& path) = 0;
 
 		virtual void Map(
@@ -786,11 +796,6 @@ namespace Engine
         RAY_SHADER_REC_MAX
     };
 #endif
-    
-    namespace Resources
-    {
-        class RaytracingShader;
-    }
 
     struct ENGINE_CORE_API IShaderBase
     {
@@ -827,7 +832,7 @@ namespace Engine
     {
     public:
         ~IRaytracingShader() override = default;
-        virtual void                Generate( const Resources::RaytracingShader* shader, void* pipeline_signature ) = 0;
+        virtual void                Generate( const Abstracts::Resource* shader, void* pipeline_signature ) = 0;
         [[nodiscard]] virtual void* GetShaderRecord( const size_t idx ) const                                       = 0;
         virtual void UpdateShaderRecords( eRaytracingShaderRecordType type, const byte_stream& records )            = 0;
         
@@ -861,14 +866,14 @@ namespace Engine
 	{
 	public:
         ~IGraphicShader() override = default;
-		virtual void        Generate(const Resources::Shader* shader, void* pipeline_signature) = 0;
+		virtual void        Generate(const Abstracts::Resource* shader, void* pipeline_signature) = 0;
 	};
 
 	struct ENGINE_CORE_API IComputeShader
 	{
 	public:
 		virtual      ~IComputeShader() = default;
-		virtual void Generate(Resources::ComputeShader* shader, void* pipeline_signature) = 0;
+		virtual void Generate(Abstracts::Resource* shader, void* pipeline_signature) = 0;
 
 		[[nodiscard]] void* GetNativeShader() const
 		{
@@ -912,7 +917,7 @@ namespace Engine
 	struct ENGINE_CORE_API IFont
 	{
 		virtual ~IFont() = default;
-		virtual void Generate(const Resources::Font* font) = 0;
+		virtual void Generate(const Abstracts::Resource* font) = 0;
 		virtual void Render(
 			const std::string_view text, 
 			const Vector2& position, 
@@ -933,7 +938,7 @@ namespace Engine
 	struct ENGINE_CORE_API IMesh
 	{
 		virtual      ~IMesh() = default;
-		virtual void Generate(Resources::Mesh* mesh) = 0;
+		virtual void Generate(Abstracts::Resource* mesh) = 0;
 
 		template <typename T>
         [[nodiscard]] const T* GetNativeVertexBuffer() const
@@ -993,9 +998,9 @@ namespace Engine
 	{
 		virtual ~IHeapBase() = default;
 
-	    virtual void SetSampler(const Resources::ShaderBase* shader, const eSampler slot) const = 0;
+	    virtual void SetSampler(const Abstracts::Resource* shader, const eSampler slot) const = 0;
 		virtual void SetShaderResources(
-			const Resources::Texture* const* textures,
+			const Abstracts::Resource* const* textures,
 			const UINT count,
 			const UINT offset) const = 0;
 
@@ -1388,23 +1393,23 @@ namespace Engine
 		virtual void SetDefaultGraphicPipeline(const IGraphicContext* context) = 0;
 		virtual void SetDefaultComputePipeline(const IGraphicContext* context) = 0;
 
-		virtual void Draw(const IGraphicContext* context, const Resources::Mesh* mesh, UINT instance_count, UINT instance_offset) = 0;
-		virtual void Dispatch(const IGraphicContext* context, const Resources::ComputeShader* shader, const Graphics::SBs::LocalParamSB& local_param, const UINT group_count[3]) = 0;
+		virtual void Draw(const IGraphicContext* context, const Abstracts::Resource* mesh, UINT instance_count, UINT instance_offset) = 0;
+		virtual void Dispatch(const IGraphicContext* context, const Abstracts::Resource* shader, const Graphics::SBs::LocalParamSB& local_param, const UINT group_count[3]) = 0;
 
-		virtual void BindGraphic(const IGraphicContext* context, const Resources::Shader* shader) = 0;
-		virtual void BindCompute(const IGraphicContext* context, const Resources::ComputeShader* shader) = 0;
+		virtual void BindGraphic(const IGraphicContext* context, const Abstracts::Resource* shader) = 0;
+		virtual void BindCompute(const IGraphicContext* context, const Abstracts::Resource* shader) = 0;
 		
-		virtual void TransitTo(const IGraphicContext* context, const Resources::Texture* tex, const eBindType bind_type) = 0;
-		virtual void TransitBack(const IGraphicContext* context, const Resources::Texture* tex, const eBindType bind_type) = 0;
-		virtual void TransitToMultiple(const IGraphicContext* context, const Resources::Texture* const* texes, const size_t count, const eBindType bind_type) = 0;
-		virtual void TransitBackMultiple(const IGraphicContext* context, const Resources::Texture* const* texes, const size_t count, const eBindType bind_type) = 0;
+		virtual void TransitTo(const IGraphicContext* context, const Abstracts::Resource* tex, const eBindType bind_type) = 0;
+		virtual void TransitBack(const IGraphicContext* context, const Abstracts::Resource* tex, const eBindType bind_type) = 0;
+		virtual void TransitToMultiple(const IGraphicContext* context, const Abstracts::Resource* const* texes, const size_t count, const eBindType bind_type) = 0;
+		virtual void TransitBackMultiple(const IGraphicContext* context, const Abstracts::Resource* const* texes, const size_t count, const eBindType bind_type) = 0;
 
-		virtual void Bind(const IGraphicContext* context, const Resources::Texture* tex, const eBindType bind_type, const UINT slot, const UINT offset) = 0;
-		virtual void BindMultiple(const IGraphicContext* context, const Resources::Texture* const* rtvs, const size_t rtv_count, Resources::Texture* dsv) = 0;
-		virtual void BindMultiple(const IGraphicContext* context, const Resources::Texture* const* textures, const eBindType bind_type, const UINT slot, const UINT offset, const size_t count) = 0;
-		virtual void Clear(const IGraphicContext* context, const Resources::Texture* tex, const eBindType clear_type) = 0;
+		virtual void Bind(const IGraphicContext* context, const Abstracts::Resource* tex, const eBindType bind_type, const UINT slot, const UINT offset) = 0;
+		virtual void BindMultiple(const IGraphicContext* context, const Abstracts::Resource* const* rtvs, const size_t rtv_count, Abstracts::Resource* dsv) = 0;
+		virtual void BindMultiple(const IGraphicContext* context, const Abstracts::Resource* const* textures, const eBindType bind_type, const UINT slot, const UINT offset, const size_t count) = 0;
+		virtual void Clear(const IGraphicContext* context, const Abstracts::Resource* tex, const eBindType clear_type) = 0;
 		virtual void ClearRenderTarget() = 0;
-		virtual void CopyRenderTarget(const IGraphicContext* context, const Resources::Texture* tex) = 0;
+		virtual void CopyRenderTarget(const IGraphicContext* context, const Abstracts::Resource* tex) = 0;
 
 	protected:
 		virtual IStructuredBuffer* GetNativeStructuredBuffer() = 0;
@@ -1488,53 +1493,8 @@ namespace Engine
         bool empty = true;
     };
 
-    struct ENGINE_CORE_API IRaytracingExtension : public virtual IGraphicAPIBase
-    {
-        ~IRaytracingExtension() override = default;
-        INLINE_COMPILE_TIME_TYPENAME( IRaytracingExtension )
-
-        virtual bool IsRaytracingSupported() = 0;
-        virtual void InitializeRaytracing()  = 0;
-        virtual void ShutdownRaytracing()    = 0;
-
-        void UseRaytracing( const bool flag )
-        {
-            if ( IsRaytracingSupported() )
-            {
-                m_b_raytracing_ = flag;
-            }
-        }
-        [[nodiscard]] bool ShouldUseRaytracing() const noexcept
-        {
-            return m_b_raytracing_;
-        }
-
-        virtual Unique<IHeapBase>  GetRaytracingHeap()      = 0;
-        virtual IRaytracingShader* GetNewRaytracingShader() = 0;
-
-        virtual void* GetRaytracingNativeInterface() = 0;
-        virtual void* GetRaytracingNativePipeline()  = 0;
-
-        virtual bool BuildTopLevelAccelerationBuffer( const IGraphicContext*   context,
-                                                      RenderMap const*         render_map,
-                                                      size_t                   render_map_size,
-                                                      AccelStructBuffer&       out_tlas_buffer,
-                                                      const ObjectPredication& predication = {} ) = 0;
-
-        virtual void DispatchRay( const IGraphicContext*                                       context,
-                                  const Resources::RaytracingShader*                           shader,
-                                  const StructuredBufferTypeProxy<Graphics::SBs::LightSB>&     light,
-                                  const StructuredBufferTypeProxy<Graphics::SBs::InstanceSB>&  instances,
-                                  const ConstantBufferTypeProxy<Graphics::CBs::PerspectiveCB>& perspective,
-                                  const ConstantBufferTypeProxy<Graphics::CBs::ParamCB>&       param,
-                                  const byte_stream&                                           hit_records,
-                                  const AccelStructBuffer& top_level_accel_buffer ) = 0;
-
-        virtual void CopyRaytracingToRenderTarget( const IGraphicContext* context ) = 0;
-
-    private:
-        bool m_b_raytracing_ = false;
-    };
+    // Full definition in RenderPipeline/Public/IRaytracingExtension.h
+    struct IRaytracingExtension;
 #endif
 
 	struct ENGINE_CORE_API IGraphicAPIAccessor
@@ -1548,18 +1508,32 @@ namespace Engine
             {
                 m_graphic_ = std::make_unique<T>();
                 m_graphic_->Initialize();
+                // Virtual base: cannot static_cast from IGraphicAPIBase* to derived T*; use dynamic_cast.
+                T* p = dynamic_cast<T*>( m_graphic_.get() );
+                if ( !p )
+                    throw std::bad_cast();
+                if constexpr ( std::is_base_of_v<IGraphicAPI, T> )
+                    m_graphic_api_ = p;
+#if CFG_RAYTRACING
+                if constexpr ( std::is_base_of_v<IRaytracingExtension, T> )
+                    m_raytracing_extension_ = p;
+#endif
             }
         }
 
         [[nodiscard]] IGraphicAPI& GetInterface()
         {
-            return *dynamic_cast<IGraphicAPI*>( m_graphic_.get() );
+            if ( !m_graphic_api_ )
+                throw std::bad_cast();
+            return *m_graphic_api_;
         }
 
 #if CFG_RAYTRACING
         [[nodiscard]] IRaytracingExtension& GetRaytracingInterface()
         {
-            return *dynamic_cast<IRaytracingExtension*>( m_graphic_.get() );
+            if ( !m_raytracing_extension_ )
+                throw std::bad_cast();
+            return *m_raytracing_extension_;
         }
 #endif
 
@@ -1569,11 +1543,19 @@ namespace Engine
             {
                 m_graphic_->Shutdown();
                 m_graphic_.reset();
+                m_graphic_api_ = nullptr;
+#if CFG_RAYTRACING
+                m_raytracing_extension_ = nullptr;
+#endif
             }
         }
 
     private:
         Unique<IGraphicAPIBase> m_graphic_;
+        IGraphicAPI*            m_graphic_api_ = nullptr;
+#if CFG_RAYTRACING
+        IRaytracingExtension*   m_raytracing_extension_ = nullptr;
+#endif
     };
 
     extern ENGINE_CORE_API IGraphicAPIAccessor g_graphic_accessor;

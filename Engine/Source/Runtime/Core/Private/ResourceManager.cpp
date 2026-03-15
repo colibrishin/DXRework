@@ -1,19 +1,23 @@
 #include "ResourceManager.h"
-#include "ResourceManager.generated.h"
 
 #include <ranges>
+#include "ModuleManager.h"
 #include "Resource.h"
 
 #if WITH_EDITOR
-#include "UIHelpersSceneManager.h"
 #include "ObjectBase.h"
 #include "Prefab.h"
+#include "UIHelpersSceneManager.h"
 #endif
 
 namespace Engine::Managers
 {
-	void ResourceManager::Initialize() 
+	void ResourceManager::Initialize()
 	{
+#if WITH_EDITOR && IS_DLL
+		ModuleManager::GetInstance().RegisterOnModuleShutdown(
+			[]( std::wstring_view name ) { ResourceManager::GetInstance().UnregisterModule( name ); } );
+#endif
 #if WITH_EDITOR
 		RegisterNewResource(Resources::Prefab::StaticTypeName(), [this](bool& managing_flag)
 			{
@@ -167,6 +171,12 @@ namespace Engine::Managers
 
 	void ResourceManager::AddResource( const Strong<Abstracts::Resource>& resource, const ResourceType type )
     {
+        // Type safety: resource must be of type (or derived from) the bucket type (e.g. do not store Sound in Texture bucket).
+        if ( !resource->IsDerivedOf( type ) )
+        {
+            assert( false && "Resource type does not match bucket; use AddResource(Strong<T>&) or ensure type matches resource->GetTypeHash()." );
+            return;
+        }
         if ( !resource->GetMetadataPath().empty() &&
              SearchResourceByMetadata( resource->GetMetadataPath(), type ).lock() )
         {
@@ -235,36 +245,93 @@ namespace Engine::Managers
 	}
 
 #if WITH_EDITOR
-	void ResourceManager::RegisterLoadResource(const std::string_view name, const UIHelpers::ManagedBooleanSignature& functor)
+	void ResourceManager::RegisterLoadResource(const std::string_view name, const UIHelpers::ManagedBooleanSignature& functor, const std::wstring_view module_name)
 	{
-		if (!m_ui_load_functions_.contains(name))
+		if ( !m_ui_load_functions_.contains( name ) )
 		{
-			m_ui_load_functions_[name] = {false, functor};
+			m_ui_load_functions_[ name ] = { false, functor };
+#if IS_DLL
+			if ( !module_name.empty() )
+			{
+				m_load_resource_names_by_module_[ std::wstring( module_name ) ].insert( std::string( name ) );
+			}
+#endif
 		}
 	}
 
 	void ResourceManager::UnregisterLoadResource(const std::string_view name)
 	{
-		if (m_ui_load_functions_.contains(name))
+		if ( m_ui_load_functions_.contains( name ) )
 		{
-			m_ui_load_functions_.erase(name);
+			m_ui_load_functions_.erase( name );
+#if IS_DLL
+			const std::string name_str( name );
+			for ( auto& [ mod, names ] : m_load_resource_names_by_module_ )
+			{
+				names.erase( name_str );
+			}
+#endif
 		}
 	}
 
-	void ResourceManager::RegisterNewResource(const std::string_view name, const UIHelpers::ManagedBooleanSignature& functor)
+	void ResourceManager::RegisterNewResource(const std::string_view name, const UIHelpers::ManagedBooleanSignature& functor, const std::wstring_view module_name)
 	{
-		if (!m_ui_new_functions_.contains(name))
+		if ( !m_ui_new_functions_.contains( name ) )
 		{
-			m_ui_new_functions_[name] = {false, functor};
+			m_ui_new_functions_[ name ] = { false, functor };
+#if IS_DLL
+			if ( !module_name.empty() )
+			{
+				m_new_resource_names_by_module_[ std::wstring( module_name ) ].insert( std::string( name ) );
+			}
+#endif
 		}
 	}
 
 	void ResourceManager::UnregisterNewResource(const std::string_view name)
 	{
-		if (m_ui_new_functions_.contains(name))
+		if ( m_ui_new_functions_.contains( name ) )
 		{
-			m_ui_new_functions_.erase(name);
+			m_ui_new_functions_.erase( name );
+#if IS_DLL
+			const std::string name_str( name );
+			for ( auto& [ mod, names ] : m_new_resource_names_by_module_ )
+			{
+				names.erase( name_str );
+			}
+#endif
 		}
+	}
+
+	void ResourceManager::UnregisterModule( std::wstring_view module_name )
+	{
+#if IS_DLL
+		const std::wstring key( module_name );
+		{
+			auto it = m_load_resource_names_by_module_.find( key );
+			if ( it != m_load_resource_names_by_module_.end() )
+			{
+				std::unordered_set<std::string> copy( it->second );
+				m_load_resource_names_by_module_.erase( it );
+				for ( const std::string& name : copy )
+				{
+					UnregisterLoadResource( name );
+				}
+			}
+		}
+		{
+			auto it = m_new_resource_names_by_module_.find( key );
+			if ( it != m_new_resource_names_by_module_.end() )
+			{
+				std::unordered_set<std::string> copy( it->second );
+				m_new_resource_names_by_module_.erase( it );
+				for ( const std::string& name : copy )
+				{
+					UnregisterNewResource( name );
+				}
+			}
+		}
+#endif
 	}
 #endif
 
