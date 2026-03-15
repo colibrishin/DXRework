@@ -6,3 +6,5 @@ edition = "2021"
 [dependencies]
 lazy_static = "1.5.0"
 sysinfo = "0.33.1"
+sha2 = "0.10"
+hex = "0.4"
