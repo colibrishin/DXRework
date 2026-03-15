@@ -1,5 +1,4 @@
 #include "AtlasAnimationPrimitive.h"
-#include "AtlasAnimation.generated.h"
 
 void Engine::AtlasAnimationPrimitive::Append(const AtlasFramePrimitive& frame)
 {

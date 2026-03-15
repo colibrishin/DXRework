@@ -1,12 +1,10 @@
 #include "Shader.h"
 #include "ShaderModule.h"
-#include "ShaderModule.generated.h"
 
 #include <ranges>
 
-
+#include "ModuleRegistration.h"
 #include "ResourceManager.h"
-
 #include <magic_enum/magic_enum.hpp>
 
 MODULE_IMPL(Engine::ShaderModule, Shader)
@@ -23,7 +21,7 @@ bool Engine::ShaderModule::InitializeImpl()
 				};
 
 			UIHelpers::OpenLoadDialog<Resources::Shader, Managers::ResourceManager>(managing_flag, {}, load_callback, {});
-		});
+		} ENGINE_MODULE_SCOPE );
 
 	Managers::ResourceManager::GetInstance().RegisterNewResource(Resources::Shader::StaticTypeName(), [](bool& managing_flag)
 		{
@@ -246,7 +244,7 @@ bool Engine::ShaderModule::InitializeImpl()
 				ui_callback,
 				load_callback,
 				cleanup_callback);
-		});
+		} ENGINE_MODULE_SCOPE );
 #endif
 
 	StockShaderPrecompile();
@@ -377,12 +375,6 @@ void Engine::ShaderModule::StockShaderPrecompile()
 		GetDefaultRTVFormat(), TEX_FORMAT_D24_UNORM_S8_UINT,
 		PRIMITIVE_TOPOLOGY_TRIANGLELIST, PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE
 	);
-}
-
-const std::vector<std::string>& Engine::ShaderModule::LoadAfter() const
-{
-	static std::vector<std::string> load_after{ "RenderPipeline" };
-	return load_after;
 }
 
 bool Engine::ShaderModule::ShutdownImpl()

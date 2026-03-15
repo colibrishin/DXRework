@@ -1,5 +1,4 @@
 #include "AnimatorModule.h"
-#include "AnimatorModule.generated.h"
 
 #include "Animator.h"
 #include "ObjectBase.h"

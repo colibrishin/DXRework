@@ -1,5 +1,4 @@
 #include "ModelRendererModule.h"
-#include "ModelRendererModule.generated.h"
 
 #include "ModelRenderer.h"
 #include "ObjectBase.h"

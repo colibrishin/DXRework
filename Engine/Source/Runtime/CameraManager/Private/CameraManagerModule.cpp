@@ -1,5 +1,4 @@
-﻿#include "CameraManagerModule.h"
-#include "CameraManagerModule.generated.h"
+#include "CameraManagerModule.h"
 
 #include "CameraManager.h"
 #include "EngineEntryPoint.h"
@@ -28,11 +27,4 @@ bool Engine::CameraManagerModule::ShutdownImpl()
 bool Engine::CameraManagerModule::DynamicLoadable()
 {
     return true;
-}
-
-const std::vector<std::string>& Engine::CameraManagerModule::LoadAfter() const
-{
-    static const std::vector<std::string> load_after = { "RenderPipeline" };
-
-    return load_after;
 }

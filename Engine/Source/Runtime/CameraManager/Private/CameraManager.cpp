@@ -1,5 +1,4 @@
 #include "CameraManager.h"
-#include "CameraManager.generated.h"
 
 #include "Rigidbody.h"
 #include "Transform.h"
@@ -32,47 +31,48 @@ namespace Engine::Managers
 				{
 					const auto position = transform->GetWorldPosition();
 					const auto rotation = transform->GetWorldRotation();
-					Vector3    up       = camera->m_b_fixed_up_ ? Vector3::Up : transform->Up();
+					Vector3    up       = camera->GetFixedUp() ? Vector3::Up : transform->Up();
 					Vector3    forward  = transform->Forward();
 
 					Matrix rotationMatrix = Matrix::CreateFromQuaternion(rotation);
 
-					camera->m_world_matrix_ =
+					camera->SetWorldMatrix(
 							Matrix::CreateWorld(Vector3::Zero, g_forward, Vector3::Up) *
 							rotationMatrix *
-							Matrix::CreateTranslation(position);
+							Matrix::CreateTranslation(position));
 
 					// Finally create the view matrix from the three updated vectors.
-					camera->m_view_matrix_ = XMMatrixLookAtLH
+					camera->SetViewMatrix(XMMatrixLookAtLH
 							(
 							position,
 							position + forward,
 							up
-							);
+							));
 
-					if (camera->m_b_orthogonal_)
+					if (camera->GetOrthogonal())
 					{
 						float aspectRatio = static_cast<float>(CFG_WIDTH) / static_cast<float>(CFG_HEIGHT);
 
-						camera->m_projection_matrix_ = DirectX::XMMatrixOrthographicLH
+						camera->SetProjectionMatrix(DirectX::XMMatrixOrthographicLH
 								(
-								camera->m_fov_ * aspectRatio, camera->m_fov_, CFG_SCREEN_NEAR, CFG_SCREEN_FAR
-								);
+								camera->GetFOV() * aspectRatio, camera->GetFOV(), CFG_SCREEN_NEAR, CFG_SCREEN_FAR
+								));
 					}
 					else
 					{
-						camera->m_projection_matrix_ = g_graphic_accessor.GetInterface().GetProjectionMatrix();
+						camera->SetProjectionMatrix(g_graphic_accessor.GetInterface().GetProjectionMatrix());
 					}
 
-					const auto invView = camera->m_view_matrix_.Invert();
-					const auto invProj = camera->m_projection_matrix_.Invert();
+					const auto invView = camera->GetViewMatrix().Invert();
+					const auto invProj = camera->GetProjectionMatrix().Invert();
 
-					camera->m_perspective_cb_.world = camera->m_world_matrix_.Transpose();
-					camera->m_perspective_cb_.view = camera->m_view_matrix_.Transpose();
-					camera->m_perspective_cb_.projection = camera->m_projection_matrix_.Transpose();
-					camera->m_perspective_cb_.invView = invView.Transpose();
-					camera->m_perspective_cb_.invProj = invProj.Transpose();
-					camera->m_perspective_cb_.invVP = XMMatrixTranspose(XMMatrixInverse(nullptr, camera->m_view_matrix_ * camera->m_projection_matrix_));
+					Graphics::CBs::PerspectiveCB cb = camera->GetPerspectiveCB();
+					cb.world = camera->GetWorldMatrix().Transpose();
+					cb.view = camera->GetViewMatrix().Transpose();
+					cb.projection = camera->GetProjectionMatrix().Transpose();
+					cb.invView = invView.Transpose();
+					cb.invProj = invProj.Transpose();
+					cb.invVP = XMMatrixTranspose(XMMatrixInverse(nullptr, camera->GetViewMatrix() * camera->GetProjectionMatrix()));
 
 					// do the same with mirror rotation
 					// flip backward, and roll forward
@@ -84,14 +84,15 @@ namespace Engine::Managers
 					Vector3 flipLookAtVector = XMVector3TransformNormal(forward, flipRotation);
 					Vector3 flipUpVector     = XMVector3TransformNormal(up, flipRotation);
 
-					camera->m_perspective_cb_.reflectView = XMMatrixLookAtLH
+					cb.reflectView = XMMatrixLookAtLH
 							(
 							position,
 							position + flipLookAtVector,
 							flipUpVector
 							);
 
-					camera->m_perspective_cb_.reflectView = camera->m_perspective_cb_.reflectView.Transpose();
+					cb.reflectView = cb.reflectView.Transpose();
+					camera->SetPerspectiveCB(cb);
 				}
 			}
 		}

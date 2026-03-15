@@ -1,5 +1,4 @@
 #include "Texture.h"
-#include "Texture.generated.h"
 
 #include "IGraphicAPI_Extensions.h"
 #include "ResourceManager.h"

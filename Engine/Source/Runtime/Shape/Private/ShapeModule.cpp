@@ -1,9 +1,8 @@
 #include "ShapeModule.h"
 #include "Shape.h"
 
-
+#include "ModuleRegistration.h"
 #include "ResourceManager.h"
-#include "ShapeModule.generated.h"
 
 MODULE_IMPL(Engine::ShapeModule, Shape)
 
@@ -34,7 +33,7 @@ bool Engine::ShapeModule::InitializeImpl()
                     ui_callback,
                     load_callback,
                     {} );
-		});
+		} ENGINE_MODULE_SCOPE );
 
 	Managers::ResourceManager::GetInstance().RegisterLoadResource(Resources::Shape::StaticTypeName(), [](bool& managing_flag)
 	{
@@ -63,7 +62,7 @@ bool Engine::ShapeModule::InitializeImpl()
 		};
 
 		UIHelpers::OpenLoadDialog<Resources::Shape, Managers::ResourceManager>(managing_flag, {}, load_callback, {});
-	});
+	} ENGINE_MODULE_SCOPE );
 #endif
 
 	return true;

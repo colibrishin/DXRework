@@ -20,12 +20,12 @@ public class DeferredRenderPassTask : EngineCommonProject
         conf.AddPublicDependency<Boost>(target);
         conf.AddPublicDependency<TBB>(target);
         conf.AddPublicDependency<Shader>(target);
-        conf.AddPublicDependency<Texture2D>(target);
+        conf.AddPublicDependency<Texture>(target);
         conf.AddPublicDependency<RenderPipeline>(target);
         conf.AddPublicDependency<Material>(target);
+        conf.AddPublicDependency<Mesh>(target);
 
         conf.AddPrivateDependency<Shape>(target);
-        conf.AddPrivateDependency<Texture>(target);
         conf.AddPrivateDependency<AtlasAnimationTexture>(target);
         conf.AddPrivateDependency<AnimationTexture>(target);
 

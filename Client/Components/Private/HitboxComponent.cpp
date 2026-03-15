@@ -1,5 +1,4 @@
 #include "Components/Public/HitboxComponent.h"
-#include "HitboxComponent.generated.h"
 
 void HitboxComponent::Hit(const float dmg) const
 {

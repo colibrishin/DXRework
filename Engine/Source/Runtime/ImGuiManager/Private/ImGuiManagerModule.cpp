@@ -1,6 +1,5 @@
-﻿#include "ImGuiManager.h"
+#include "ImGuiManager.h"
 #include "ImGuiManagerModule.h"
-#include "ImGuiManagerModule.generated.h"
 
 #include "EngineEntryPoint.h"
 #include "CoreModule.h"
@@ -27,10 +26,4 @@ bool Engine::ImGuiManagerModule::ShutdownImpl()
 bool Engine::ImGuiManagerModule::DynamicLoadable()
 {
 	return true;	
-}
-
-const std::vector<std::string>& Engine::ImGuiManagerModule::LoadAfter() const
-{
-	static std::vector<std::string> load_after = { "RenderPipeline" };
-	return load_after;
 }

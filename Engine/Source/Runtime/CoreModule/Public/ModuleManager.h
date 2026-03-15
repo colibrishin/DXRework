@@ -8,6 +8,8 @@
 #include <mutex>
 
 #include "CoreType.h"
+#include "IModule.h"
+#include "ModuleInfo.h"
 
 #include "ModuleManager.generated.h"
 
@@ -35,12 +37,6 @@ extern ENGINE_COREMODULE_API std::unique_ptr<Engine::ModuleInfo> g_graphic_api;
     {}
 #endif
 
-namespace Engine
-{
-    struct ModuleInfo;
-    struct IModule;
-}
-
 namespace Engine::Managers
 {
     using ModuleInitializationFunctionCStyle = Engine::IModule *( * )();
@@ -58,6 +54,12 @@ namespace Engine::Managers
 #else
         bool CheckNoInit( const std::wstring_view module_name );
 #endif
+        /// Creates IModule* without Initialize; used by LoadModuleAll for phase-aware sort.
+        bool CreateModuleOnly( const std::wstring_view name );
+        /// Initializes an already-created module and appends to load order.
+        void InitializeModuleInOrder( const std::wstring_view name );
+        /// Returns names sorted by ELoadPhase then by dependency (topological order).
+        std::vector<std::wstring> SortByPhaseAndDependency( const std::vector<std::wstring>& names );
     public:
         ModuleManager() = default;
         ~ModuleManager();
@@ -72,6 +74,11 @@ namespace Engine::Managers
         void                  LoadModuleAll();
         static ModuleManager& GetInstance();
 
+        /// Callback invoked for each registered listener when a module is about to shut down (before
+        /// IModule::Shutdown). Use so subsystems can unregister all state owned by that module.
+        using OnModuleShutdownCallback = std::function<void( std::wstring_view )>;
+        void RegisterOnModuleShutdown( OnModuleShutdownCallback cb );
+
 #if !IS_DLL
         void RegisterStaticModule( const std::wstring_view name, const ModuleInitializationFunction& func );
 #endif
@@ -83,6 +90,7 @@ namespace Engine::Managers
         std::unordered_map<std::wstring, std::filesystem::path>  m_module_paths_;
         std::unordered_map<std::wstring, std::set<std::wstring>> m_lazy_modules_;
         std::list<std::wstring>                                  m_module_load_order_;
+        std::vector<OnModuleShutdownCallback>                    m_on_module_shutdown_;
 
 #if !IS_DLL
         std::unordered_map<std::wstring, ModuleInitializationFunction> m_module_initializer_;

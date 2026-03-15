@@ -1,5 +1,4 @@
 #include "NetworkConsumers.h"
-#include "NetworkConsumers.generated.h"
 #include "INetworkAPI.h"
 
 Engine::NetworkConsumers::NetworkConsumers()

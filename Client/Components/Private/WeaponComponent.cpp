@@ -1,5 +1,4 @@
 #include "Components/Public/WeaponComponent.h"
-#include "WeaponComponent.generated.h"
 
 #include "Object.h"
 #include "Shape.h"

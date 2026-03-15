@@ -1,5 +1,4 @@
 #include "Animator.h"
-#include "Animator.generated.h"
 
 
 

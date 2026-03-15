@@ -1,8 +1,7 @@
-﻿#include "ProjectionFrustumModule.h"
+#include "ProjectionFrustumModule.h"
 
 #include "EngineEntryPoint.h"
 #include "ProjectionFrustum.h"
-#include "ProjectionFrustumModule.generated.h"
 
 bool Engine::ProjectionFrustumModule::InitializeImpl()
 {

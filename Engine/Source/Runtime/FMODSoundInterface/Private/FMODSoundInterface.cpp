@@ -1,5 +1,4 @@
 #include "FMODSoundInterface.h"
-#include "FMODSoundInterface.generated.h"
 
 static bool HandleFMODResult(FMOD_RESULT result)
 {

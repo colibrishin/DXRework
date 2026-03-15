@@ -1,5 +1,4 @@
-﻿#include "Resources/Public/ShadowIntensityComputeShader.h"
-#include "ShadowIntensityComputeShader.generated.h"
+#include "Resources/Public/ShadowIntensityComputeShader.h"
 
 #include "Resources/Public/IntensityPositionTexture.h"
 #include "Resources/Public/IntensityTexture.h"

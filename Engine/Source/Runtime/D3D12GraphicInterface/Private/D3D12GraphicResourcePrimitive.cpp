@@ -1,5 +1,4 @@
-﻿#include "D3D12GraphicResourcePrimitive.h"
-#include "D3D12GraphicResourcePrimitive.generated.h"
+#include "D3D12GraphicResourcePrimitive.h"
 
 namespace Engine
 {

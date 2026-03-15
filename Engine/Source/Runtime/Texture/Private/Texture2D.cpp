@@ -1,5 +1,4 @@
 #include "Texture2D.h"
-#include "Texture2D.generated.h"
 
 #include "ResourceManager.h"
 

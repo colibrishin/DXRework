@@ -1,5 +1,4 @@
 #include "RenderComponent.h"
-#include "RenderComponent.generated.h"
 
 #include "ResourceManager.h"
 #include "UIHelpersResourceManager.h"

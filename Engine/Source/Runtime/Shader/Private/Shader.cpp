@@ -1,5 +1,4 @@
 #include "Shader.h"
-#include "Shader.generated.h"
 
 #include "IGraphicAPI.h"
 #include "ResourceManager.h"

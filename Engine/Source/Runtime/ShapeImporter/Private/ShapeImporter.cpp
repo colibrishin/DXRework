@@ -4,8 +4,6 @@
 #include <assimp/scene.h>
 #include <boost/make_shared.hpp>
 
-#include "ShapeImporter.generated.h"
-
 namespace Engine
 {
 	bool ShapeImporter::Import

@@ -1,5 +1,4 @@
 #include "Layer.h"
-#include "Layer.generated.h"
 
 #if WITH_EDITOR
 #include "IUIAPI.h"

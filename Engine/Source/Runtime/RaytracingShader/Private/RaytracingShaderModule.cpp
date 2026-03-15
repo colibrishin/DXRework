@@ -1,5 +1,4 @@
-﻿#include "RaytracingShaderModule.h"
-#include "RaytracingShaderModule.generated.h"
+#include "RaytracingShaderModule.h"
 
 #include "RaytracingShader.h"
 
@@ -23,10 +22,4 @@ bool Engine::RaytracingShaderModule::ShutdownImpl()
 bool Engine::RaytracingShaderModule::DynamicLoadable()
 {
     return true;
-}
-
-const std::vector<std::string> & Engine::RaytracingShaderModule::LoadAfter() const
-{
-    static const std::vector<std::string> load_after = { "RenderPipeline", "RaytracingExtension" };
-    return load_after;
 }

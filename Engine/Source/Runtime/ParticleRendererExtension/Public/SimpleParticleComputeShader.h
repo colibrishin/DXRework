@@ -3,6 +3,7 @@
 
 #include "InstanceParticleSB.h"
 #include "ParticleComputeShader.h"
+#include "Texture2D.h"
 
 #include "SimpleParticleComputeShader.generated.h"
 

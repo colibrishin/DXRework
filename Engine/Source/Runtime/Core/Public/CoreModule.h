@@ -20,6 +20,7 @@ namespace Engine
 		{
 			return true;
 		}
+		ELoadPhase GetLoadPhase() const override { return ELoadPhase::Core; }
 	};
 }
 

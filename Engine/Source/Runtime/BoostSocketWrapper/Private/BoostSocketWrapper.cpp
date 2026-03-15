@@ -1,5 +1,4 @@
 #include "BoostSocketWrapper.h"
-#include "BoostSocketWrapper.generated.h"
 
 #include "NetworkMessageTask.h"
 #include "NetworkTask.h"

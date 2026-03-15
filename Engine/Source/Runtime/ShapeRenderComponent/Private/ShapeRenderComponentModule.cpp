@@ -1,5 +1,4 @@
 #include "ShapeRenderComponentModule.h"
-#include "ShapeRenderComponentModule.generated.h"
 
 MODULE_IMPL(Engine::ShapeRenderComponentModule, ShapeRenderComponent)
 

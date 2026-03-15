@@ -75,10 +75,6 @@ namespace Engine::Components
 		Transform();
 
 	private:
-		friend class Managers::LerpManager;
-		friend class Managers::ShadowManager;
-		friend class Managers::Renderer;
-
 		static Weak<Transform> FindNextTransform(const Transform& transform_);
 
 		EPROPERTY()

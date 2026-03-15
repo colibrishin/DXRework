@@ -20,7 +20,7 @@ public class ParticleRendererExtension : EngineCommonProject
         conf.AddPublicDependency<Boost>(target);
         conf.AddPublicDependency<TBB>(target);
         conf.AddPublicDependency<ParticleRenderer>(target);
-        conf.AddPublicDependency<Texture2D>(target);
+        conf.AddPublicDependency<Texture>(target);
         conf.AddPublicDependency<AtlasAnimation>(target);
         conf.AddPublicDependency<AtlasAnimationTexture>(target);
 

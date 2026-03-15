@@ -1,5 +1,4 @@
 #include "ShadowManager.h"
-#include "ShadowManager.generated.h"
 
 #include "Transform.h"
 #include "Camera.h"
@@ -332,31 +331,31 @@ namespace Engine::Managers
 	void ShadowManager::BindShadowMaps(const IGraphicContext* context) const
 	{
 		IGraphicAPI& gi = g_graphic_accessor.GetInterface();
-		std::vector<Resources::Texture*> textures;
+		std::vector<const Abstracts::Resource*> res_ptrs;
+		res_ptrs.reserve( m_shadow_texs_.size() );
+		for ( const auto &tex : m_shadow_texs_ )
+		{
+			res_ptrs.push_back( tex.get() );
+		}
 
-        for ( const auto &tex : m_shadow_texs_ )
-        {
-            textures.push_back( tex.get() );
-        }
-
-		CheckSize<UINT>(textures.size(), L"Warning: Shadow map size is too big!");
-		gi.BindMultiple(context, textures.data(), BIND_TYPE_SRV, RESERVED_TEX_SHADOW_MAP, 0, textures.size());
+		CheckSize<UINT>( res_ptrs.size(), L"Warning: Shadow map size is too big!" );
+		gi.BindMultiple( context, res_ptrs.data(), BIND_TYPE_SRV, RESERVED_TEX_SHADOW_MAP, 0, res_ptrs.size() );
 
 		context->heap->SetSampler( m_shadow_sampler_.get(), SAMPLER_SHADOW );
 	}
 
 	void ShadowManager::TransitBackShadowMaps(const IGraphicContext* context) const
 	{
-        IGraphicAPI &                gi = g_graphic_accessor.GetInterface();
-        std::vector<Resources::Texture *> textures;
+		IGraphicAPI& gi = g_graphic_accessor.GetInterface();
+		std::vector<const Abstracts::Resource*> res_ptrs;
+		res_ptrs.reserve( m_shadow_texs_.size() );
+		for ( const auto &tex : m_shadow_texs_ )
+		{
+			res_ptrs.push_back( tex.get() );
+		}
 
-        for ( const auto &tex : m_shadow_texs_ )
-        {
-            textures.push_back( tex.get() );
-        }
-
-        CheckSize<UINT>( textures.size(), L"Warning: Shadow map size is too big!" );
-        gi.TransitBackMultiple( context, textures.data(), textures.size(), BIND_TYPE_SRV );
+		CheckSize<UINT>( res_ptrs.size(), L"Warning: Shadow map size is too big!" );
+		gi.TransitBackMultiple( context, res_ptrs.data(), res_ptrs.size(), BIND_TYPE_SRV );
 	}
     
     const StructuredBufferTypeProxy<SBs::LightVPSB> & ShadowManager::GetLightVPBuffer() const

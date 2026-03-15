@@ -1,5 +1,4 @@
 #include "AtlasAnimationTexture.h"
-#include "AtlasAnimationTexture.generated.h"
 
 #include "AtlasAnimation.h"
 #include "Texture2D.h"

@@ -12,7 +12,7 @@ namespace Engine
 	{
         ~D3D12PrimitiveFont() override;
 		D3D12PrimitiveFont() = default;
-		void Generate(const Resources::Font* font) override;
+		void Generate(const Abstracts::Resource* font) override;
 		void Render(const std::string_view text, const Vector2& position, const Color& color, const float rotation_rad, const Vector2& scale) override;
 
 	private:

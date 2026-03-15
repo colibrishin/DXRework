@@ -1,7 +1,6 @@
 #include "RenderPipelineModule.h"
 
 #include "EngineEntryPoint.h"
-#include "RenderPipelineModule.generated.h"
 
 #include "RenderPipeline.h"
 #include "Renderer.h"
@@ -30,10 +29,4 @@ bool Engine::RenderPipelineModule::ShutdownImpl()
 bool Engine::RenderPipelineModule::DynamicLoadable()
 {
 	return true;
-}
-
-const std::vector<std::string>& Engine::RenderPipelineModule::LoadAfter() const
-{
-	static const std::vector<std::string> load_after = {};
-	return load_after;
 }

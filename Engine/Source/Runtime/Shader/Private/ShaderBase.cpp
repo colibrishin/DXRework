@@ -1,5 +1,4 @@
 #include "ShaderBase.h"
-#include "ShaderBase.generated.h"
 
 Engine::Resources::ShaderBase::ShaderBase( const std::filesystem::path &path, const eShaderDomain domain )
     : Resource( path ), m_domain_( domain )

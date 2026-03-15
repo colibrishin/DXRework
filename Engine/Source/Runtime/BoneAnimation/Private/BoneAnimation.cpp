@@ -1,7 +1,6 @@
 #include "BoneAnimation.h"
 
 #include "Bone.h"
-#include "BoneAnimation.generated.h"
 
 namespace Engine::Resources
 {

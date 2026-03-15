@@ -1,5 +1,4 @@
 #include "ShapeRenderComponent.h"
-#include "ShapeRenderComponent.generated.h"
 
 #include "UIHelpersResourceManager.h"
 

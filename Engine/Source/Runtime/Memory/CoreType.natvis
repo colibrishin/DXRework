@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Natvis for Engine hash types (HashType, HashTypeImpl, cityhash256).
+  To use: add this file to your solution (Solution Explorer > right-click Solution > Add > Existing Item)
+  or copy to .vs\<SolutionName>\vc\x64\Debug\ (or your config) so it loads when debugging.
+-->
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
+  <!-- HashType (const HashTypeImpl*): show address and pointee hash -->
+  <Type Name="const HashTypeImpl *">
+    <DisplayString>0x{this,x} | hash = {this->v}</DisplayString>
+    <Expand>
+      <Item Name="address">(void*)this</Item>
+      <Item Name="[hash]">this->v</Item>
+      <ExpandedItem>(*this)</ExpandedItem>
+    </Expand>
+  </Type>
+  <Type Name="HashTypeImpl *">
+    <DisplayString>0x{this,x} | hash = {this->v}</DisplayString>
+    <Expand>
+      <Item Name="address">(void*)this</Item>
+      <Item Name="[hash]">this->v</Item>
+      <ExpandedItem>(*this)</ExpandedItem>
+    </Expand>
+  </Type>
+  <!-- HashTypeImpl (value): show hash and address -->
+  <Type Name="HashTypeImpl">
+    <DisplayString>0x{this,x} | hash = {v}</DisplayString>
+    <Expand>
+      <Item Name="address">(void*)this</Item>
+      <Item Name="[hash]">v</Item>
+      <Item Name="v">v</Item>
+    </Expand>
+  </Type>
+  <Type Name="const HashTypeImpl">
+    <DisplayString>0x{this,x} | hash = {v}</DisplayString>
+    <Expand>
+      <Item Name="address">(void*)this</Item>
+      <Item Name="[hash]">v</Item>
+      <Item Name="v">v</Item>
+    </Expand>
+  </Type>
+  <!-- cityhash256: show four uint64s as hex for readability -->
+  <Type Name="cityhash::cityhash256">
+    <DisplayString>v[0]={v[0],x} v[1]={v[1],x} v[2]={v[2],x} v[3]={v[3],x}</DisplayString>
+    <Expand>
+      <Item Name="v[0]" Format="hex">v[0]</Item>
+      <Item Name="v[1]" Format="hex">v[1]</Item>
+      <Item Name="v[2]" Format="hex">v[2]</Item>
+      <Item Name="v[3]" Format="hex">v[3]</Item>
+    </Expand>
+  </Type>
+</AutoVisualizer>

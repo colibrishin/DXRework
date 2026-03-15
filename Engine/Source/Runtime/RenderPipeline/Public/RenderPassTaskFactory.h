@@ -7,7 +7,7 @@
 
 namespace Engine
 {
-    struct ENGINE_CORE_API IRenderPassTaskFactory
+    struct ENGINE_RENDERPIPELINE_API IRenderPassTaskFactory
     {
         virtual ~IRenderPassTaskFactory() = default;
         IRenderPassTaskFactory()          = default;
@@ -26,7 +26,7 @@ namespace Engine
     template <typename T> requires std::is_base_of_v<RenderPassTask, T>
     struct RenderPassTaskFactory : public IRenderPassTaskFactory
     {
-        RenderPassTaskFactory() 
+        RenderPassTaskFactory()
         {
         }
 
@@ -61,4 +61,4 @@ namespace Engine
     private:
         std::deque<T> m_values_;
     };
-} // namespace Engine
+}

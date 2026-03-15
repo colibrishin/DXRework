@@ -1,5 +1,4 @@
 #include "TextRendererModule.h"
-#include "TextRendererModule.generated.h"
 
 #include "TextRenderer.h"
 

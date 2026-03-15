@@ -144,7 +144,6 @@ namespace Engine::Abstracts
 	private:
 		friend class Scene;
 		friend class Layer;
-		friend class Managers::ShadowManager;
 
 		// Overridable function for derived object clone behavior.
 		[[nodiscard]] virtual Strong<ObjectBase> cloneImpl() const = 0;

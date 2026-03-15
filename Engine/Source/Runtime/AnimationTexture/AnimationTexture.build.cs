@@ -16,7 +16,7 @@ public class AnimationTexture : EngineCommonProject
 
         conf.AddPublicDependency<Core>(target);
         conf.AddPublicDependency<Boost>(target);
-        conf.AddPublicDependency<Texture3D>(target);
+        conf.AddPublicDependency<Texture>(target);
 
         conf.AddPrivateDependency<BaseAnimation>(target);
         conf.AddPrivateDependency<BoneAnimation>(target);

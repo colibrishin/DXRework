@@ -9,8 +9,8 @@ namespace Engine
 	{
 		D3D12PrimitiveTexture();
         ~D3D12PrimitiveTexture() override;
-		void Generate(Resources::Texture* texture) override;
-		void LoadFromFile(Resources::Texture* texture, const std::filesystem::path& path) override;
+		void Generate(Abstracts::Resource* texture) override;
+		void LoadFromFile(Abstracts::Resource* texture, const std::filesystem::path& path) override;
 		void SaveAsFile(const std::filesystem::path& path) override;
 
 		void Map(

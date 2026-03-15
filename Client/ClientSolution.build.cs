@@ -8,10 +8,8 @@ using Sharpmake;
 [Generate]
 public class ClientProject : CommonProject
 {
-    public ClientProject() : base(false)
+    public ClientProject() : base(false, "Client")
     {
-        Name = "Client";
-
         ResourceFilesExtensions.Add(".ini");
         ResourceFilesExtensions.Add(".hlsl");
         ResourceFilesExtensions.Add(".jpg");
@@ -31,7 +29,7 @@ public class ClientProject : CommonProject
         conf.AddPublicDependency<Boost>(target);
         conf.AddPublicDependency<TextRenderer>(target);
         conf.AddPublicDependency<Shape>(target);
-        conf.AddPublicDependency<Texture2D>(target);
+        conf.AddPublicDependency<Texture>(target);
         conf.AddPublicDependency<ModelRenderer>(target);
         conf.AddPublicDependency<ShadowTexture>(target);
         conf.AddPublicDependency<ComputeShader>(target);

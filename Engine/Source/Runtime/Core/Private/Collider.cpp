@@ -4,7 +4,6 @@
 #include "Transform.h"
 #include "VertexElement.h"
 #include "Generator.hpp"
-#include "Collider.generated.h"
 
 #if WITH_DEBUG
 #include "Debugger.h"

@@ -40,14 +40,18 @@ namespace Engine::Objects
 		[[nodiscard]] Matrix  GetWorldMatrix() const;
 		[[nodiscard]] bool    GetOrthogonal() const;
 		[[nodiscard]] float   GetFOV() const;
+		[[nodiscard]] bool    GetFixedUp() const { return m_b_fixed_up_; }
 		[[nodiscard]] const Graphics::CBs::PerspectiveCB& GetPerspectiveCB() const;
+
+		void SetWorldMatrix(const Matrix& m) { m_world_matrix_ = m; }
+		void SetViewMatrix(const Matrix& m) { m_view_matrix_ = m; }
+		void SetProjectionMatrix(const Matrix& m) { m_projection_matrix_ = m; }
+		void SetPerspectiveCB(const Graphics::CBs::PerspectiveCB& cb) { m_perspective_cb_ = cb; }
 
 	private:
 		OBJ_CLONE_DECL;
 
 	private:
-		friend class Managers::CameraManager; 
-
 		EPROPERTY()
 		float m_fov_;
 

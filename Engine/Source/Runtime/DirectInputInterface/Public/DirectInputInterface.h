@@ -13,7 +13,8 @@ namespace Engine
 	ECLASS()
 	struct ENGINE_DIRECTINPUTINTERFACE_API DirectInputInterface : public IInputAPI
 	{
-		// InputInterface을(를) 통해 상속됨
+		GENERATE_BODY
+
 		void Initialize() override;
 		void Shutdown() override;
 		void Update() override;

@@ -1,5 +1,4 @@
 #include "Prefab.h"
-#include "Prefab.generated.h"
 
 #include "ObjectBase.h"
 

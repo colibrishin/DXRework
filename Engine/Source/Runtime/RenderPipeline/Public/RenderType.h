@@ -5,16 +5,10 @@
 #include "InstancePair.h"
 #include "Object.h"
 
-namespace Engine::Resources
+namespace Engine
 {
-    class Mesh;
-    class ShaderBase;
-}
-
-namespace Engine 
-{
-	using MeshMap = concurrent_fast_pool_map<Strong<Resources::Mesh>, aligned_vector<InstancePair>>;
-	using ShaderMap = concurrent_fast_pool_map<Strong<Resources::ShaderBase>, MeshMap>;
+	using MeshMap = concurrent_fast_pool_map<Strong<Abstracts::Resource>, aligned_vector<InstancePair>>;
+	using ShaderMap = concurrent_fast_pool_map<Strong<Abstracts::Resource>, MeshMap>;
 	// Object + Materials -> Mesh -> Shader -> Renderer -> Shader Domain
 	using RenderMap = concurrent_fast_pool_map<HashType, ShaderMap>;
 }

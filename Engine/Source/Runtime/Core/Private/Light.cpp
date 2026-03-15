@@ -2,8 +2,6 @@
 
 #include <magic_enum/magic_enum.hpp>
 
-#include "Light.generated.h"
-
 #include "Transform.h"
 
 namespace Engine::Objects

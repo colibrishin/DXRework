@@ -1,5 +1,4 @@
 #include "SingletonSpinLock.h"
-#include "SingletonSpinLock.generated.h"
 
 Engine::SpinLockTicket Engine::SingletonSpinLock::Register()
 {

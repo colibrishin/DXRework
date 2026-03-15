@@ -11,7 +11,7 @@ namespace Engine
     {
         ~D3D12PrimitiveMesh() override;
         D3D12PrimitiveMesh() = default;
-        void Generate( Resources::Mesh* mesh ) override;
+        void Generate( Abstracts::Resource* mesh ) override;
 
         [[nodiscard]] uint64_t GetNativeVertexBufferGPUAddress() const override;
         [[nodiscard]] uint64_t GetNativeIndexBufferGPUAddress() const override;

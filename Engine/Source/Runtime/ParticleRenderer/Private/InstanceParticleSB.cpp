@@ -1,5 +1,4 @@
 #include "InstanceParticleSB.h"
-#include "InstanceParticleSB.generated.h"
 
 Engine::Graphics::SBs::InstanceParticleSB::InstanceParticleSB()
 {

@@ -3,6 +3,7 @@
 
 #include "TypeLibrary.h"
 #include "IGraphicAPI_Extensions.h"
+#include "RenderType.h"
 
 #include "RenderPassTask.generated.h"
 
@@ -11,7 +12,7 @@ namespace Engine
     using ContextSetupFunction = std::function<void( const IGraphicContext* )>;
 
     ECLASS( virtual )
-    struct ENGINE_CORE_API RenderPassTask
+    struct ENGINE_RENDERPIPELINE_API RenderPassTask
     {
         GENERATE_BODY
         virtual ~RenderPassTask() = default;

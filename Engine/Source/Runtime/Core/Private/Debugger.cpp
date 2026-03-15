@@ -4,7 +4,6 @@
 #include "Scene.h"
 #include "Transform.h"
 #include "TypeLibrary.h"
-#include "Debugger.generated.h"
 
 namespace Engine::Managers
 {

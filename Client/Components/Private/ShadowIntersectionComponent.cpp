@@ -1,5 +1,4 @@
-﻿#include "Components/Public/ShadowIntersectionComponent.h"
-#include "ShadowIntersectionComponent.generated.h"
+#include "Components/Public/ShadowIntersectionComponent.h"
 
 #if CLIENT || WITH_EDITOR
 #include "Shader.h"

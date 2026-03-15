@@ -18,7 +18,7 @@ public class ShadowManager : EngineCommonProject
         base.ConfigureAll(conf, target);
         conf.AddPublicDependency<Core>(target);
         conf.AddPublicDependency<Boost>(target);
-        conf.AddPublicDependency<Texture2D>(target);
+        conf.AddPublicDependency<Texture>(target);
         conf.AddPublicDependency<RenderPipeline>(target);
 
         conf.AddPrivateDependency<Shader>(target);

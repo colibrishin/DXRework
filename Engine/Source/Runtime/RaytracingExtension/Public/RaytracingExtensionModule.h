@@ -13,7 +13,7 @@ namespace Engine
 		bool InitializeImpl() override;
 		bool ShutdownImpl() override;
 		bool DynamicLoadable() override;
-	    const std::vector<std::string> &LoadAfter() const override;
+		ELoadPhase GetLoadPhase() const override { return ELoadPhase::Graphic; }
 	};
 }
 #endif

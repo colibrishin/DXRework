@@ -1,7 +1,6 @@
 #include "SoundManagerModule.h"
 
 #include "EngineEntryPoint.h"
-#include "SoundManagerModule.generated.h"
 
 #include "ISoundAPI.h"
 #include "SoundManager.h"
@@ -28,10 +27,4 @@ bool Engine::SoundManagerModule::ShutdownImpl()
 bool Engine::SoundManagerModule::DynamicLoadable()
 {
     return true;
-}
-
-const std::vector<std::string>& Engine::SoundManagerModule::LoadAfter() const
-{
-    static std::vector<std::string> load_after{ "FMODSoundInterface" };
-    return load_after;
 }

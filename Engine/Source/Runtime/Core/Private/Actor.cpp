@@ -1,5 +1,4 @@
 #include "Actor.h"
-#include "Actor.generated.h"
 
 #if WITH_EDITOR
 #include "IUIAPI.h"

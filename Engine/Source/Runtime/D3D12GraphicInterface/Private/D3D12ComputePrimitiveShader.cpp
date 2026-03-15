@@ -5,6 +5,7 @@
 #include "RenderPipeline.h"
 #include "ThrowIfFailed.h"
 #include "CommandPair.h"
+#include "ResourceTypeValidation.h"
 
 std::vector<std::tuple<Engine::eShaderType, std::string, std::string>> Engine::D3D12ComputePrimitiveShader::s_main_version =
 		{
@@ -23,8 +24,10 @@ namespace Engine
     D3D12ComputePrimitiveShader::D3D12ComputePrimitiveShader()
     { }
 
-	void D3D12ComputePrimitiveShader::Generate(Resources::ComputeShader* shader, void* pipeline_signature)
+	void D3D12ComputePrimitiveShader::Generate(Abstracts::Resource* resource, void* pipeline_signature)
 	{
+		D3D12::ExpectComputeShader( resource );
+		auto* shader = static_cast<Resources::ComputeShader*>(resource);
 		ComPtr<ID3DBlob> error;
 		UINT             flag = 0;
 

@@ -1,5 +1,4 @@
 #include "Components/Public/CubifyComponent.h"
-#include "CubifyComponent.generated.h"
 
 #include "Scene.h"
 #include "ObjectBase.h"

@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 #include "ComputeShader.h"
 #include "TypeLibrary.h"
 

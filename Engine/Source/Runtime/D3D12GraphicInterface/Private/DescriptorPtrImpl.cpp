@@ -2,6 +2,7 @@
 
 #include "CommandPair.h"
 #include "DescriptorHandler.hpp"
+#include "ResourceTypeValidation.h"
 
 namespace Engine
 {
@@ -88,9 +89,11 @@ namespace Engine
         return m_handler_->GetMainSamplerDescriptorHeap(m_heap_queue_offset_);
     }
 
-    void DescriptorPtrImpl::SetSampler(const Resources::ShaderBase* shader, const eSampler slot) const
+    void DescriptorPtrImpl::SetSampler(const Abstracts::Resource* resource, const eSampler slot) const
     {
         if (!IsValid()) { return; }
+        D3D12::ExpectShaderBase( resource );
+        auto* shader = static_cast<const Resources::ShaderBase*>(resource);
         m_handler_->SetSampler(
             m_cpu_sampler_handle_,
             static_cast<ID3D12DescriptorHeap*>(shader->GetPrimitive().GetNativeSampler())->GetCPUDescriptorHandleForHeapStart(),
@@ -125,14 +128,16 @@ namespace Engine
     }
 
     void DescriptorPtrImpl::SetShaderResources(
-        const Resources::Texture* const* textures, const UINT count, const UINT offset
+        const Abstracts::Resource* const* textures, const UINT count, const UINT offset
     ) const
     {
         std::vector<D3D12_CPU_DESCRIPTOR_HANDLE> handles;
 
         for (size_t i = 0; i < count; ++i)
         {
-            D3D12_CPU_DESCRIPTOR_HANDLE handle = static_cast<D3D12PrimitiveTexture*>(textures[i]->GetPrimitiveTexture())
+            D3D12::ExpectTexture( textures[i] );
+            auto* tex = static_cast<const Resources::Texture*>(textures[i]);
+            D3D12_CPU_DESCRIPTOR_HANDLE handle = static_cast<D3D12PrimitiveTexture*>(tex->GetPrimitiveTexture())
                                                  ->GetSrv()->GetCPUDescriptorHandleForHeapStart();
             handles.push_back(handle);
         }

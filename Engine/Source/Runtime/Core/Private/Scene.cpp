@@ -5,7 +5,6 @@
 #include <extensions/PxDefaultSimulationFilterShader.h>
 #endif
 #include "Scene.h"
-#include "Scene.generated.h"
 
 #if WITH_EDITOR
 #include "IUIAPI.h"

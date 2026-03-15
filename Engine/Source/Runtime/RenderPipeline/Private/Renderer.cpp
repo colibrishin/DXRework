@@ -1,10 +1,10 @@
 #include "Renderer.h"
-#include "Renderer.generated.h"
 
 #include "ConcurrentTypeLibrary.h"
-#include "SceneManager.h"
-#include "Scene.h"
+#include "ModuleManager.h"
 #include "RenderPipeline.h"
+#include "Scene.h"
+#include "SceneManager.h"
 
 namespace Engine::Managers
 {
@@ -72,7 +72,13 @@ namespace Engine::Managers
 
 	void Renderer::PostUpdate(const float dt) {}
 
-	void Renderer::Initialize() {}
+	void Renderer::Initialize()
+	{
+#if IS_DLL
+		ModuleManager::GetInstance().RegisterOnModuleShutdown(
+			[]( std::wstring_view name ) { Renderer::GetInstance().UnregisterModule( name ); } );
+#endif
+	}
 
 	void Renderer::RegisterRenderInstance(const std::wstring_view name, RenderInstanceTask* task)
 	{
@@ -82,27 +88,38 @@ namespace Engine::Managers
 		}
 	}
 
-	void Renderer::RegisterRenderPass( const std::wstring_view name, IRenderPassTaskFactory* task )
+	void Renderer::RegisterRenderPass( const std::wstring_view name, IRenderPassTaskFactory* task, const std::wstring_view module_name )
 	{
-		if (task != nullptr)
+		if ( task != nullptr )
 		{
-            m_unique_render_pass_task_factories_.emplace( name, std::unique_ptr<IRenderPassTaskFactory>( task ) );
+			m_unique_render_pass_task_factories_.emplace( name, std::unique_ptr<IRenderPassTaskFactory>( task ) );
+#if IS_DLL
+			if ( !module_name.empty() )
+			{
+				m_render_pass_names_by_module_[ std::wstring( module_name ) ].insert( std::wstring( name ) );
+			}
+#endif
 		}
-    }
+	}
 
-    void Renderer::RenderPassWith( const std::wstring_view name, const eShaderDomain domain )
-    {
-		if (domain < SHADER_DOMAIN_BEGIN || domain >= SHADER_DOMAIN_MAX)
+	void Renderer::RenderPassWith( const std::wstring_view name, const eShaderDomain domain, const std::wstring_view module_name )
+	{
+		if ( domain < SHADER_DOMAIN_BEGIN || domain >= SHADER_DOMAIN_MAX )
 		{
-            return;
+			return;
 		}
 
 		if ( m_unique_render_pass_task_factories_.contains( name.data() ) )
 		{
-            m_render_pass_tasks_factories_[ domain ].emplace(
+			m_render_pass_tasks_factories_[ domain ].emplace(
 				name.data(),
 				m_unique_render_pass_task_factories_.at( name.data() ).get() );
-            
+#if IS_DLL
+			if ( !module_name.empty() )
+			{
+				m_render_pass_names_by_module_[ std::wstring( module_name ) ].insert( std::wstring( name ) );
+			}
+#endif
 			onRenderTaskDirty.Broadcast();
 		}
 	}
@@ -117,27 +134,51 @@ namespace Engine::Managers
 
 	void Renderer::UnregisterRenderPass( const std::wstring_view name )
 	{
-        if ( m_unique_render_pass_task_factories_.contains( name.data() ) )
+		if ( m_unique_render_pass_task_factories_.contains( name.data() ) )
 		{
-            IRenderPassTaskFactory* factory = m_unique_render_pass_task_factories_.at( name.data() ).get();
-            HashType                task_type = factory->GetTaskType();
+			IRenderPassTaskFactory* factory = m_unique_render_pass_task_factories_.at( name.data() ).get();
+			HashType                task_type = factory->GetTaskType();
 
 			for ( size_t i = 0; i < SHADER_DOMAIN_MAX; ++i )
 			{
-                m_render_pass_tasks_factories_[ i ].erase( name.data() );
-                
-                for ( RenderPassTask* task : m_render_pass_tasks_[ i ][ task_type ] )
-                {
-                    factory->Release( task );
-                }
+				m_render_pass_tasks_factories_[ i ].erase( name.data() );
+
+				for ( RenderPassTask* task : m_render_pass_tasks_[ i ][ task_type ] )
+				{
+					factory->Release( task );
+				}
 			}
 
-            m_unique_render_pass_task_factories_.erase( name.data() );
-            onRenderTaskDirty.Broadcast();
+			m_unique_render_pass_task_factories_.erase( name.data() );
+#if IS_DLL
+			const std::wstring name_str( name );
+			for ( auto& [ mod, names ] : m_render_pass_names_by_module_ )
+			{
+				names.erase( name_str );
+			}
+#endif
+			onRenderTaskDirty.Broadcast();
 		}
-    }
+	}
 
-    void Renderer::RenderPassWithout( const std::wstring_view name, const eShaderDomain domain )
+	void Renderer::UnregisterModule( std::wstring_view module_name )
+	{
+#if IS_DLL
+		const std::wstring key( module_name );
+		auto it = m_render_pass_names_by_module_.find( key );
+		if ( it == m_render_pass_names_by_module_.end() )
+		{
+			return;
+		}
+		for ( const std::wstring& name : it->second )
+		{
+			UnregisterRenderPass( name );
+		}
+		m_render_pass_names_by_module_.erase( it );
+#endif
+	}
+
+	void Renderer::RenderPassWithout( const std::wstring_view name, const eShaderDomain domain )
     {
         if ( domain < SHADER_DOMAIN_BEGIN || domain >= SHADER_DOMAIN_MAX )
         {

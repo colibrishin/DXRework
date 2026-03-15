@@ -1,12 +1,13 @@
 #include "DeferredRenderPassTask.h"
-#include "DeferredRenderPassTask.generated.h"
 
 #include "Shader.h"
 #include "ShaderBase.h"
 #include "RenderPipeline.h"
+#include "Mesh.h"
 #include "AtlasAnimationTexture.h"
 #include "AnimationTexture.h"
 
+#include <vector>
 #include <tbb/parallel_for_each.h>
 #include "Texture2D.h"
 
@@ -34,13 +35,25 @@ void Engine::DeferredRenderPassTask::Run(
         return;
     }
 
+    bool rt_ready = ( m_deferred_depth_raw_ != nullptr );
+    for ( size_t i = 0; i < g_deferred_count; ++i )
+    {
+        rt_ready = rt_ready && ( m_deferred_render_targets_raw_[ i ] != nullptr );
+    }
+    if ( !rt_ready )
+    {
+        return;
+    }
+
     IGraphicAPI &gi= g_graphic_accessor.GetInterface();
     {
         const auto &context   = gi.GetNewContext( 0, false, L"Clear Deferred Textures" );
         const auto &primitive = context.GetPointers();
 
         primitive.commandList->SoftReset();
-        gi.TransitToMultiple( &primitive, m_deferred_render_targets_raw_, g_deferred_count, BIND_TYPE_RTV );
+        const Abstracts::Resource* rtv_ptrs[ g_deferred_count ];
+        for ( size_t i = 0; i < g_deferred_count; ++i ) rtv_ptrs[ i ] = m_deferred_render_targets_raw_[ i ];
+        gi.TransitToMultiple( &primitive, rtv_ptrs, g_deferred_count, BIND_TYPE_RTV );
         gi.TransitTo( &primitive, m_deferred_depth_raw_, BIND_TYPE_DSV );
         primitive.commandList->FlagReady();
     }
@@ -76,7 +89,7 @@ void Engine::DeferredRenderPassTask::Run(
                         if ( const Strong<Resources::Shader> &locked = Cast<Resources::Shader>( shader ) )
                         {
                             if ( decltype( intermediate_shader_map )::const_accessor acc;
-                                 intermediate_shader_map.find( acc, shader.get() ) )
+                                 intermediate_shader_map.find( acc, static_cast<Resources::ShaderBase*>( shader.get() ) ) )
                             {
                                 StartPhase_MultiThread( dt,
                                                         shader_bypass,
@@ -118,7 +131,8 @@ void Engine::DeferredRenderPassTask::Run(
                                             0 );
         if ( m_used_shader_textures_.size() > 0 && m_used_shader_textures_[ 0 ] != nullptr )
         {
-            gi.TransitBackMultiple( &primitive, m_used_shader_textures_.data(), unique_idx, BIND_TYPE_SRV );
+            std::vector<const Abstracts::Resource*> res_ptrs( m_used_shader_textures_.begin(), m_used_shader_textures_.begin() + unique_idx );
+            gi.TransitBackMultiple( &primitive, res_ptrs.data(), unique_idx, BIND_TYPE_SRV );
             std::ranges::fill( m_used_shader_textures_, nullptr );
         }
         gi.TransitBack( &primitive, m_deferred_depth_raw_, BIND_TYPE_DSV );
@@ -128,6 +142,10 @@ void Engine::DeferredRenderPassTask::Run(
 
 void Engine::DeferredRenderPassTask::Cleanup()
 {
+    if ( m_deferred_depth_raw_ == nullptr )
+    {
+        return;
+    }
     IGraphicAPI &gi = g_graphic_accessor.GetInterface();
     const auto       &context = gi.GetNewContext( 0, false, L"Clear Deferred Textures" );
     const auto       &primitive = context.GetPointers();
@@ -135,7 +153,10 @@ void Engine::DeferredRenderPassTask::Cleanup()
     primitive.commandList->SoftReset();
     for ( size_t i = 0; i < std::size(m_deferred_render_targets_raw_); ++i )
     {
-        gi.Clear( &primitive, m_deferred_render_targets_raw_[i], BIND_TYPE_RTV );
+        if ( m_deferred_render_targets_raw_[ i ] != nullptr )
+        {
+            gi.Clear( &primitive, m_deferred_render_targets_raw_[i], BIND_TYPE_RTV );
+        }
     }
 
     gi.Clear( &primitive, m_deferred_depth_raw_, BIND_TYPE_DSV );
@@ -255,7 +276,9 @@ inline void Engine::DeferredRenderPassTask::StartPhase_MultiThread(
     sb.TransitionToSRV( &temp_context );
     sb.CopySRVHeap( &temp_context );
 
-    gi.BindMultiple( &primitive, m_deferred_render_targets_raw_, g_deferred_count, m_deferred_depth_raw_ );
+    const Abstracts::Resource* rtv_ptrs[ g_deferred_count ];
+    for ( size_t i = 0; i < g_deferred_count; ++i ) rtv_ptrs[ i ] = m_deferred_render_targets_raw_[ i ];
+    gi.BindMultiple( &primitive, rtv_ptrs, g_deferred_count, m_deferred_depth_raw_ );
     Managers::RenderPipeline::GetInstance().BindConstantBuffers( &temp_context );
     gi.SetViewport( &temp_context, Managers::RenderPipeline::GetInstance().GetViewport() );
 
@@ -374,7 +397,7 @@ inline void Engine::DeferredRenderPassTask::MaterialPass_Multithread(
                     {
                         // allow to instance with the first reserved texture encountered.
                         reserved_texture_tolerant = true;
-                        reserved_textures[ i ]    = pair.reservedTextures->at( i ).get();
+                        reserved_textures[ i ]    = static_cast<Resources::Texture*>( pair.reservedTextures->at( i ).get() );
                     }
                 }
                 else if ( pair.reservedTextures->at( i ).get() == reserved_textures[ i ] &&
@@ -399,7 +422,7 @@ inline void Engine::DeferredRenderPassTask::MaterialPass_Multithread(
                 {
                     if ( pair.textures->at( i ) )
                     {
-                        if ( const auto &it = std::ranges::find( assigned_texture, pair.textures->at( i ).get() );
+                        if ( const auto &it = std::ranges::find( assigned_texture, static_cast<Resources::Texture*>( pair.textures->at( i ).get() ) );
                              it != std::end( assigned_texture ) )
                         {
                             const size_t bind_slot = std::distance( std::begin( assigned_texture ), it );
@@ -408,7 +431,7 @@ inline void Engine::DeferredRenderPassTask::MaterialPass_Multithread(
                         else
                         {
                             tex_bind_mask |= 1 << msb;
-                            assigned_texture[ lsb ] = pair.textures->at( i ).get();
+                            assigned_texture[ lsb ] = static_cast<Resources::Texture*>( pair.textures->at( i ).get() );
                             instances[ instance_resolved + instance_to_resolve ]->SetTextureSlot( i, lsb );
                             --msb;
                             ++lsb;
@@ -423,7 +446,7 @@ inline void Engine::DeferredRenderPassTask::MaterialPass_Multithread(
                         // should be tolerant to the one reserved texture per each.
                         if ( pair.reservedTextures->at( i ) && reserved_textures[ i ] != nullptr )
                         {
-                            reserved_textures[ i ] = pair.reservedTextures->at( i ).get();
+                            reserved_textures[ i ] = static_cast<Resources::Texture*>( pair.reservedTextures->at( i ).get() );
                         }
                     }
                 }
@@ -452,25 +475,26 @@ inline void Engine::DeferredRenderPassTask::MaterialPass_Multithread(
             {
                 for ( size_t j = 0; j < texture_pairs[ instance_resolved + i ].reservedTextures->size(); ++j )
                 {
-                    if ( const Strong<Resources::Texture> &tex =
+                    if ( const Strong<Abstracts::Resource> &raw =
                                  texture_pairs[ instance_resolved + i ].reservedTextures->at( j ) )
                     {
+                        const auto* tex = static_cast<const Resources::Texture*>( raw.get() );
                         if ( tex->GetTypeHash() == Resources::AtlasAnimationTexture::StaticTypeHash() )
                         {
-                            RecordUsedTexture( context, gi, tex.get() );
-                            gi.Bind( context, tex.get(), BIND_TYPE_SRV, RESERVED_USER_TEX_ATLAS, 0 );
+                            RecordUsedTexture( context, gi, tex );
+                            gi.Bind( context, tex, BIND_TYPE_SRV, RESERVED_USER_TEX_ATLAS, 0 );
                         }
                         else if ( tex->GetTypeHash() == Resources::AnimationTexture::StaticTypeHash() )
                         {
-                            RecordUsedTexture( context, gi, tex.get() );
-                            gi.Bind( context, tex.get(), BIND_TYPE_SRV, RESERVED_USER_TEX_BONES, 0 );
+                            RecordUsedTexture( context, gi, tex );
+                            gi.Bind( context, tex, BIND_TYPE_SRV, RESERVED_USER_TEX_BONES, 0 );
                         }
                     }
                 }
             }
         }
 
-        gi.Draw( context, mesh, instance_to_resolve, instance_resolved );
+        gi.Draw( context, static_cast<const Abstracts::Resource*>( mesh ), instance_to_resolve, instance_resolved );
 
         instance_buffer.TransitionCommon( context );
         instance_resolved += instance_to_resolve;
@@ -503,9 +527,11 @@ inline void Engine::DeferredRenderPassTask::LightPass(
     sb.TransitionToSRV( &temp_context );
     sb.CopySRVHeap( &temp_context );
 
-    gi.TransitBackMultiple( &temp_context, m_deferred_render_targets_raw_, g_deferred_count, BIND_TYPE_RTV );
-    gi.TransitToMultiple( &temp_context, m_deferred_render_targets_raw_, g_deferred_count, BIND_TYPE_SRV );
-    gi.BindMultiple( &temp_context, m_deferred_render_targets_raw_, BIND_TYPE_SRV, BIND_SLOT_TEX, 0, g_deferred_count );
+    const Abstracts::Resource* rtv_ptrs_lp[ g_deferred_count ];
+    for ( size_t i = 0; i < g_deferred_count; ++i ) rtv_ptrs_lp[ i ] = m_deferred_render_targets_raw_[ i ];
+    gi.TransitBackMultiple( &temp_context, rtv_ptrs_lp, g_deferred_count, BIND_TYPE_RTV );
+    gi.TransitToMultiple( &temp_context, rtv_ptrs_lp, g_deferred_count, BIND_TYPE_SRV );
+    gi.BindMultiple( &temp_context, rtv_ptrs_lp, BIND_TYPE_SRV, BIND_SLOT_TEX, 0, g_deferred_count );
     gi.SetDefaultRenderTarget( &temp_context );
 
     Managers::RenderPipeline::GetInstance().BindConstantBuffers( &temp_context );
@@ -553,8 +579,10 @@ inline void Engine::DeferredRenderPassTask::LightPass(
     }
 
     sb.TransitionCommon( &temp_context );
-    gi.TransitBackMultiple( &temp_context, m_deferred_render_targets_raw_, g_deferred_count, BIND_TYPE_SRV );
-    
+    const Abstracts::Resource* srv_ptrs[ g_deferred_count ];
+    for ( size_t i = 0; i < g_deferred_count; ++i ) srv_ptrs[ i ] = m_deferred_render_targets_raw_[ i ];
+    gi.TransitBackMultiple( &temp_context, srv_ptrs, g_deferred_count, BIND_TYPE_SRV );
+
     temp_context.commandList->FlagReady();
 }
 

@@ -1,5 +1,4 @@
 #include "TaskScheduler.h"
-#include "TaskScheduler.generated.h"
 #include "EngineEntryPoint.h"
 
 namespace Engine::Managers

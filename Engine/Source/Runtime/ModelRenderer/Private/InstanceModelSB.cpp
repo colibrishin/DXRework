@@ -1,5 +1,4 @@
 #include "InstanceModelSB.h"
-#include "InstanceModelSB.generated.h"
 
 Engine::Graphics::SBs::InstanceModelSB::InstanceModelSB()
 {

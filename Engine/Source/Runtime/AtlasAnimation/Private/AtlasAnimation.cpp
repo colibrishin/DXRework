@@ -1,5 +1,4 @@
 #include "AtlasAnimation.h"
-#include "AtlasAnimation.generated.h"
 
 #include <pugixml.hpp>
 #include "ResourceManager.h"

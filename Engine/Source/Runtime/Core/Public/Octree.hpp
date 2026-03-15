@@ -2,6 +2,7 @@
 #include <array>
 #include <bitset>
 #include <stack>
+#include <unordered_set>
 #include <vector>
 #include <queue>
 #include <memory>
@@ -330,6 +331,7 @@ namespace Engine
             while ( !stack.empty() )
             {
                 auto [node, post_visit] = stack.top();
+                stack.pop();
 
                 auto&       life_count           = node->m_life_count_;
                 auto&       node_value           = node->m_values_;
@@ -359,14 +361,21 @@ namespace Engine
                             if ( bound_check != DirectX::ContainmentType::CONTAINS )
                             {
                                 auto* cursor = node->parent();
-
+                                std::unordered_set<octree_impl*> seen_ancestors;
+                                constexpr unsigned max_parent_walk = 65536u;
+                                unsigned walk_steps = 0;
                                 while ( cursor )
                                 {
+                                    if ( walk_steps++ >= max_parent_walk || !seen_ancestors.insert(cursor).second )
+                                    {
+                                        // Cycle or unreasonably deep parent chain: rebuild tree to recover.
+                                        root()->Panic();
+                                        return;
+                                    }
                                     if ( cursor->Insert(obj) )
                                     {
                                         break;
                                     }
-
                                     cursor = cursor->parent();
                                 }
 
@@ -400,7 +409,6 @@ namespace Engine
                     Managers::Debugger::GetInstance().Draw(node_bound,
                                                            { 1.f, 1.f, 1.f, 1.f });
 #endif
-                    stack.pop();
                     continue;
                 }
 
@@ -847,9 +855,10 @@ namespace Engine
                 // Resolve the insertion queue and clear dirty flag
                 while ( !m_insertion_queue_.empty() )
                 {
-                    if ( auto obj = m_insertion_queue_.front().lock() )
+                    auto obj = m_insertion_queue_.front().lock();
+                    m_insertion_queue_.pop();
+                    if ( obj )
                     {
-                        m_insertion_queue_.pop();
                         Insert(obj);
                     }
                 }

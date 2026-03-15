@@ -1,7 +1,7 @@
 #include "ForwardRenderPassTask.h"
-#include "ForwardRenderPassTask.generated.h"
 
 #include <ranges>
+#include <vector>
 #include <tbb/parallel_for_each.h>
 
 #include "RenderPipeline.h"
@@ -68,7 +68,7 @@ namespace Engine
                             if ( const Strong<Resources::Shader> &locked = Cast<Resources::Shader>( shader ) )
                             {
                                 if ( decltype( intermediate_shader_map )::const_accessor acc;
-                                     intermediate_shader_map.find( acc, shader.get() ) )
+                                     intermediate_shader_map.find( acc, static_cast<Resources::ShaderBase*>( shader.get() ) ) )
                                 {
                                     StartPhase_MultiThread( dt,
                                                             shader_bypass,
@@ -101,7 +101,8 @@ namespace Engine
                                             0 );
         if ( m_used_shader_textures_.size() > 0 && m_used_shader_textures_[ 0 ] != nullptr )
         {
-            gi.TransitBackMultiple( &primitive, m_used_shader_textures_.data(), unique_idx, BIND_TYPE_SRV );
+            std::vector<const Abstracts::Resource*> res_ptrs( m_used_shader_textures_.begin(), m_used_shader_textures_.begin() + unique_idx );
+            gi.TransitBackMultiple( &primitive, res_ptrs.data(), unique_idx, BIND_TYPE_SRV );
             std::ranges::fill( m_used_shader_textures_, nullptr );
         }
         primitive.commandList->FlagReady();
@@ -327,7 +328,7 @@ namespace Engine
 						{
                             // allow to instance with the first reserved texture encountered.
                             reserved_texture_tolerant = true;
-                            reserved_textures[ i ]    = pair.reservedTextures->at( i ).get();
+                            reserved_textures[ i ]    = static_cast<Resources::Texture*>( pair.reservedTextures->at( i ).get() );
 						}
 					}
                     else if ( pair.reservedTextures->at( i ).get() == reserved_textures[ i ] &&
@@ -352,7 +353,7 @@ namespace Engine
 					{
 						if (pair.textures->at(i))
 						{
-							if (const auto& it = std::ranges::find( assigned_texture, pair.textures->at( i ).get() );
+							if (const auto& it = std::ranges::find( assigned_texture, static_cast<Resources::Texture*>( pair.textures->at( i ).get() ) );
 								it != std::end( assigned_texture ) )
 							{
                                 const size_t bind_slot = std::distance( std::begin( assigned_texture ), it );
@@ -361,7 +362,7 @@ namespace Engine
 							else
 							{
                                 tex_bind_mask |= 1 << msb;
-                                assigned_texture[ lsb ] = pair.textures->at( i ).get();
+                                assigned_texture[ lsb ] = static_cast<Resources::Texture*>( pair.textures->at( i ).get() );
                                 instances[ instance_resolved + instance_to_resolve ]->SetTextureSlot( i, lsb );
                                 --msb;
                                 ++lsb;
@@ -376,7 +377,7 @@ namespace Engine
 							// should be tolerant to the one reserved texture per each.
 							if (pair.reservedTextures->at(i) && reserved_textures[i] != nullptr)
 							{
-								reserved_textures[i] = pair.reservedTextures->at(i).get();
+								reserved_textures[i] = static_cast<Resources::Texture*>( pair.reservedTextures->at( i ).get() );
 							}
 						}
 					}
@@ -404,18 +405,19 @@ namespace Engine
                 {
                     for ( size_t j = 0; j < texture_pairs[ instance_resolved + i ].reservedTextures->size(); ++j )
                     {
-                        if ( const Strong<Resources::Texture> &tex =
+                        if ( const Strong<Abstracts::Resource> &raw =
                                      texture_pairs[ instance_resolved + i ].reservedTextures->at( j ) )
                         {
+                            const auto* tex = static_cast<const Resources::Texture*>( raw.get() );
                             if ( tex->GetTypeHash() == Resources::AtlasAnimationTexture::StaticTypeHash() )
                             {
-                                RecordUsedTexture( context, gi, tex.get() );
-                                gi.Bind( context, tex.get(), BIND_TYPE_SRV, RESERVED_USER_TEX_ATLAS, 0 );
+                                RecordUsedTexture( context, gi, tex );
+                                gi.Bind( context, tex, BIND_TYPE_SRV, RESERVED_USER_TEX_ATLAS, 0 );
                             }
                             else if ( tex->GetTypeHash() == Resources::AnimationTexture::StaticTypeHash() )
                             {
-                                RecordUsedTexture( context, gi, tex.get() );
-                                gi.Bind( context, tex.get(), BIND_TYPE_SRV, RESERVED_USER_TEX_BONES, 0 );
+                                RecordUsedTexture( context, gi, tex );
+                                gi.Bind( context, tex, BIND_TYPE_SRV, RESERVED_USER_TEX_BONES, 0 );
                             }
                         }
                     }

@@ -1,5 +1,4 @@
 #include "RendererModule.h"
-#include "RendererModule.generated.h"
 
 bool Engine::RendererModule::InitializeImpl()
 {

@@ -6,7 +6,6 @@
 #endif
 
 #include "Mesh.h"
-#include "Mesh.generated.h"
 
 #include <algorithm>
 #include <execution>

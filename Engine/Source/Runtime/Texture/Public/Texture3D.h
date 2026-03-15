@@ -6,7 +6,7 @@
 namespace Engine::Resources
 {
 	ECLASS(resource, serialize)
-	class ENGINE_TEXTURE3D_API Texture3D : public Texture
+	class ENGINE_TEXTURE_API Texture3D : public Texture
 	{
 		GENERATE_BODY
 	public:

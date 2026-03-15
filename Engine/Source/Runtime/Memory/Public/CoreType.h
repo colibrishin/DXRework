@@ -955,7 +955,7 @@ public:
 
 #define INLINE_COMPILE_TIME_TYPENAME(Type) \
 	INLINE_COMPILE_TIME_TYPENAME_NON_ENTITY(Type) \
-	static bool StaticIsDerivedOf(HashType base) \
+	constexpr static bool StaticIsDerivedOf(HashType base) \
 	{ \
 		return polymorphic_type_hash<##Type##>::is_derived_of(base); \
 	} \
@@ -1038,11 +1038,46 @@ template <typename T> struct type_hash;
 template <size_t Count>
 using HashArray = std::array<HashType, Count>;
 
+// Compile-time inheritance chain typelist for polymorphic_type_hash.
+// chain = type_list<MostDerived, DirectBase, ..., void> (one path; POLYMORPHIC_TYPE_MAP registers one immediate base per type).
+// Virtual inheritance: the chain still lists each type once along that path (e.g. IGraphicAPI -> IGraphicAPIBase).
+// Types with multiple direct bases have one chain per POLYMORPHIC_TYPE_MAP; pointer conversion from virtual base to derived
+// cannot use static_cast and must use dynamic_cast when RTTI is available (see safe_cast).
+template <typename... Ts>
+struct type_list {};
+
+template <typename T, typename List>
+struct type_list_prepend;
+
+template <typename T, typename... Ts>
+struct type_list_prepend<T, type_list<Ts...>>
+{
+	using type = type_list<T, Ts...>;
+};
+
+// True if U appears in the chain (direct or indirect base).
+template <typename U, typename List>
+struct type_list_contains : std::false_type {};
+
+template <typename U>
+struct type_list_contains<U, type_list<>> : std::false_type {};
+
+template <typename U, typename First, typename... Rest>
+struct type_list_contains<U, type_list<First, Rest...>>
+	: std::conditional_t<std::is_same_v<U, First>, std::true_type, type_list_contains<U, type_list<Rest...>>> {};
+
+template <typename List>
+struct type_list_size;
+
+template <typename... Ts>
+struct type_list_size<type_list<Ts...>> : std::integral_constant<size_t, sizeof...(Ts)> {};
+
 template <typename T>
 struct polymorphic_type_hash
 {
 	static constexpr size_t upcast_count = 0;
 	static constexpr HashArray<upcast_count> upcast_array{};
+	using chain = type_list<T>;
 
 	constexpr static bool is_derived_of(const HashType /*base*/)
 	{
@@ -1109,11 +1144,23 @@ public:
 	static constexpr HashTypeT<T> value{};
 };
 
+// Derive runtime upcast array from the chain (single source of truth).
+template <typename List>
+struct chain_to_upcast_array;
+
+template <typename... Ts>
+struct chain_to_upcast_array<type_list<Ts...>>
+{
+	static constexpr size_t count = sizeof...(Ts);
+	static constexpr HashArray<count> value = { &type_hash<Ts>::value... };
+};
+
 template <>
 struct polymorphic_type_hash<void>
 {
-	static constexpr size_t upcast_count = 1;
-	static constexpr HashArray<upcast_count> upcast_array{ &type_hash<void>::value };
+	using chain = type_list<void>;
+	static constexpr size_t upcast_count = type_list_size<chain>::value;
+	static constexpr HashArray<upcast_count> upcast_array = chain_to_upcast_array<chain>::value;
 
 	constexpr static bool is_derived_of(const HashType /*base*/)
 	{
@@ -1154,16 +1201,12 @@ POLYMORPHIC_TYPE_MAP(Type, Engine::Abstracts::Singleton<##Type##>)
 template <>\
 struct polymorphic_type_hash<##Type##>\
 {\
-	static constexpr size_t upcast_count = 1 + polymorphic_type_hash<##Base##>::upcast_count;\
-	static constexpr auto upcast_array = []\
-	{\
-		HashArray<upcast_count> ret{&type_hash<##Type##>::value};\
-		std::copy_n(polymorphic_type_hash<##Base##>::upcast_array.begin(),  polymorphic_type_hash<##Base##>::upcast_array.size(), ret.data() + 1);\
-		return ret;\
-	}();\
+	using chain = type_list_prepend<Type, polymorphic_type_hash<##Base##>::chain>::type;\
+	static constexpr size_t upcast_count = type_list_size<chain>::value;\
+	static constexpr HashArray<upcast_count> upcast_array = chain_to_upcast_array<chain>::value;\
 	constexpr static bool is_derived_of(const HashType base)\
 	{\
-		return std::ranges::find_if(upcast_array, [&base](const auto other){ return base->Equal(*other); }) != upcast_array.end();\
+		return std::ranges::find_if(upcast_array, [&base](const auto other){return other && base && (other == base || other->v == base->v);}) != upcast_array.end();\
 	}\
 };
 
@@ -1984,7 +2027,7 @@ public:
 
 	template <typename U>
      managed_shared_ptr( const managed_shared_ptr<U>& other )
-        : boost::shared_ptr<T>( other ), m_context_( other.m_context_ )
+        : boost::shared_ptr<T>( boost::static_pointer_cast<T>( other.native() ) ), m_context_( other.m_context_ )
     {
         resolve();
     }

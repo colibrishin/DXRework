@@ -6,7 +6,7 @@
 namespace Engine::Resources
 {
 	ECLASS(resource, serialize)
-	class ENGINE_TEXTURE2D_API Texture2D : public Texture
+	class ENGINE_TEXTURE_API Texture2D : public Texture
 	{
 		GENERATE_BODY
 	public:
@@ -28,7 +28,7 @@ namespace Engine::Resources
 			: Texture("", TEX_TYPE_2D, {}) {}
 
 #if WITH_EDITOR
-		friend struct Texture2DModule;
+		friend struct TextureModule;
 		static bool m_b_ui_load_dialog_;
 #endif
 	};

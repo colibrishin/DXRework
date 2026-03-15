@@ -1,5 +1,4 @@
 #include "ShadowTexture.h"
-#include "ShadowTexture.generated.h"
 
 #include "ResourceManager.h"
 #include "IGraphicAPI_Extensions.h"

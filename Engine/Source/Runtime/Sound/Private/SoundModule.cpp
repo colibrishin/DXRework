@@ -1,10 +1,9 @@
 #include "SoundModule.h"
-#include "SoundModule.generated.h"
 
-#include "Sound.h"
-
-#include "UIHelpersResourceManager.h"
+#include "ModuleRegistration.h"
 #include "ResourceManager.h"
+#include "Sound.h"
+#include "UIHelpersResourceManager.h"
 
 
 MODULE_IMPL(Engine::SoundModule, Sound)
@@ -26,7 +25,7 @@ bool Engine::SoundModule::InitializeImpl()
                 load_callback,
                 {}
             );
-        });
+        } ENGINE_MODULE_SCOPE );
 #endif
     return true;
 }
@@ -42,15 +41,4 @@ bool Engine::SoundModule::ShutdownImpl()
 bool Engine::SoundModule::DynamicLoadable()
 {
     return true;
-}
-
-const std::vector<std::string>& Engine::SoundModule::LoadAfter() const
-{
-    static const std::vector<std::string> load_after = {
-        "SoundManager",
-#if USE_FMOD
-        "FMODSoundInterface"
-#endif
-    };
-    return load_after;
 }

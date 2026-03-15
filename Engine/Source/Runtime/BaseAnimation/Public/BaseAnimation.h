@@ -5,6 +5,11 @@
 
 #include "BaseAnimation.generated.h"
 
+namespace Engine::Components
+{
+    class Animator;
+}
+
 namespace Engine::Resources
 {
 	using namespace Graphics;

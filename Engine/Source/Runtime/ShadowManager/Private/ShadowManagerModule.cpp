@@ -1,7 +1,6 @@
-﻿#include "ShadowManagerModule.h"
+#include "ShadowManagerModule.h"
 
 #include "EngineEntryPoint.h"
-#include "ShadowManagerModule.generated.h"
 
 #include "ShadowManager.h"
 

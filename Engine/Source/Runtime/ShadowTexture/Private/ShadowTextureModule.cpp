@@ -1,5 +1,4 @@
 #include "ShadowTextureModule.h"
-#include "ShadowTextureModule.generated.h"
 
 
 MODULE_IMPL( Engine::ShadowTextureModule, ShadowTexture )

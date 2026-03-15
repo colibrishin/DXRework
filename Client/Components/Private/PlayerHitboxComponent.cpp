@@ -1,5 +1,4 @@
 #include "Components/Public/PlayerHitboxComponent.h"
-#include "PlayerHitboxComponent.generated.h"
 
 #include "ObjectBase.h"
 #include "Shape.h"

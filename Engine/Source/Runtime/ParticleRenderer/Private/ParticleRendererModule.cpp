@@ -1,5 +1,4 @@
 #include "ParticleRendererModule.h"
-#include "ParticleRendererModule.generated.h"
 
 #include "ComputeShader.h"
 #include "ParticleRenderer.h"

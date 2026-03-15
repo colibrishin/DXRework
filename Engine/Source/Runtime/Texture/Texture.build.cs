@@ -14,5 +14,6 @@ public class Texture : EngineCommonProject
 
         conf.AddPublicDependency<Core>(target);
         conf.AddPublicDependency<Boost>(target);
+        conf.AddPublicDependency<TBB>(target);
     }
 }

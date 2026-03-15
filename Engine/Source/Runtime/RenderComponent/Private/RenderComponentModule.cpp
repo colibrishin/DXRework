@@ -1,5 +1,4 @@
 #include "RenderComponentModule.h"
-#include "RenderComponentModule.generated.h"
 
 MODULE_IMPL( Engine::RenderComponentModule, RenderComponent )
 

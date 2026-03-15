@@ -37,12 +37,12 @@ namespace Engine
 			return m_gpu_handle_;
 		}
 
-        void SetSampler( const Resources::ShaderBase *shader, const eSampler slot ) const override;
+        void SetSampler( const Abstracts::Resource* shader, const eSampler slot ) const override;
         void SetSampler( const ISampler *sampler, const eSampler slot ) const override;
 		void SetSampler(const D3D12_CPU_DESCRIPTOR_HANDLE& sampler, UINT slot) const;
 		void SetConstantBuffer(const D3D12_CPU_DESCRIPTOR_HANDLE& cbv, UINT slot) const;
 		void SetShaderResource(const D3D12_CPU_DESCRIPTOR_HANDLE& srv_handle, UINT slot) const;
-		void SetShaderResources(const Resources::Texture* const* textures, const UINT count, const UINT offset) const override;
+		void SetShaderResources(const Abstracts::Resource* const* textures, const UINT count, const UINT offset) const override;
 		void SetShaderResources(UINT slot, UINT count, const std::vector<D3D12_CPU_DESCRIPTOR_HANDLE>& data) const;
 		void SetUnorderedAccess(const D3D12_CPU_DESCRIPTOR_HANDLE& uav, UINT slot) const;
 

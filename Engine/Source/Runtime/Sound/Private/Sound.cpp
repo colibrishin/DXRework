@@ -1,5 +1,4 @@
 #include "Sound.h"
-#include "Sound.generated.h"
 
 #include "Transform.h"
 

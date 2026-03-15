@@ -1,6 +1,8 @@
 #pragma once
 #if CLIENT || WITH_EDITOR
 #include "RenderPassTask.h"
+#include "Texture2D.h"
+#include "ComputeShader.h"
 
 #include "ShadowIntersectionRenderTask.generated.h"
 

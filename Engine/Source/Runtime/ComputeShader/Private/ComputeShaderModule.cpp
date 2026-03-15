@@ -1,8 +1,8 @@
 #include "ComputeShaderModule.h"
-#include "ComputeShaderModule.generated.h"
 
-#include "ResourceManager.h"
 #include "ComputeShader.h"
+#include "ModuleRegistration.h"
+#include "ResourceManager.h"
 
 MODULE_IMPL(Engine::ComputeShaderModule, ComputeShader)
 
@@ -19,7 +19,7 @@ namespace Engine
 
 				return UIHelpers::OpenLoadDialog<Resources::ComputeShader, Managers::ResourceManager>(
                             managing_flag, {}, load_callback, {} );
-			});
+			} ENGINE_MODULE_SCOPE );
 #endif
 
 		return true;
@@ -38,9 +38,4 @@ namespace Engine
 		return true;
     }
 
-    const std::vector<std::string>& ComputeShaderModule::LoadAfter() const
-    {
-        static std::vector<std::string> load_after = { "RenderPipeline" };
-        return load_after;
-    }
 } // namespace Engine::Resources
