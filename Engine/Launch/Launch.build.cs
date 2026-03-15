@@ -14,6 +14,8 @@ public class Launch : EngineCommonProject
     {
         base.ConfigureAll(conf, target);
 
+        Utils.AddSolutionPrebuildSteps(conf);
+
         if (target.LaunchType == ELaunchType.Editor)
         {
             conf.AddPrivateDependency<Boost>(target);

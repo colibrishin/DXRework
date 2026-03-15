@@ -82,6 +82,53 @@ public class Utils
         );
     }
 
+    /// <summary>
+    /// Adds solution-level prebuild steps to conf: build balius (release), then run GenerateSolution.bat.
+    /// Use on entry-point projects (e.g. Launch, Monolith).
+    /// </summary>
+    public static void AddSolutionPrebuildSteps(Project.Configuration conf)
+    {
+        string solutionDir = GetSolutionDir();
+        string engineDir = GetEngineDir();
+        if (string.IsNullOrEmpty(engineDir))
+            engineDir = solutionDir;
+
+        string baliusDir = Path.Combine(engineDir, "balius");
+        if (Directory.Exists(baliusDir))
+        {
+            // FastBuild resolves ExecExecutable relative to BFF dir, so "cargo" would look for I:\...\cargo. Use full path when available (rustup default).
+            string cargoExe = "cargo";
+            string cargoHome = Environment.GetEnvironmentVariable("CARGO_HOME");
+            if (!string.IsNullOrEmpty(cargoHome))
+            {
+                string cargoPath = Path.Combine(cargoHome, "bin", "cargo.exe");
+                if (File.Exists(cargoPath))
+                    cargoExe = cargoPath;
+            }
+            if (cargoExe == "cargo")
+            {
+                string userCargo = Path.Combine(Environment.GetEnvironmentVariable("USERPROFILE") ?? "", ".cargo", "bin", "cargo.exe");
+                if (File.Exists(userCargo))
+                    cargoExe = userCargo;
+            }
+
+            // FastBuild Exec() requires .ExecOutput; use a log path so the BFF is valid.
+            string buildBaliusLog = Path.Combine(engineDir, "Intermediate", "log", "BuildBalius.log");
+            var buildBalius = new Project.Configuration.BuildStepExecutable(
+                cargoExe,
+                "",
+                buildBaliusLog,
+                "build --release",
+                baliusDir,
+                true,
+                true
+            );
+            buildBalius.FastBuildAlwaysShowOutput = true;
+            buildBalius.FastBuildExecAlways = true;
+            conf.EventCustomPrebuildExecute.Add("BuildBalius", buildBalius);
+        }
+    }
+
     public static void AddDefines(Project.Configuration conf, EngineTarget target)
     {
         if (target.Platform == Platform.win64 || target.Platform == Platform.win32)
@@ -104,8 +151,6 @@ public class Utils
         }
 
         conf.Defines.Add($"CFG_RAYTRACING={Convert.ToInt32(target.Raytracing == ERaytracing.On)}");
-
-        //conf.Defines.Add("SNIFF_DEVICE_REMOVAL");
 
         conf.Defines.Add("CFG_CASCADE_SHADOW_COUNT=3");
         conf.Defines.Add("CFG_CASCADE_SHADOW_TEX_WIDTH=500");

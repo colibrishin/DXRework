@@ -1,8 +1,10 @@
 using System;
 using System.Collections;
+using System.IO;
 using Microsoft.Win32;
 using Sharpmake;
 
+[module: Include("%EngineDir%/Build/ThirdPartyPrograms/ThirdPartyPrograms.build.cs")]
 [module: Include("%EngineDir%/Client/ClientSolution.build.cs")]
 [module: Include("%EngineDir%/Engine/Source/EngineSolution.build.cs")]
 
@@ -27,7 +29,9 @@ public class Monolith : Project
         foreach (Solution.Configuration.IncludedProjectInfo info in solutionConfiguration.IncludedProjectInfos)
         {
             Project instantiated = (Project)Activator.CreateInstance(info.Type);
-            AdditionalSourceRootPaths.Add(instantiated.SourceRootPath);
+            // Exclude ImGui sources from the monolith blob so STB_*_IMPLEMENTATION is not compiled multiple times in one TU.
+            if (instantiated.Name != "ImGui")
+                AdditionalSourceRootPaths.Add(instantiated.SourceRootPath);
         }
     }
 
@@ -43,6 +47,29 @@ public class Monolith : Project
         foreach (Solution.Configuration.IncludedProjectInfo info in solutionConfiguration.IncludedProjectInfos)
         {
             conf.AddPrivateDependency(target, info.Type);
+        }
+
+        Utils.AddSolutionPrebuildSteps(conf);
+
+        // Build header-parser before Monolith when the vcxproj exists (solution build order).
+        string headerParserVcxproj = Path.Combine(Utils.GetSolutionDir(), "Programs", "header-parser", "header-parser.vcxproj");
+        if (File.Exists(headerParserVcxproj))
+            conf.AddPrivateDependency<HeaderParserProject>(target);
+
+        // Monolith (static lib) compiles sources from all dependency projects; it must see their
+        // generated headers (from balius/header-parser) which live under Intermediate/HeaderParser/<ProjectName>/HeaderGenerated.
+        string solutionDirForPaths = Utils.GetSolutionDir();
+        string engineDir = Utils.GetEngineDir();
+        string headerGeneratedRoot = !string.IsNullOrEmpty(engineDir) ? engineDir : solutionDirForPaths;
+        if (!string.IsNullOrEmpty(headerGeneratedRoot))
+        {
+            foreach (Solution.Configuration.IncludedProjectInfo info in solutionConfiguration.IncludedProjectInfos)
+            {
+                Project dep = (Project)Activator.CreateInstance(info.Type);
+                string headerGeneratedPath = Path.Combine(headerGeneratedRoot, "Intermediate", "HeaderParser", dep.Name, "HeaderGenerated");
+                conf.IncludePaths.Add(Path.Combine(headerGeneratedPath, "Public"));
+                conf.IncludePaths.Add(Path.Combine(headerGeneratedPath, "Private"));
+            }
         }
 
         conf.DumpDependencyGraph = true;

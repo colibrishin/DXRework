@@ -3,6 +3,7 @@ using System.IO;
 using Sharpmake;
 
 [module: Include("%EngineDir%/Build/CommonProject.build.cs")]
+[module: Include("%EngineDir%/Build/ThirdPartyPrograms/ThirdPartyPrograms.build.cs")]
 [module: Include("%EngineDir%/Engine/Launch/Launch.build.cs")]
 [module: Include("%EngineDir%/Engine/Monolith/MonolithClient.build.cs")]
 [module: Include("%EngineDir%/Engine/Monolith/MonolithServer.build.cs")]
@@ -36,6 +37,11 @@ public class KolibriSolution : Solution
         conf.SolutionPath = Utils.GetSolutionDir();
         string ProjectFilesDir = conf.SolutionPath + @"\Intermediate\ProjectFiles";
         Environment.SetEnvironmentVariable("ProjectFilesDir", ProjectFilesDir);
+
+        // Add header-parser to solution only when the CMake-generated vcxproj exists.
+        string headerParserVcxproj = Path.Combine(conf.SolutionPath, "Programs", "header-parser", "header-parser.vcxproj");
+        if (File.Exists(headerParserVcxproj))
+            conf.AddProject<HeaderParserProject>(target);
 
         if (target.LaunchType == ELaunchType.Client)
         {
