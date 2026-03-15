@@ -255,6 +255,23 @@ public abstract class CommonProject : Project, IEngineProjectConfigure
             FastBuildSettings.FastBuildMakeCommand = FastBuildPath;
             FastBuildSettings.FastBuildAllowDBMigration = true;
 
+            // Append Rust + VC to FastBuild PATH and set LIB so link.exe finds ntdll.lib etc. (SDK from Sharpmake; we do not override).
+            if (target.Platform == Platform.win64)
+            {
+                if (!FastBuildSettings.AdditionalGlobalEnvironmentVariables.ContainsKey("PATH"))
+                {
+                    string rustAndVc = Utils.GetFastBuildPathRustAndVCTools();
+                    if (!string.IsNullOrEmpty(rustAndVc))
+                        FastBuildSettings.AdditionalGlobalEnvironmentVariables["PATH"] = rustAndVc;
+                }
+                if (!FastBuildSettings.AdditionalGlobalEnvironmentVariables.ContainsKey("LIB"))
+                {
+                    string lib = Utils.GetFastBuildLib();
+                    if (!string.IsNullOrEmpty(lib))
+                        FastBuildSettings.AdditionalGlobalEnvironmentVariables["LIB"] = lib;
+                }
+            }
+
             // Include
             {
                 conf.IncludePrivatePaths.Add(conf.ProjectPath + @"/Private");

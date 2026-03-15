@@ -49,8 +49,6 @@ public class Monolith : Project
             conf.AddPrivateDependency(target, info.Type);
         }
 
-        Utils.AddSolutionPrebuildSteps(conf);
-
         // Build header-parser before Monolith when the vcxproj exists (solution build order).
         string headerParserVcxproj = Path.Combine(Utils.GetSolutionDir(), "Programs", "header-parser", "header-parser.vcxproj");
         if (File.Exists(headerParserVcxproj))
