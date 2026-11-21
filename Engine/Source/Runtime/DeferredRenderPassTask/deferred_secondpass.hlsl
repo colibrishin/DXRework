@@ -34,48 +34,30 @@ float4 ps_main(DeferredLightPixelInputType input) : SV_Target
     specular = MRAS.a;
     worldPosition = tex[3].Sample(PSSampler, input.uv);
     
-    float4 lightIntensity[MAX_NUM_LIGHTS];
-    float4 colorArray[MAX_NUM_LIGHTS];
-    float4 specularArray[MAX_NUM_LIGHTS];    
     float shadowFactor[MAX_NUM_LIGHTS];
     
     const float4 wvp = mul(mul(worldPosition, g_camView), g_camProj);
     GetShadowFactor(worldPosition, wvp.z, shadowFactor);
     
-    // todo: MR
-    for (int i = 0; i < PARAM_NUM_LIGHT; ++i)
-    {
-        const float4 lightPos = GetTranslation(bufLight[i].world);
-        const float4 lightDir = float4(normalize(worldPosition - lightPos).xyz, 1.f);
-        const float4 shadow = LerpShadow(shadowFactor[i]);
-        
-        lightIntensity[i] = saturate(dot(worldNormal, lightDir));
+    // Blinn-Phong over the G-buffer (non-PBR fallback). Directions are float3 so the w=1 components
+    // do not leak into the dot products.
+    const float3 N       = normalize(worldNormal.xyz);
+    const float3 viewDir = normalize(GetTranslation(g_camWorld).xyz - worldPosition.xyz);
 
-        const float4 normalLightDir = float4(normalize(worldNormal - lightPos).xyz, 1.f);
-        const float4 viewDir = normalize(GetTranslation(g_camWorld) - worldPosition);
-        
-        const float4 reflection = normalize(2.0f * lightIntensity[i] * normalLightDir);
-        const float4 specularFactor = pow(saturate(dot(reflection, viewDir)), specular);
-        
-        colorArray[i] = shadow * bufLight[i].color * lightIntensity[i] * ao;
-        specularArray[i] = specularFactor * ao;
-    }
-    
-    float3 lightColor = g_ambientColor;
-    for (int i = 0; i < PARAM_NUM_LIGHT; ++i)
-    {
-        lightColor.r += colorArray[i].r;
-        lightColor.g += colorArray[i].g;
-        lightColor.b += colorArray[i].b;
-    }
-    
+    float3 lightColor    = g_ambientColor.rgb;
     float3 specularColor = float3(0, 0, 0);
-    for (int i = 0; i < PARAM_NUM_LIGHT; ++i)
+
+    for (int li = 0; li < PARAM_NUM_LIGHT; ++li)
     {
-        specularColor.r += specularArray[i].r;
-        specularColor.g += specularArray[i].g;
-        specularColor.b += specularArray[i].b;
+        const float3 toLight   = normalize(GetTranslation(bufLight[li].world).xyz - worldPosition.xyz);
+        const float  shadow    = LerpShadow(shadowFactor[li]).r;
+        const float  intensity = saturate(dot(N, toLight));
+        const float3 halfVec   = normalize(toLight + viewDir);
+        const float  spec      = intensity > 0.f ? pow(saturate(dot(N, halfVec)), max(specular * 255.f, 1.f)) : 0.f;
+
+        lightColor    += shadow * bufLight[li].color.rgb * intensity * ao;
+        specularColor += shadow * bufLight[li].color.rgb * spec * ao;
     }
-    
+
     return float4(saturate(lightColor) * baseColor.rgb + specularColor, 1.f);
 }
