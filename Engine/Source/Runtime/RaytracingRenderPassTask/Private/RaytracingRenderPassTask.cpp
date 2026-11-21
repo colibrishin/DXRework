@@ -78,28 +78,46 @@ namespace Engine
                 tbb::parallel_for_each
                     (
                      renderer.begin(), renderer.end(),
-                     [this, &intermediate_shader_map, &dt, &shader_bypass, &additional_sbs, &local_param,
+                     [this, &predicate, &dt, &shader_bypass, &additional_sbs, &local_param,
                          &prerender_predicate, &postrender_predicate, &prerender_predicates, &postrender_predicates]
-                         (const std::pair<Strong<Resources::ShaderBase>, MeshMap>& pair)
+                         (const ShaderMap::value_type& pair)
                      {
+                         const Strong<Resources::RaytracingShader>& locked_shader =
+                                 Cast<Resources::RaytracingShader>(pair.first);
+                         if (!locked_shader)
+                         {
+                             return;
+                         }
+
+                         // Hit records index instance_pairs as [mesh offset + i], so the per-mesh counts and the
+                         // flattened list must come from the same predicate-filtered source, in mesh order.
                          std::vector<RaytracingMeshInstancePair> meshes;
+                         aligned_vector<InstancePair>            instance_pairs;
                          meshes.reserve(pair.second.size());
                          for (const auto& [mesh, instances] : pair.second)
                          {
-                             meshes.emplace_back(static_cast<Resources::Mesh*>(mesh.get()), instances.size());
+                             size_t count = 0;
+                             for (const InstancePair& instance_pair : instances)
+                             {
+                                 if (predicate && !predicate(instance_pair.object))
+                                 {
+                                     continue;
+                                 }
+                                 instance_pairs.push_back(instance_pair);
+                                 ++count;
+                             }
+                             if (count != 0)
+                             {
+                                 meshes.emplace_back(static_cast<Resources::Mesh*>(mesh.get()), count);
+                             }
                          }
 
-                         if (const Strong<Resources::RaytracingShader>& locked_shader =
-                             Cast<Resources::RaytracingShader>(pair.first))
+                         if (!instance_pairs.empty())
                          {
-                             if (decltype(intermediate_shader_map)::const_accessor acc;
-                             intermediate_shader_map.find(acc, locked_shader.get()))
-                             {
-                                 StartPhase_MultiThread(
-                                      dt, shader_bypass, meshes, locked_shader.get(), additional_sbs, local_param,
-                                      prerender_predicate, postrender_predicate, prerender_predicates, postrender_predicates,
-                                      acc->second);
-                             }
+                             StartPhase_MultiThread(
+                                  dt, shader_bypass, meshes, locked_shader.get(), additional_sbs, local_param,
+                                  prerender_predicate, postrender_predicate, prerender_predicates, postrender_predicates,
+                                  instance_pairs);
                          }
                      }
                     );
@@ -159,7 +177,7 @@ namespace Engine
 		{
 			tbb::parallel_for_each
 			(
-				meshes.begin(), meshes.end(), [&](const std::pair<Strong<Resources::ShaderBase>, MeshMap>& shader_pair)
+				meshes.begin(), meshes.end(), [&](const ShaderMap::value_type& shader_pair)
 				{
 					for (const aligned_vector<InstancePair>& instances : shader_pair.second | std::views::values)
 					{
@@ -171,13 +189,13 @@ namespace Engine
 							}
 
 							std::remove_reference_t<decltype(out_map)>::accessor acc;
-							if (!out_map.find(acc, shader_pair.first.get()))
+							if (!out_map.find(acc, static_cast<Resources::ShaderBase*>(shader_pair.first.get())))
 							{
-								out_map.insert(acc, shader_pair.first.get());
+								out_map.insert(acc, static_cast<Resources::ShaderBase*>(shader_pair.first.get()));
 							}
 
 							acc->second.push_back(instance_pair);
-							++instance_count;
+							std::atomic_ref(instance_count).fetch_add(1);
 						}
 					}
 				}
@@ -241,12 +259,7 @@ namespace Engine
 		StructuredBufferTypeProxy<Graphics::SBs::InstanceSB>& instance = m_instance_pool_.get();
 		instance_token.Release();
 		
-		static aligned_vector<Graphics::SBs::InstanceSB*> instances;
-		
-		if ( instance_pairs.size() > instances.capacity() )
-		{
-			instances.resize( instance_pairs.size() );
-		}
+		aligned_vector<Graphics::SBs::InstanceSB*> instances( instance_pairs.size() );
 
 		size_t idx = 0;
 		for ( const InstancePair& instance_pair : instance_pairs )
@@ -280,12 +293,12 @@ namespace Engine
                         .heap = heap
                     };
 	                
-	            for ( size_t j = 0; j < instance_pairs[i].textures.size(); ++j )
+	            for ( size_t j = 0; j < instance_pairs[instance_pos + i].textures.size(); ++j )
 	            {
 	                if ( instance_pairs[instance_pos + i].textures[j] )
 	                {
 	                    RecordUsedTexture( &local_sig_context, gi, instance_pairs[instance_pos + i].textures[j] );
-	                    instance_pairs[instance_pos + i].instance->SetTextureSlot( j, 0 );
+	                    instance_pairs[instance_pos + i].instance->SetTextureSlot( j, static_cast<int>( j ) ); // bound at BIND_SLOT_TEX + j below
 	                    gi.Bind( &local_sig_context, instance_pairs[instance_pos + i].textures[j].get(), BIND_TYPE_SRV, BIND_SLOT_TEX, j );
 	                }
 	            }
