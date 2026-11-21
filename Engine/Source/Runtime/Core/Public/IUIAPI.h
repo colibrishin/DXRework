@@ -370,14 +370,13 @@ namespace Engine
         IUITokenBasePtr NewForwardTuple( const void* context, const std::string_view name, const Tuple& t, std::index_sequence<Is...> )
         {
             object_pool_allocator<T>& alloc = g_allocator_storage.get_allocator<T>();
-            AllocationContext          ctx  = alloc.allocate( context, name, std::get<Is>( t )... );
-            T*                         p    = static_cast<T*>( ctx.ptr() );
+            T*                         p    = alloc.allocate_unmanaged( context, name, std::get<Is>( t )... );
             if ( !p )
             {
                 auto ptr = std::make_unique<T>( context, name, std::get<Is>( t )... );
                 return IUITokenBasePtr( ptr.release(), []( IUITokenBase* p ) { delete static_cast<T*>( p ); } );
             }
-            return IUITokenBasePtr( p, [&alloc]( IUITokenBase* p ) { alloc.deallocate( static_cast<T*>( p ) ); } );
+            return IUITokenBasePtr( p, [&alloc]( IUITokenBase* p ) { alloc.deallocate_unmanaged( static_cast<T*>( p ) ); } );
         }
     };
 
