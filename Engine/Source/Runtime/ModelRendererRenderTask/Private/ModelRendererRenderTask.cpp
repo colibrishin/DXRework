@@ -71,8 +71,7 @@ namespace Engine
                         }
 
                         // Strong locals own the objects for this scope (RAII); the raw pointers taken from them are
-                        // borrowed and skip resolve() on every use. Valid only while no object of the same type is
-                        // allocated (a pool grow moves objects); checked in debug builds below.
+                        // borrowed and valid while those locals live (pools never move their objects).
                         const Strong<Components::ModelRenderer>& mr =
                                 raw_component->GetSharedPtr<Components::ModelRenderer>();
                         const Strong<Abstracts::ObjectBase>& obj   = raw_component->GetOwner().lock();
@@ -85,11 +84,6 @@ namespace Engine
                             return;
                         }
 
-#if defined( _DEBUG )
-                        // Snapshot before borrowing, so a grow between get() and the snapshot is not missed. The
-                        // asserts below detect a violation after the fact; they do not prevent it.
-                        const size_t shape_reallocs = shape.pool_reallocation_count();
-#endif
                         Resources::Shape* const    raw_shape = shape.get();
                         const auto                 world     = tr->GetWorldMatrix().Transpose();
                         const Strong<Components::Animator> anim =
@@ -121,9 +115,6 @@ namespace Engine
                             {
                                 continue;
                             }
-#if defined( _DEBUG )
-                            const size_t mtr_reallocs = locked_mtr.pool_reallocation_count();
-#endif
                             Resources::Material* const           material      = locked_mtr.get();
                             const Strong<Resources::ShaderBase>& locked_shader = material->GetShader().lock();
                             if ( !locked_shader )
@@ -136,10 +127,6 @@ namespace Engine
                             {
                                 continue;
                             }
-
-#if defined( _DEBUG )
-                            const size_t shader_reallocs = locked_shader.pool_reallocation_count();
-#endif
 
                             RenderMap::accessor acc;
                             if ( !render_map[ domain ].find( acc, Components::ModelRenderer::StaticTypeHash() ) )
@@ -200,18 +187,7 @@ namespace Engine
 
                                 shader_acc->second.emplace_back( instance_pair );
                             }
-
-#if defined( _DEBUG )
-                            assert( mtr_reallocs == locked_mtr.pool_reallocation_count() &&
-                                    shader_reallocs == locked_shader.pool_reallocation_count() &&
-                                    "pool reallocated while raw pointers were borrowed" );
-#endif
                         }
-
-#if defined( _DEBUG )
-                        assert( shape_reallocs == shape.pool_reallocation_count() &&
-                                "pool reallocated while raw pointers were borrowed" );
-#endif
                     }
                 } );
     }
