@@ -61,7 +61,8 @@ namespace Engine
 		void Cleanup() override;
 
 	private:
-		using IntermediateShaderMap = concurrent_fast_pool_map<Resources::ShaderBase*, aligned_vector<InstancePair>>;
+		// Keyed by the per-(shader, mesh) instance list so each mesh draws only its own instances.
+		using IntermediateShaderMap = concurrent_fast_pool_map<const aligned_vector<InstancePair>*, aligned_vector<InstancePair>>;
 
 		inline void PredicateObject( const ObjectPredication &predicate,
                                      RenderMap const         *domain_map,
