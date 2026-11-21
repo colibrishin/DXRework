@@ -314,38 +314,25 @@ namespace Engine
 				}
 				
 				const TexturePair& pair = texture_pairs[ instance_resolved + instance_to_resolve ];
-				bool reserved_texture_tolerant = false;
-
-				for (size_t i = 0; i < pair.reservedTextures->size(); ++i)
+				// Reserved textures (bones, atlas) bind one texture per slot for the whole batch: an instance
+				// with a different one, or one whose textures no longer fit, starts the next batch.
+				bool reserved_conflict = false;
+				for ( size_t i = 0; i < pair.reservedTextures->size(); ++i )
 				{
-					if (!pair.reservedTextures->at(i))
-					{
-						continue;
-					}
-					if (pair.reservedTextures->at(i))
-					{
-						if (reserved_textures[i] == nullptr)
-						{
-                            // allow to instance with the first reserved texture encountered.
-                            reserved_texture_tolerant = true;
-                            reserved_textures[ i ]    = static_cast<Resources::Texture*>( pair.reservedTextures->at( i ).get() );
-						}
-					}
-                    else if ( pair.reservedTextures->at( i ).get() == reserved_textures[ i ] &&
-                              reserved_textures[ i ] != nullptr )
-					{
-						// tolerance the same reserved texture.
-						reserved_texture_tolerant = true;
-					}
-					else
-					{
-						// another reserved texture for the same slot.
-						// unable to handle, split the instancing
-						break;
-					}
+				    const auto* reserved = static_cast<Resources::Texture*>( pair.reservedTextures->at( i ).get() );
+				    if ( reserved && reserved_textures[ i ] && reserved_textures[ i ] != reserved )
+				    {
+				        reserved_conflict = true;
+				        break;
+				    }
 				}
-				
-				if (count > pair.GetTextureCount())
+
+				if ( reserved_conflict || count <= pair.GetTextureCount() )
+				{
+				    break; // flush this batch (an empty batch always has room: 16 slots > 8 per material)
+				}
+
+				if ( count > pair.GetTextureCount() )
 				{
 					size_t msb = count - 1;
 					size_t lsb = max_tex_binds - count;
@@ -370,18 +357,14 @@ namespace Engine
 						}
 					}
 
-					if (reserved_texture_tolerant)
+					for ( size_t i = 0; i < pair.reservedTextures->size(); ++i )
 					{
-						for (size_t i = 0; i < pair.reservedTextures->size(); ++i)
-						{
-							// should be tolerant to the one reserved texture per each.
-							if (pair.reservedTextures->at(i) && reserved_textures[i] != nullptr)
-							{
-								reserved_textures[i] = static_cast<Resources::Texture*>( pair.reservedTextures->at( i ).get() );
-							}
-						}
+					    if ( pair.reservedTextures->at( i ) && reserved_textures[ i ] == nullptr )
+					    {
+					        reserved_textures[ i ] = static_cast<Resources::Texture*>( pair.reservedTextures->at( i ).get() );
+					    }
 					}
-					
+
 					instance_to_resolve++;
 				}
 			}
