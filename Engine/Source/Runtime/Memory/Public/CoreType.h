@@ -2239,6 +2239,14 @@ public:
         return boost::shared_ptr<T>::use_count();
 	}
 
+	// Reallocation count of this object's pool. A raw pointer from get() stays valid while this does not change
+	// (a pool grow moves its objects).
+	[[nodiscard]] size_t pool_reallocation_count() const
+	{
+        const pool_allocator_base* alloc = m_context_.allocator();
+        return alloc ? alloc->allocation_count() : 0;
+	}
+
 	bool operator!() const noexcept
     {
         return !this->operator bool();

@@ -1,4 +1,5 @@
 #include "ModelRendererRenderTask.h"
+#include <cassert>
 #include <tbb/concurrent_vector.h>
 #include <tbb/parallel_for_each.h>
 
@@ -69,6 +70,9 @@ namespace Engine
                             return;
                         }
 
+                        // Strong locals own the objects for this scope (RAII); the raw pointers taken from them are
+                        // borrowed and skip resolve() on every use. Valid only while no object of the same type is
+                        // allocated (a pool grow moves objects); checked in debug builds below.
                         const Strong<Components::ModelRenderer>& mr =
                                 raw_component->GetSharedPtr<Components::ModelRenderer>();
                         const Strong<Abstracts::ObjectBase>& obj   = raw_component->GetOwner().lock();
@@ -81,93 +85,133 @@ namespace Engine
                             return;
                         }
 
+#if defined( _DEBUG )
+                        // Snapshot before borrowing, so a grow between get() and the snapshot is not missed. The
+                        // asserts below detect a violation after the fact; they do not prevent it.
+                        const size_t shape_reallocs = shape.pool_reallocation_count();
+#endif
+                        Resources::Shape* const    raw_shape = shape.get();
+                        const auto                 world     = tr->GetWorldMatrix().Transpose();
+                        const Strong<Components::Animator> anim =
+                                obj->GetComponent<Components::Animator>().lock();
+                        const Strong<Resources::AnimationTexture> anims = raw_shape->GetAnimations().lock();
+
                         // Pre-mapping by the shader domain.
                         for ( size_t i = 0; i < map_size; ++i )
                         {
-                            const auto domain     = static_cast<eShaderDomain>( i );
-                            auto&      domain_map = render_map[ domain ];
+                            auto& domain_map = render_map[ i ];
 
                             RenderMap::accessor acc;
                             if ( !domain_map.find( acc, Components::ModelRenderer::StaticTypeHash() ) )
                             {
                                 domain_map.insert( acc, Components::ModelRenderer::StaticTypeHash() );
                             }
-
-                            for ( const auto& [ mesh, mtr ] : shape->GetMeshes() )
-                            {
-                                if ( mesh.expired() || mtr.expired() )
-                                {
-                                    continue;
-                                }
-
-                                const Strong<Resources::Material>&   locked_mtr    = mtr.lock();
-                                const Strong<Resources::ShaderBase>& locked_shader = locked_mtr->GetShader().lock();
-
-                                if ( locked_shader->GetShaderDomain() != domain )
-                                {
-                                    continue;
-                                }
-
-                                ShaderMap::accessor mesh_acc;
-                                if ( !acc->second.find( mesh_acc, locked_shader ) )
-                                {
-                                    acc->second.insert( mesh_acc, locked_shader );
-                                }
-
-                                if ( const Strong<Resources::Mesh>& locked_mesh = mesh.lock() )
-                                {
-                                    decltype( mesh_acc->second )::accessor shader_acc;
-                                    if ( !mesh_acc->second.find( shader_acc, locked_mesh ) )
-                                    {
-                                        mesh_acc->second.insert( shader_acc, locked_mesh );
-                                    }
-
-                                    InstancePair instance_pair;
-                                    instance_pair.object = obj;
-
-                                    instance_pair.instance = GetInstance();
-                                    instance_pair.instance->SetParam( 0, tr->GetWorldMatrix().Transpose() );
-
-                                    // Copy the material primitive and animator primitive if it exists.
-                                    locked_mtr->GetPrimitive().Apply( *instance_pair.instance );
-
-                                    if ( const Strong<Components::Animator>& anim =
-                                                 obj->GetComponent<Components::Animator>().lock() )
-                                    {
-                                        anim->GetPrimitive().Apply( *instance_pair.instance );
-                                    }
-
-                                    for ( auto it = locked_mtr->GetTextures().begin();
-                                          it != locked_mtr->GetTextures().end();
-                                          ++it )
-                                    {
-                                        const size_t idx = std::distance( locked_mtr->GetTextures().begin(), it );
-                                        if ( const Strong<Resources::Texture>& locked = it->lock() )
-                                        {
-                                            instance_pair.textures[ idx ] = locked;
-                                        }
-                                    }
-
-                                    if ( const Strong<Resources::AnimationTexture>& anims =
-                                                 shape->GetAnimations().lock() )
-                                    {
-                                        instance_pair
-                                                .reservedTextures[ RESERVED_USER_TEX_BONES - RESERVED_USER_TEX_BEGIN ] =
-                                                anims;
-                                    }
-
-                                    if ( const Strong<Resources::AtlasAnimationTexture>& atlas =
-                                                 locked_mtr->GetAtlasTexture().lock() )
-                                    {
-                                        instance_pair
-                                                .reservedTextures[ RESERVED_USER_TEX_ATLAS - RESERVED_USER_TEX_BEGIN ] =
-                                                atlas;
-                                    }
-
-                                    shader_acc->second.emplace_back( instance_pair );
-                                }
-                            }
                         }
+
+                        // One pass over the meshes; each goes to the domain of its shader.
+                        for ( const auto& [ mesh, mtr ] : raw_shape->GetMeshes() )
+                        {
+                            if ( mesh.expired() || mtr.expired() )
+                            {
+                                continue;
+                            }
+
+                            const Strong<Resources::Material>&   locked_mtr    = mtr.lock();
+                            if ( !locked_mtr )
+                            {
+                                continue;
+                            }
+#if defined( _DEBUG )
+                            const size_t mtr_reallocs = locked_mtr.pool_reallocation_count();
+#endif
+                            Resources::Material* const           material      = locked_mtr.get();
+                            const Strong<Resources::ShaderBase>& locked_shader = material->GetShader().lock();
+                            if ( !locked_shader )
+                            {
+                                continue;
+                            }
+
+                            const size_t domain = locked_shader->GetShaderDomain();
+                            if ( domain >= map_size )
+                            {
+                                continue;
+                            }
+
+#if defined( _DEBUG )
+                            const size_t shader_reallocs = locked_shader.pool_reallocation_count();
+#endif
+
+                            RenderMap::accessor acc;
+                            if ( !render_map[ domain ].find( acc, Components::ModelRenderer::StaticTypeHash() ) )
+                            {
+                                render_map[ domain ].insert( acc, Components::ModelRenderer::StaticTypeHash() );
+                            }
+
+                            ShaderMap::accessor mesh_acc;
+                            if ( !acc->second.find( mesh_acc, locked_shader ) )
+                            {
+                                acc->second.insert( mesh_acc, locked_shader );
+                            }
+
+                            if ( const Strong<Resources::Mesh>& locked_mesh = mesh.lock() )
+                            {
+                                decltype( mesh_acc->second )::accessor shader_acc;
+                                if ( !mesh_acc->second.find( shader_acc, locked_mesh ) )
+                                {
+                                    mesh_acc->second.insert( shader_acc, locked_mesh );
+                                }
+
+                                InstancePair instance_pair;
+                                instance_pair.object = obj;
+
+                                instance_pair.instance = GetInstance();
+                                instance_pair.instance->SetParam( 0, world );
+
+                                // Copy the material primitive and animator primitive if it exists.
+                                material->GetPrimitive().Apply( *instance_pair.instance );
+
+                                if ( anim )
+                                {
+                                    anim->GetPrimitive().Apply( *instance_pair.instance );
+                                }
+
+                                const auto& textures = material->GetTextures();
+                                for ( auto it = textures.begin(); it != textures.end(); ++it )
+                                {
+                                    const size_t idx = std::distance( textures.begin(), it );
+                                    if ( const Strong<Resources::Texture>& locked = it->lock() )
+                                    {
+                                        instance_pair.textures[ idx ] = locked;
+                                    }
+                                }
+
+                                if ( anims )
+                                {
+                                    instance_pair.reservedTextures[ RESERVED_USER_TEX_BONES - RESERVED_USER_TEX_BEGIN ] =
+                                            anims;
+                                }
+
+                                if ( const Strong<Resources::AtlasAnimationTexture>& atlas =
+                                             material->GetAtlasTexture().lock() )
+                                {
+                                    instance_pair.reservedTextures[ RESERVED_USER_TEX_ATLAS - RESERVED_USER_TEX_BEGIN ] =
+                                            atlas;
+                                }
+
+                                shader_acc->second.emplace_back( instance_pair );
+                            }
+
+#if defined( _DEBUG )
+                            assert( mtr_reallocs == locked_mtr.pool_reallocation_count() &&
+                                    shader_reallocs == locked_shader.pool_reallocation_count() &&
+                                    "pool reallocated while raw pointers were borrowed" );
+#endif
+                        }
+
+#if defined( _DEBUG )
+                        assert( shape_reallocs == shape.pool_reallocation_count() &&
+                                "pool reallocated while raw pointers were borrowed" );
+#endif
                     }
                 } );
     }
