@@ -63,8 +63,8 @@ void Engine::DeferredRenderPassTask::Run(
     IntermediateShaderMap intermediate_shader_map;
     PredicateObject( predicate, domain_map, instance_count, intermediate_shader_map );
 
-    m_local_param_pool_.Update( nullptr, instance_count );
-    m_instance_pool_.Update( nullptr, instance_count );
+    // The per-batch pools grow in advance(); sizing them to the instance count allocated one GPU buffer and one
+    // descriptor heap per object (E_OUTOFMEMORY at ~5k objects).
 
     for ( const auto &renderer : *domain_map | std::views::values )
     {
