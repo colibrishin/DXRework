@@ -84,6 +84,7 @@ namespace Engine
 		DX::ThrowIfFailed(m_allocator_->Reset());
 		DX::ThrowIfFailed(m_list_->Reset(m_allocator_.Get(), nullptr));
 		DX::ThrowIfFailed(m_list_->Close());
+		{ std::lock_guard<std::mutex> dl(m_deferred_mutex_); m_deferred_release_.clear(); }
 
 		m_b_ready_    = false;
 		m_b_executed_ = false;
@@ -95,10 +96,20 @@ namespace Engine
 		std::lock_guard<std::mutex> l(m_critical_mutex_);
 
 		DX::ThrowIfFailed(m_list_->Reset(m_allocator_.Get(), nullptr));
+		{ std::lock_guard<std::mutex> dl(m_deferred_mutex_); m_deferred_release_.clear(); } // previous recording already finished on the GPU (or never executed)
 
 		m_b_executed_ = false;
 		m_b_ready_    = false;
 		m_b_disposed_ = false;
+	}
+
+	void CommandPair::DeferRelease(std::function<void()>&& holder)
+	{
+		std::lock_guard<std::mutex> l(m_deferred_mutex_);
+		if (!m_b_executed_)
+		{
+			m_deferred_release_.push_back(std::move(holder));
+		}
 	}
 
 	void CommandPair::FlagReady(const std::function<void()>& post_execution)
@@ -533,6 +544,15 @@ namespace Engine
 		if (pair->m_post_execute_function_)
 		{
 			pair->m_post_execute_function_();
+		}
+
+		{
+			// GPU finished with this list: deferred heaps can be returned now.
+			std::vector<std::function<void()>> released;
+			{
+				std::lock_guard<std::mutex> l(pair->m_deferred_mutex_);
+				released.swap(pair->m_deferred_release_);
+			}
 		}
 
 		pair->m_b_ready_    = false;
