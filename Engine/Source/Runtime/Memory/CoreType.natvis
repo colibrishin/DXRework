@@ -5,7 +5,16 @@
   or copy to .vs\<SolutionName>\vc\x64\Debug\ (or your config) so it loads when debugging.
 -->
 <AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
-  <!-- HashType (const HashTypeImpl*): show address and pointee hash -->
+  <!-- HashType (handle around const HashTypeImpl*): show address and pointee hash -->
+  <Type Name="HashType">
+    <DisplayString Condition="m_ptr_ == 0">null</DisplayString>
+    <DisplayString>0x{(void*)m_ptr_,x} | hash = {m_ptr_->v}</DisplayString>
+    <Expand>
+      <Item Name="address">(void*)m_ptr_</Item>
+      <ExpandedItem Condition="m_ptr_ != 0">*m_ptr_</ExpandedItem>
+    </Expand>
+  </Type>
+  <!-- const HashTypeImpl*: show address and pointee hash -->
   <Type Name="const HashTypeImpl *">
     <DisplayString>0x{this,x} | hash = {this->v}</DisplayString>
     <Expand>

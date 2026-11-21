@@ -23,6 +23,9 @@
 #include <boost/archive/detail/iserializer.hpp>
 #include <boost/functional/hash.hpp>
 #include <boost/serialization/access.hpp>
+#include <boost/serialization/split_free.hpp>
+#include <boost/serialization/level.hpp>
+#include <boost/serialization/tracking.hpp>
 #include <boost/pool/pool_alloc.hpp>
 
 namespace Engine
@@ -965,6 +968,8 @@ public:
 	virtual bool IsDerivedOf(HashType base) const { return Type##::StaticIsDerivedOf(base); } \
 	virtual bool IsBaseOf(HashType derived) const { return derived->IsDerivedOf(Type##::StaticTypeHash()); }
 
+class HashType;
+
 struct ENGINE_MEMORY_API HashTypeImpl
 {
 	virtual        ~HashTypeImpl() = default;
@@ -979,18 +984,9 @@ struct ENGINE_MEMORY_API HashTypeImpl
 	{
 		return v == other.v;
 	}
-	[[nodiscard]] virtual const HashTypeImpl* Fetch() const
-	{
-		throw std::runtime_error("Not Implemented");
-	}
-	[[nodiscard]] virtual bool IsDerivedOf(const HashTypeImpl* /*base*/) const 
-	{
-		throw std::runtime_error("Not Implemented");
-	}
-	[[nodiscard]] virtual bool IsBaseOf(const HashTypeImpl* /*derived*/) const
-	{
-		throw std::runtime_error("Not Implemented");
-	}
+	[[nodiscard]] virtual HashType Fetch() const;
+	[[nodiscard]] virtual bool     IsDerivedOf(HashType base) const;
+	[[nodiscard]] virtual bool     IsBaseOf(HashType derived) const;
 	[[nodiscard]] virtual bool IsSerializable() const 
 	{
 		throw std::runtime_error("Not Implemented");
@@ -1023,15 +1019,102 @@ private:
 BOOST_CLASS_EXPORT_KEY(HashTypeImpl)
 
 using HashTypeValue = const HashTypeImpl;
-using HashType = const HashTypeValue*;
+
+// Type identity handle (points at a type_hash<T>::value).
+// type_hash<T>::value is instantiated once per DLL, so the same type can have different addresses; its cityhash `v`
+// is evaluated at compile time and identical everywhere. Equality is therefore decided in three steps:
+//   1) both operands are constant expressions -> the compiler compares the AOT hashes (no runtime cost);
+//   2) same address -> equal, without reading the hash (the common same-DLL case);
+//   3) otherwise -> full comparison of the AOT hashes.
+// A different address alone never means a different type. Use SameAddress()/get() only when the address itself is
+// what you want (convenience within one module); it can report "different" for one type across DLLs.
+class HashType
+{
+public:
+	constexpr HashType() noexcept = default;
+	constexpr HashType(std::nullptr_t) noexcept {}
+	constexpr HashType(const HashTypeImpl* ptr) noexcept : m_ptr_(ptr) {}
+
+	[[nodiscard]] constexpr const HashTypeImpl* get() const noexcept { return m_ptr_; }
+	constexpr const HashTypeImpl*               operator->() const noexcept { return m_ptr_; }
+	constexpr const HashTypeImpl&               operator*() const noexcept { return *m_ptr_; }
+	constexpr explicit                          operator bool() const noexcept { return m_ptr_ != nullptr; }
+
+	[[nodiscard]] constexpr bool SameAddress(const HashType other) const noexcept { return m_ptr_ == other.m_ptr_; }
+
+	[[nodiscard]] constexpr bool Equals(const HashType other) const noexcept
+	{
+		return m_ptr_ == other.m_ptr_ || ( m_ptr_ && other.m_ptr_ && m_ptr_->v == other.m_ptr_->v );
+	}
+
+	[[nodiscard]] constexpr size_t hash() const noexcept { return m_ptr_ ? m_ptr_->v.hash() : 0; }
+
+	friend constexpr bool operator==(const HashType lhs, const HashType rhs) noexcept { return lhs.Equals(rhs); }
+	friend constexpr bool operator==(const HashType lhs, std::nullptr_t) noexcept { return lhs.m_ptr_ == nullptr; }
+
+	// Strict weak order by hash value (null first), consistent with ==.
+	friend constexpr bool operator<(const HashType lhs, const HashType rhs) noexcept
+	{
+		if ( !lhs.m_ptr_ || !rhs.m_ptr_ )
+		{
+			return !lhs.m_ptr_ && rhs.m_ptr_;
+		}
+		return !lhs.SameAddress(rhs) && lhs.m_ptr_->v < rhs.m_ptr_->v;
+	}
+
+private:
+	const HashTypeImpl* m_ptr_ = nullptr;
+};
+
+template <>
+struct std::hash<HashType>
+{
+	constexpr size_t operator()(const HashType h) const noexcept { return h.hash(); }
+};
 
 struct HashTypeHash
 {
-	size_t operator()( HashType p ) const noexcept
-	{
-		return std::hash<const void*>{}( static_cast<const void*>( p ) );
-	}
+	constexpr size_t operator()( const HashType p ) const noexcept { return p.hash(); }
 };
+
+// Serialized exactly like the raw `const HashTypeImpl*` it replaced: no class header, no tracking of the handle,
+// the pointee goes through the existing pointer path (and boost::archive::load -> Fetch() on load).
+namespace boost::serialization
+{
+	template <typename Archive>
+	void save(Archive& ar, const HashType& t, const unsigned int /*version*/)
+	{
+		const HashTypeImpl* ptr = t.get();
+		ar & ptr;
+	}
+
+	template <typename Archive>
+	void load(Archive& ar, HashType& t, const unsigned int /*version*/)
+	{
+		const HashTypeImpl* ptr = nullptr;
+		ar & ptr;
+		t = ptr;
+	}
+}
+
+BOOST_SERIALIZATION_SPLIT_FREE(HashType)
+BOOST_CLASS_IMPLEMENTATION(HashType, boost::serialization::object_serializable)
+BOOST_CLASS_TRACKING(HashType, boost::serialization::track_never)
+
+inline HashType HashTypeImpl::Fetch() const
+{
+	throw std::runtime_error("Not Implemented");
+}
+
+inline bool HashTypeImpl::IsDerivedOf(HashType /*base*/) const
+{
+	throw std::runtime_error("Not Implemented");
+}
+
+inline bool HashTypeImpl::IsBaseOf(HashType /*derived*/) const
+{
+	throw std::runtime_error("Not Implemented");
+}
 
 template <typename T> struct type_hash;
 
@@ -1097,17 +1180,17 @@ struct HashTypeT : HashTypeImpl
 
 	[[nodiscard]] constexpr bool Equal(const HashTypeImpl& other) const override
 	{
-		return HashTypeImpl::Equal(other) && this == &other;
+		return this == &other || HashTypeImpl::Equal(other);
 	}
 	[[nodiscard]] HashType Fetch() const override
 	{
 		return &type_hash<T>::value;
 	}
-	bool IsDerivedOf(const HashTypeImpl* base) const override
+	bool IsDerivedOf(HashType base) const override
 	{
 		return polymorphic_type_hash<T>::is_derived_of(base);
 	}
-	bool IsBaseOf(const HashTypeImpl* derived) const override 
+	bool IsBaseOf(HashType derived) const override 
 	{
 		return derived->IsDerivedOf(this);
 	}
@@ -1180,7 +1263,7 @@ namespace boost::archive
 		// deallocate the memory that was created by boost
 		simple_gc_collector::Add(loaded);
 		// retrieve the runtime type
-		t = loaded->Fetch();
+		t = loaded->Fetch().get();
 	}
 }
 
@@ -1206,7 +1289,7 @@ struct polymorphic_type_hash<##Type##>\
 	static constexpr HashArray<upcast_count> upcast_array = chain_to_upcast_array<chain>::value;\
 	constexpr static bool is_derived_of(const HashType base)\
 	{\
-		return std::ranges::find_if(upcast_array, [&base](const auto other){return other && base && (other == base || other->v == base->v);}) != upcast_array.end();\
+		return base && std::ranges::find(upcast_array, base) != upcast_array.end();\
 	}\
 };
 
@@ -1574,24 +1657,28 @@ object_pool_allocator<T>& get_instanced_pool_allocator()
 class ENGINE_MEMORY_API PoolAllocatorStorage
 {
 private:
+    // Keyed by type value, so every DLL gets the same allocator instance for a type (the first one registered).
     std::unordered_map<HashType, pool_allocator_base*, HashTypeHash> m_allocators_;
+    mutable std::mutex                                                m_allocators_mutex_;
 
 public:
     template <typename T>
     object_pool_allocator<T>& get_allocator()
     {
-        const HashType key = &type_hash<T>::value;
-        if ( !m_allocators_.contains( key ) )
+        const HashType              key = &type_hash<T>::value;
+        std::lock_guard<std::mutex> lock( m_allocators_mutex_ );
+        auto                        it = m_allocators_.find( key );
+        if ( it == m_allocators_.end() )
         {
-            auto& instanced = get_instanced_pool_allocator<T>();
-            m_allocators_.emplace( key, &instanced );
+            it = m_allocators_.emplace( key, &get_instanced_pool_allocator<T>() ).first;
         }
 
-        return reinterpret_cast<object_pool_allocator<T>&>( *m_allocators_.at( key ) );
+        return static_cast<object_pool_allocator<T>&>( *it->second );
     }
 
 	bool is_allocator_live( HashType type ) const
 	{
+        std::lock_guard<std::mutex> lock( m_allocators_mutex_ );
         return m_allocators_.contains( type );
 	}
 
@@ -1643,10 +1730,10 @@ private:
     struct object_tag
     { };
 
-    using PoolType = boost::singleton_pool<object_tag,
-                                           sizeof( T ), 
-										   user_allocator,
-                                           boost::details::pool::null_mutex>;
+    // Per-instance pool, not boost::singleton_pool: a singleton is a static in every DLL that instantiates this
+    // template, while the allocator instance is shared through g_allocator_storage. Memory obtained in one DLL
+    // would otherwise be returned to another DLL's pool.
+    mutable boost::pool<user_allocator> m_pool_{ sizeof( T ) };
 
     T*                   m_start_ptr_ = nullptr;
     std::vector<__m256i> m_mask_{};
@@ -1669,11 +1756,11 @@ private:
 
     void reallocate()
     {
-        T* reallocated = static_cast<T*>( PoolType::ordered_malloc( (m_mask_.size() + 1) * ( 1 << 8 ) ) );
+        T* reallocated = static_cast<T*>( m_pool_.ordered_malloc( (m_mask_.size() + 1) * ( 1 << 8 ) ) );
         if ( m_start_ptr_ )
         {
-            std::memmove( reallocated, m_start_ptr_, sizeof( T* ) * m_mask_.size() * ( 1 << 8 ) );
-            PoolType::ordered_free( m_start_ptr_, m_mask_.size() * ( 1 << 8 ) );
+            std::memmove( reallocated, m_start_ptr_, sizeof( T ) * m_mask_.size() * ( 1 << 8 ) );
+            m_pool_.ordered_free( m_start_ptr_, m_mask_.size() * ( 1 << 8 ) );
         }
         m_mask_.emplace_back( __m256i{} );
         m_local_allocation_count_.resize( ( m_mask_.size() + 1 ) * ( 1 << 8 ), 0 );
@@ -1866,13 +1953,13 @@ public:
 
     virtual void destroy() const override
     {
-        PoolType::ordered_free( m_start_ptr_, m_mask_.size() * ( 1 << 8 ) );
+        m_pool_.ordered_free( m_start_ptr_, m_mask_.size() * ( 1 << 8 ) );
     }
 
 	virtual void purge() const override
     {
-        PoolType::release_memory();
-        PoolType::purge_memory();
+        m_pool_.release_memory();
+        m_pool_.purge_memory();
 	}
 
 	void flag_dirty( const AllocationContext& context ) override

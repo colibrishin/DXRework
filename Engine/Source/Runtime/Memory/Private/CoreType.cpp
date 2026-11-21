@@ -4,6 +4,8 @@ PoolAllocatorStorage g_allocator_storage{};
 
 void PoolAllocatorStorage::cleanup()
 {
+    std::lock_guard<std::mutex> lock( m_allocators_mutex_ );
+
     for ( const pool_allocator_base* allocator : m_allocators_ | std::views::values )
     {
         allocator->destroy();
