@@ -1874,10 +1874,7 @@ namespace Engine
 template <typename T>
 class managed_shared_ptr : protected boost::shared_ptr<T>
 {
-    mutable AllocationContext m_context_;
-    // Pool address of the allocation that the stored boost pointer was derived from. Pools no longer move objects,
-    // so this never differs from the current address; the rebase below is removed separately.
-    mutable const void* m_resolved_raw_ = nullptr;
+    AllocationContext m_context_;
 
 	template <typename U> 
 	friend class managed_weak_ptr;
@@ -1916,42 +1913,61 @@ class managed_shared_ptr : protected boost::shared_ptr<T>
 
 	template <typename U>
     managed_shared_ptr( const managed_shared_ptr<U>& other, const cast_tag& )
-        : boost::shared_ptr<T>( boost::reinterpret_pointer_cast<T>( other ) ), m_context_( other.m_context_ ),
-          m_resolved_raw_( other.m_resolved_raw_ )
+        : boost::shared_ptr<T>( boost::reinterpret_pointer_cast<T>( other ) ), m_context_( other.m_context_ )
 	{
-        resolve();
 	}
 
 	// The only place a control block is created: one block per allocation, shared by every copy.
 	managed_shared_ptr( const AllocationContext& context, const init_tag& )
-        : boost::shared_ptr<T>( static_cast<T*>( context.ptr() ), managed_slot_deleter<T>{ context } ), m_context_( context ),
-          m_resolved_raw_( context.ptr() )
+        : boost::shared_ptr<T>( static_cast<T*>( context.ptr() ), managed_slot_deleter<T>{ context } ), m_context_( context )
     {
 	}
 
 	template <typename U>
     explicit managed_shared_ptr( const boost::weak_ptr<U>& weak_native, const AllocationContext& context )
-        : boost::shared_ptr<T>( weak_native, boost::detail::sp_nothrow_tag{} ), m_context_( context ),
-          m_resolved_raw_( context.ptr() ) // caller passes a pointer to the object's current address
+        : boost::shared_ptr<T>( weak_native, boost::detail::sp_nothrow_tag{} ), m_context_( context )
     {
-        resolve();
+        drop_if_unmanaged();
     }
 
 	template <typename U>
     explicit managed_shared_ptr( const boost::shared_ptr<U>& native, const AllocationContext& context )
-        : boost::shared_ptr<T>( native ), m_context_( context ),
-          m_resolved_raw_( context.ptr() ) // caller passes a pointer to the object's current address
+        : boost::shared_ptr<T>( native ), m_context_( context )
     {
-        resolve();
+        drop_if_unmanaged();
     }
 
 	template <typename U>
     explicit managed_shared_ptr( const managed_weak_ptr<U>& weak_native )
-        : boost::shared_ptr<T>( weak_native, boost::detail::sp_nothrow_tag{} ), m_context_( weak_native.m_context_ ),
-          m_resolved_raw_( weak_native.m_resolved_raw_ )
+        : boost::shared_ptr<T>( weak_native, boost::detail::sp_nothrow_tag{} ), m_context_( weak_native.m_context_ )
     {
-        resolve();
+        drop_if_unmanaged();
     }
+
+	// Decided once where a pointer can be made from something other than an allocation or another managed pointer,
+	// with the result resolve() used to give on every access:
+	// - an object without a pool allocation (e.g. created on the heap by deserialization) reads as null;
+	// - a pointer to an object that is gone (e.g. a weak pointer locked after the object died) is empty, with a null
+	//   context, so hashing, ordering and to_weak() treat it as empty.
+	void drop_if_unmanaged()
+	{
+		if ( !g_allocator_storage.is_allocator_live( m_context_.allocator_type() ) )
+		{
+			return;
+		}
+
+		if ( !m_context_.valid() )
+		{
+			boost::shared_ptr<T>::reset();
+			return;
+		}
+
+		if ( m_context_.expired() )
+		{
+			boost::shared_ptr<T>::reset();
+			m_context_ = AllocationContext::get_null_context();
+		}
+	}
 
 	AllocationContext internal_context() const
     {
@@ -1960,7 +1976,6 @@ class managed_shared_ptr : protected boost::shared_ptr<T>
 
     [[nodiscard]] boost::shared_ptr<T> native() const
     {
-        resolve();
         return *this;
     }
 
@@ -1968,15 +1983,17 @@ class managed_shared_ptr : protected boost::shared_ptr<T>
     void serialize( Archive& ar, const unsigned int file_version )
     {
         ar & static_cast<boost::shared_ptr<T>&>( *this );
+        if constexpr ( Archive::is_loading::value )
+        {
+            drop_if_unmanaged();
+        }
 	}
 
 public:
     using element_type = T;
 
-	~managed_shared_ptr()
-    {
-        resolve();
-	}
+	// Declared so that no implicit move is generated (moves copy): a moved-from boost pointer would keep a live context.
+	~managed_shared_ptr() = default;
 
 	managed_shared_ptr( nullptr_t )
         : boost::shared_ptr<T>( nullptr ), m_context_( AllocationContext::get_null_context()  )
@@ -1990,15 +2007,14 @@ public:
 
 	template <typename U>
      managed_shared_ptr( const managed_shared_ptr<U>& other )
-        : boost::shared_ptr<T>( boost::static_pointer_cast<T>( other.native() ) ), m_context_( other.m_context_ ),
-          m_resolved_raw_( other.m_resolved_raw_ ) // read after native() resolved `other`
+        : boost::shared_ptr<T>( boost::static_pointer_cast<T>( other.native() ) ), m_context_( other.m_context_ )
     {
-        resolve();
     }
 
+	// After cleanup every managed pointer reads as null, like get().
 	explicit operator bool() const noexcept
     {
-        if ( !m_context_.valid() )
+        if ( !g_allocator_storage.is_allocator_live( m_context_.allocator_type() ) || !m_context_.valid() )
         {
             return false;
         }
@@ -2007,12 +2023,12 @@ public:
 
 	bool operator==( nullptr_t ) const
     {
-        return !m_context_.valid() || m_context_.expired();
+        return !g_allocator_storage.is_allocator_live( m_context_.allocator_type() ) || !m_context_.valid() ||
+               m_context_.expired();
 	}
 
 	operator boost::shared_ptr<T>() const
 	{
-        resolve();
         boost::shared_ptr<T> result( *this );
         return result;
 	}
@@ -2023,72 +2039,23 @@ public:
         *this = managed_shared_ptr<T>();
 	}
 
+	// The stored pointer is set when the pointer is made and does not change: pools never move their objects, and
+	// the object stays alive while this owns a share. Null after cleanup.
 	T* resolve() const noexcept
     {
 		if ( !g_allocator_storage.is_allocator_live( m_context_.allocator_type() ) )
 		{
-            // there is nothing it can do
 			return nullptr;
 		}
 
-		if ( !m_context_.valid() )
-		{
-            if ( boost::shared_ptr<T>::get() )
-            {
-                managed_shared_ptr<T>* non_const = const_cast<managed_shared_ptr<T>*>( this );
-                static_cast<boost::shared_ptr<T>*>( non_const )->reset();
-            }
-
-			return nullptr;
-		}
-
-		if ( m_context_.expired() )
-		{
-			if ( boost::shared_ptr<T>::get() )
-			{
-                managed_shared_ptr<T>* non_const = const_cast<managed_shared_ptr<T>*>( this );
-                static_cast<boost::shared_ptr<T>*>( non_const )->reset();
-			}
-
-            m_context_ = AllocationContext::get_null_context();
-            return nullptr;
-		}
-
-		boost::shared_ptr<T>& self = *const_cast<managed_shared_ptr<T>*>( this );
-		if ( self.use_count() == 0 )
-		{
-			// No control block: ownership is only created at allocation. Never adopt the object here, e.g. from a
-			// weak pointer whose block already died while the object is being destroyed.
-			return nullptr;
-		}
-
-		// Compare addresses rather than should_resolve(): expired() above may already have updated the context.
-		const void* current = m_context_.ptr();
-		if ( current != m_resolved_raw_ )
-		{
-			// Keep the one control block, refresh only the address (unreachable since pools stopped moving objects).
-			T* moved = self.get() && m_resolved_raw_
-				? reinterpret_cast<T*>( reinterpret_cast<char*>( self.get() ) +
-				                        ( static_cast<const char*>( current ) - static_cast<const char*>( m_resolved_raw_ ) ) )
-				: static_cast<T*>( const_cast<void*>( current ) );
-			self            = boost::shared_ptr<T>( self, moved );
-			m_resolved_raw_ = current;
-		}
-
-        return self.get();
+		T* const stored = boost::shared_ptr<T>::get();
+		assert( !stored || ( m_context_.valid() && !m_context_.expired() ) );
+		return stored;
 	}
 
 	[[nodiscard]] size_t use_count() const
 	{
         return boost::shared_ptr<T>::use_count();
-	}
-
-	// Reallocation count of this object's pool. Pools no longer move their objects, so it does not change and a raw
-	// pointer from get() stays valid while the object is alive.
-	[[nodiscard]] size_t pool_reallocation_count() const
-	{
-        const pool_core* alloc = m_context_.allocator();
-        return alloc ? alloc->allocation_count() : 0;
 	}
 
 	bool operator!() const noexcept
@@ -2183,8 +2150,7 @@ managed_shared_ptr<T> managed_static_pointer_cast( const managed_shared_ptr<U>& 
 template <typename T>
 class managed_weak_ptr : protected boost::weak_ptr<T>
 {
-    mutable AllocationContext m_context_;
-    mutable const void*       m_resolved_raw_ = nullptr; // see managed_shared_ptr
+    AllocationContext m_context_;
 
 	template <typename U>
     friend class managed_weak_ptr;
@@ -2211,16 +2177,16 @@ public:
 	template <typename U>
 	managed_weak_ptr( const managed_weak_ptr<U>& other )
 		: boost::weak_ptr<T>( other ),
-		m_context_( other.m_context_ ), m_resolved_raw_( other.m_resolved_raw_ )
+		m_context_( other.m_context_ )
 	{ }
 
     managed_weak_ptr( const managed_shared_ptr<T>& other )
-        : boost::weak_ptr<T>( other ), m_context_( other.m_context_ ), m_resolved_raw_( other.m_resolved_raw_ )
+        : boost::weak_ptr<T>( other ), m_context_( other.m_context_ )
     { }
 
 	template <typename U>
     managed_weak_ptr( const managed_shared_ptr<U>& other )
-        : boost::weak_ptr<T>( other ), m_context_( other.m_context_ ), m_resolved_raw_( other.m_resolved_raw_ )
+        : boost::weak_ptr<T>( other ), m_context_( other.m_context_ )
     { }
 
 	void reset()
@@ -2330,13 +2296,15 @@ managed_shared_ptr<U> make_managed_shared( Args&&... arguments )
     return managed_shared_ptr<U>( make_managed_shared<T>( std::forward<Args>( arguments )... ) );
 }
 
-// `self` is the object's address. Only the weak pointer's control block is used (weak_from_this()).
+// `self` is the object (weak_from_this() of it); pools never move objects, so the weak pointer already holds its
+// address.
 template <typename T>
 managed_shared_ptr<T> from_native( const boost::weak_ptr<T>& native, T* self )
 {
     if ( const boost::shared_ptr<T> locked = native.lock() )
 	{
-        return managed_shared_ptr<T>( boost::shared_ptr<T>( locked, self ), self->GetAllocationContext() );
+        assert( locked.get() == self );
+        return managed_shared_ptr<T>( locked, self->GetAllocationContext() );
 	}
 
 	return {};
