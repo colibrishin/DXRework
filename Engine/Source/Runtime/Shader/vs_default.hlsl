@@ -12,7 +12,7 @@ PixelInputType vs_main(VertexInputType input, uint instanceId : SV_InstanceID)
 
     if (INST_BONE_FLAG(bufInstance, instanceId) && !INST_NO_ANIM(bufInstance, instanceId))
 	{
-		matrix animation_transform;
+		matrix animation_transform = (matrix)0;
 
 		for (int i = 0; i < input.bone_element.bone_count; ++i)
 		{
@@ -77,9 +77,12 @@ PixelInputType vs_main(VertexInputType input, uint instanceId : SV_InstanceID)
 	output.viewDirection = cam_position.xyz - output.worldPosition.xyz;
 	output.viewDirection = normalize(output.viewDirection);
 
-    output.normal = mul(float4(output.normal, 1.f), world);
-    output.tangent = mul(float4(output.tangent, 1.f), world);
-    output.binormal = mul(float4(output.binormal, 1.f), world);
+    // Directions must not pick up the world translation; inverse-transpose scaling keeps non-uniform scales correct.
+    const float3x3 w3    = (float3x3)world;
+    const float3   invS2 = 1.f / float3(dot(w3[0], w3[0]), dot(w3[1], w3[1]), dot(w3[2], w3[2]));
+    output.normal   = normalize(mul(output.normal * invS2, w3));
+    output.tangent  = normalize(mul(output.tangent, w3));
+    output.binormal = normalize(mul(output.binormal, w3));
 
 	matrix reflectionWorld = mul(g_camReflectView, g_camProj);
 	reflectionWorld        = mul(world, reflectionWorld);

@@ -39,7 +39,7 @@ float4 ps_main(DeferredLightPixelInputType input) : SV_Target
     float3 viewDir = normalize(cameraPosition - worldPosition.xyz);
     
     float4 color = float4(PBRLight(viewDir,
-                                   worldNormal.xyz,
+                                   normalize(worldNormal.xyz),
                                    worldPosition,
                                    baseColor.rgb,
                                    specular,

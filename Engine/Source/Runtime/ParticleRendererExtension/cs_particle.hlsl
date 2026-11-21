@@ -15,7 +15,7 @@
 #define RANDOM_TEX1 tex[1]
 #define RANDOM_TEX2 tex[2]
 
-groupshared int global_lock = 0;
+groupshared int global_lock;
 
 [numthreads(32, 32, 1)]
 void cs_main(
@@ -33,28 +33,28 @@ void cs_main(
 	}
 
 	// Skipping inactive particles
-	if (INST_PARTICLE_ACTIVE(flat_idx) == 0)
+	if (INST_PARTICLE_ACTIVE(uavInstance, flat_idx) == 0)
 	{
 		return;
 	}
 
 	// disable particles that have exceeded their lifetime
-	if (INST_PARTICLE_LIFE(flat_idx) > duration)
+	if (INST_PARTICLE_LIFE(uavInstance, flat_idx) > duration)
 	{
-		INST_PARTICLE_ACTIVE(flat_idx) = 0;
+		INST_PARTICLE_ACTIVE(uavInstance, flat_idx) = 0;
 		return;
 	}
 
-	const float life_normalized = INST_PARTICLE_LIFE(flat_idx) / duration;
-	float4      curr_pos        = GetTranslation(INST_PARTICLE_WORLD(flat_idx));
+	const float life_normalized = INST_PARTICLE_LIFE(uavInstance, flat_idx) / duration;
+	float4      curr_pos        = GetTranslation(INST_PARTICLE_WORLD(uavInstance, flat_idx));
 
 	const float3  w = float3(0.f, 1.f, 0.f);
 	const float3  r = curr_pos.xyz;
 	const float3  v = cross(w, r);
-	INST_PARTICLE_VELOCITY(flat_idx)  = float4(v, 0.f);
+	INST_PARTICLE_VELOCITY(uavInstance, flat_idx)  = float4(v, 0.f);
 
 	curr_pos += float4(v * dt, 0.f);
-	matrix mat = INST_PARTICLE_WORLD(flat_idx);
+	matrix mat = INST_PARTICLE_WORLD(uavInstance, flat_idx);
 
 	if (PARAM_SCALING)
 	{
@@ -69,6 +69,6 @@ void cs_main(
 	mat._42 = curr_pos.y;
 	mat._43 = curr_pos.z;
 
-	INST_PARTICLE_WORLD(flat_idx) = mat;
-	INST_PARTICLE_LIFE(flat_idx) += dt;
+	INST_PARTICLE_WORLD(uavInstance, flat_idx) = mat;
+	INST_PARTICLE_LIFE(uavInstance, flat_idx) += dt;
 }
