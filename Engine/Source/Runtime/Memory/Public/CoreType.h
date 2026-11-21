@@ -1477,6 +1477,12 @@ struct ENGINE_MEMORY_API null_deleter : deleter_base
 // can still race with a writer holding the lock).
 class ENGINE_MEMORY_API pool_core
 {
+    // Slots are reserved, freed and addressed only by the typed front and the managed side: nothing else can free
+    // an object under a managed pointer or reuse its slot.
+    template <typename T>
+    friend class object_pool_allocator;
+    friend struct managed_pool_access;
+
 public:
     pool_core( size_t element_size, size_t reserve_bytes );
     pool_core( const pool_core& )            = delete;
@@ -1486,6 +1492,32 @@ public:
     size_t reserve_bytes() const { return m_reserve_bytes_; }
     size_t allocation_count() const { return m_reallocation_count_; }
 
+    // How the objects of a pool are owned. A pool is either managed (objects owned by managed pointers, freed only
+    // by their control block) or unmanaged (allocate_unmanaged/deallocate_unmanaged); the first allocation decides.
+    enum class ownership : uint8_t { undecided, managed, unmanaged };
+    ownership current_ownership() const { return m_ownership_.load( std::memory_order_relaxed ); }
+
+    // True while the slot of `key` still holds that allocation (its generation did not move). Lock-free: the
+    // generations never move and a slot's generation only changes after its object was destroyed, which cannot
+    // happen while a managed pointer owns it; a concurrent write to the same slot only happens in that bug case.
+    bool is_current( const AllocationKey& key ) const
+    {
+        return m_local_allocation_count_[ key.to_raw_index() ] == key.allocation_count;
+    }
+
+    // Ends the process (__fastfail) instead of continuing with an object that is gone or not owned this way.
+    [[noreturn]] static void fail_fast( const char* reason );
+
+    bool  past( const AllocationContext& context ) const;
+    bool  expired( const AllocationContext& context ) const;
+    void* get_ptr( const AllocationContext& context ) const;
+
+    void destroy() const;
+    void purge() const;
+
+private:
+    // Records the pool's ownership on first use; ends the process if the pool is already used the other way.
+    void claim_ownership( ownership mode );
     // Takes a free slot under the lock (growing the storage if needed) and returns its context, also built under
     // the lock. The object is constructed by the caller.
     AllocationContext reserve( HashType type );
@@ -1497,14 +1529,6 @@ public:
     AllocationKey key_of( const void* ptr ) const;
     bool          is_safe( const void* ptr ) const;
 
-    bool  past( const AllocationContext& context ) const;
-    bool  expired( const AllocationContext& context ) const;
-    void* get_ptr( const AllocationContext& context ) const;
-
-    void destroy() const;
-    void purge() const;
-
-private:
     void          init();
     void          commit_chunk();
     AllocationKey get_free_space();
@@ -1519,6 +1543,7 @@ private:
     __m256i*                  m_mask_               = nullptr; // reserved, one entry per chunk
     size_t*                   m_local_allocation_count_ = nullptr; // reserved, one generation per slot
     std::atomic<size_t>       m_chunks_             = 0;       // committed chunks
+    std::atomic<ownership>    m_ownership_          = ownership::undecided;
     mutable std::atomic<bool> m_lock_               = false;
     bool                      m_initialized_        = false;
 };
@@ -1712,10 +1737,11 @@ private:
     mutable std::mutex                                                m_allocators_mutex_;
     std::atomic<bool>                                                 m_closed_ = false; // set by cleanup()
 
-public:
-    // The pool core of a type, created on first use. Same instance for every DLL (keyed by type value).
+    // The pool core of a type, created on first use. Same instance for every DLL (keyed by type value). Reached only
+    // through get_allocator, so pool cores are not handed out.
     pool_core* get_core( HashType type, size_t element_size, size_t reserve_bytes );
 
+public:
     // The typed front of a type's pool. A per-DLL object that only refers to the shared pool_core.
     template <typename T>
     object_pool_allocator<T>& get_allocator()
@@ -1772,16 +1798,72 @@ using user_allocator = debug_new_delete;
 using user_allocator = boost::default_user_allocator_new_delete;
 #endif
 
+struct managed_pool_access;
+
 // Typed front of a pool: constructs and destroys T in slots of the shared pool_core. Instances are per-DLL and
 // hold no state of their own, so allocation contexts refer to the pool_core, not to this object.
+//
+// Objects owned by managed pointers are created only by make_managed_shared and freed only by their control block
+// (through managed_pool_access), so a managed pointer's object cannot be freed under it. Objects without managed
+// pointers (e.g. UI tokens) use allocate_unmanaged/deallocate_unmanaged; a pool serves one kind or the other.
 template <typename T>
 class object_pool_allocator
 {
+    friend struct managed_pool_access;
+
 public:
     explicit object_pool_allocator( pool_core* core )
         : m_core_( core )
     { }
 
+    // The caller owns the object and frees it with deallocate_unmanaged.
+    template <typename... Args>
+    T* allocate_unmanaged( Args&&... arguments )
+    {
+        m_core_->claim_ownership( pool_core::ownership::unmanaged );
+        return static_cast<T*>( m_core_->slot_ptr( allocate( std::forward<Args>( arguments )... ).m_key_ ) );
+    }
+
+    // Frees an object from allocate_unmanaged. Nothing after cleanup (like the managed pointers' deleter).
+    void deallocate_unmanaged( T* ptr )
+    {
+        if ( !g_allocator_storage.is_allocator_live( &type_hash<T>::value ) )
+        {
+            return;
+        }
+
+        if ( m_core_->current_ownership() != pool_core::ownership::unmanaged || !m_core_->is_safe( ptr ) )
+        {
+            pool_core::fail_fast( "object pool: deallocate_unmanaged of an object it does not own" );
+        }
+
+        // Must be the start of a slot that holds an object (not an interior pointer or a slot already freed).
+        const AllocationKey key = m_core_->key_of( ptr );
+        if ( m_core_->slot_ptr( key ) != ptr || !m_core_->alive( key ) )
+        {
+            pool_core::fail_fast( "object pool: deallocate_unmanaged of an object it does not own" );
+        }
+
+        deallocate( get_context( ptr ) );
+    }
+
+    // Null context for an object that is not in this pool (e.g. created on the heap by deserialization).
+    AllocationContext get_context( const T* ptr ) const
+    {
+        if ( !m_core_->is_safe( ptr ) )
+        {
+            return AllocationContext::get_null_context();
+        }
+
+        return AllocationContext( m_core_->key_of( ptr ), m_core_, &type_hash<T>::value );
+    }
+
+    size_t allocation_count() const
+    {
+        return m_core_->allocation_count();
+    }
+
+private:
     template <typename... Args>
     AllocationContext allocate( Args&&... arguments )
     {
@@ -1790,18 +1872,6 @@ public:
                                                  std::forward<Args>( arguments )... );
 
         return context;
-    }
-
-    void deallocate( T* ptr )
-    {
-        // After cleanup the pool no longer frees objects (as the managed pointers' deleter).
-        if ( !g_allocator_storage.is_allocator_live( &type_hash<T>::value ) )
-        {
-            return;
-        }
-
-        assert( m_core_->is_safe( ptr ) );
-        deallocate( get_context( ptr ) );
     }
 
     // Frees the object in the context's slot if it is still the same generation; a no-op otherwise (already freed,
@@ -1827,24 +1897,36 @@ public:
         const_cast<pool_core*>( core )->release( context.m_key_ );
     }
 
-    // Null context for an object that is not in this pool (e.g. created on the heap by deserialization).
-    AllocationContext get_context( const T* ptr ) const
-    {
-        if ( !m_core_->is_safe( ptr ) )
-        {
-            return AllocationContext::get_null_context();
-        }
-
-        return AllocationContext( m_core_->key_of( ptr ), m_core_, &type_hash<T>::value );
-    }
-
-    size_t allocation_count() const
-    {
-        return m_core_->allocation_count();
-    }
-
-private:
     pool_core* m_core_;
+};
+
+template <typename T>
+struct managed_slot_deleter;
+
+// The managed side of object_pool_allocator: allocation for make_managed_shared and freeing for the control
+// block's deleter, which are the only ones that can use it.
+struct managed_pool_access
+{
+private:
+    template <typename T>
+    friend struct managed_slot_deleter;
+
+    template <typename T, typename... Args>
+    friend managed_shared_ptr<T> make_managed_shared( Args&&... arguments );
+
+    template <typename T, typename... Args>
+    static AllocationContext allocate( Args&&... arguments )
+    {
+        object_pool_allocator<T>& alloc = g_allocator_storage.get_allocator<T>();
+        alloc.m_core_->claim_ownership( pool_core::ownership::managed );
+        return alloc.allocate( std::forward<Args>( arguments )... );
+    }
+
+    template <typename T>
+    static void deallocate( const AllocationContext& context )
+    {
+        object_pool_allocator<T>::deallocate( context );
+    }
 };
 
 // Deleter of the one boost control block that owns a pooled object. It finds the object by allocation slot and
@@ -1861,7 +1943,7 @@ struct managed_slot_deleter
         // if there is no instanced allocator, it is undefined behaviour so dismiss the calling deallocation.
         if ( g_allocator_storage.is_allocator_live( context.allocator_type() ) )
         {
-            object_pool_allocator<T>::deallocate( context );
+            managed_pool_access::deallocate<T>( context );
         }
     }
 };
@@ -1956,6 +2038,14 @@ class managed_shared_ptr : protected boost::shared_ptr<T>
 			return;
 		}
 
+		// No object (e.g. a weak pointer locked while its object is being destroyed): empty, so operator bool agrees
+		// with get().
+		if ( !boost::shared_ptr<T>::get() )
+		{
+			m_context_ = AllocationContext::get_null_context();
+			return;
+		}
+
 		if ( !m_context_.valid() )
 		{
 			boost::shared_ptr<T>::reset();
@@ -1982,6 +2072,11 @@ class managed_shared_ptr : protected boost::shared_ptr<T>
 	template <class Archive>
     void serialize( Archive& ar, const unsigned int file_version )
     {
+        if constexpr ( Archive::is_loading::value )
+        {
+            // A loaded object is not the allocation this pointer may have held before.
+            m_context_ = AllocationContext::get_null_context();
+        }
         ar & static_cast<boost::shared_ptr<T>&>( *this );
         if constexpr ( Archive::is_loading::value )
         {
@@ -2049,7 +2144,13 @@ public:
 		}
 
 		T* const stored = boost::shared_ptr<T>::get();
-		assert( !stored || ( m_context_.valid() && !m_context_.expired() ) );
+		// The allocation must still be the one this pointer owns. It cannot change while a share is held; if it did
+		// (a bug elsewhere), stop instead of handing out a destroyed or reused object. Covers get(), -> and * only:
+		// raw pointers kept from get(), operator bool and weak pointers are not checked here.
+		if ( stored && !m_context_.allocator()->is_current( m_context_.m_key_ ) )
+		{
+			pool_core::fail_fast( "managed_shared_ptr: the object was freed while a managed pointer owned it" );
+		}
 		return stored;
 	}
 
@@ -2286,7 +2387,7 @@ template <typename T, typename... Args>
 managed_shared_ptr<T> make_managed_shared( Args&&... arguments )
 {
     static typename managed_shared_ptr<T>::init_tag tag{};
-    return managed_shared_ptr<T>( g_allocator_storage.get_allocator<T>().allocate( std::forward<Args>( arguments )... ), tag );
+    return managed_shared_ptr<T>( managed_pool_access::allocate<T>( std::forward<Args>( arguments )... ), tag );
 }
 
 template <typename T, typename U, typename... Args>

@@ -164,6 +164,30 @@ void pool_core::flip( const AllocationKey& key, const bool allocate )
     }
 }
 
+void pool_core::claim_ownership( const ownership mode )
+{
+    ownership current = m_ownership_.load( std::memory_order_relaxed );
+    if ( current == mode )
+    {
+        return;
+    }
+
+    if ( current == ownership::undecided &&
+         ( m_ownership_.compare_exchange_strong( current, mode ) || current == mode ) )
+    {
+        return;
+    }
+
+    fail_fast( "object pool: a type is allocated both with and without managed pointers" );
+}
+
+void pool_core::fail_fast( const char* reason )
+{
+    OutputDebugStringA( reason );
+    OutputDebugStringA( "\n" );
+    __fastfail( FAST_FAIL_FATAL_APP_EXIT );
+}
+
 AllocationContext pool_core::reserve( const HashType type )
 {
     // The lock is released by the guard if the reservation or a commit throws.
