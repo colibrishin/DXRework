@@ -145,6 +145,12 @@ namespace Engine::Managers
                     light_buffer.emplace_back
                             ( world.Transpose(), locked->GetColor(), locked->GetType(), locked->GetRange() );
                 }
+                else
+                {
+                    // Expired light: keep a black placeholder so light indices stay aligned with shadow VPs
+                    // and PARAM_NUM_LIGHT never exceeds the filled buffer.
+                    light_buffer.emplace_back( Matrix::Identity, Color{ 0.f, 0.f, 0.f, 0.f }, 0, 0.f );
+                }
             }
 
             const auto &context   = gi.GetNewContext( 0, false, L"Light Structured Buffer Update" );
