@@ -1,89 +1,142 @@
 #include "CoreType.h"
 
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+#include <Windows.h>
+#include <new>
+#include <stdexcept>
+#include <string>
+
 PoolAllocatorStorage g_allocator_storage{};
 
 namespace
 {
     constexpr size_t slab_slots = 1 << 8; // slots per mask entry (one __m256i)
 
-    boost::pool<user_allocator>& pool_of( void* pool )
+    char* reserve_range( const size_t bytes )
     {
-        return *static_cast<boost::pool<user_allocator>*>( pool );
+        void* p = VirtualAlloc( nullptr, bytes, MEM_RESERVE, PAGE_NOACCESS );
+        if ( !p )
+        {
+            throw std::bad_alloc();
+        }
+        return static_cast<char*>( p );
     }
+
+    void commit_range( char* begin, const size_t bytes )
+    {
+        // Pages that are already committed (shared with the previous chunk) are left as they are.
+        if ( !VirtualAlloc( begin, bytes, MEM_COMMIT, PAGE_READWRITE ) )
+        {
+            throw std::bad_alloc();
+        }
+    }
+
+    struct spin_guard
+    {
+        std::atomic<bool>& flag;
+        explicit spin_guard( std::atomic<bool>& f ) : flag( f )
+        {
+            while ( flag.exchange( true ) )
+            { }
+        }
+        ~spin_guard() { flag.store( false ); }
+    };
 }
 
-pool_core::pool_core( const size_t element_size )
+pool_core::pool_core( const size_t element_size, const size_t reserve_bytes )
     : m_element_size_( element_size ),
-      // Per-instance pool, not boost::singleton_pool: a singleton is a static in every DLL that instantiates it.
-      m_pool_( new boost::pool<user_allocator>( element_size ) )
+      m_reserve_bytes_( reserve_bytes )
 { }
 
-void pool_core::lock() const
-{
-    while ( m_lock_.exchange( true ) )
-    { }
-}
-
-void pool_core::unlock() const
-{
-    m_lock_.store( false );
-}
-
+// Called under the lock.
 void pool_core::init()
 {
-    if ( !m_initialized_ )
+    if ( m_initialized_ )
     {
-        m_initialized_ = true;
-        reallocate();
+        return;
     }
+
+    const size_t capacity_chunks = ( std::max )( m_reserve_bytes_ / ( m_element_size_ * slab_slots ), size_t( 1 ) );
+    const size_t slots           = capacity_chunks * slab_slots;
+
+    // Reserve all three ranges before keeping any, so a failure does not leak the ranges reserved so far.
+    char* objects     = nullptr;
+    char* mask        = nullptr;
+    char* generations = nullptr;
+    try
+    {
+        objects     = reserve_range( slots * m_element_size_ );
+        mask        = reserve_range( capacity_chunks * sizeof( __m256i ) );
+        generations = reserve_range( slots * sizeof( size_t ) );
+    }
+    catch ( ... )
+    {
+        for ( char* range : { objects, mask, generations } )
+        {
+            if ( range )
+            {
+                VirtualFree( range, 0, MEM_RELEASE );
+            }
+        }
+        throw;
+    }
+
+    m_capacity_chunks_        = capacity_chunks;
+    m_start_ptr_              = objects;
+    m_mask_                   = reinterpret_cast<__m256i*>( mask );
+    m_local_allocation_count_ = reinterpret_cast<size_t*>( generations );
+    m_initialized_            = true;
+    commit_chunk();
 }
 
-void pool_core::reallocate()
+// Called under the lock. Commits the next 256 slots, their mask entry and their generations; committed pages are
+// zero-filled, so the new slots are free with generation 0. Nothing that was handed out moves.
+void pool_core::commit_chunk()
 {
-    auto& pool        = pool_of( m_pool_ );
-    char* reallocated = static_cast<char*>( pool.ordered_malloc( ( m_mask_.size() + 1 ) * slab_slots ) );
-    if ( m_start_ptr_ )
+    const size_t chunk = m_chunks_.load( std::memory_order_relaxed );
+    if ( chunk >= m_capacity_chunks_ )
     {
-        std::memmove( reallocated, m_start_ptr_, m_element_size_ * m_mask_.size() * slab_slots );
-        pool.ordered_free( m_start_ptr_, m_mask_.size() * slab_slots );
+        throw std::length_error( "object pool: reserved address space exhausted (element size " +
+                                 std::to_string( m_element_size_ ) + " bytes, " + std::to_string( m_reserve_bytes_ ) +
+                                 " bytes reserved; specialize pool_reserve_bytes for the type)" );
     }
-    m_mask_.emplace_back( __m256i{} );
-    m_local_allocation_count_.resize( ( m_mask_.size() + 1 ) * slab_slots, 0 );
-    ++m_reallocation_count_;
-    m_start_ptr_ = reallocated;
+
+    commit_range( m_start_ptr_ + chunk * slab_slots * m_element_size_, slab_slots * m_element_size_ );
+    commit_range( reinterpret_cast<char*>( m_mask_ + chunk ), sizeof( __m256i ) );
+    commit_range( reinterpret_cast<char*>( m_local_allocation_count_ + chunk * slab_slots ), slab_slots * sizeof( size_t ) );
+    m_chunks_.store( chunk + 1, std::memory_order_release );
 }
 
 AllocationKey pool_core::get_free_space()
 {
-    auto it = m_mask_.begin();
-    while ( it != m_mask_.end() )
+    const size_t chunks = m_chunks_.load( std::memory_order_relaxed );
+    size_t       chunk  = 0;
+    while ( chunk < chunks && _mm256_test_all_ones( m_mask_[ chunk ] ) )
     {
-        if ( _mm256_test_all_ones( *it ) )
-        {
-            ++it;
-            continue;
-        }
-
-        break;
+        ++chunk;
     }
 
-    const size_t chunk = std::distance( m_mask_.begin(), it );
-
-    if ( it == m_mask_.end() )
+    if ( chunk == chunks )
     {
-        reallocate();
+        commit_chunk();
         return { ( size_t )m_local_allocation_count_[ chunk * slab_slots ], ( size_t )chunk, ( uint8_t )0, ( uint8_t )0 };
     }
 
+    const __m256i& entry = m_mask_[ chunk ];
     for ( uint8_t segment = 0; segment < 8; ++segment )
     {
-        const uint32_t& segment_value = it->m256i_u32[ segment ];
+        const uint32_t& segment_value = entry.m256i_u32[ segment ];
         if ( segment_value == std::numeric_limits<uint32_t>::max() )
         {
             continue;
         }
 
-        const uint8_t offset = ( uint8_t )_tzcnt_u32( ~( ( *it ).m256i_i32[ segment ] ) );
+        const uint8_t offset = ( uint8_t )_tzcnt_u32( ~( entry.m256i_i32[ segment ] ) );
         const size_t  unwrapped_index =
                 ( chunk * slab_slots ) + ( segment * std::numeric_limits<uint32_t>::digits ) + offset;
         return { ( size_t )m_local_allocation_count_[ unwrapped_index ], chunk, segment, offset };
@@ -113,29 +166,26 @@ void pool_core::flip( const AllocationKey& key, const bool allocate )
 
 AllocationContext pool_core::reserve( const HashType type )
 {
+    // The lock is released by the guard if the reservation or a commit throws.
+    spin_guard              guard( m_lock_ );
     init();
-    lock();
     const AllocationKey     key = get_free_space();
     const AllocationContext context( key, this, type );
     flip( key, true );
-    unlock();
     return context;
 }
 
 bool pool_core::alive( const AllocationKey& key ) const
 {
-    lock();
-    const bool result = peak( key );
-    unlock();
-    return result;
+    spin_guard guard( m_lock_ );
+    return peak( key );
 }
 
 void pool_core::release( const AllocationKey& key )
 {
-    lock();
+    spin_guard guard( m_lock_ );
     ++m_local_allocation_count_[ key.to_raw_index() ];
     flip( key, false );
-    unlock();
 }
 
 void* pool_core::slot_ptr( const AllocationKey& key ) const
@@ -155,7 +205,8 @@ AllocationKey pool_core::key_of( const void* ptr ) const
 bool pool_core::is_safe( const void* ptr ) const
 {
     const char* p = static_cast<const char*>( ptr );
-    return m_start_ptr_ <= p && m_start_ptr_ + ( m_mask_.size() * slab_slots * m_element_size_ ) > p;
+    return m_start_ptr_ && m_start_ptr_ <= p &&
+           m_start_ptr_ + ( m_chunks_.load( std::memory_order_acquire ) * slab_slots * m_element_size_ ) > p;
 }
 
 bool pool_core::past( const AllocationContext& context ) const
@@ -190,28 +241,26 @@ void* pool_core::get_ptr( const AllocationContext& context ) const
     return nullptr;
 }
 
+// The storage is kept until the process exits: managed pointers released after cleanup (static destructors,
+// modules unloaded later) still read the slot mask and generations.
 void pool_core::destroy() const
-{
-    pool_of( m_pool_ ).ordered_free( m_start_ptr_, m_mask_.size() * slab_slots );
-}
+{ }
 
 void pool_core::purge() const
-{
-    pool_of( m_pool_ ).release_memory();
-    pool_of( m_pool_ ).purge_memory();
-}
+{ }
 
-pool_core* PoolAllocatorStorage::get_core( const HashType type, const size_t element_size )
+pool_core* PoolAllocatorStorage::get_core( const HashType type, const size_t element_size, const size_t reserve_bytes )
 {
     std::lock_guard<std::mutex> lock( m_allocators_mutex_ );
     auto                        it = m_allocators_.find( type );
     if ( it == m_allocators_.end() )
     {
         // Never deleted: contexts in any module may refer to it until the process exits.
-        it = m_allocators_.emplace( type, new pool_core( element_size ) ).first;
+        it = m_allocators_.emplace( type, new pool_core( element_size, reserve_bytes ) ).first;
     }
 
     assert( it->second->element_size() == element_size );
+    assert( it->second->reserve_bytes() == reserve_bytes && "pool_reserve_bytes<T> differs between modules" );
     return it->second;
 }
 
@@ -241,9 +290,9 @@ void PoolAllocatorStorage::report_leakage()
 #include <stdlib.h>
     _CrtSetDbgFlag( _CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF );
 #if !defined( ENGINE_SUPPRESS_POOL_LEAK_REPORT )
-    // Boost pool allocators use static/singleton storage; blocks still reachable at exit
-    // are reported as leaks but are intentional. Define ENGINE_SUPPRESS_POOL_LEAK_REPORT
-    // to skip the dump when you only expect pool-related "leaks".
+    // Object pools reserve their storage with VirtualAlloc and are not part of this report. Container pools (boost)
+    // still keep blocks until exit, which are reported as leaks but are intentional. Define
+    // ENGINE_SUPPRESS_POOL_LEAK_REPORT to skip the dump when you only expect pool-related "leaks".
     _CrtDumpMemoryLeaks();
 #endif
 #endif

@@ -1469,14 +1469,21 @@ struct ENGINE_MEMORY_API null_deleter : deleter_base
 // functions are compiled into Memory.dll: an AllocationContext held by any module stays usable after the module
 // that first used the type is unloaded. Only construction and destruction of T live in the typed
 // object_pool_allocator<T>.
+//
+// Storage never moves: the objects, the slot mask and the generations each live in an address range reserved up
+// front and committed 256 slots at a time as the pool grows (reserve_bytes is the object range; the generations
+// take another 8 bytes per slot and the mask 32 bytes per 256 slots). Addresses of objects and of the bookkeeping
+// stay valid until the process exits, so readers that skip the lock never touch freed memory (the values they read
+// can still race with a writer holding the lock).
 class ENGINE_MEMORY_API pool_core
 {
 public:
-    explicit pool_core( size_t element_size );
+    pool_core( size_t element_size, size_t reserve_bytes );
     pool_core( const pool_core& )            = delete;
     pool_core& operator=( const pool_core& ) = delete;
 
     size_t element_size() const { return m_element_size_; }
+    size_t reserve_bytes() const { return m_reserve_bytes_; }
     size_t allocation_count() const { return m_reallocation_count_; }
 
     // Takes a free slot under the lock (growing the storage if needed) and returns its context, also built under
@@ -1499,23 +1506,21 @@ public:
 
 private:
     void          init();
-    void          reallocate();
+    void          commit_chunk();
     AllocationKey get_free_space();
     bool          peak( const AllocationKey& key ) const;
     void          flip( const AllocationKey& key, bool allocate );
-    void          lock() const;
-    void          unlock() const;
 
-    // Scalars first: inline accessors are compiled into every module, and the layout of std::vector can differ
-    // between modules built with different iterator-debug settings.
     size_t                    m_element_size_;
-    size_t                    m_reallocation_count_ = 0;
-    void*                     m_pool_               = nullptr; // boost::pool<user_allocator>, defined in CoreType.cpp
-    char*                     m_start_ptr_          = nullptr;
+    size_t                    m_reserve_bytes_;
+    size_t                    m_capacity_chunks_    = 0;       // 256-slot chunks that fit in the reservation
+    size_t                    m_reallocation_count_ = 0;       // storage never moves; kept for the context check
+    char*                     m_start_ptr_          = nullptr; // reserved object range
+    __m256i*                  m_mask_               = nullptr; // reserved, one entry per chunk
+    size_t*                   m_local_allocation_count_ = nullptr; // reserved, one generation per slot
+    std::atomic<size_t>       m_chunks_             = 0;       // committed chunks
     mutable std::atomic<bool> m_lock_               = false;
     bool                      m_initialized_        = false;
-    std::vector<__m256i>      m_mask_{};
-    std::vector<size_t>       m_local_allocation_count_{};
 };
 
 struct ENGINE_MEMORY_API AllocationContext
@@ -1691,6 +1696,12 @@ public:
 template <typename T>
 class object_pool_allocator;
 
+// Address space reserved for the objects of a type's pool (not memory: pages are committed as the pool grows).
+// Specialize for a type that needs more; the specialization must be visible wherever the type's pool is first used
+// (the first module to use the type decides, and other modules must agree).
+template <typename T>
+inline constexpr size_t pool_reserve_bytes = size_t( 1 ) << 30;
+
 class ENGINE_MEMORY_API PoolAllocatorStorage
 {
 private:
@@ -1703,13 +1714,13 @@ private:
 
 public:
     // The pool core of a type, created on first use. Same instance for every DLL (keyed by type value).
-    pool_core* get_core( HashType type, size_t element_size );
+    pool_core* get_core( HashType type, size_t element_size, size_t reserve_bytes );
 
     // The typed front of a type's pool. A per-DLL object that only refers to the shared pool_core.
     template <typename T>
     object_pool_allocator<T>& get_allocator()
     {
-        static object_pool_allocator<T> allocator( get_core( &type_hash<T>::value, sizeof( T ) ) );
+        static object_pool_allocator<T> allocator( get_core( &type_hash<T>::value, sizeof( T ), pool_reserve_bytes<T> ) );
         return allocator;
     }
 
@@ -1783,6 +1794,12 @@ public:
 
     void deallocate( T* ptr )
     {
+        // After cleanup the pool no longer frees objects (as the managed pointers' deleter).
+        if ( !g_allocator_storage.is_allocator_live( &type_hash<T>::value ) )
+        {
+            return;
+        }
+
         assert( m_core_->is_safe( ptr ) );
         deallocate( get_context( ptr ) );
     }
@@ -1810,8 +1827,14 @@ public:
         const_cast<pool_core*>( core )->release( context.m_key_ );
     }
 
+    // Null context for an object that is not in this pool (e.g. created on the heap by deserialization).
     AllocationContext get_context( const T* ptr ) const
     {
+        if ( !m_core_->is_safe( ptr ) )
+        {
+            return AllocationContext::get_null_context();
+        }
+
         return AllocationContext( m_core_->key_of( ptr ), m_core_, &type_hash<T>::value );
     }
 
@@ -1825,7 +1848,7 @@ private:
 };
 
 // Deleter of the one boost control block that owns a pooled object. It finds the object by allocation slot and
-// generation instead of the raw pointer, so it stays correct after the pool moved the object (reallocate()).
+// generation instead of the raw pointer.
 // T is the allocated (most derived) type: the destructor is called from the module that created the control block,
 // the same module whose code the control block's vtable already belongs to.
 template <typename T>
@@ -1852,8 +1875,8 @@ template <typename T>
 class managed_shared_ptr : protected boost::shared_ptr<T>
 {
     mutable AllocationContext m_context_;
-    // Pool address of the allocation that the stored boost pointer was derived from. When the pool moves the object
-    // (reallocate()), the stored pointer is shifted by the same distance, keeping its base-subobject offset.
+    // Pool address of the allocation that the stored boost pointer was derived from. Pools no longer move objects,
+    // so this never differs from the current address; the rebase below is removed separately.
     mutable const void* m_resolved_raw_ = nullptr;
 
 	template <typename U> 
@@ -2043,7 +2066,7 @@ public:
 		const void* current = m_context_.ptr();
 		if ( current != m_resolved_raw_ )
 		{
-			// Keep the one control block, refresh only the address (the pool moved the object).
+			// Keep the one control block, refresh only the address (unreachable since pools stopped moving objects).
 			T* moved = self.get() && m_resolved_raw_
 				? reinterpret_cast<T*>( reinterpret_cast<char*>( self.get() ) +
 				                        ( static_cast<const char*>( current ) - static_cast<const char*>( m_resolved_raw_ ) ) )
@@ -2060,8 +2083,8 @@ public:
         return boost::shared_ptr<T>::use_count();
 	}
 
-	// Reallocation count of this object's pool. A raw pointer from get() stays valid while this does not change
-	// (a pool grow moves its objects).
+	// Reallocation count of this object's pool. Pools no longer move their objects, so it does not change and a raw
+	// pointer from get() stays valid while the object is alive.
 	[[nodiscard]] size_t pool_reallocation_count() const
 	{
         const pool_core* alloc = m_context_.allocator();
@@ -2307,8 +2330,7 @@ managed_shared_ptr<U> make_managed_shared( Args&&... arguments )
     return managed_shared_ptr<U>( make_managed_shared<T>( std::forward<Args>( arguments )... ) );
 }
 
-// `self` is the object's current address. The weak pointer (e.g. weak_from_this()) still holds the address the object
-// had when its control block was created; the pool may have moved it since, so only its control block is used.
+// `self` is the object's address. Only the weak pointer's control block is used (weak_from_this()).
 template <typename T>
 managed_shared_ptr<T> from_native( const boost::weak_ptr<T>& native, T* self )
 {
