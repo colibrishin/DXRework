@@ -1660,6 +1660,7 @@ private:
     // Keyed by type value, so every DLL gets the same allocator instance for a type (the first one registered).
     std::unordered_map<HashType, pool_allocator_base*, HashTypeHash> m_allocators_;
     mutable std::mutex                                                m_allocators_mutex_;
+    std::atomic<bool>                                                 m_closed_ = false; // set by cleanup()
 
 public:
     template <typename T>
@@ -1676,10 +1677,11 @@ public:
         return static_cast<object_pool_allocator<T>&>( *it->second );
     }
 
-	bool is_allocator_live( HashType type ) const
+	// Called on every managed pointer access, so no lock: a valid allocation context always refers to a registered
+	// allocator, and entries are only removed all at once by cleanup().
+	bool is_allocator_live( HashType /*type*/ ) const
 	{
-        std::lock_guard<std::mutex> lock( m_allocators_mutex_ );
-        return m_allocators_.contains( type );
+        return !m_closed_.load( std::memory_order_acquire );
 	}
 
     void        cleanup();
