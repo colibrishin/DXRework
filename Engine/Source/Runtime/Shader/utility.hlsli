@@ -10,12 +10,8 @@ float4 GetTranslation(in matrix mat)
 
 float3 GetScale(in matrix mat)
 {
-	return float3
-			(
-			 length(float3(mat[0][0], mat[1][0], mat[2][0])),
-			 length(float3(mat[0][1], mat[1][1], mat[2][1])),
-			 length(float3(mat[0][2], mat[1][2], mat[2][2]))
-			);
+	// Row-vector matrices (translation in _41.._43): each basis axis, scaled, is a row.
+	return float3(length(mat[0].xyz), length(mat[1].xyz), length(mat[2].xyz));
 }
 
 quaternion MatToQuaternion(in matrix world)

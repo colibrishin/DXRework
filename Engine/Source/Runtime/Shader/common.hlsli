@@ -72,10 +72,7 @@ float4 SampleGrad(in SamplerState inSampler, in float2 uv, in float2 ddx, in flo
 {
     float4 outValue = float4(0.f, 0.f, 0.f, 0.f);
 
-    if (slot >= MAX_TEX_PER_MAT)
-    {
-        return outValue;
-    }
+    // slot is a bind slot (tex[0..15]), not a per-material index; out-of-range slots fall to default.
 
 #define SWITCH_OFFSET(NUM) case NUM: \
     outValue = tex[NUM].SampleGrad(inSampler, uv, ddx, ddy); \
@@ -111,10 +108,7 @@ float4 Sample(in SamplerState inSampler, in float2 uv, in uint slot)
 {
     float4 outValue = float4(0.f, 0.f, 0.f, 0.f);
 
-	if (slot >= MAX_TEX_PER_MAT)
-	{
-		return outValue;
-	}
+    // slot is a bind slot (tex[0..15]), not a per-material index; out-of-range slots fall to default.
 
 #define SWITCH_OFFSET(NUM) case NUM: \
     outValue = tex[NUM].Sample(inSampler, uv); \

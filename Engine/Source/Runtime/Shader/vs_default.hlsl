@@ -72,7 +72,7 @@ PixelInputType vs_main(VertexInputType input, uint instanceId : SV_InstanceID)
 		output.lightDelta[i]        = output.lightDelta[i];
 	}
 
-	const float3 cam_position = GetTranslation(g_camWorld);
+	const float3 cam_position = GetTranslation(g_camWorld).xyz;
 
 	output.viewDirection = cam_position.xyz - output.worldPosition.xyz;
 	output.viewDirection = normalize(output.viewDirection);
