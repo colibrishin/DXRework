@@ -17,6 +17,11 @@ void Engine::Graphics::D3D12StructuredBufferTypeless::Clear()
 
 void Engine::Graphics::D3D12StructuredBufferTypeless::TransitionToSRV(const IGraphicContext* context)
 {
+	if (m_current_state_ == D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE)
+	{
+		return; // identical before/after barriers invalidate the command list
+	}
+
 	auto* cmd = static_cast<CommandPair*>(context->commandList);
 
 	const auto& srv_transition = CD3DX12_RESOURCE_BARRIER::Transition
@@ -32,6 +37,11 @@ void Engine::Graphics::D3D12StructuredBufferTypeless::TransitionToSRV(const IGra
 
 void Engine::Graphics::D3D12StructuredBufferTypeless::TransitionToUAV(const IGraphicContext* context)
 {
+	if (m_current_state_ == D3D12_RESOURCE_STATE_UNORDERED_ACCESS)
+	{
+		return; // identical before/after barriers invalidate the command list
+	}
+
 	auto* cmd = static_cast<CommandPair*>(context->commandList);
 
 	const auto& uav_transition = CD3DX12_RESOURCE_BARRIER::Transition
@@ -47,6 +57,11 @@ void Engine::Graphics::D3D12StructuredBufferTypeless::TransitionToUAV(const IGra
 
 void Engine::Graphics::D3D12StructuredBufferTypeless::TransitionCommon(const IGraphicContext* context)
 {
+	if (m_current_state_ == D3D12_RESOURCE_STATE_COMMON)
+	{
+		return; // identical before/after barriers invalidate the command list
+	}
+
 	auto* cmd = static_cast<CommandPair*>(context->commandList);
 
 	const auto& common_transition = CD3DX12_RESOURCE_BARRIER::Transition
@@ -139,6 +154,7 @@ void Engine::Graphics::D3D12StructuredBufferTypeless::SetData(const IGraphicCont
 	);
 
 	cmd->GetList4()->ResourceBarrier(1, &common_transition);
+	m_current_state_ = D3D12_RESOURCE_STATE_COMMON;
 }
 
 void Engine::Graphics::D3D12StructuredBufferTypeless::SetDataContainer(const IGraphicContext* context, UINT size, const void* const* src_ptr, const size_t stride)
@@ -176,6 +192,7 @@ void Engine::Graphics::D3D12StructuredBufferTypeless::SetDataContainer(const IGr
 	);
 
 	cmd->GetList4()->ResourceBarrier(1, &common_transition);
+	m_current_state_ = D3D12_RESOURCE_STATE_COMMON;
 }
 
 void Engine::Graphics::D3D12StructuredBufferTypeless::SetDataPointerContainer(
@@ -215,6 +232,7 @@ void Engine::Graphics::D3D12StructuredBufferTypeless::SetDataPointerContainer(
 	);
 
 	cmd->GetList4()->ResourceBarrier(1, &common_transition);
+	m_current_state_ = D3D12_RESOURCE_STATE_COMMON;
 }
 
 void Engine::Graphics::D3D12StructuredBufferTypeless::GetData(const IGraphicContext* context, UINT size, void* dst_ptr, const size_t stride)

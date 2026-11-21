@@ -34,7 +34,7 @@ namespace Engine::Managers
 
 		m_shadow_sampler_ = Unique<decltype( m_shadow_sampler_ )::element_type>( gi.GetNewPrimitiveSampler() );
         m_shadow_sampler_->Generate(
-                SHADER_SAMPLER_WRAP, 
+                SHADER_SAMPLER_CLAMP, 
 				SHADER_SAMPLER_LESS_EQUAL, 
 				SAMPLER_FILTER_COMPARISON_MIN_MAG_LINEAR_MIP_POINT );
 

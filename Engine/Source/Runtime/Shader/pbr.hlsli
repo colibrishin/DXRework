@@ -218,6 +218,8 @@ float3 PBRLight(
     acc_color += c_spec * specular_env;
     */
 
+    acc_color += c_diff * g_ambientColor.rgb; // no IBL: keep surfaces facing away from lights visible
+
     return acc_color;
 }
 #endif

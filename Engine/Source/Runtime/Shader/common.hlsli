@@ -177,9 +177,9 @@ float GetShadowFactorImpl(
     projCoords.x = projCoords.x * 0.5 + 0.5f;
     projCoords.y = -projCoords.y * 0.5 + 0.5f;
 
-    if (projCoords.z > 1.0)
+    if (projCoords.z > 1.0 || any(projCoords.xy < 0.f) || any(projCoords.xy > 1.f))
     {
-        return 0.f;
+        return 1.f; // outside this cascade: not shadowed
     }
 
     float currentDepth = projCoords.z;

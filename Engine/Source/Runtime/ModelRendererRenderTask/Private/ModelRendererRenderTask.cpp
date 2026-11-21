@@ -189,7 +189,14 @@ namespace Engine
 
         if ( m_allocation_count_ > m_used_count_ )
         {
-            return m_instance_generated_[ m_used_count_++ ];
+            // Reused across frames and handed to a different object each frame (parallel order): reset it so
+            // texture-slot enables, bone flags, etc. from the previous owner do not leak (flicker).
+            Graphics::SBs::InstanceSB* reused = m_instance_generated_[ m_used_count_++ ];
+            auto& alloc = get_instance_sb_pool_allocator();
+            alloc.destroy( reused );
+            std::memset( reused, 0, sizeof( decltype( *reused ) ) );
+            alloc.construct( reused );
+            return reused;
         }
 
         auto& alloc = get_instance_sb_pool_allocator();

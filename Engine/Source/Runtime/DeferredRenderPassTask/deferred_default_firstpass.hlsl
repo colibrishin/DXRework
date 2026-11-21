@@ -12,7 +12,8 @@ struct DeferredOutput
 DeferredOutput ps_main(PixelInputType input)
 {
     DeferredOutput output;
-    float4 worldNormal = float4(input.normal, 1.f);
+    const float3 N = normalize(input.normal);
+    float4 worldNormal = float4(N, 1.f);
     float4 baseColor = input.color;
     float specular = INST_SPECULAR(bufInstance, input.instanceId);
     float metallic = 0.f;
@@ -29,7 +30,7 @@ DeferredOutput ps_main(PixelInputType input)
     if (INST_TEX_SLOT0_ENABLE(bufInstance, input.instanceId) == true)
     {
         const float3 localNormal = BiasX2(Sample(PSSampler, input.tex, INST_TEX_SLOT0(bufInstance, input.instanceId)).rgb);
-        worldNormal = float4(PeturbNormal(localNormal, input.worldPosition.xyz, input.normal, input.tex), 1.f);
+        worldNormal = float4(PeturbNormal(localNormal, input.worldPosition.xyz, N, input.tex), 1.f);
     }
     
     if (INST_TEX_SLOT1_ENABLE(bufInstance, input.instanceId) == true)
@@ -44,7 +45,7 @@ DeferredOutput ps_main(PixelInputType input)
         ao = mra.b;
     }
 
-    output.A = worldNormal;
+    output.A = float4(normalize(worldNormal.xyz), 1.f);
     output.B = baseColor;
     output.C = float4(metallic, roughness, ao, specular);
     output.D = input.worldPosition;

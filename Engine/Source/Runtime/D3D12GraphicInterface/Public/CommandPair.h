@@ -46,6 +46,7 @@ namespace Engine
 		// thread-safety of post_execution inside values should be guaranteed by the caller.
 		void               FlagReady(const std::function<void()>& post_execution = {}) override;
 		void               Execute() override;
+		void               DeferRelease(std::function<void()>&& holder) override;
 		[[nodiscard]] bool IsReady();
 		[[nodiscard]] bool IsExecuted();
 		[[nodiscard]] bool IsDisposed();
@@ -76,6 +77,8 @@ namespace Engine
 
 		std::atomic<uint64_t>   m_latest_fence_value_;
 		std::function<void()> m_post_execute_function_;
+		std::vector<std::function<void()>> m_deferred_release_;
+		std::mutex                         m_deferred_mutex_; // separate: m_critical_mutex_ is held while waiting for execution
 
 		std::atomic<bool>       m_b_executed_{};
 		std::atomic<bool>       m_b_ready_{};

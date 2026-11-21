@@ -63,17 +63,17 @@ namespace Engine
                           &shader_bypass,
                           &dt,
                           &intermediate_shader_map ](
-                                const std::pair<Strong<Resources::Mesh>, aligned_vector<InstancePair>> &pair )
+                                const MeshMap::value_type &pair )
                         {
                             if ( const Strong<Resources::Shader> &locked = Cast<Resources::Shader>( shader ) )
                             {
                                 if ( decltype( intermediate_shader_map )::const_accessor acc;
-                                     intermediate_shader_map.find( acc, static_cast<Resources::ShaderBase*>( shader.get() ) ) )
+                                     intermediate_shader_map.find( acc, &pair.second ) )
                                 {
                                     StartPhase_MultiThread( dt,
                                                             shader_bypass,
                                                             locked.get(),
-                                                            pair.first.get(),
+                                                            static_cast<const Resources::Mesh*>( pair.first.get() ),
                                                             additional_sbs,
                                                             local_param,
                                                             prerender_predicate,
@@ -127,7 +127,7 @@ namespace Engine
 		{
 			tbb::parallel_for_each
 			(
-				shaders.begin(), shaders.end(), [&](const std::pair<Strong<Resources::ShaderBase>, MeshMap>& shader_pair)
+				shaders.begin(), shaders.end(), [&](const ShaderMap::value_type& shader_pair)
 				{
                     for ( const aligned_vector<InstancePair> &instances : shader_pair.second | std::views::values )
 					{
@@ -139,13 +139,13 @@ namespace Engine
 							}
 
 							std::remove_reference_t<decltype(out_map)>::accessor acc;
-                            if ( !out_map.find( acc, shader_pair.first.get() ) )
+                            if ( !out_map.find( acc, &instances ) )
 							{
-                                out_map.insert( acc, shader_pair.first.get() );
+                                out_map.insert( acc, &instances );
 							}
 
 							acc->second.push_back(instance_pair);
-							++instance_count;
+							std::atomic_ref( instance_count ).fetch_add( 1 );
 						}
 					}
 				}
@@ -349,7 +349,7 @@ namespace Engine
 				{
 					size_t msb = count - 1;
 					size_t lsb = max_tex_binds - count;
-					for (size_t i = 0; i < pair.GetTextureCount(); ++i)
+					for (size_t i = 0; i < pair.textures->size(); ++i) // material slots may be sparse
 					{
 						if (pair.textures->at(i))
 						{
