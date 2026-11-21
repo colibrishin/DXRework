@@ -399,6 +399,12 @@ namespace Engine
 			{
 				std::lock_guard lock(m_critical_mutex_);
 
+				// StopTask() clears m_running_ under this lock; once it is cleared the queue belongs to Cleanup().
+				if (!m_running_)
+				{
+					break;
+				}
+
 				if (m_command_pairs_.empty())
 				{
 					__debugbreak();
@@ -427,8 +433,6 @@ namespace Engine
 				m_command_pair_count_.wait(count);
 			}
 		}
-
-		Cleanup();
 	}
 
 	void CommandPairTask::SwapBuffer(const uint32_t next_buffer)
@@ -445,20 +449,30 @@ namespace Engine
 
 	void CommandPairTask::Cleanup()
 	{
-		WaitForCommandsCompletion();
-
-		while (!m_command_pairs_.empty())
+		// Called after StopTask(): the task thread no longer takes pairs from the queue, and every list it submitted
+		// was already waited on in ExecuteImpl. Pairs still queued were never flagged ready (e.g. a frame aborted by
+		// an exception) and never will be, so they are discarded here instead of waited for; waiting for the count
+		// to reach zero never returned in that case. A discarded list may still be recording, so it is not reset
+		// (resetting the allocator of an open list fails); its D3D objects are released and m_pool_.Cleanup()
+		// below drops the pair. (Close() followed by Deallocate() dereferenced the released allocator.)
 		{
-			const auto& pair = m_command_pairs_.front();
-			m_command_pairs_.pop();
+			std::lock_guard l(m_critical_mutex_);
 
-			if (const Strong<CommandPair> locked = pair.lock())
+			while (!m_command_pairs_.empty())
 			{
-				locked->HardReset();
-                locked->Close();
-				m_pool_.Deallocate(locked);
+				const Weak<CommandPair> pair = m_command_pairs_.front();
+				m_command_pairs_.pop();
+
+				if (const Strong<CommandPair> locked = pair.lock())
+				{
+					locked->Close();
+				}
 			}
+
+			m_command_pair_count_.store(0);
 		}
+
+		m_command_pair_count_.notify_all();
 
 		for ( ComPtr<ID3D12CommandQueue>& queue : m_queue_ )
 		{
