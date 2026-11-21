@@ -1464,18 +1464,58 @@ struct ENGINE_MEMORY_API null_deleter : deleter_base
     { }
 };
 
-class ENGINE_MEMORY_API pool_allocator_base
+// Type-independent slot bookkeeping of one object pool (slot mask, per-slot generation, storage, address
+// arithmetic). Created and owned by PoolAllocatorStorage in Memory.dll and never destroyed, and its member
+// functions are compiled into Memory.dll: an AllocationContext held by any module stays usable after the module
+// that first used the type is unloaded. Only construction and destruction of T live in the typed
+// object_pool_allocator<T>.
+class ENGINE_MEMORY_API pool_core
 {
 public:
-    virtual ~pool_allocator_base()                                                        = default;
-    virtual void                                destroy() const                           = 0;
-    virtual void                                purge() const                             = 0;
-    virtual bool                                past( const AllocationContext& ) const    = 0;
-    virtual bool                                expired( const AllocationContext& ) const = 0;
-    virtual void*                               get_ptr( const AllocationContext& ) const = 0;
-    virtual size_t                              allocation_count() const                  = 0;
-    virtual void                                deallocate( const AllocationContext& )    = 0;
-    virtual void                                flag_dirty( const AllocationContext& )    = 0;
+    explicit pool_core( size_t element_size );
+    pool_core( const pool_core& )            = delete;
+    pool_core& operator=( const pool_core& ) = delete;
+
+    size_t element_size() const { return m_element_size_; }
+    size_t allocation_count() const { return m_reallocation_count_; }
+
+    // Takes a free slot under the lock (growing the storage if needed) and returns its context, also built under
+    // the lock. The object is constructed by the caller.
+    AllocationContext reserve( HashType type );
+    // True if the slot still holds the allocation of this key (checked under the lock).
+    bool          alive( const AllocationKey& key ) const;
+    // Bumps the slot's generation and marks it free; called after the object was destroyed.
+    void          release( const AllocationKey& key );
+    void*         slot_ptr( const AllocationKey& key ) const;
+    AllocationKey key_of( const void* ptr ) const;
+    bool          is_safe( const void* ptr ) const;
+
+    bool  past( const AllocationContext& context ) const;
+    bool  expired( const AllocationContext& context ) const;
+    void* get_ptr( const AllocationContext& context ) const;
+
+    void destroy() const;
+    void purge() const;
+
+private:
+    void          init();
+    void          reallocate();
+    AllocationKey get_free_space();
+    bool          peak( const AllocationKey& key ) const;
+    void          flip( const AllocationKey& key, bool allocate );
+    void          lock() const;
+    void          unlock() const;
+
+    // Scalars first: inline accessors are compiled into every module, and the layout of std::vector can differ
+    // between modules built with different iterator-debug settings.
+    size_t                    m_element_size_;
+    size_t                    m_reallocation_count_ = 0;
+    void*                     m_pool_               = nullptr; // boost::pool<user_allocator>, defined in CoreType.cpp
+    char*                     m_start_ptr_          = nullptr;
+    mutable std::atomic<bool> m_lock_               = false;
+    bool                      m_initialized_        = false;
+    std::vector<__m256i>      m_mask_{};
+    std::vector<size_t>       m_local_allocation_count_{};
 };
 
 struct ENGINE_MEMORY_API AllocationContext
@@ -1483,12 +1523,14 @@ struct ENGINE_MEMORY_API AllocationContext
 private:
     AllocationKey              m_key_                     = null_pair;
     mutable size_t             m_type_reallocation_count_ = -1;
-    const pool_allocator_base* m_allocator_               = nullptr;
+    const pool_core*           m_allocator_               = nullptr;
     HashType                   m_allocator_type_          = nullptr;
     mutable void*              m_ptr_				      = nullptr;
 
 	template <typename T>
     friend class object_pool_allocator;
+
+    friend class pool_core;
 
     template <typename T>
     friend class managed_shared_ptr;
@@ -1578,15 +1620,14 @@ public:
 		return m_ptr_;
 	}
 
-	template <typename T>
-	AllocationContext( const AllocationKey& key, const object_pool_allocator<T>* alloc )
+	AllocationContext( const AllocationKey& key, const pool_core* alloc, const HashType type )
 	{
         assert( key != null_pair && alloc );
         m_key_                     = key;
         m_allocator_               = alloc;
-	m_allocator_type_          = &type_hash<T>::value;
+        m_allocator_type_          = type;
 		m_type_reallocation_count_ = m_allocator_->allocation_count();
-        m_ptr_                     = m_allocator_->get_ptr( *this );   
+        m_ptr_                     = m_allocator_->get_ptr( *this );
 	}
 
 	size_t type_allocation_count() const
@@ -1604,7 +1645,7 @@ public:
         return m_key_.to_raw_index();
 	}
 
-	const pool_allocator_base* allocator() const
+	const pool_core* allocator() const
 	{
         return m_allocator_;
 	}
@@ -1648,33 +1689,28 @@ public:
 };
 
 template <typename T>
-object_pool_allocator<T>& get_instanced_pool_allocator()
-{
-    static object_pool_allocator<T> instanced;
-    return instanced;
-}
+class object_pool_allocator;
 
 class ENGINE_MEMORY_API PoolAllocatorStorage
 {
 private:
-    // Keyed by type value, so every DLL gets the same allocator instance for a type (the first one registered).
-    std::unordered_map<HashType, pool_allocator_base*, HashTypeHash> m_allocators_;
+    // Keyed by type value, so every DLL gets the same pool_core for a type. The key points at the type_hash value of
+    // the module that registered the type first.
+    // Pool cores are created here (Memory.dll) and never destroyed, see pool_core.
+    std::unordered_map<HashType, pool_core*, HashTypeHash> m_allocators_;
     mutable std::mutex                                                m_allocators_mutex_;
     std::atomic<bool>                                                 m_closed_ = false; // set by cleanup()
 
 public:
+    // The pool core of a type, created on first use. Same instance for every DLL (keyed by type value).
+    pool_core* get_core( HashType type, size_t element_size );
+
+    // The typed front of a type's pool. A per-DLL object that only refers to the shared pool_core.
     template <typename T>
     object_pool_allocator<T>& get_allocator()
     {
-        const HashType              key = &type_hash<T>::value;
-        std::lock_guard<std::mutex> lock( m_allocators_mutex_ );
-        auto                        it = m_allocators_.find( key );
-        if ( it == m_allocators_.end() )
-        {
-            it = m_allocators_.emplace( key, &get_instanced_pool_allocator<T>() ).first;
-        }
-
-        return static_cast<object_pool_allocator<T>&>( *it->second );
+        static object_pool_allocator<T> allocator( get_core( &type_hash<T>::value, sizeof( T ) ) );
+        return allocator;
     }
 
 	// Called on every managed pointer access, so no lock: a valid allocation context always refers to a registered
@@ -1725,173 +1761,21 @@ using user_allocator = debug_new_delete;
 using user_allocator = boost::default_user_allocator_new_delete;
 #endif
 
+// Typed front of a pool: constructs and destroys T in slots of the shared pool_core. Instances are per-DLL and
+// hold no state of their own, so allocation contexts refer to the pool_core, not to this object.
 template <typename T>
-class object_pool_allocator : public pool_allocator_base
+class object_pool_allocator
 {
-private:
-    struct object_tag
-    { };
-
-    // Per-instance pool, not boost::singleton_pool: a singleton is a static in every DLL that instantiates this
-    // template, while the allocator instance is shared through g_allocator_storage. Memory obtained in one DLL
-    // would otherwise be returned to another DLL's pool.
-    mutable boost::pool<user_allocator> m_pool_{ sizeof( T ) };
-
-    T*                   m_start_ptr_ = nullptr;
-    std::vector<__m256i> m_mask_{};
-    std::vector<size_t>  m_local_allocation_count_{};
-    size_t               m_reallocation_count_ = 0;
-
-    std::atomic<bool> m_lock_        = false;
-    bool              m_initialized_ = false;
-
-	friend class PoolAllocatorStorage;
-
-    void init()
-    {
-        if ( !m_initialized_ )
-        {
-            m_initialized_ = true;
-            reallocate();
-        }
-    }
-
-    void reallocate()
-    {
-        T* reallocated = static_cast<T*>( m_pool_.ordered_malloc( (m_mask_.size() + 1) * ( 1 << 8 ) ) );
-        if ( m_start_ptr_ )
-        {
-            std::memmove( reallocated, m_start_ptr_, sizeof( T ) * m_mask_.size() * ( 1 << 8 ) );
-            m_pool_.ordered_free( m_start_ptr_, m_mask_.size() * ( 1 << 8 ) );
-        }
-        m_mask_.emplace_back( __m256i{} );
-        m_local_allocation_count_.resize( ( m_mask_.size() + 1 ) * ( 1 << 8 ), 0 );
-        ++m_reallocation_count_;
-        m_start_ptr_ = reallocated;
-    }
-
-    AllocationKey get_free_space()
-    {
-        auto it = m_mask_.begin();
-        while ( it != m_mask_.end() )
-        {
-            if ( _mm256_test_all_ones( *it ) )
-            {
-                ++it;
-                continue;
-            }
-
-            break;
-        }
-
-        const size_t chunk = std::distance( m_mask_.begin(), it );
-
-        if ( it == m_mask_.end() )
-        {
-            reallocate();
-            return { ( size_t )m_local_allocation_count_[ chunk * (1 << 8) ], ( size_t )chunk, ( uint8_t )0, ( uint8_t )0 };
-        }
-		
-        for ( uint8_t segment = 0; segment < 8; ++segment )
-        {
-            const uint32_t& segment_value = it->m256i_u32[ segment ];
-            if ( segment_value == std::numeric_limits<uint32_t>::max() )
-            {
-                continue;
-            }
-
-			uint32_t bitmask = segment_value; 
-			do
-			{
-                if ( !( bitmask & ( 1 << 31 ) ) )
-                {
-                    break;
-                }
-			}
-            while ( bitmask <<= 1 );
-			
-			const uint8_t offset = ( uint8_t )_tzcnt_u32( ~( ( *it ).m256i_i32[ segment ] ) );
-            const size_t  unwrapped_index =
-                    ( chunk * ( 1 << 8 ) ) + ( segment * std::numeric_limits<uint32_t>::digits ) + offset;
-            return { ( size_t )m_local_allocation_count_[ unwrapped_index ], chunk, segment, offset };
-        }
-
-        return { ( size_t )-1, ( size_t )-1, ( uint8_t )-1, ( uint8_t )-1 };
-    }
-#define UNWRAP( Pointer )                                                                                              \
-    const size_t dist    = ptr - m_start_ptr_;                                                                         \
-    const size_t chunk   = dist / ( 1 << 8 );                                                                          \
-    const size_t segment = ( dist - ( ( 1 << 8 ) * chunk ) ) / std::numeric_limits<uint32_t>::digits;                  \
-    const size_t offset  = ( dist - ( ( 1 << 8 ) * chunk ) ) - ( segment * std::numeric_limits<uint32_t>::digits );
-
-    template <bool Allocate>
-    void flip( T* ptr )
-    {
-        UNWRAP( ptr )
-
-        if constexpr ( !Allocate )
-        {
-            m_mask_[ chunk ].m256i_i32[ segment ] &= ~( 1 << offset );
-        }
-        else
-        {
-            m_mask_[ chunk ].m256i_i32[ segment ] |= 1 << offset;
-        }
-    }
-
-	void flag_dirty( T* ptr )
-	{
-        const size_t dist    = ptr - m_start_ptr_;
-        ++m_local_allocation_count_[ dist ];
-	}
-
-    template <bool Allocate>
-    void flip( const AllocationKey& pair )
-    {
-        if constexpr ( !Allocate )
-        {
-            m_mask_[ pair.chunk ].m256i_i32[ pair.segment ] &= ~( 1 << pair.offset );
-        }
-        else
-        {
-            m_mask_[ pair.chunk ].m256i_i32[ pair.segment ] |= 1 << pair.offset;
-        }
-    }
-
-	bool peak(const AllocationKey& pair) const
-	{
-        const uint32_t shift = m_mask_[ pair.chunk ].m256i_i32[ pair.segment ] >> pair.offset;
-        const size_t allocation_count = m_local_allocation_count_[ pair.to_raw_index() ];
-        return (bool)( shift & 1 ) && pair.allocation_count == allocation_count;
-	}
-	
-	void* start_ptr() const
-    {
-        return m_start_ptr_;
-    }
-
-	bool is_safe( T* ptr ) const
-	{
-        return m_start_ptr_ <= ptr && m_start_ptr_ + ( m_mask_.size() * ( 1 << 8 ) ) > ptr;
-	}
-
 public:
-    size_t allocation_count() const override
-    {
-        return m_reallocation_count_;
-    }
+    explicit object_pool_allocator( pool_core* core )
+        : m_core_( core )
+    { }
 
     template <typename... Args>
     AllocationContext allocate( Args&&... arguments )
     {
-        init();
-        while ( m_lock_.exchange( true ) )
-        { }
-        const AllocationKey          next_pair = get_free_space();
-        AllocationContext            context( next_pair, this );
-        flip<true>( next_pair );
-        m_lock_.store( false );
-        ConstructorAccess::InternalConstruct<T>( m_start_ptr_ + next_pair.to_raw_index(),
+        const AllocationContext context = m_core_->reserve( &type_hash<T>::value );
+        ConstructorAccess::InternalConstruct<T>( static_cast<T*>( m_core_->slot_ptr( context.m_key_ ) ),
                                                  std::forward<Args>( arguments )... );
 
         return context;
@@ -1899,115 +1783,52 @@ public:
 
     void deallocate( T* ptr )
     {
-        assert( is_safe( ptr ) );
+        assert( m_core_->is_safe( ptr ) );
         deallocate( get_context( ptr ) );
     }
 
     // Frees the object in the context's slot if it is still the same generation; a no-op otherwise (already freed,
     // or the slot was reused), so a second call for the same allocation is harmless.
     // The destructor runs outside the spinlock: it may release other objects of the same type.
-    void deallocate( const AllocationContext& context ) override
+    static void deallocate( const AllocationContext& context )
     {
         if ( !context.valid() )
         {
             return;
         }
 
-        while ( m_lock_.exchange( true ) )
-        { }
-        const bool alive = peak( context.m_key_ );
-        m_lock_.store( false );
-        if ( !alive )
+        const pool_core* core = context.allocator();
+        if ( !core->alive( context.m_key_ ) )
         {
             return;
         }
 
-        T* ptr = m_start_ptr_ + context.m_key_.to_raw_index();
+        T* ptr = static_cast<T*>( core->slot_ptr( context.m_key_ ) );
         ConstructorAccess::InternalPreDeconstruction( ptr );
         ConstructorAccess::InternalDeconstruct( ptr );
 
-        while ( m_lock_.exchange( true ) )
-        { }
-        ++m_local_allocation_count_[ context.m_key_.to_raw_index() ];
-        flip<false>( context.m_key_ );
-        m_lock_.store( false );
+        const_cast<pool_core*>( core )->release( context.m_key_ );
     }
 
-	bool past( const AllocationContext& context ) const override
-	{
-        return context.type_allocation_count() != m_reallocation_count_ || 
-               context.allocation_count() != m_local_allocation_count_[context.m_key_.to_raw_index()];
-	}
-
-	bool expired( const AllocationContext& context ) const override
-	{
-		return !peak( context.m_key_ );
-	}
-
-	void* get_ptr( const AllocationContext& context ) const override
-	{
-		if ( !context.valid() )
-		{
-            return nullptr;
-		}
-
-		if ( context.m_key_.allocation_count != m_local_allocation_count_[ context.m_key_.to_raw_index() ] )
-		{
-            return nullptr;
-		}
-
-        T* ptr = m_start_ptr_ + context.m_key_.to_raw_index();
-		if ( is_safe(ptr) )
-		{
-            return ptr;
-		}
-
-        return nullptr;
-	}
-
-	AllocationContext get_context( const T* ptr ) const
+    AllocationContext get_context( const T* ptr ) const
     {
-        UNWRAP( ptr )
-        const size_t allocation_count = m_local_allocation_count_[ dist ];
-
-        return AllocationContext( { allocation_count, chunk, ( uint8_t )segment, ( uint8_t )offset },
-                                  this );
+        return AllocationContext( m_core_->key_of( ptr ), m_core_, &type_hash<T>::value );
     }
 
-    virtual void destroy() const override
+    size_t allocation_count() const
     {
-        m_pool_.ordered_free( m_start_ptr_, m_mask_.size() * ( 1 << 8 ) );
+        return m_core_->allocation_count();
     }
 
-	virtual void purge() const override
-    {
-        m_pool_.release_memory();
-        m_pool_.purge_memory();
-	}
-
-	void flag_dirty( const AllocationContext& context ) override
-	{
-		if ( !context.valid() )
-		{
-			return;
-		}
-
-		if ( !is_safe( static_cast<T*>( context.ptr() ) ) )
-        {
-            return;
-        }
-
-        while ( m_lock_.exchange( true ) )
-        { }
-        flag_dirty( static_cast<T*>( context.ptr() ) );
-        m_lock_.store( false );
-	}
-
-#undef UNWRAP
+private:
+    pool_core* m_core_;
 };
 
 // Deleter of the one boost control block that owns a pooled object. It finds the object by allocation slot and
 // generation instead of the raw pointer, so it stays correct after the pool moved the object (reallocate()).
+// T is the allocated (most derived) type: the destructor is called from the module that created the control block,
+// the same module whose code the control block's vtable already belongs to.
+template <typename T>
 struct managed_slot_deleter
 {
     AllocationContext context;
@@ -2017,7 +1838,7 @@ struct managed_slot_deleter
         // if there is no instanced allocator, it is undefined behaviour so dismiss the calling deallocation.
         if ( g_allocator_storage.is_allocator_live( context.allocator_type() ) )
         {
-            const_cast<pool_allocator_base*>( context.allocator() )->deallocate( context );
+            object_pool_allocator<T>::deallocate( context );
         }
     }
 };
@@ -2080,7 +1901,7 @@ class managed_shared_ptr : protected boost::shared_ptr<T>
 
 	// The only place a control block is created: one block per allocation, shared by every copy.
 	managed_shared_ptr( const AllocationContext& context, const init_tag& )
-        : boost::shared_ptr<T>( static_cast<T*>( context.ptr() ), managed_slot_deleter{ context } ), m_context_( context ),
+        : boost::shared_ptr<T>( static_cast<T*>( context.ptr() ), managed_slot_deleter<T>{ context } ), m_context_( context ),
           m_resolved_raw_( context.ptr() )
     {
 	}
@@ -2243,7 +2064,7 @@ public:
 	// (a pool grow moves its objects).
 	[[nodiscard]] size_t pool_reallocation_count() const
 	{
-        const pool_allocator_base* alloc = m_context_.allocator();
+        const pool_core* alloc = m_context_.allocator();
         return alloc ? alloc->allocation_count() : 0;
 	}
 
@@ -2482,8 +2303,8 @@ managed_shared_ptr<T> make_managed_shared( Args&&... arguments )
 template <typename T, typename U, typename... Args>
 managed_shared_ptr<U> make_managed_shared( Args&&... arguments )
 {
-    static typename managed_shared_ptr<T>::init_tag tag{};
-    return managed_shared_ptr<U>( g_allocator_storage.get_allocator<T>().allocate( std::forward<Args>( arguments )... ), tag );
+    // Created as T, so the control block's deleter destroys the allocated type, then converted to U.
+    return managed_shared_ptr<U>( make_managed_shared<T>( std::forward<Args>( arguments )... ) );
 }
 
 // `self` is the object's current address. The weak pointer (e.g. weak_from_this()) still holds the address the object
