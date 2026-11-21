@@ -58,7 +58,9 @@ namespace Engine
 
     private:
         friend struct std::hash<RawNetMessage>;
-        std::vector<unsigned char, u_pool_allocator_single<unsigned char>> m_raw_data_{};
+        // Plain std::vector: messages are created in Core and destroyed in the socket module. A pooled allocator
+        // is a separate singleton pool per DLL, so the memory was freed into another DLL's pool.
+        std::vector<unsigned char> m_raw_data_{};
     };
 
     enum ENGINE_CORE_API eNetSendType
