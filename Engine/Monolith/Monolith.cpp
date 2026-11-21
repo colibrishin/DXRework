@@ -43,23 +43,10 @@ void MonolithicLaunch( HINSTANCE hInstance )
         g_graphic_api.reset();
     }
 
-    for ( Engine::alloc_base* alloc : g_static_alloc | std::views::values )
-    {
-        alloc->purge_memory();
-
-        auto& rebind_releases = alloc->get_rebind_release();
-        auto& rebind_purge    = alloc->get_rebind_purge();
-
-        for ( const auto& [ type, func ] : rebind_purge )
-        {
-            func();
-        }
-
-        rebind_releases.clear();
-        rebind_purge.clear();
-    }
-
-    g_static_alloc.clear();
+    // Container pools (g_static_alloc) are not emptied here: containers using them can still be alive (globals,
+    // statics destroyed after this point), and pools that received memory from another DLL's copy of the same pool
+    // have inconsistent free lists, so release_memory/purge_memory crashed or never returned when closing early.
+    // The process is exiting; the OS reclaims the memory.
     g_allocator_storage.cleanup();
     PoolAllocatorStorage::report_leakage();
     Engine::Managers::ModuleManager::GetInstance().Destroy();
