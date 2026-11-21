@@ -5,6 +5,7 @@ using Sharpmake;
 [module: Include("%EngineDir%/Build/CommonProject.build.cs")]
 [module: Include("%EngineDir%/Build/ThirdPartyPrograms/ThirdPartyPrograms.build.cs")]
 [module: Include("%EngineDir%/Engine/Launch/Launch.build.cs")]
+[module: Include("%EngineDir%/Engine/Tests/MemoryTests/MemoryTests.build.cs")]
 [module: Include("%EngineDir%/Engine/Monolith/MonolithClient.build.cs")]
 [module: Include("%EngineDir%/Engine/Monolith/MonolithServer.build.cs")]
 
@@ -32,6 +33,8 @@ public class KolibriSolution : Solution
 
             clientSolution.ConfigureAll(conf, target);
             engineSolution.ConfigureAll(conf, target);
+
+            conf.AddProject<MemoryTests>(target);
         }
 
         conf.SolutionPath = Utils.GetSolutionDir();
