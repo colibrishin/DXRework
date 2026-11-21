@@ -1,5 +1,6 @@
 #pragma once
 #include <tbb/tbb.h>
+#include <deque>
 #include "IGraphicAPI.h"
 
 namespace Engine
@@ -126,7 +127,8 @@ namespace Engine
             primitive.commandList->FlagReady();
         }
 
-        std::vector<StructuredBufferTypeProxy<T>> m_resource_{};
+        // deque: advance() may grow the pool while other draw threads still hold references from get().
+        std::deque<StructuredBufferTypeProxy<T>>  m_resource_{};
         size_t                                    m_allocated_size_{};
         size_t                                    m_used_size_{};
         size_t                                    m_read_offset_{};
