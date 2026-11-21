@@ -17,6 +17,7 @@
     "pugixml",
     "tbb",
     "tinyobjloader",
-    "magic-enum"
+    "magic-enum",
+    "gtest"
   ]
 }

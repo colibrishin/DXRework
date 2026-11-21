@@ -1484,6 +1484,7 @@ class ENGINE_MEMORY_API pool_core
     template <typename T>
     friend class object_pool_allocator;
     friend struct managed_pool_access;
+    friend struct pool_test_access; // unit tests (Engine/Tests/MemoryTests)
 
 public:
     pool_core( size_t element_size, size_t reserve_bytes );
@@ -1812,6 +1813,7 @@ template <typename T>
 class object_pool_allocator
 {
     friend struct managed_pool_access;
+    friend struct pool_test_access; // unit tests (Engine/Tests/MemoryTests)
 
 public:
     explicit object_pool_allocator( pool_core* core )
