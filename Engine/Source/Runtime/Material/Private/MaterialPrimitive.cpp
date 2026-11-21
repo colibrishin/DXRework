@@ -9,6 +9,5 @@ void Engine::Graphics::MaterialPrimitive::Apply( SBs::InstanceSB& instance ) con
     SIMDExtension::_mm256_memcpy( instance.EvaluateAddress<Vector4>( 0 ), &overrideColor, sizeof( Vector4 ) * 3 );
     SIMDExtension::_mm256_memcpy( instance.EvaluateAddress<int>( 8 ),
                                   &repeatTexture,
-                                  sizeof( int ) * ( g_max_texture_per_material + g_max_texture_per_material +
-                                                    g_max_texture_per_material + 2 ) );
+                                  sizeof( int ) * ( 2 + g_max_texture_per_material + g_max_texture_per_material ) );
 }

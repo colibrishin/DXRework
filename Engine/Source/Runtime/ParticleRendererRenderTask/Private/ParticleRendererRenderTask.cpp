@@ -176,13 +176,7 @@ namespace Engine
 
         if ( m_allocation_count_ > m_used_count_ )
         {
-            // Reset reused instances so the previous owner's flags/slots do not leak.
-            Graphics::SBs::InstanceSB* reused = m_instance_generated_[ m_used_count_++ ];
-            auto& alloc = get_instance_sb_pool_allocator();
-            alloc.destroy( reused );
-            std::memset( reused, 0, sizeof( decltype( *reused ) ) );
-            alloc.construct( reused );
-            return reused;
+            return m_instance_generated_[ m_used_count_++ ];
         }
 
         auto& alloc = get_instance_sb_pool_allocator();

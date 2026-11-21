@@ -32,6 +32,11 @@ namespace Engine
 			return *s_interface_;
 		}
 
+		bool IsValid() const
+		{
+			return s_interface_ != nullptr;
+		}
+
 		template <typename T>
 		void SetInterface()
 		{

@@ -47,7 +47,12 @@ namespace Engine::Resources
 		{
 			void operator()( void* ptr ) const
 			{
-                g_sound_accessor.GetInterface().ReleaseSound( static_cast<ISound*>( ptr ) );
+				// Resources can be unloaded after the sound module shut down (ResourceManager is destroyed with Core).
+				// The interface owns its sounds and released them all in its Shutdown().
+				if ( g_sound_accessor.IsValid() )
+				{
+					g_sound_accessor.GetInterface().ReleaseSound( static_cast<ISound*>( ptr ) );
+				}
 			}
 		};
 

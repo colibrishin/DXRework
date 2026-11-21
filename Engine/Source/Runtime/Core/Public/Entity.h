@@ -107,13 +107,13 @@ namespace Engine::Abstracts
 		template <typename T>
 		Weak<T> GetWeakPtr()
 		{
-            return managed_static_pointer_cast<T>( from_native( weak_from_this() ) );
+            return managed_static_pointer_cast<T>( from_native( weak_from_this(), static_cast<Entity*>( this ) ) );
 		}
 
 		template <typename T>
 		Strong<T> GetSharedPtr()
 		{
-            return managed_static_pointer_cast<T>( from_native( weak_from_this() ) );
+            return managed_static_pointer_cast<T>( from_native( weak_from_this(), static_cast<Entity*>( this ) ) );
 		}
 
 		virtual void Initialize();

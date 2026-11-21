@@ -69,6 +69,7 @@ namespace Engine::Managers
 				if (light_dir == Vector3::Zero)
 				{
 					current_light_vp.at(idx) = {};
+					++idx; // keep VP index aligned with the light index
 					continue;
 				}
 
@@ -302,7 +303,7 @@ namespace Engine::Managers
 
 				buffer.view[i] = XMMatrixTranspose
 						(
-						 XMMatrixLookAtLH(pos, Vector3(center), Vector3::Up)
+						 XMMatrixLookAtLH(pos, Vector3(center), std::fabsf(light_dir.y) > 0.99f ? Vector3::Forward : Vector3::Up) // Up is degenerate for a vertical light
 						);
 
 				buffer.proj[i] =

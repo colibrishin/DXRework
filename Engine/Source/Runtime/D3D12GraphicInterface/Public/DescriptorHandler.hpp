@@ -35,14 +35,14 @@ namespace Engine
 
         [[nodiscard]] virtual bool IsValid(const DescriptorPtrImpl* ptr)
         {
-            std::lock_guard<std::recursive_mutex> l(m_slot_mutex_);
+            std::lock_guard<std::mutex> l(m_slot_mutex_);
             return ptr->m_heap_queue_offset_ != -1 && ptr->m_segment_offset_ != -1 && ptr->m_element_offset_ != -1 &&
                 (m_used_slots_[ptr->m_heap_queue_offset_].m256i_i32[ptr->m_segment_offset_] & (1 << ptr->m_element_offset_)) != 0;
         }
 
         virtual void Release(const DescriptorPtrImpl& handles)
         {
-            std::lock_guard<std::recursive_mutex> l(m_slot_mutex_);
+            std::lock_guard<std::mutex> l(m_slot_mutex_);
             m_used_slots_[handles.m_heap_queue_offset_].m256i_u32[handles.m_segment_offset_] &= ~(
                 1 << handles.m_element_offset_);
         }
@@ -187,7 +187,7 @@ namespace Engine
         static constexpr size_t s_segment_size = sizeof(__m256i) / sizeof(unsigned int);
         std::deque<__m256i>                                m_used_slots_{};
         // Slots are acquired from parallel render threads and released from the command executor thread.
-        std::recursive_mutex                               m_slot_mutex_{};
+        std::mutex                                         m_slot_mutex_{};
 
         ComPtr<ID3D12Device2>                              m_dev_{};
         ComPtr<ID3D12RootSignature>                        m_root_signature_{};
@@ -210,7 +210,7 @@ namespace Engine
             UINT64 queue_offset   = 0;
             UINT64 segment_offset = 0;
             UINT64 element_offset = 0;
-            std::unique_lock<std::recursive_mutex> slot_lock(m_slot_mutex_);
+            std::lock_guard<std::mutex> slot_lock(m_slot_mutex_);
             Allocate(queue_offset, segment_offset, element_offset);
 
             D3D12_CPU_DESCRIPTOR_HANDLE out_buffer_handle,     out_sampler_handle;

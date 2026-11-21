@@ -170,11 +170,13 @@ namespace Engine::Managers
 		{
 			return;
 		}
-		for ( const std::wstring& name : it->second )
+		// UnregisterRenderPass erases the name from this same container: iterate a copy.
+		const auto names = it->second;
+		for ( const std::wstring& name : names )
 		{
 			UnregisterRenderPass( name );
 		}
-		m_render_pass_names_by_module_.erase( it );
+		m_render_pass_names_by_module_.erase( key );
 #endif
 	}
 

@@ -23,6 +23,9 @@
 #include <boost/archive/detail/iserializer.hpp>
 #include <boost/functional/hash.hpp>
 #include <boost/serialization/access.hpp>
+#include <boost/serialization/split_free.hpp>
+#include <boost/serialization/level.hpp>
+#include <boost/serialization/tracking.hpp>
 #include <boost/pool/pool_alloc.hpp>
 
 namespace Engine
@@ -965,6 +968,8 @@ public:
 	virtual bool IsDerivedOf(HashType base) const { return Type##::StaticIsDerivedOf(base); } \
 	virtual bool IsBaseOf(HashType derived) const { return derived->IsDerivedOf(Type##::StaticTypeHash()); }
 
+class HashType;
+
 struct ENGINE_MEMORY_API HashTypeImpl
 {
 	virtual        ~HashTypeImpl() = default;
@@ -979,18 +984,9 @@ struct ENGINE_MEMORY_API HashTypeImpl
 	{
 		return v == other.v;
 	}
-	[[nodiscard]] virtual const HashTypeImpl* Fetch() const
-	{
-		throw std::runtime_error("Not Implemented");
-	}
-	[[nodiscard]] virtual bool IsDerivedOf(const HashTypeImpl* /*base*/) const 
-	{
-		throw std::runtime_error("Not Implemented");
-	}
-	[[nodiscard]] virtual bool IsBaseOf(const HashTypeImpl* /*derived*/) const
-	{
-		throw std::runtime_error("Not Implemented");
-	}
+	[[nodiscard]] virtual HashType Fetch() const;
+	[[nodiscard]] virtual bool     IsDerivedOf(HashType base) const;
+	[[nodiscard]] virtual bool     IsBaseOf(HashType derived) const;
 	[[nodiscard]] virtual bool IsSerializable() const 
 	{
 		throw std::runtime_error("Not Implemented");
@@ -1023,15 +1019,102 @@ private:
 BOOST_CLASS_EXPORT_KEY(HashTypeImpl)
 
 using HashTypeValue = const HashTypeImpl;
-using HashType = const HashTypeValue*;
+
+// Type identity handle (points at a type_hash<T>::value).
+// type_hash<T>::value is instantiated once per DLL, so the same type can have different addresses; its cityhash `v`
+// is evaluated at compile time and identical everywhere. Equality is therefore decided in three steps:
+//   1) both operands are constant expressions -> the compiler compares the AOT hashes (no runtime cost);
+//   2) same address -> equal, without reading the hash (the common same-DLL case);
+//   3) otherwise -> full comparison of the AOT hashes.
+// A different address alone never means a different type. Use SameAddress()/get() only when the address itself is
+// what you want (convenience within one module); it can report "different" for one type across DLLs.
+class HashType
+{
+public:
+	constexpr HashType() noexcept = default;
+	constexpr HashType(std::nullptr_t) noexcept {}
+	constexpr HashType(const HashTypeImpl* ptr) noexcept : m_ptr_(ptr) {}
+
+	[[nodiscard]] constexpr const HashTypeImpl* get() const noexcept { return m_ptr_; }
+	constexpr const HashTypeImpl*               operator->() const noexcept { return m_ptr_; }
+	constexpr const HashTypeImpl&               operator*() const noexcept { return *m_ptr_; }
+	constexpr explicit                          operator bool() const noexcept { return m_ptr_ != nullptr; }
+
+	[[nodiscard]] constexpr bool SameAddress(const HashType other) const noexcept { return m_ptr_ == other.m_ptr_; }
+
+	[[nodiscard]] constexpr bool Equals(const HashType other) const noexcept
+	{
+		return m_ptr_ == other.m_ptr_ || ( m_ptr_ && other.m_ptr_ && m_ptr_->v == other.m_ptr_->v );
+	}
+
+	[[nodiscard]] constexpr size_t hash() const noexcept { return m_ptr_ ? m_ptr_->v.hash() : 0; }
+
+	friend constexpr bool operator==(const HashType lhs, const HashType rhs) noexcept { return lhs.Equals(rhs); }
+	friend constexpr bool operator==(const HashType lhs, std::nullptr_t) noexcept { return lhs.m_ptr_ == nullptr; }
+
+	// Strict weak order by hash value (null first), consistent with ==.
+	friend constexpr bool operator<(const HashType lhs, const HashType rhs) noexcept
+	{
+		if ( !lhs.m_ptr_ || !rhs.m_ptr_ )
+		{
+			return !lhs.m_ptr_ && rhs.m_ptr_;
+		}
+		return !lhs.SameAddress(rhs) && lhs.m_ptr_->v < rhs.m_ptr_->v;
+	}
+
+private:
+	const HashTypeImpl* m_ptr_ = nullptr;
+};
+
+template <>
+struct std::hash<HashType>
+{
+	constexpr size_t operator()(const HashType h) const noexcept { return h.hash(); }
+};
 
 struct HashTypeHash
 {
-	size_t operator()( HashType p ) const noexcept
-	{
-		return std::hash<const void*>{}( static_cast<const void*>( p ) );
-	}
+	constexpr size_t operator()( const HashType p ) const noexcept { return p.hash(); }
 };
+
+// Serialized exactly like the raw `const HashTypeImpl*` it replaced: no class header, no tracking of the handle,
+// the pointee goes through the existing pointer path (and boost::archive::load -> Fetch() on load).
+namespace boost::serialization
+{
+	template <typename Archive>
+	void save(Archive& ar, const HashType& t, const unsigned int /*version*/)
+	{
+		const HashTypeImpl* ptr = t.get();
+		ar & ptr;
+	}
+
+	template <typename Archive>
+	void load(Archive& ar, HashType& t, const unsigned int /*version*/)
+	{
+		const HashTypeImpl* ptr = nullptr;
+		ar & ptr;
+		t = ptr;
+	}
+}
+
+BOOST_SERIALIZATION_SPLIT_FREE(HashType)
+BOOST_CLASS_IMPLEMENTATION(HashType, boost::serialization::object_serializable)
+BOOST_CLASS_TRACKING(HashType, boost::serialization::track_never)
+
+inline HashType HashTypeImpl::Fetch() const
+{
+	throw std::runtime_error("Not Implemented");
+}
+
+inline bool HashTypeImpl::IsDerivedOf(HashType /*base*/) const
+{
+	throw std::runtime_error("Not Implemented");
+}
+
+inline bool HashTypeImpl::IsBaseOf(HashType /*derived*/) const
+{
+	throw std::runtime_error("Not Implemented");
+}
 
 template <typename T> struct type_hash;
 
@@ -1097,17 +1180,17 @@ struct HashTypeT : HashTypeImpl
 
 	[[nodiscard]] constexpr bool Equal(const HashTypeImpl& other) const override
 	{
-		return HashTypeImpl::Equal(other) && this == &other;
+		return this == &other || HashTypeImpl::Equal(other);
 	}
 	[[nodiscard]] HashType Fetch() const override
 	{
 		return &type_hash<T>::value;
 	}
-	bool IsDerivedOf(const HashTypeImpl* base) const override
+	bool IsDerivedOf(HashType base) const override
 	{
 		return polymorphic_type_hash<T>::is_derived_of(base);
 	}
-	bool IsBaseOf(const HashTypeImpl* derived) const override 
+	bool IsBaseOf(HashType derived) const override 
 	{
 		return derived->IsDerivedOf(this);
 	}
@@ -1180,7 +1263,7 @@ namespace boost::archive
 		// deallocate the memory that was created by boost
 		simple_gc_collector::Add(loaded);
 		// retrieve the runtime type
-		t = loaded->Fetch();
+		t = loaded->Fetch().get();
 	}
 }
 
@@ -1206,7 +1289,7 @@ struct polymorphic_type_hash<##Type##>\
 	static constexpr HashArray<upcast_count> upcast_array = chain_to_upcast_array<chain>::value;\
 	constexpr static bool is_derived_of(const HashType base)\
 	{\
-		return std::ranges::find_if(upcast_array, [&base](const auto other){return other && base && (other == base || other->v == base->v);}) != upcast_array.end();\
+		return base && std::ranges::find(upcast_array, base) != upcast_array.end();\
 	}\
 };
 
@@ -1391,7 +1474,7 @@ public:
     virtual bool                                expired( const AllocationContext& ) const = 0;
     virtual void*                               get_ptr( const AllocationContext& ) const = 0;
     virtual size_t                              allocation_count() const                  = 0;
-    virtual const std::function<void( void* )>& get_deleter() const                       = 0;
+    virtual void                                deallocate( const AllocationContext& )    = 0;
     virtual void                                flag_dirty( const AllocationContext& )    = 0;
 };
 
@@ -1574,25 +1657,31 @@ object_pool_allocator<T>& get_instanced_pool_allocator()
 class ENGINE_MEMORY_API PoolAllocatorStorage
 {
 private:
+    // Keyed by type value, so every DLL gets the same allocator instance for a type (the first one registered).
     std::unordered_map<HashType, pool_allocator_base*, HashTypeHash> m_allocators_;
+    mutable std::mutex                                                m_allocators_mutex_;
+    std::atomic<bool>                                                 m_closed_ = false; // set by cleanup()
 
 public:
     template <typename T>
     object_pool_allocator<T>& get_allocator()
     {
-        const HashType key = &type_hash<T>::value;
-        if ( !m_allocators_.contains( key ) )
+        const HashType              key = &type_hash<T>::value;
+        std::lock_guard<std::mutex> lock( m_allocators_mutex_ );
+        auto                        it = m_allocators_.find( key );
+        if ( it == m_allocators_.end() )
         {
-            auto& instanced = get_instanced_pool_allocator<T>();
-            m_allocators_.emplace( key, &instanced );
+            it = m_allocators_.emplace( key, &get_instanced_pool_allocator<T>() ).first;
         }
 
-        return reinterpret_cast<object_pool_allocator<T>&>( *m_allocators_.at( key ) );
+        return static_cast<object_pool_allocator<T>&>( *it->second );
     }
 
-	bool is_allocator_live( HashType type ) const
+	// Called on every managed pointer access, so no lock: a valid allocation context always refers to a registered
+	// allocator, and entries are only removed all at once by cleanup().
+	bool is_allocator_live( HashType /*type*/ ) const
 	{
-        return m_allocators_.contains( type );
+        return !m_closed_.load( std::memory_order_acquire );
 	}
 
     void        cleanup();
@@ -1643,10 +1732,10 @@ private:
     struct object_tag
     { };
 
-    using PoolType = boost::singleton_pool<object_tag,
-                                           sizeof( T ), 
-										   user_allocator,
-                                           boost::details::pool::null_mutex>;
+    // Per-instance pool, not boost::singleton_pool: a singleton is a static in every DLL that instantiates this
+    // template, while the allocator instance is shared through g_allocator_storage. Memory obtained in one DLL
+    // would otherwise be returned to another DLL's pool.
+    mutable boost::pool<user_allocator> m_pool_{ sizeof( T ) };
 
     T*                   m_start_ptr_ = nullptr;
     std::vector<__m256i> m_mask_{};
@@ -1669,11 +1758,11 @@ private:
 
     void reallocate()
     {
-        T* reallocated = static_cast<T*>( PoolType::ordered_malloc( (m_mask_.size() + 1) * ( 1 << 8 ) ) );
+        T* reallocated = static_cast<T*>( m_pool_.ordered_malloc( (m_mask_.size() + 1) * ( 1 << 8 ) ) );
         if ( m_start_ptr_ )
         {
-            std::memmove( reallocated, m_start_ptr_, sizeof( T* ) * m_mask_.size() * ( 1 << 8 ) );
-            PoolType::ordered_free( m_start_ptr_, m_mask_.size() * ( 1 << 8 ) );
+            std::memmove( reallocated, m_start_ptr_, sizeof( T ) * m_mask_.size() * ( 1 << 8 ) );
+            m_pool_.ordered_free( m_start_ptr_, m_mask_.size() * ( 1 << 8 ) );
         }
         m_mask_.emplace_back( __m256i{} );
         m_local_allocation_count_.resize( ( m_mask_.size() + 1 ) * ( 1 << 8 ), 0 );
@@ -1811,15 +1900,36 @@ public:
     void deallocate( T* ptr )
     {
         assert( is_safe( ptr ) );
+        deallocate( get_context( ptr ) );
+    }
+
+    // Frees the object in the context's slot if it is still the same generation; a no-op otherwise (already freed,
+    // or the slot was reused), so a second call for the same allocation is harmless.
+    // The destructor runs outside the spinlock: it may release other objects of the same type.
+    void deallocate( const AllocationContext& context ) override
+    {
+        if ( !context.valid() )
+        {
+            return;
+        }
+
         while ( m_lock_.exchange( true ) )
         { }
-        if ( !expired( get_context( ptr ) ) )
+        const bool alive = peak( context.m_key_ );
+        m_lock_.store( false );
+        if ( !alive )
         {
-            ConstructorAccess::InternalPreDeconstruction( ptr );
-            ConstructorAccess::InternalDeconstruct( ptr );
+            return;
         }
-        flag_dirty( ptr );
-        flip<false>( ptr );
+
+        T* ptr = m_start_ptr_ + context.m_key_.to_raw_index();
+        ConstructorAccess::InternalPreDeconstruction( ptr );
+        ConstructorAccess::InternalDeconstruct( ptr );
+
+        while ( m_lock_.exchange( true ) )
+        { }
+        ++m_local_allocation_count_[ context.m_key_.to_raw_index() ];
+        flip<false>( context.m_key_ );
         m_lock_.store( false );
     }
 
@@ -1866,13 +1976,13 @@ public:
 
     virtual void destroy() const override
     {
-        PoolType::ordered_free( m_start_ptr_, m_mask_.size() * ( 1 << 8 ) );
+        m_pool_.ordered_free( m_start_ptr_, m_mask_.size() * ( 1 << 8 ) );
     }
 
 	virtual void purge() const override
     {
-        PoolType::release_memory();
-        PoolType::purge_memory();
+        m_pool_.release_memory();
+        m_pool_.purge_memory();
 	}
 
 	void flag_dirty( const AllocationContext& context ) override
@@ -1893,23 +2003,23 @@ public:
         m_lock_.store( false );
 	}
 
-private:
-    const std::function<void( void* )>& get_deleter() const override
-    {
-		// simple deallocation mapping lambda function
-        static std::function<void( void* )> deleter = []( void* ptr )
-        {
-			// if there is no instanced allocator, it is undefined behaviour so dismiss the calling deallocation.
-            if ( g_allocator_storage.is_allocator_live( &type_hash<T>::value ) )
-            {
-                g_allocator_storage.get_allocator<T>().deallocate( static_cast<T*>( ptr ) );
-            }
-        };
-
-        return deleter;
-    }
-
 #undef UNWRAP
+};
+
+// Deleter of the one boost control block that owns a pooled object. It finds the object by allocation slot and
+// generation instead of the raw pointer, so it stays correct after the pool moved the object (reallocate()).
+struct managed_slot_deleter
+{
+    AllocationContext context;
+
+    void operator()( const void* /*stale address*/ ) const noexcept
+    {
+        // if there is no instanced allocator, it is undefined behaviour so dismiss the calling deallocation.
+        if ( g_allocator_storage.is_allocator_live( context.allocator_type() ) )
+        {
+            const_cast<pool_allocator_base*>( context.allocator() )->deallocate( context );
+        }
+    }
 };
 
 namespace Engine
@@ -1921,6 +2031,9 @@ template <typename T>
 class managed_shared_ptr : protected boost::shared_ptr<T>
 {
     mutable AllocationContext m_context_;
+    // Pool address of the allocation that the stored boost pointer was derived from. When the pool moves the object
+    // (reallocate()), the stored pointer is shifted by the same distance, keeping its base-subobject offset.
+    mutable const void* m_resolved_raw_ = nullptr;
 
 	template <typename U> 
 	friend class managed_weak_ptr;
@@ -1947,7 +2060,7 @@ class managed_shared_ptr : protected boost::shared_ptr<T>
     friend managed_shared_ptr<U> make_managed_shared( Args&&... arguments );
 
 	template <typename T>
-    friend managed_shared_ptr<T> from_native( boost::weak_ptr<T> native );
+    friend managed_shared_ptr<T> from_native( const boost::weak_ptr<T>& native, T* self );
 
 	template <typename T>
     friend managed_shared_ptr<T> from_native( const boost::shared_ptr<T>& native );
@@ -1959,33 +2072,39 @@ class managed_shared_ptr : protected boost::shared_ptr<T>
 
 	template <typename U>
     managed_shared_ptr( const managed_shared_ptr<U>& other, const cast_tag& )
-        : boost::shared_ptr<T>( boost::reinterpret_pointer_cast<T>( other ) ), m_context_( other.m_context_ )
+        : boost::shared_ptr<T>( boost::reinterpret_pointer_cast<T>( other ) ), m_context_( other.m_context_ ),
+          m_resolved_raw_( other.m_resolved_raw_ )
 	{
         resolve();
 	}
 
-	managed_shared_ptr( const AllocationContext& context, const init_tag& ) : boost::shared_ptr<T>( nullptr ), m_context_( context )
+	// The only place a control block is created: one block per allocation, shared by every copy.
+	managed_shared_ptr( const AllocationContext& context, const init_tag& )
+        : boost::shared_ptr<T>( static_cast<T*>( context.ptr() ), managed_slot_deleter{ context } ), m_context_( context ),
+          m_resolved_raw_( context.ptr() )
     {
-        resolve();
 	}
 
 	template <typename U>
     explicit managed_shared_ptr( const boost::weak_ptr<U>& weak_native, const AllocationContext& context )
-        : boost::shared_ptr<T>( weak_native, boost::detail::sp_nothrow_tag{} ), m_context_( context )
+        : boost::shared_ptr<T>( weak_native, boost::detail::sp_nothrow_tag{} ), m_context_( context ),
+          m_resolved_raw_( context.ptr() ) // caller passes a pointer to the object's current address
     {
         resolve();
     }
 
 	template <typename U>
     explicit managed_shared_ptr( const boost::shared_ptr<U>& native, const AllocationContext& context )
-        : boost::shared_ptr<T>( native ), m_context_( context )
+        : boost::shared_ptr<T>( native ), m_context_( context ),
+          m_resolved_raw_( context.ptr() ) // caller passes a pointer to the object's current address
     {
         resolve();
     }
 
 	template <typename U>
     explicit managed_shared_ptr( const managed_weak_ptr<U>& weak_native )
-        : boost::shared_ptr<T>( weak_native, boost::detail::sp_nothrow_tag{} ), m_context_( weak_native.m_context_ )
+        : boost::shared_ptr<T>( weak_native, boost::detail::sp_nothrow_tag{} ), m_context_( weak_native.m_context_ ),
+          m_resolved_raw_( weak_native.m_resolved_raw_ )
     {
         resolve();
     }
@@ -2027,7 +2146,8 @@ public:
 
 	template <typename U>
      managed_shared_ptr( const managed_shared_ptr<U>& other )
-        : boost::shared_ptr<T>( boost::static_pointer_cast<T>( other.native() ) ), m_context_( other.m_context_ )
+        : boost::shared_ptr<T>( boost::static_pointer_cast<T>( other.native() ) ), m_context_( other.m_context_ ),
+          m_resolved_raw_( other.m_resolved_raw_ ) // read after native() resolved `other`
     {
         resolve();
     }
@@ -2055,15 +2175,8 @@ public:
 
 	void reset()
 	{
-		if ( boost::shared_ptr<T>::unique() )
-		{
-			if ( g_allocator_storage.is_allocator_live( m_context_.allocator_type() ) )
-			{
-                m_context_.allocator()->get_deleter()( resolve() );
-			}
-		}
-
-        *this = managed_shared_ptr<T>( boost::shared_ptr<T>(), AllocationContext::get_null_context() );
+        // Dropping the share is enough: the control block's deleter frees the object when this was the last owner.
+        *this = managed_shared_ptr<T>();
 	}
 
 	T* resolve() const noexcept
@@ -2097,14 +2210,28 @@ public:
             return nullptr;
 		}
 
-		if ( m_context_.should_resolve() || boost::shared_ptr<T>::get() == nullptr )
+		boost::shared_ptr<T>& self = *const_cast<managed_shared_ptr<T>*>( this );
+		if ( self.use_count() == 0 )
 		{
-            m_context_.update();
-			managed_shared_ptr<T>* non_const = const_cast<managed_shared_ptr<T>*>( this );
-            static_cast<boost::shared_ptr<T>*>( non_const )->reset( static_cast<T*>( m_context_.ptr() ), m_context_.m_allocator_->get_deleter() );
-        }
+			// No control block: ownership is only created at allocation. Never adopt the object here, e.g. from a
+			// weak pointer whose block already died while the object is being destroyed.
+			return nullptr;
+		}
 
-        return boost::shared_ptr<T>::get();
+		// Compare addresses rather than should_resolve(): expired() above may already have updated the context.
+		const void* current = m_context_.ptr();
+		if ( current != m_resolved_raw_ )
+		{
+			// Keep the one control block, refresh only the address (the pool moved the object).
+			T* moved = self.get() && m_resolved_raw_
+				? reinterpret_cast<T*>( reinterpret_cast<char*>( self.get() ) +
+				                        ( static_cast<const char*>( current ) - static_cast<const char*>( m_resolved_raw_ ) ) )
+				: static_cast<T*>( const_cast<void*>( current ) );
+			self            = boost::shared_ptr<T>( self, moved );
+			m_resolved_raw_ = current;
+		}
+
+        return self.get();
 	}
 
 	[[nodiscard]] size_t use_count() const
@@ -2205,6 +2332,7 @@ template <typename T>
 class managed_weak_ptr : protected boost::weak_ptr<T>
 {
     mutable AllocationContext m_context_;
+    mutable const void*       m_resolved_raw_ = nullptr; // see managed_shared_ptr
 
 	template <typename U>
     friend class managed_weak_ptr;
@@ -2231,15 +2359,16 @@ public:
 	template <typename U>
 	managed_weak_ptr( const managed_weak_ptr<U>& other )
 		: boost::weak_ptr<T>( other ),
-		m_context_( other.m_context_ )
+		m_context_( other.m_context_ ), m_resolved_raw_( other.m_resolved_raw_ )
 	{ }
 
     managed_weak_ptr( const managed_shared_ptr<T>& other )
-        : boost::weak_ptr<T>( other ), m_context_( other.m_context_ )
+        : boost::weak_ptr<T>( other ), m_context_( other.m_context_ ), m_resolved_raw_( other.m_resolved_raw_ )
     { }
 
 	template <typename U>
-    managed_weak_ptr( const managed_shared_ptr<U>& other ) : boost::weak_ptr<T>( other ), m_context_( other.m_context_ )
+    managed_weak_ptr( const managed_shared_ptr<U>& other )
+        : boost::weak_ptr<T>( other ), m_context_( other.m_context_ ), m_resolved_raw_( other.m_resolved_raw_ )
     { }
 
 	void reset()
@@ -2349,13 +2478,14 @@ managed_shared_ptr<U> make_managed_shared( Args&&... arguments )
     return managed_shared_ptr<U>( g_allocator_storage.get_allocator<T>().allocate( std::forward<Args>( arguments )... ), tag );
 }
 
+// `self` is the object's current address. The weak pointer (e.g. weak_from_this()) still holds the address the object
+// had when its control block was created; the pool may have moved it since, so only its control block is used.
 template <typename T>
-managed_shared_ptr<T> from_native( boost::weak_ptr<T> native )
+managed_shared_ptr<T> from_native( const boost::weak_ptr<T>& native, T* self )
 {
-    if ( const boost::shared_ptr<T>& locked = native.lock() )
+    if ( const boost::shared_ptr<T> locked = native.lock() )
 	{
-        AllocationContext key = locked->GetAllocationContext();
-        return managed_shared_ptr<T>( native, key );
+        return managed_shared_ptr<T>( boost::shared_ptr<T>( locked, self ), self->GetAllocationContext() );
 	}
 
 	return {};

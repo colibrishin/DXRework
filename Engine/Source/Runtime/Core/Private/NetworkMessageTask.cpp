@@ -79,7 +79,11 @@ inline Engine::NetworkConsumers& Engine::NetworkMessageTask::GetConsumers()
 }
 
 inline void Engine::NetworkMessageTask::Cleanup()
-{ }
+{
+    // Stops the consumers' worker threads (e.g. NetworkChallengeTask) during module shutdown. Waiting for them later,
+    // in the static destructor at process exit, never returns: the OS has already terminated them.
+    m_consumers_.Cleanup();
+}
 
 inline void Engine::NetworkMessageTask::ConsumeMessage( std::pair<NetMessageDescription, Unique<NetMessage>>& pair ) const
 {

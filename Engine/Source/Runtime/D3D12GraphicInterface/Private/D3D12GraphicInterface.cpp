@@ -53,8 +53,9 @@ bool Engine::D3D12GraphicInterfaceModule::ShutdownImpl()
 		CoreLoop::LOOP_TYPE_RENDER,
 		Managers::ToolkitAPI::GetInstance);
 
-	auto& gi = g_graphic_accessor.GetInterface();
-	gi.Shutdown();
+	// Shut down and destroy the interface here, while this DLL and the pools its members allocate from are still alive.
+	// Otherwise the object is destroyed by Core's static destructor at process exit, after the pools were purged.
+	g_graphic_accessor.Shutdown();
 
 	return true;
 }
