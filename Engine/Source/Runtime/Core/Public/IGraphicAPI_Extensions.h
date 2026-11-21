@@ -44,13 +44,15 @@ namespace Engine
             return m_resource_[ m_read_offset_ ];
         }
 
+        // One element per draw batch. The pool grows here on demand (doubling), so it only ever holds as many
+        // buffers as batches were drawn; growing keeps references from get() valid (deque).
         void advance()
         {
             ++m_read_offset_;
 
             if ( m_read_offset_ >= m_allocated_size_ )
             {
-                resize( m_allocated_size_ * 2.f );
+                resize( (std::max)( m_read_offset_ + 1, m_allocated_size_ * 2 ) );
             }
         }
 
