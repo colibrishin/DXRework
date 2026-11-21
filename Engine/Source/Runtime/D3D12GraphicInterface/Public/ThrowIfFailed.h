@@ -15,7 +15,7 @@
         Variable##->SetPrivateData(##WKPDID_D3DDebugObjectName##, std::size( String ), String.c_str() );               \
     }
 #else
-#define SET_NAME( Variable, String ) Variable##->SetName( String.c_str() );
+#define SET_NAME( Variable, String ) Variable##->SetName( String );
 #define SET_NAME_RUNTIME( Variable, String ) Variable##->SetName( String.c_str() );
 #endif
 

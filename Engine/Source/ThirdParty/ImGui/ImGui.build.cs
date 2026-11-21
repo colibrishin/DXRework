@@ -20,6 +20,7 @@ public class ImGui : CommonProject
         conf.SolutionFolder = @"ThirdParty";
         // Disable unity/jumbo build so STB_*_IMPLEMENTATION is compiled in exactly one TU per header (avoids redefinition in merged blob).
         conf.Options.Remove(Options.Vc.Compiler.JumboBuild.Enable);
+        conf.FastBuildBlobbed = false; // FastBuild unity is controlled separately from JumboBuild
         conf.Defines.Add("IMGUI_DEFINE_MATH_OPERATORS=1");
         // Always static library: no DLL export/import for ImGui in any configuration.
         conf.Output = Configuration.OutputType.Lib;
