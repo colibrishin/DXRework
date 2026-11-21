@@ -145,6 +145,11 @@ namespace Engine::Abstracts
 		EPROPERTY()
 		std::filesystem::path m_meta_path_;
 
+		// Stable for the object's lifetime. Not the address: pooled objects move when their pool grows.
+		// A copy (Clone) gets a new ID; not serialized, a loaded object gets a new ID.
+		static GlobalEntityID AllocateID();
+		GlobalEntityID        m_id_ = AllocateID();
+
 #if WITH_EDITOR
 	public:
 		UIInfo         m_ui_info_;
