@@ -76,6 +76,10 @@ namespace Engine
         {
             if ( m_interface_ )
             {
+                // Stop the message task (and its challenge thread, started in SetInterface) while the interface still
+                // exists. Otherwise the thread is first waited for in a static destructor at process exit, after the
+                // OS has already terminated it, and the process never exits.
+                m_message_task_.Shutdown();
                 m_interface_->Shutdown();
                 m_interface_.reset();
             }
