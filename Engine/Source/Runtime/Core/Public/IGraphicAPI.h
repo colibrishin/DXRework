@@ -965,6 +965,8 @@ namespace Engine
 		virtual void SoftReset() = 0;
 		virtual void FlagReady(const std::function<void()>& post_function = {}) = 0;
 		virtual void Execute() = 0;
+		// Keep a resource (e.g. a descriptor heap) alive until this list has finished executing on the GPU.
+		virtual void DeferRelease(std::function<void()>&& holder) = 0;
 
     protected:
         virtual void Close() = 0;
@@ -1035,6 +1037,20 @@ namespace Engine
 			}
 
 			m_heap_ = std::move(heap);
+		}
+
+		IGraphicContextImpl(IGraphicContextImpl&&) noexcept            = default;
+		IGraphicContextImpl& operator=(IGraphicContextImpl&&) noexcept = default;
+
+		// The heap holds descriptors the GPU reads when the list executes, which is after this context is gone.
+		// Releasing it here let the next pass/frame overwrite them first (wrong textures/instance data, flicker).
+		~IGraphicContextImpl()
+		{
+			if (m_heap_ && m_command_list_)
+			{
+				std::shared_ptr<IHeapBase> heap(std::move(m_heap_));
+				m_command_list_->DeferRelease([heap]() {});
+			}
 		}
 
 		IGraphicContext GetPointers() const
