@@ -31,9 +31,15 @@ const std::filesystem::path& Engine::Abstracts::Entity::GetMetadataPath() const
 	return m_meta_path_;
 }
 
+Engine::GlobalEntityID Engine::Abstracts::Entity::AllocateID()
+{
+	static std::atomic<GlobalEntityID> next_id{ 1 };
+	return next_id.fetch_add( 1, std::memory_order_relaxed );
+}
+
 Engine::GlobalEntityID Engine::Abstracts::Entity::GetID() const
 {
-	return reinterpret_cast<GlobalEntityID>(this);  // NOLINT(clang-diagnostic-pointer-to-int-cast)
+	return m_id_;
 }
 
 const Engine::EntityName& Engine::Abstracts::Entity::GetName() const
