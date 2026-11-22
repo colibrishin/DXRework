@@ -143,6 +143,14 @@ namespace Engine::Managers
         {
             ShutdownModule( *it );
         }
+
+        // The callbacks are only for module shutdown, which is done. Destroy them now, while every DLL is loaded: their
+        // code lives in the DLLs that registered them (Core, RenderPipeline), which are FreeLibrary'd before this
+        // instance's static destructor runs.
+        {
+            std::lock_guard l( m_read_mutex_ );
+            m_on_module_shutdown_.clear();
+        }
 	}
 
 	ModuleInfo* ModuleManager::FindModule(const std::wstring_view name)
