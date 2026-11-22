@@ -9,19 +9,22 @@
 
 void MonolithicLaunch( HINSTANCE hInstance )
 {
-    WinAPI::WinAPIWrapper::Initialize( hInstance );
-
-    g_graphic_api = std::make_unique<Engine::ModuleInfo>();
-
-#if defined( USE_D3D12 )
-    g_graphic_api->m_module_ = std::unique_ptr<Engine::IModule>(
-            StaticLinkModuleEntry<Engine::D3D12GraphicInterfaceModule>::InitializeModule() );
-#endif
-
-    g_graphic_api->m_module_->Initialize();
-
     try
     {
+        WinAPI::WinAPIWrapper::Initialize( hInstance );
+
+        g_graphic_api = std::make_unique<Engine::ModuleInfo>();
+
+#if defined( USE_D3D12 )
+        g_graphic_api->m_module_ = std::unique_ptr<Engine::IModule>(
+                StaticLinkModuleEntry<Engine::D3D12GraphicInterfaceModule>::InitializeModule() );
+#endif
+
+        if ( g_graphic_api->m_module_ )
+        {
+            g_graphic_api->m_module_->Initialize();
+        }
+
         Engine::Managers::EngineEntryPoint::GetInstance().Initialize();
         WinAPI::WinAPIWrapper::Update();
     }
@@ -39,7 +42,10 @@ void MonolithicLaunch( HINSTANCE hInstance )
     // Clean up the graphic API.
     if ( g_graphic_api )
     {
-        g_graphic_api->m_module_->Shutdown();
+        if ( g_graphic_api->m_module_ )
+        {
+            g_graphic_api->m_module_->Shutdown();
+        }
         g_graphic_api.reset();
     }
 
