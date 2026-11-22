@@ -86,9 +86,12 @@ namespace Engine
                                 const Resources::Texture*               tex );
 
 
-		inline void DrawPhase_MultiThread( float                                                 dt,
+		// Draws one batch starting at instance_resolved (as many instances as fit the texture slots of one heap
+		// block) and returns how many it drew.
+		inline size_t DrawPhase_MultiThread( float                                                 dt,
                                            bool                                                  shader_bypass,
                                            size_t                                                instance_count,
+                                           size_t                                                instance_resolved,
                                            StructuredBufferTypeProxy<Graphics::SBs::InstanceSB> &instance_buffer,
                                            const Resources::Shader                              *shader,
                                            const Resources::Mesh                                *mesh,

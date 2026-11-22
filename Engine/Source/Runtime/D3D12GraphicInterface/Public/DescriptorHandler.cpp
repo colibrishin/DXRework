@@ -16,5 +16,5 @@ void Engine::DescriptorHandlerBase::PreDeconstruction()
     }
 
 	m_main_descriptor_heap_.clear();
-    m_main_descriptor_heap_.clear();
+    m_main_sampler_descriptor_heap_.clear();
 }

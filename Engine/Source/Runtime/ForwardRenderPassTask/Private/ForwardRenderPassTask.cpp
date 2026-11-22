@@ -239,7 +239,46 @@ namespace Engine
 			additional_sb->CopySRVHeap(&temp_context);
 		}
 		
-		DrawPhase_MultiThread(dt, shader_bypass, idx, instance, shader, mesh, &temp_context, instances, texture_pairs);
+		// One batch per heap block: descriptors are written into the shader-visible block immediately, so a further batch
+		// binding its textures and instance buffer into the same block changed what the earlier draws read, and its upload
+		// overwrote the earlier batch's instance data before the GPU copied it. Each further batch gets its own block and
+		// instance buffer, with the pass bindings repeated.
+		static_assert( g_max_texture_per_material < BIND_SLOT_TEXARR - BIND_SLOT_TEX, "an empty batch must fit one material" );
+		IGraphicContext                                       batch_context  = temp_context;
+		StructuredBufferTypeProxy<Graphics::SBs::InstanceSB> *batch_instance = &instance;
+		for ( size_t resolved = 0; resolved != idx; )
+		{
+		    if ( resolved != 0 )
+		    {
+		        batch_context = IGraphicContext{ .commandList = primitive.commandList, .heap = m_heaps_.emplace_back( gi.GetHeap() )->get() };
+		        batch_context.heap->BindGraphic( &batch_context );
+		        sb.CopySRVHeap( &batch_context );
+		        Managers::RenderPipeline::GetInstance().BindConstantBuffers( &batch_context );
+		        if ( prerender_predicate )
+		        {
+		            prerender_predicate( &batch_context );
+		        }
+		        for ( const auto &func : prerender_predicates | std::views::values )
+		        {
+		            func( &batch_context );
+		        }
+		        for ( const StructuredBufferDecorator *additional_sb : additional_sbs )
+		        {
+		            additional_sb->CopySRVHeap( &batch_context );
+		        }
+
+		        auto batch_token = SingletonSpinLock::GetInstance().Lock( m_instance_pool_ticket_ );
+		        m_instance_pool_.advance();
+		        batch_instance = &m_instance_pool_.get();
+		    }
+
+		    const size_t drawn = DrawPhase_MultiThread( dt, shader_bypass, idx, resolved, *batch_instance, shader, mesh, &batch_context, instances, texture_pairs );
+		    if ( drawn == 0 )
+		    {
+		        __fastfail( FAST_FAIL_INVALID_ARG ); // cannot happen (static_assert above); it would loop forever
+		    }
+		    resolved += drawn;
+		}
 
 		if (postrender_predicate) { postrender_predicate(&temp_context); }
 
@@ -277,10 +316,11 @@ namespace Engine
 		}
 	}
 
-	void ForwardRenderPassTask::DrawPhase_MultiThread( 
+	size_t ForwardRenderPassTask::DrawPhase_MultiThread( 
 		float                                                 dt,
 		bool                                                  shader_bypass,
 		size_t                                                instance_count,
+		size_t                                                instance_resolved,
 		StructuredBufferTypeProxy<Graphics::SBs::InstanceSB> &instance_buffer,
 		const Resources::Shader                              *shader,
 		const Resources::Mesh                                *mesh,
@@ -301,8 +341,6 @@ namespace Engine
             gi.BindGraphic( context, shader );
 		}
 
-		size_t instance_resolved = 0;
-		while (instance_resolved != instance_count)
 		{
 			size_t instance_to_resolve = 0;
 
@@ -415,7 +453,7 @@ namespace Engine
 			gi.Draw( context, mesh, instance_to_resolve, instance_resolved );
 			
 			instance_buffer.TransitionCommon(context);
-			instance_resolved += instance_to_resolve;
+			return instance_to_resolve;
 		}
 	}
 

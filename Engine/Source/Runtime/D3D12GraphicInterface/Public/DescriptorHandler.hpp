@@ -77,12 +77,15 @@ namespace Engine
             const D3D12_GPU_DESCRIPTOR_HANDLE&      sampler_handle
         ) const = 0;
 
+		// Under the slot lock: Acquire() on another render thread may append heaps (reallocating the vectors).
 		[[nodiscard]] ID3D12DescriptorHeap* GetMainDescriptorHeap(UINT64 offset) const
 		{
+		    std::lock_guard<std::mutex> l(m_slot_mutex_);
 		    return m_main_descriptor_heap_[offset].Get();
 		}
 		[[nodiscard]] ID3D12DescriptorHeap* GetMainSamplerDescriptorHeap(UINT64 offset) const
 		{
+		    std::lock_guard<std::mutex> l(m_slot_mutex_);
 		    return m_main_sampler_descriptor_heap_[offset].Get();
 		}
         [[nodiscard]] ID3D12RootSignature* GetRootSignature() const
@@ -187,7 +190,7 @@ namespace Engine
         static constexpr size_t s_segment_size = sizeof(__m256i) / sizeof(unsigned int);
         std::deque<__m256i>                                m_used_slots_{};
         // Slots are acquired from parallel render threads and released from the command executor thread.
-        std::mutex                                         m_slot_mutex_{};
+        mutable std::mutex                                 m_slot_mutex_{};
 
         ComPtr<ID3D12Device2>                              m_dev_{};
         ComPtr<ID3D12RootSignature>                        m_root_signature_{};

@@ -180,7 +180,7 @@ void Engine::Graphics::D3D12StructuredBufferTypeless::SetDataContainer(const IGr
 
 	for (UINT i = 0; i < size; ++i)
 	{
-		SIMDExtension::_mm256_memcpy(data + (i * stride), *(src_ptr + (i * stride)), stride);
+		SIMDExtension::_mm256_memcpy(data + (i * stride), *(src_ptr + i), stride);
 	}
 
 	m_upload_buffer_->Unmap(0, nullptr);
