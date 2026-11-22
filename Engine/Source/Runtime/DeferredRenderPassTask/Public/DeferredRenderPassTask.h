@@ -108,9 +108,12 @@ namespace Engine
                                 const std::unordered_map<std::string_view, ContextSetupFunction> &postrender_predicates,
                                 const aligned_vector<const InstancePair *>                       &instance_pairs );
 
-        inline void MaterialPass_Multithread( float                                                 dt,
+        // Draws one batch starting at instance_resolved (as many instances as fit the texture slots of one heap
+        // block) and returns how many it drew.
+        inline size_t MaterialPass_Multithread( float                                                 dt,
                                            bool                                                  shader_bypass,
                                            size_t                                                instance_count,
+                                           size_t                                                instance_resolved,
                                            StructuredBufferTypeProxy<Graphics::SBs::InstanceSB> &instance_buffer,
                                            const Resources::Shader                              *shader,
                                            const Resources::Mesh                                *mesh,
