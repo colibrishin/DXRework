@@ -302,6 +302,18 @@ namespace Engine
 			}
 		}
 
+		// Axis-aligned bounds of the box view, the one ContainsBy(BoundingBox) tests. An axis-aligned box contains the
+		// oriented box exactly when it contains all 8 corners, i.e. these bounds; the octree computes them once per
+		// object and then tests box against box instead of transforming the corners for every node.
+		[[nodiscard]] BoundingBox __vectorcall GetBoxAxisAlignedBounds() const
+		{
+			DirectX::XMFLOAT3 corners[ BoundingOrientedBox::CORNER_COUNT ];
+			m_boundings_.box.GetCorners(corners);
+			BoundingBox out;
+			BoundingBox::CreateFromPoints(out, BoundingOrientedBox::CORNER_COUNT, corners, sizeof(DirectX::XMFLOAT3));
+			return out;
+		}
+
 		void __vectorcall UpdateFromBoundingBox(const BoundingOrientedBox& box_)
 		{
 			m_boundings_.box = box_;

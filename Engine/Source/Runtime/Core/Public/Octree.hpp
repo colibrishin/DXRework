@@ -163,6 +163,12 @@ namespace Engine
                 return true;
             }
 
+            return InsertBounded(obj, BoundingValueGetter::value(obj.lock()).GetBoxAxisAlignedBounds());
+        }
+
+        // Insert with the object's axis-aligned bounds already computed (GenericBounding::GetBoxAxisAlignedBounds).
+        bool InsertBounded(const WeakT& obj, const BoundingBox& obj_box)
+        {
             // This will be the last node that successfully contains the object
             octree_impl*             last = nullptr;
             std::stack<octree_impl*> stack;
@@ -170,8 +176,6 @@ namespace Engine
 
             // exact match (which is the smallest node that can contain the object)
             bool found = false;
-
-            const auto bounding_value = BoundingValueGetter::value(obj.lock());
 
             while ( !stack.empty() )
             {
@@ -207,7 +211,7 @@ namespace Engine
                 }
 
                 // Check whether the object is bounded by the node
-                if ( bounding_value.ContainsBy(node_bound) == DirectX::CONTAINS )
+                if ( node_bound.Contains(obj_box) == DirectX::CONTAINS )
                 {
                     // Try to insert into children for more precise containment
                     for ( int i = 0; i < octant_count; ++i )
@@ -215,7 +219,7 @@ namespace Engine
                         // See if there is any child that can contain the object
                         if ( node_children[ i ] )
                         {
-                            if ( bounding_value.ContainsBy(node_children[ i ]->m_bounds_) == DirectX::CONTAINS )
+                            if ( node_children[ i ]->m_bounds_.Contains(obj_box) == DirectX::CONTAINS )
                             {
                                 node_active_children.set(i);
                                 stack.push(node_children[ i ].get());
@@ -227,7 +231,7 @@ namespace Engine
                             const auto bound = GetBound(node_extent,
                                                         node_center,
                                                         static_cast<eOctant>( i ));
-                            const auto bound_check = bounding_value.ContainsBy(bound);
+                            const auto bound_check = bound.Contains(obj_box);
 
                             if ( bound_check == DirectX::ContainmentType::CONTAINS )
                             {
@@ -253,7 +257,7 @@ namespace Engine
                 last->m_values_.push_back(obj);
                 return true;
             }
-            if ( !last && bounding_value.ContainsBy(root()->m_bounds_) )
+            if ( !last && root()->m_bounds_.Contains(obj_box) )
             {
                 root()->m_values_.push_back(obj);
                 return true;
@@ -343,55 +347,30 @@ namespace Engine
 
                 if ( post_visit )
                 {
-                    if ( !node_value.empty() )
+                    // The objects that were here at the first visit were checked there. Check only the ones moved up
+                    // into this node by its descendants since (appended at the end), so an object leaving several
+                    // levels still climbs in one frame.
+                    for ( size_t i = node->m_values_checked_; i < node_value.size(); )
                     {
-                        // Check whether the objects are still bounded by the node
-                        for ( auto it = node_value.begin(); it != node_value.end(); )
+                        if ( node_value[ i ].expired() )
                         {
-                            if ( it->expired() )
-                            {
-                                it = node_value.erase(it);
-                                continue;
-                            }
-
-                            const auto obj         = it->lock();
-                            const auto obj_bound   = BoundingValueGetter::value(obj);
-                            const auto bound_check = obj_bound.ContainsBy(node_bound);
-
-                            if ( bound_check != DirectX::ContainmentType::CONTAINS )
-                            {
-                                auto* cursor = node->parent();
-                                std::unordered_set<octree_impl*> seen_ancestors;
-                                constexpr unsigned max_parent_walk = 65536u;
-                                unsigned walk_steps = 0;
-                                while ( cursor )
-                                {
-                                    if ( walk_steps++ >= max_parent_walk || !seen_ancestors.insert(cursor).second )
-                                    {
-                                        // Cycle or unreasonably deep parent chain: rebuild tree to recover.
-                                        root()->Panic();
-                                        return;
-                                    }
-                                    if ( cursor->Insert(obj) )
-                                    {
-                                        break;
-                                    }
-                                    cursor = cursor->parent();
-                                }
-
-                                if ( !cursor )
-                                {
-                                    // panic: Even root cannot contain the object, need to rebuild the whole tree.
-                                    root()->Panic();
-                                    return;
-                                }
-                                // Object moved to parent node, remove from current obj
-                                it = node_value.erase(it);
-                                continue;
-                            }
-
-                            ++it;
+                            node_value.erase(node_value.begin() + i);
+                            continue;
                         }
+
+                        const auto obj     = node_value[ i ].lock();
+                        const auto obj_box = BoundingValueGetter::value(obj).GetBoxAxisAlignedBounds();
+                        if ( node_bound.Contains(obj_box) != DirectX::ContainmentType::CONTAINS )
+                        {
+                            if ( !MoveUp(node, obj, obj_box) )
+                            {
+                                return;
+                            }
+                            node_value.erase(node_value.begin() + i);
+                            continue;
+                        }
+
+                        ++i;
                     }
 
                     for ( int i = 0; i < octant_count; ++i )
@@ -450,19 +429,19 @@ namespace Engine
                                 continue;
                             }
 
-                            const auto obj       = it->lock();
-                            const auto obj_bound = BoundingValueGetter::value(obj);
-                            bool       found     = false;
+                            const auto obj     = it->lock();
+                            const auto obj_box = BoundingValueGetter::value(obj).GetBoxAxisAlignedBounds();
+                            bool       found   = false;
 
                             for ( int i = 0; i < octant_count; ++i )
                             {
                                 if ( node_children[ i ] )
                                 {
-                                    if ( obj_bound.ContainsBy(node_children[ i ]->m_bounds_) ==
+                                    if ( node_children[ i ]->m_bounds_.Contains(obj_box) ==
                                          DirectX::ContainmentType::CONTAINS )
                                     {
                                         // Move the object to the child node for precise boundary
-                                        if ( node_children[ i ]->Insert(obj) )
+                                        if ( node_children[ i ]->InsertBounded(obj, obj_box) )
                                         {
                                             found = true;
                                             break;
@@ -474,7 +453,7 @@ namespace Engine
                                     const auto bound = GetBound(node_extent,
                                                                 node_center,
                                                                 static_cast<eOctant>( i ));
-                                    const auto bound_check = obj_bound.ContainsBy(bound);
+                                    const auto bound_check = bound.Contains(obj_box);
 
                                     if ( bound_check == DirectX::ContainmentType::CONTAINS )
                                     {
@@ -483,7 +462,7 @@ namespace Engine
                                         node_children[ i ]->m_parent_ = node;
                                         node_children[ i ]->Build();
                                         node_active_children.set(i);
-                                        if ( node_children[ i ]->Insert(obj) )
+                                        if ( node_children[ i ]->InsertBounded(obj, obj_box) )
                                         {
                                             found = true;
                                             break;
@@ -495,14 +474,25 @@ namespace Engine
                             if ( found )
                             {
                                 it = node_value.erase(it);
+                                continue;
                             }
-                            else
+
+                            // Still bounded by this node? (Was checked in the post-visit with a second bounding.)
+                            if ( node_bound.Contains(obj_box) != DirectX::ContainmentType::CONTAINS )
                             {
-                                ++it;
+                                if ( !MoveUp(node, obj, obj_box) )
+                                {
+                                    return;
+                                }
+                                it = node_value.erase(it);
+                                continue;
                             }
+
+                            ++it;
                         }
                     }
 
+                    node->m_values_checked_ = node_value.size();
                     stack.emplace(node, true); // post-visit after children
                     for ( int i = 0; i < octant_count; ++i )
                     {
@@ -688,6 +678,38 @@ namespace Engine
         }
 
     private:
+        // Moves an object that left `node` to the nearest ancestor that takes it (the caller erases it from `node`).
+        // Returns false after a panic rebuild (the caller must stop iterating).
+        bool MoveUp(octree_impl* node, const WeakT& obj, const BoundingBox& obj_box)
+        {
+            auto* cursor = node->parent();
+            std::unordered_set<octree_impl*> seen_ancestors;
+            constexpr unsigned max_parent_walk = 65536u;
+            unsigned walk_steps = 0;
+            while ( cursor )
+            {
+                if ( walk_steps++ >= max_parent_walk || !seen_ancestors.insert(cursor).second )
+                {
+                    // Cycle or unreasonably deep parent chain: rebuild tree to recover.
+                    root()->Panic();
+                    return false;
+                }
+                if ( cursor->InsertBounded(obj, obj_box) )
+                {
+                    break;
+                }
+                cursor = cursor->parent();
+            }
+
+            if ( !cursor )
+            {
+                // panic: Even root cannot contain the object, need to rebuild the whole tree.
+                root()->Panic();
+                return false;
+            }
+            return true;
+        }
+
         static bool __vectorcall FloatCompare(const float a, const float b)
         {
             return std::fabs(a - b) < Epsilon * std::fmaxf(1.0f,
@@ -747,19 +769,25 @@ namespace Engine
                                                                    node_center);
                 std::array<PoolVector, octant_count> octant_values;
 
-                for ( int i = 0; i < octant_count; ++i )
+                // Same containment test as Insert/Update (axis-aligned bounds, computed once per object), so an object
+                // placed here is not judged differently by the next Update at an exact boundary.
+                for ( auto it = node_value.begin(); it != node_value.end(); )
                 {
-                    for ( auto it = node_value.begin(); it != node_value.end(); )
+                    const BoundingBox obj_box = BoundingValueGetter::value(it->lock()).GetBoxAxisAlignedBounds();
+                    bool              moved   = false;
+                    for ( int i = 0; i < octant_count; ++i )
                     {
-                        if ( BoundingValueGetter::value(it->lock()).ContainsBy(octants[ i ]) == DirectX::CONTAINS )
+                        if ( octants[ i ].Contains(obj_box) == DirectX::CONTAINS )
                         {
                             octant_values[ i ].push_back(*it);
-                            it = node_value.erase(it);
+                            it    = node_value.erase(it);
+                            moved = true;
+                            break;
                         }
-                        else
-                        {
-                            ++it;
-                        }
+                    }
+                    if ( !moved )
+                    {
+                        ++it;
                     }
                 }
 
@@ -1077,6 +1105,8 @@ namespace Engine
         bool                                                                   m_b_initialized_;
 
         int m_life_count_;
+        // Update(): number of m_values_ checked at the first visit; the post-visit checks only those added since.
+        size_t m_values_checked_ = 0;
     };
 
     template <typename WeakT, typename BoundingValueGetter, float Epsilon>
