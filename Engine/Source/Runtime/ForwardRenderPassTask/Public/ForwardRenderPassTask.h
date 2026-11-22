@@ -62,7 +62,7 @@ namespace Engine
 
 	private:
 		// Keyed by the per-(shader, mesh) instance list so each mesh draws only its own instances.
-		using IntermediateShaderMap = concurrent_fast_pool_map<const aligned_vector<InstancePair>*, aligned_vector<InstancePair>>;
+		using IntermediateShaderMap = concurrent_fast_pool_map<const aligned_vector<InstancePair>*, aligned_vector<const InstancePair*>>; // refers to the render map's pairs
 
 		inline void PredicateObject( const ObjectPredication &predicate,
                                      RenderMap const         *domain_map,
@@ -79,7 +79,7 @@ namespace Engine
                                             const ContextSetupFunction                                       &postrender_predicate,
                                             const std::unordered_map<std::string_view, ContextSetupFunction> &prerender_predicates,
                                             const std::unordered_map<std::string_view, ContextSetupFunction> &postrender_predicates,
-                                            const aligned_vector<InstancePair>                               &instance_pairs );
+                                            const aligned_vector<const InstancePair *>                       &instance_pairs );
 
 		void RecordUsedTexture( const IGraphicContext* context,
                                 IGraphicAPI&                       gi,

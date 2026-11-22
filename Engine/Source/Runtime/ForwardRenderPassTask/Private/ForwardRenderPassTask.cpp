@@ -131,22 +131,27 @@ namespace Engine
 				{
                     for ( const aligned_vector<InstancePair> &instances : shader_pair.second | std::views::values )
 					{
+						// Filtered locally, then inserted once per instance list.
+						aligned_vector<const InstancePair*> selected;
+						selected.reserve( instances.size() );
 						for (const InstancePair& instance_pair : instances)
 						{
 							if (predicate && !predicate(instance_pair.object))
 							{
 								continue;
 							}
-
-							std::remove_reference_t<decltype(out_map)>::accessor acc;
-                            if ( !out_map.find( acc, &instances ) )
-							{
-                                out_map.insert( acc, &instances );
-							}
-
-							acc->second.push_back(instance_pair);
-							std::atomic_ref( instance_count ).fetch_add( 1 );
+							selected.push_back( &instance_pair );
 						}
+
+						if ( selected.empty() )
+						{
+							continue;
+						}
+
+						std::atomic_ref( instance_count ).fetch_add( selected.size() );
+						std::remove_reference_t<decltype(out_map)>::accessor acc;
+						out_map.insert( acc, &instances );
+						acc->second = std::move( selected );
 					}
 				}
 			);
@@ -164,14 +169,14 @@ namespace Engine
             const ContextSetupFunction                                       &postrender_predicate,
             const std::unordered_map<std::string_view, ContextSetupFunction> &prerender_predicates,
             const std::unordered_map<std::string_view, ContextSetupFunction> &postrender_predicates,
-            const aligned_vector<InstancePair>                               &instance_pairs
+            const aligned_vector<const InstancePair *>                       &instance_pairs
 	)
 	{
 		IGraphicAPI& gi = g_graphic_accessor.GetInterface();
 
 		// Manual release
 		SpinLockToken gi_token = SingletonSpinLock::GetInstance().Lock(m_gi_ticket_);
-		const IGraphicContextImpl& context = std::move(gi.GetNewContext(0, false, L"Render Pass"));
+		const IGraphicContextImpl& context = gi.GetNewContext(0, false, L"Render Pass"); // lifetime extended to the scope
 		gi_token.Release();
 		
 		const IGraphicContext&  primitive = context.GetPointers();
@@ -221,10 +226,10 @@ namespace Engine
         }
 
 		size_t idx = 0;
-		for (const InstancePair& instance_pair : instance_pairs)
+		for (const InstancePair* instance_pair : instance_pairs)
 		{
-			instances[idx] = instance_pair.instance;
-			texture_pairs[idx] = TexturePair(&instance_pair.textures, &instance_pair.reservedTextures);
+			instances[idx] = instance_pair->instance;
+			texture_pairs[idx] = TexturePair(&instance_pair->textures, &instance_pair->reservedTextures);
 			++idx;
 		}
 

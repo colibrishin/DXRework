@@ -1,5 +1,7 @@
 #include "StructuredBufferDX12.hpp"
 
+#include <algorithm>
+
 #include <directxtk12/Keyboard.h>
 
 #include "CommandPair.h"
@@ -144,7 +146,8 @@ void Engine::Graphics::D3D12StructuredBufferTypeless::SetData(const IGraphicCont
 
 	m_upload_buffer_->Unmap(0, nullptr);
 
-	cmd->GetList4()->CopyResource(m_buffer_.Get(), m_upload_buffer_.Get());
+	// Only the written elements (at least one, so the copy always promotes the buffer to COPY_DEST for the barrier).
+	cmd->GetList4()->CopyBufferRegion(m_buffer_.Get(), 0, m_upload_buffer_.Get(), 0, static_cast<UINT64>((std::max)(size, 1u)) * stride);
 
 	const auto& common_transition = CD3DX12_RESOURCE_BARRIER::Transition
 	(
@@ -182,7 +185,8 @@ void Engine::Graphics::D3D12StructuredBufferTypeless::SetDataContainer(const IGr
 
 	m_upload_buffer_->Unmap(0, nullptr);
 
-	cmd->GetList4()->CopyResource(m_buffer_.Get(), m_upload_buffer_.Get());
+	// Only the written elements (at least one, so the copy always promotes the buffer to COPY_DEST for the barrier).
+	cmd->GetList4()->CopyBufferRegion(m_buffer_.Get(), 0, m_upload_buffer_.Get(), 0, static_cast<UINT64>((std::max)(size, 1u)) * stride);
 
 	const auto& common_transition = CD3DX12_RESOURCE_BARRIER::Transition
 	(
@@ -222,7 +226,8 @@ void Engine::Graphics::D3D12StructuredBufferTypeless::SetDataPointerContainer(
 
 	m_upload_buffer_->Unmap(0, nullptr);
 
-	cmd->GetList4()->CopyResource(m_buffer_.Get(), m_upload_buffer_.Get());
+	// Only the written elements (at least one, so the copy always promotes the buffer to COPY_DEST for the barrier).
+	cmd->GetList4()->CopyBufferRegion(m_buffer_.Get(), 0, m_upload_buffer_.Get(), 0, static_cast<UINT64>((std::max)(size, 1u)) * stride);
 
 	const auto& common_transition = CD3DX12_RESOURCE_BARRIER::Transition
 	(
