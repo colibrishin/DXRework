@@ -111,7 +111,9 @@ namespace Engine::Managers
                 m_render_pass_tasks_usage_[ domain ].emplace( type, 0 );
             }
 
-            size_t         use_count       = m_render_pass_tasks_usage_[ domain ][ type ];
+            // Each call in a frame takes its own task (counts are reset in PreUpdate): a task's Cleanup() resets its
+            // buffer pools and heaps, which the previous call's command lists may not have executed yet.
+            size_t&        use_count       = m_render_pass_tasks_usage_[ domain ][ type ];
             const size_t   allocated_count = m_render_pass_tasks_[ domain ][ type ].size();
 
             if (use_count == allocated_count)

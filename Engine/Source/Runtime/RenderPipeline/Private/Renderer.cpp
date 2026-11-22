@@ -147,6 +147,10 @@ namespace Engine::Managers
 				{
 					factory->Release( task );
 				}
+
+				// Drop the released tasks: RenderPass() indexes them by the per-frame use count.
+				m_render_pass_tasks_[ i ].erase( task_type );
+				m_render_pass_tasks_usage_[ i ].erase( task_type );
 			}
 
 			m_unique_render_pass_task_factories_.erase( name.data() );
@@ -200,6 +204,7 @@ namespace Engine::Managers
 			}
 
             m_render_pass_tasks_[ domain ].erase( task_type );
+            m_render_pass_tasks_usage_[ domain ].erase( task_type );
 		}
 	}
 
