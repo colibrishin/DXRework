@@ -198,3 +198,85 @@ TEST( WeakPointer, MoveTransfersAndEmptiesTheSource )
     EXPECT_EQ( c.lock().get(), item.get() );
     EXPECT_TRUE( b.empty() ); // NOLINT(bugprone-use-after-move)
 }
+
+// managed_static_weak_cast<T>(Strong<U>): a Weak<T> without a temporary Strong<T> (GetComponent<T>()).
+namespace weak_cast_tests
+{
+    struct A { int a = 1; };
+    struct B { int b = 2; };
+    struct C : A, B { int c = 3; }; // B sits at a non-zero offset inside C
+}
+
+TEST( ManagedWeakCast, UpcastAdjustsThePointerAndDoesNotOwn )
+{
+    using namespace weak_cast_tests;
+    Strong<C>     c  = make_managed_shared<C>();
+    const Weak<B> wb = managed_static_weak_cast<B>( c );
+
+    EXPECT_EQ( c.use_count(), 1 ); // the weak pointer holds no share
+    const Strong<B> b = wb.lock();
+    ASSERT_TRUE( b );
+    EXPECT_EQ( b.get(), static_cast<B*>( c.get() ) );
+    EXPECT_EQ( b->b, 2 );
+    EXPECT_TRUE( wb.owner_equals( c ) );
+}
+
+TEST( ManagedWeakCast, DowncastReachesTheDerivedObject )
+{
+    using namespace weak_cast_tests;
+    const Strong<C> c = make_managed_shared<C>();
+    const Strong<B> b = c;
+    const Weak<C>   wc = managed_static_weak_cast<C>( b );
+
+    const Strong<C> locked = wc.lock();
+    ASSERT_TRUE( locked );
+    EXPECT_EQ( locked.get(), c.get() );
+    EXPECT_EQ( locked->c, 3 );
+}
+
+TEST( ManagedWeakCast, SameOwnerAsAConvertedWeak )
+{
+    using namespace weak_cast_tests;
+    const Strong<C> c    = make_managed_shared<C>();
+    const Weak<B>   cast = managed_static_weak_cast<B>( c );
+    const Weak<B>   conv = Weak<B>( Strong<B>( c ) );
+
+    EXPECT_TRUE( cast == conv );
+    EXPECT_EQ( std::hash<Weak<B>>{}( cast ), std::hash<Weak<B>>{}( conv ) );
+    EXPECT_EQ( cast.lock().get(), conv.lock().get() );
+}
+
+TEST( ManagedWeakCast, LocksThroughAnotherOwnerAfterTheSourceIsGone )
+{
+    using namespace weak_cast_tests;
+    Strong<C>       source = make_managed_shared<C>();
+    const Strong<C> keep   = source;
+    const Weak<B>   wb     = managed_static_weak_cast<B>( source );
+
+    source.reset();
+    const Strong<B> b = wb.lock();
+    ASSERT_TRUE( b );
+    EXPECT_EQ( b.get(), static_cast<B*>( keep.get() ) );
+    EXPECT_EQ( b->b, 2 );
+}
+
+TEST( ManagedWeakCast, ExpiresWithTheObject )
+{
+    using namespace weak_cast_tests;
+    Strong<C>     c  = make_managed_shared<C>();
+    const Weak<A> wa = managed_static_weak_cast<A>( c );
+
+    c.reset();
+    EXPECT_TRUE( wa.expired() );
+    EXPECT_FALSE( wa.lock() );
+}
+
+TEST( ManagedWeakCast, EmptySourceGivesAnEmptyWeak )
+{
+    using namespace weak_cast_tests;
+    const Strong<C> empty;
+    const Weak<B>   wb = managed_static_weak_cast<B>( empty );
+
+    EXPECT_TRUE( wb.empty() );
+    EXPECT_FALSE( wb.lock() );
+}

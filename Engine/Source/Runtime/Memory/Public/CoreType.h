@@ -2392,6 +2392,22 @@ class managed_weak_ptr : protected boost::weak_ptr<T>
     {
     }
 
+	struct static_cast_tag
+	{ };
+
+	// Aliasing: shares r's control block (weak count only) and points at r's stored pointer cast to T
+	// (managed_static_weak_cast). Reads the stored pointer like the converting copies do, without resolve(): handing
+	// out a weak pointer neither dereferences nor checks the slot; lock() and the dereference do.
+	template <typename U>
+	managed_weak_ptr( const managed_shared_ptr<U>& r, const static_cast_tag& ) noexcept
+		: boost::weak_ptr<T>( static_cast<const boost::shared_ptr<U>&>( r ),
+		                      static_cast<T*>( static_cast<const boost::shared_ptr<U>&>( r ).get() ) ),
+		  m_context_( r.m_context_ )
+	{ }
+
+	template <typename T1, typename U1>
+	friend managed_weak_ptr<T1> managed_static_weak_cast( const managed_shared_ptr<U1>& r ) noexcept;
+
 public:
     managed_weak_ptr() : boost::weak_ptr<T>( {} ), m_context_( AllocationContext::no_assert_tag{} )
     {
@@ -2485,6 +2501,16 @@ public:
 		return managed_shared_ptr<T>( *this );
     }
 };
+
+// Weak<T> from Strong<U> through a static cast without a temporary Strong<T>: one weak-count increment instead of a
+// strong increment, a weak increment and a strong decrement (e.g. ObjectBase::GetComponent<T>()). Unlike
+// managed_static_pointer_cast (a reinterpret cast of the stored pointer), this adjusts the pointer for a base at a
+// non-zero offset.
+template <typename T, typename U>
+managed_weak_ptr<T> managed_static_weak_cast( const managed_shared_ptr<U>& r ) noexcept
+{
+    return managed_weak_ptr<T>( r, typename managed_weak_ptr<T>::static_cast_tag{} );
+}
 
 template <class T>
 inline bool operator==( managed_weak_ptr<T> const& a, nullptr_t ) noexcept

@@ -9,9 +9,10 @@ namespace Engine
 {
     GenericBounding<> bounding_getter::value(const Weak<Abstracts::ObjectBase>& object)
 	{
-		const auto tr = object.lock()->GetComponent<Components::Transform>().lock();
+		const auto obj = object.lock();
+		const auto tr  = obj->GetComponent<Components::Transform>().lock();
 
-		if (const auto cldr = object.lock()->GetComponent<Components::Collider>().lock())
+		if (const auto cldr = obj->GetComponent<Components::Collider>().lock())
 		{
 			auto bounding = cldr->GetBounding();
 			return bounding;
