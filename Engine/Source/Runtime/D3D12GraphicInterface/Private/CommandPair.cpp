@@ -385,14 +385,18 @@ namespace Engine
 
 	void CommandPairTask::StopTask()
 	{
-		std::lock_guard l(m_critical_mutex_);
-		m_running_ = false;
+		{
+			std::lock_guard l(m_critical_mutex_);
+			m_running_ = false;
+			// Wake the thread if it is idle in wait(0): wait() only returns once the value changes, so a notify alone
+			// (as Cleanup() does after store(0)) leaves it blocked forever. The loop sees !m_running_ and exits.
+			m_command_pair_count_.fetch_add(1);
+		}
+		m_command_pair_count_.notify_all();
 	}
 
 	void CommandPairTask::StartTask()
 	{
-		m_running_ = true;
-
 		while (m_running_)
 		{
 			if (const UINT64 count = m_command_pair_count_.load())

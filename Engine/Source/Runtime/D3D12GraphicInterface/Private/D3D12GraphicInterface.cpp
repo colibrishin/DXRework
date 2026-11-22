@@ -68,7 +68,14 @@ Engine::D3D12GraphicInterface::D3D12GraphicInterface()
 { }
 
 Engine::D3D12GraphicInterface::~D3D12GraphicInterface()
-{ }
+{
+    // Shutdown() normally joined it; a joinable std::thread in a destructor would call std::terminate.
+    if ( m_command_task_thread_.joinable() )
+    {
+        m_command_pair_task_.StopTask();
+        m_command_task_thread_.join();
+    }
+}
 
 void Engine::D3D12GraphicInterface::Initialize()
 {
@@ -104,6 +111,12 @@ void Engine::D3D12GraphicInterface::Initialize()
 void Engine::D3D12GraphicInterface::Shutdown()
 {
 	m_command_pair_task_.StopTask();
+
+	if ( m_command_task_thread_.joinable() )
+	{
+		m_command_task_thread_.join();
+	}
+
     m_command_pair_task_.Cleanup();
 
 	for ( ComPtr<ID3D12Resource>& resource : m_render_targets_ )
@@ -1551,8 +1564,10 @@ void Engine::D3D12GraphicInterface::InitializePipeline()
 
 void Engine::D3D12GraphicInterface::DetachCommandThread()
 {
+    // Joined in Shutdown(): a detached thread outlived this object and the DLL. Running is set before the thread
+    // starts so a StopTask() that comes first is not overwritten by the thread.
+    m_command_pair_task_.MarkRunning();
     m_command_task_thread_ = std::thread(&CommandPairTask::StartTask, &m_command_pair_task_);
-    m_command_task_thread_.detach();
 }
 
 float Engine::D3D12GraphicInterface::GetAspectRatio()
