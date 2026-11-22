@@ -171,7 +171,7 @@ namespace Engine
 
 		// Manual release
 		SpinLockToken gi_token = SingletonSpinLock::GetInstance().Lock(m_gi_ticket_);
-		const IGraphicContextImpl& context = std::move(gi.GetNewContext(0, false, L"Render Pass"));
+		const IGraphicContextImpl& context = gi.GetNewContext(0, false, L"Render Pass"); // lifetime extended to the scope
 		gi_token.Release();
 		
 		const IGraphicContext&  primitive = context.GetPointers();

@@ -256,7 +256,7 @@ inline void Engine::DeferredRenderPassTask::StartPhase_MultiThread(
 
     // Manual release
     SpinLockToken                            gi_token = SingletonSpinLock::GetInstance().Lock( m_gi_ticket_ );
-    const IGraphicContextImpl &context  = std::move( gi.GetNewContext( 0, false, L"Render Pass" ) );
+    const IGraphicContextImpl &context  = gi.GetNewContext( 0, false, L"Render Pass" ); // lifetime extended to the scope
     gi_token.Release();
 
     const IGraphicContext &primitive = context.GetPointers();
@@ -495,7 +495,7 @@ inline void Engine::DeferredRenderPassTask::LightPass(
         const std::unordered_map<std::string_view, ContextSetupFunction> &postrender_predicates )
 {
     IGraphicAPI &gi = g_graphic_accessor.GetInterface();
-    const IGraphicContextImpl &context  = std::move( gi.GetNewContext( 0, false, L"Render Pass" ) );
+    const IGraphicContextImpl &context  = gi.GetNewContext( 0, false, L"Render Pass" ); // lifetime extended to the scope
     const IGraphicContext &primitive = context.GetPointers();
     primitive.commandList->SoftReset();
 
