@@ -337,7 +337,10 @@ namespace Engine::Managers
             {
 #if IS_DLL
 #if PLATFORM == Windows
-                if ( HMODULE module = static_cast<HMODULE>( ptr->m_handle_ ) )
+                // Only release what LoadLibraryW referenced. A module already mapped as another DLL's import was
+                // found with GetModuleHandleW (m_b_dynamic_ false), which takes no reference; freeing it dropped the
+                // importer's reference.
+                if ( HMODULE module = static_cast<HMODULE>( ptr->m_handle_ ); module && ptr->m_b_dynamic_ )
                 {
                     FreeLibrary( module );
                 }

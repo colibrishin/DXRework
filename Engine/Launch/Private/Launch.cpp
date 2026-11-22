@@ -67,14 +67,13 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline
             module.m_module_->Shutdown();
             module.m_module_.reset();
 
-            if ( module.m_handle_ )
+            // Only release what LoadLibraryW referenced (GetModuleHandleW takes no reference).
+            if ( module.m_handle_ && module.m_b_dynamic_ )
             {
                 FreeLibrary( static_cast<HMODULE>( module.m_handle_ ) );
             }
-            else
-            {
-                module.m_handle_ = nullptr;
-            }
+
+            module.m_handle_ = nullptr;
         }
     };
 
