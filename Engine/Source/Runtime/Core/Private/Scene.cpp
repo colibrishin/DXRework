@@ -344,7 +344,11 @@ namespace Engine
 			m_concurrent_cached_objects_.clear();
 			m_assigned_actor_ids_.clear();
 
-			for (auto it = scene->m_layers_.begin(); it != scene->m_layers_.end(); ++it)
+			// The layers move into this scene; the source keeps none (taken as a whole, so it never holds null entries).
+			std::vector<Strong<Layer>> layers = std::move( scene->m_layers_ );
+			scene->m_layers_.clear();
+
+			for (auto it = layers.begin(); it != layers.end(); ++it)
 			{
                 const Strong<Layer>& layer = m_layers_.emplace_back( std::move( *it ) );
 				for (const auto& obj : layer->GetGameObjects())

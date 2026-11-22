@@ -1582,7 +1582,7 @@ private:
 	AllocationContext( no_assert_tag ) {}
 
 public:
-	AllocationContext( const AllocationContext& context )
+	AllocationContext( const AllocationContext& context ) noexcept
 	{
         m_key_                     = context.m_key_;
         m_allocator_               = context.m_allocator_;
@@ -2165,8 +2165,40 @@ class managed_shared_ptr : protected boost::shared_ptr<T>
 public:
     using element_type = T;
 
-	// Declared so that no implicit move is generated (moves copy): a moved-from boost pointer would keep a live context.
 	~managed_shared_ptr() = default;
+
+	managed_shared_ptr( const managed_shared_ptr& other ) = default;
+
+private:
+	void swap_with( managed_shared_ptr& other ) noexcept
+	{
+		boost::shared_ptr<T>::swap( other );
+		std::swap( m_context_, other.m_context_ );
+	}
+
+public:
+	// A move transfers the share without touching the reference count and leaves the source empty: its context is
+	// reset too, because operator bool, == nullptr, hashing and owner comparisons read the context.
+	managed_shared_ptr( managed_shared_ptr&& other ) noexcept
+		: boost::shared_ptr<T>( std::move( static_cast<boost::shared_ptr<T>&>( other ) ) ), m_context_( other.m_context_ )
+	{
+		other.m_context_ = AllocationContext::get_null_context();
+	}
+
+	// Assignments swap with a temporary: this is complete (pointer and context) before the old share is released,
+	// so the old object's destructor never sees a half-assigned pointer, and other may live inside the old object
+	// (node = std::move( node->next )).
+	managed_shared_ptr& operator=( const managed_shared_ptr& other )
+	{
+		managed_shared_ptr( other ).swap_with( *this );
+		return *this;
+	}
+
+	managed_shared_ptr& operator=( managed_shared_ptr&& other ) noexcept
+	{
+		managed_shared_ptr( std::move( other ) ).swap_with( *this );
+		return *this;
+	}
 
 	managed_shared_ptr( nullptr_t )
         : boost::shared_ptr<T>( nullptr ), m_context_( AllocationContext::get_null_context()  )
@@ -2178,11 +2210,24 @@ public:
 	{
 	}
 
+	// Converting copy: shares other's control block directly (one reference count increment).
 	template <typename U>
-     managed_shared_ptr( const managed_shared_ptr<U>& other )
-        : boost::shared_ptr<T>( boost::static_pointer_cast<T>( other.native() ) ), m_context_( other.m_context_ )
-    {
-    }
+	managed_shared_ptr( const managed_shared_ptr<U>& other )
+		: boost::shared_ptr<T>( static_cast<const boost::shared_ptr<U>&>( other ),
+		                        static_cast<T*>( static_cast<const boost::shared_ptr<U>&>( other ).get() ) ),
+		  m_context_( other.m_context_ )
+	{
+	}
+
+	// Converting move: takes other's share and leaves it empty.
+	template <typename U>
+	managed_shared_ptr( managed_shared_ptr<U>&& other ) noexcept
+		: boost::shared_ptr<T>( std::move( static_cast<boost::shared_ptr<U>&>( other ) ),
+		                        static_cast<T*>( static_cast<boost::shared_ptr<U>&>( other ).get() ) ),
+		  m_context_( other.m_context_ )
+	{
+		other.m_context_ = AllocationContext::get_null_context();
+	}
 
 	// After cleanup every managed pointer reads as null, like get().
 	explicit operator bool() const noexcept
@@ -2353,6 +2398,27 @@ public:
         m_context_ = AllocationContext::get_null_context();
     }
 
+	managed_weak_ptr( const managed_weak_ptr& other )            = default;
+	managed_weak_ptr& operator=( const managed_weak_ptr& other ) = default;
+
+	// Leaves the source empty (context included, which empty() and owner comparisons read).
+	managed_weak_ptr( managed_weak_ptr&& other ) noexcept
+		: boost::weak_ptr<T>( std::move( static_cast<boost::weak_ptr<T>&>( other ) ) ), m_context_( other.m_context_ )
+	{
+		other.m_context_ = AllocationContext::get_null_context();
+	}
+
+	managed_weak_ptr& operator=( managed_weak_ptr&& other ) noexcept
+	{
+		if ( this != &other )
+		{
+			boost::weak_ptr<T>::operator=( std::move( static_cast<boost::weak_ptr<T>&>( other ) ) );
+			m_context_       = other.m_context_;
+			other.m_context_ = AllocationContext::get_null_context();
+		}
+		return *this;
+	}
+
 	template <typename U>
 	managed_weak_ptr( const managed_weak_ptr<U>& other )
 		: boost::weak_ptr<T>( other ),
@@ -2371,6 +2437,7 @@ public:
 	void reset()
     {
 		boost::weak_ptr<T>::reset();
+		m_context_ = AllocationContext::get_null_context();
     }
 
 	bool operator==(const managed_weak_ptr<T>& other) const
