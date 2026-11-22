@@ -150,9 +150,14 @@ void Engine::D3D12GraphicInterface::Shutdown()
 		reinterpret_cast<decltype(DXGIGetDebugInterface)*>(
 			GetProcAddress(hModule, "DXGIGetDebugInterface"));
 
-	IDXGIDebug* pDXGIDebug;
-	DXGIGetDebugInterfaceFunc(IID_PPV_ARGS(&pDXGIDebug));
-    pDXGIDebug->ReportLiveObjects( DXGI_DEBUG_D3D12, DXGI_DEBUG_RLO_DETAIL );
+	// dxgidebug.dll is loaded only once the debug DXGI factory was created; an initialization that failed
+	// earlier reaches here without it.
+	IDXGIDebug* pDXGIDebug = nullptr;
+	if ( DXGIGetDebugInterfaceFunc && SUCCEEDED( DXGIGetDebugInterfaceFunc( IID_PPV_ARGS( &pDXGIDebug ) ) ) )
+	{
+		pDXGIDebug->ReportLiveObjects( DXGI_DEBUG_D3D12, DXGI_DEBUG_RLO_DETAIL );
+		pDXGIDebug->Release();
+	}
 #endif // WITH_DEBUG
 }
 
