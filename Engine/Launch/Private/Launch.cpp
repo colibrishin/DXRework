@@ -131,7 +131,10 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline
         Engine::Managers::ModuleManager::GetInstance().Shutdown();
     }
 
-    cleanup_seq( *g_core_api );
+    if ( g_core_api )
+    {
+        cleanup_seq( *g_core_api );
+    }
 
     if ( g_graphic_api )
     {
@@ -154,7 +157,10 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline
     PoolAllocatorStorage::report_leakage();
     Engine::Managers::ModuleManager::GetInstance().Destroy();
 
-    cleanup_seq( *g_module_api );
+    if ( g_module_api )
+    {
+        cleanup_seq( *g_module_api );
+    }
 
     if ( g_core_mem )
     {
