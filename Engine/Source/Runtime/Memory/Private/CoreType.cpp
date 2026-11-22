@@ -48,6 +48,127 @@ namespace
     };
 }
 
+namespace
+{
+    // State of the control block pool: created on first use and never destroyed (see control_block_pool).
+    struct control_block_state
+    {
+        static constexpr size_t   reserve_bytes = size_t( 4 ) << 30;  // address space, ~44M blocks
+        static constexpr size_t   commit_bytes  = size_t( 64 ) << 10; // committed as blocks are first used
+        static constexpr uint64_t free_tag      = 0xF4EEB10CC0B1F4EEull;
+
+        std::atomic<bool> lock      = false;
+        char*             base      = nullptr;
+        size_t            used      = 0; // bytes handed out at least once
+        size_t            committed = 0;
+        size_t            live      = 0;
+        void*             free_head = nullptr;
+    };
+
+    // Layout of a block on the free list. A block is destroyed by boost before it is freed, so the tag cannot be a
+    // live control block's fields: offset 8 holds its use and weak counts, both zero by then.
+    struct free_block
+    {
+        void*    next;
+        uint64_t tag;
+    };
+
+    control_block_state& control_blocks()
+    {
+        static control_block_state* state = new control_block_state();
+        return *state;
+    }
+
+    // Whether p is the start of a block that was handed out at least once.
+    bool in_pool( const control_block_state& s, const void* p )
+    {
+        const uintptr_t base = reinterpret_cast<uintptr_t>( s.base );
+        const uintptr_t addr = reinterpret_cast<uintptr_t>( p );
+        return s.base && addr >= base && addr < base + s.used && ( addr - base ) % control_block_pool::block_size == 0;
+    }
+
+    [[noreturn]] void control_block_fail_fast( const char* reason )
+    {
+        OutputDebugStringA( reason );
+        OutputDebugStringA( "\n" );
+        __fastfail( FAST_FAIL_FATAL_APP_EXIT );
+    }
+}
+
+void* control_block_pool::allocate()
+{
+    control_block_state& s = control_blocks();
+    spin_guard           guard( s.lock );
+
+    char* block;
+    if ( s.free_head )
+    {
+        auto* free = static_cast<free_block*>( s.free_head );
+        // A write into a freed block would otherwise hand out an arbitrary address later.
+        if ( free->tag != control_block_state::free_tag || ( free->next && !in_pool( s, free->next ) ) )
+        {
+            control_block_fail_fast( "control_block_pool: free list corrupted (write into a freed control block)" );
+        }
+        s.free_head = free->next;
+        free->tag   = 0;
+        block       = reinterpret_cast<char*>( free );
+    }
+    else
+    {
+        if ( !s.base )
+        {
+            s.base = reserve_range( control_block_state::reserve_bytes );
+        }
+        if ( s.used + block_size > control_block_state::reserve_bytes )
+        {
+            throw std::bad_alloc();
+        }
+        while ( s.used + block_size > s.committed )
+        {
+            commit_range( s.base + s.committed, control_block_state::commit_bytes );
+            s.committed += control_block_state::commit_bytes;
+        }
+        block = s.base + s.used;
+        s.used += block_size;
+    }
+    ++s.live;
+    return block;
+}
+
+void control_block_pool::deallocate( void* block ) noexcept
+{
+    control_block_state& s = control_blocks();
+    spin_guard           guard( s.lock );
+
+    if ( !in_pool( s, block ) )
+    {
+        control_block_fail_fast( "control_block_pool: freeing a pointer that is not a control block of the pool" );
+    }
+    auto* free = static_cast<free_block*>( block );
+    if ( free->tag == control_block_state::free_tag )
+    {
+        control_block_fail_fast( "control_block_pool: freeing a control block twice" );
+    }
+    free->next  = s.free_head;
+    free->tag   = control_block_state::free_tag;
+    s.free_head = free;
+    --s.live;
+}
+
+size_t control_block_pool::live_blocks()
+{
+    control_block_state& s = control_blocks();
+    spin_guard           guard( s.lock );
+    return s.live;
+}
+
+size_t control_block_pool::used_bytes()
+{
+    control_block_state& s = control_blocks();
+    spin_guard           guard( s.lock );
+    return s.used;
+}
+
 pool_core::pool_core( const size_t element_size, const size_t reserve_bytes )
     : m_element_size_( element_size ),
       m_reserve_bytes_( reserve_bytes )
