@@ -158,6 +158,10 @@ namespace Engine::Managers
 		    primitive.commandList->SoftReset();
             CheckSize<UINT>( light_buffer.size(), L"Warning: Light buffer size is too big!" );
             UpdateLights( &primitive, light_buffer.data(), light_buffer.size() );
+            // Record this frame's constant buffer copies here, before any pass acquires a command list. Otherwise the
+            // first pass thread to bind them records the copy, and lists acquired earlier (executed earlier) read the
+            // previous frame's values. No heap: Bind() only flushes.
+            BindConstantBuffers( &primitive );
 		    primitive.commandList->FlagReady();
 		}
 	}
