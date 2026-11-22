@@ -12,8 +12,19 @@
 #endif
 
 #if PLATFORM == Windows
+// Both launch paths (editor and monolithic client/server); WIN32_LEAN_AND_MEAN keeps Windows.h from including it.
+#include <objbase.h>
+#pragma comment( lib, "ole32.lib" )
+#endif
+
+#if PLATFORM == Windows
 int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline, int iCmdshow )
 {
+    // Texture loading (WIC) needs COM on this thread. Without this, COM was only initialized when the window was
+    // activated (the text input service does it on focus), so a launch that did not get focus failed to load
+    // textures with E_NOINTERFACE.
+    const HRESULT com_result = CoInitializeEx( nullptr, COINIT_APARTMENTTHREADED );
+
 #ifndef CFG_MONOLITH
     const auto& load_seq =
             []( Engine::ModuleInfo& module, const std::wstring& filename, const std::filesystem::path& entry )
@@ -155,6 +166,12 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline
 #else
     MonolithicLaunch( hInstance );
 #endif
+
+    // Every COM user (graphics and sound modules, the window) is torn down above.
+    if ( SUCCEEDED( com_result ) )
+    {
+        CoUninitialize();
+    }
     return 0;
 }
 #endif
