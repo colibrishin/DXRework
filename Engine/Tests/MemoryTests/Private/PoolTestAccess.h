@@ -37,4 +37,9 @@ struct pool_test_access
     // Bumps the slot's generation and marks it free without destroying the object: simulates an object freed
     // behind a managed pointer.
     static void release_behind( pool_core* c, const void* object ) { c->release( c->key_of( object ) ); }
+
+    static size_t live_control_blocks() { return control_block_pool::live_blocks(); }
+    static size_t used_control_block_bytes() { return control_block_pool::used_bytes(); }
+    static void*  allocate_control_block() { return control_block_pool::allocate(); }
+    static void   deallocate_control_block( void* block ) { control_block_pool::deallocate( block ); }
 };

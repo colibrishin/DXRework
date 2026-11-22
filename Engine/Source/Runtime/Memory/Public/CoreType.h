@@ -1933,6 +1933,78 @@ private:
     }
 };
 
+// Fixed-size storage for the control blocks of managed pointers: one block per make_managed_shared, all from one
+// process-wide pool in Memory.dll instead of the default heap. Freed blocks are reused; the memory is never returned
+// (like the object pools), so a control block released after cleanup() (e.g. by a global) is still valid to free.
+// Only control_block_allocator reaches it; freeing a block twice, an interior pointer or a pointer from outside the
+// pool ends the process.
+class ENGINE_MEMORY_API control_block_pool
+{
+    template <typename U>
+    friend struct control_block_allocator;
+    friend struct pool_test_access; // unit tests (Engine/Tests/MemoryTests)
+
+public:
+    // Every managed pointer's control block has the same size (pointer, managed_slot_deleter, empty allocator);
+    // control_block_allocator checks it at compile time.
+    static constexpr size_t block_size  = 96;
+    static constexpr size_t block_align = 16;
+
+private:
+    static void*  allocate();
+    static void   deallocate( void* block ) noexcept;
+    static size_t live_blocks();
+    static size_t used_bytes();
+};
+
+// Allocator of a managed pointer's boost control block (boost rebinds it to the control block type). Only
+// managed_shared_ptr can create one; boost copies it into the control block and keeps it private there, so nothing
+// else can reach the pool.
+template <typename U>
+struct control_block_allocator
+{
+private:
+    template <typename V>
+    friend class managed_shared_ptr;
+
+    control_block_allocator() noexcept = default;
+
+public:
+    using value_type = U;
+
+    template <typename V>
+    control_block_allocator( const control_block_allocator<V>& ) noexcept
+    { }
+
+    U* allocate( const size_t n )
+    {
+        static_assert( sizeof( U ) <= control_block_pool::block_size, "control block does not fit control_block_pool::block_size" );
+        static_assert( alignof( U ) <= control_block_pool::block_align, "control block alignment exceeds the pool's" );
+        if ( n != 1 )
+        {
+            throw std::bad_alloc();
+        }
+        return static_cast<U*>( control_block_pool::allocate() );
+    }
+
+    void deallocate( U* p, size_t ) noexcept
+    {
+        control_block_pool::deallocate( p );
+    }
+
+    template <typename V>
+    bool operator==( const control_block_allocator<V>& ) const noexcept
+    {
+        return true;
+    }
+
+    template <typename V>
+    bool operator!=( const control_block_allocator<V>& ) const noexcept
+    {
+        return false;
+    }
+};
+
 // Deleter of the one boost control block that owns a pooled object. It finds the object by allocation slot and
 // generation instead of the raw pointer.
 // T is the allocated (most derived) type: the destructor is called from the module that created the control block,
@@ -2003,9 +2075,11 @@ class managed_shared_ptr : protected boost::shared_ptr<T>
 	{
 	}
 
-	// The only place a control block is created: one block per allocation, shared by every copy.
+	// The only place a managed control block is created: one block per allocation (from control_block_pool), shared
+	// by every copy. (Deserialization creates default-heap ones, which drop_if_unmanaged discards.)
 	managed_shared_ptr( const AllocationContext& context, const init_tag& )
-        : boost::shared_ptr<T>( static_cast<T*>( context.ptr() ), managed_slot_deleter<T>{ context } ), m_context_( context )
+        : boost::shared_ptr<T>( static_cast<T*>( context.ptr() ), managed_slot_deleter<T>{ context }, control_block_allocator<T>{} ),
+          m_context_( context )
     {
 	}
 
