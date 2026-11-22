@@ -91,14 +91,14 @@ namespace Engine::Abstracts
 		{
 			if constexpr (std::is_base_of_v<Component, T>)
 			{
-				if (!m_components_.contains(T::StaticTypeHash()))
+				// One lookup, and no temporary Strong<T> (managed_static_weak_cast).
+				const auto it = m_components_.find(T::StaticTypeHash());
+				if (it == m_components_.end())
 				{
 					return {};
 				}
 
-				const auto& comp = m_components_[T::StaticTypeHash()];
-
-				return managed_static_pointer_cast<T>( comp );
+				return managed_static_weak_cast<T>( it->second );
 			}
 
 #pragma warning(disable: 4702)
