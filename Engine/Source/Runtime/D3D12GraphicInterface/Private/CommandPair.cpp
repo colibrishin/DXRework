@@ -316,7 +316,8 @@ namespace Engine
 
 		m_buffer_count_ = buffer_count;
 
-		m_fence_nonce_ = std::unique_ptr<uint64_t>(new uint64_t[buffer_count]);
+		// Array form (freed with delete[]) and zero-initialized: the fence is created at 0 and each Signal increments.
+		m_fence_nonce_ = std::make_unique<uint64_t[]>(buffer_count);
 		DX::ThrowIfFailed(dev->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(m_fence_.GetAddressOf())));
         m_fence_->SetName( L"CommandPairTask Fence" );
 
