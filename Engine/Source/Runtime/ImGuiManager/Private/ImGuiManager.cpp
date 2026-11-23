@@ -89,6 +89,9 @@ namespace Engine::Managers
 
             ImGui::DestroyContext();
         }
+
+        // Set in Initialize(); its code is in this module and it drives the ImGui context destroyed above.
+        g_ui_accessor.Shutdown();
 #endif
 	}
 
