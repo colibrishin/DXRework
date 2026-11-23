@@ -1,6 +1,20 @@
 #include "TaskScheduler.h"
 #include "EngineEntryPoint.h"
 
+namespace
+{
+    using TaskFuncPtr = void ( * )( const std::vector<std::any>&, float );
+
+    // Same registration only when both wrap the same plain function. Other callables (lambdas, binds) have no
+    // comparable identity and never match.
+    bool IsSameFunction( const Engine::TaskSchedulerFunc& lhs, const Engine::TaskSchedulerFunc& rhs )
+    {
+        const TaskFuncPtr* lhs_ptr = lhs.target<TaskFuncPtr>();
+        const TaskFuncPtr* rhs_ptr = rhs.target<TaskFuncPtr>();
+        return lhs_ptr && rhs_ptr && *lhs_ptr == *rhs_ptr;
+    }
+}
+
 namespace Engine::Managers
 {
 	void TaskScheduler::Initialize() {}
@@ -43,8 +57,7 @@ namespace Engine::Managers
                                                     m_injected_funcs_[ type ],
                                                     [&func](const TaskSchedulerFunc& elem)
                                                     {
-                                                        return elem.target<void(*)(const std::vector<std::any> &, float)>() ==
-                                                            func.target<void(*)(const std::vector<std::any> &, float)>();
+                                                        return IsSameFunction( elem, func );
                                                     });
             it == m_injected_funcs_[ type ].end() )
         {
@@ -58,8 +71,7 @@ namespace Engine::Managers
                 ( m_injected_funcs_[ type ],
                   [&func]( const TaskSchedulerFunc &elem )
                   {
-                      return elem.target<void( const std::vector<std::any> &, float )>() ==
-                          func.target<void(const std::vector<std::any> &, float)>();
+                      return IsSameFunction( elem, func );
                   } );
     }
     void TaskScheduler::PreDeconstruction()
