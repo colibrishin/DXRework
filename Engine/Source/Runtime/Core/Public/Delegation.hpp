@@ -185,6 +185,21 @@ public:
         {
             m_listener_.erase( key );
         }
+
+        // Listeners usually remove themselves in PreDeconstruction, where the object's strong count is already zero:
+        // GetWeakPtr() then returns an empty pointer and the key above never matches. Drop this function's entries
+        // whose owner can no longer be locked (dying or gone), so the std::function (code of the listener's module) does not stay behind.
+        for ( auto it = m_listener_.begin(); it != m_listener_.end(); )
+        {
+            if ( it->first.second == address && !it->first.first.empty() && !it->first.first.lock() )
+            {
+                it = m_listener_.erase( it );
+            }
+            else
+            {
+                ++it;
+            }
+        }
 	}
 
 	template <typename FunctionT> requires std::is_convertible_v<FunctionT, function_type>

@@ -16,7 +16,13 @@ namespace Engine::Managers
 	{
 #if WITH_EDITOR && IS_DLL
 		ModuleManager::GetInstance().RegisterOnModuleShutdown(
-			[]( std::wstring_view name ) { ResourceManager::GetInstance().UnregisterModule( name ); } );
+			[]( std::wstring_view name )
+			{
+				if ( ResourceManager::IsInitialized() )
+				{
+					ResourceManager::GetInstance().UnregisterModule( name );
+				}
+			} );
 #endif
 #if WITH_EDITOR
 		RegisterNewResource(Resources::Prefab::StaticTypeName(), [this](bool& managing_flag)

@@ -143,6 +143,31 @@ namespace Engine::Managers
         {
             ShutdownModule( *it );
         }
+
+        // The callbacks are only for module shutdown, which is done. Destroy them now, while every DLL is loaded: their
+        // code lives in the DLLs that registered them (Core, RenderPipeline), which are FreeLibrary'd before this
+        // instance's static destructor runs.
+        {
+            std::lock_guard l( m_read_mutex_ );
+            m_on_module_shutdown_.clear();
+
+            // Modules created but never initialized (LoadModuleAll stopped by an exception) are not in the load
+            // order. Delete them now, while their DLLs are loaded; their destructors live in those DLLs.
+            for ( auto& [ name, info ] : m_module_loaded_ )
+            {
+                if ( info && info->m_module_ )
+                {
+#if IS_DLL
+                    if ( !GetModuleHandleW( info->m_path_.c_str() ) )
+                    {
+                        ( void )info->m_module_.release(); // its DLL is gone; the destructor code with it
+                        continue;
+                    }
+#endif
+                    info->m_module_.reset();
+                }
+            }
+        }
 	}
 
 	ModuleInfo* ModuleManager::FindModule(const std::wstring_view name)
@@ -167,10 +192,10 @@ namespace Engine::Managers
 			{
                 if ( module_info->m_b_lazy )
                 {
+                    m_module_load_order_.emplace_back( name );
                     module_info->m_module_->Initialize();
                     module_info->m_b_lazy = false;
 
-                    m_module_load_order_.emplace_back( name );
                     TryResolveLazyness( name );
                 }
 
@@ -222,8 +247,8 @@ namespace Engine::Managers
                             }
 
 
-                            module_info->m_module_->Initialize();
                             m_module_load_order_.emplace_back( name.begin(), name.end() );
+                            module_info->m_module_->Initialize();
                         }
                     }
                     else
@@ -292,8 +317,8 @@ namespace Engine::Managers
                         }
 
                         module_info->m_module_->SetModuleName( name );
-                        module_info->m_module_->Initialize();
                         m_module_load_order_.emplace_back( name.begin(), name.end() );
+                        module_info->m_module_->Initialize();
                     }
                 }
 
@@ -329,7 +354,10 @@ namespace Engine::Managers
             {
 #if IS_DLL
 #if PLATFORM == Windows
-                if ( HMODULE module = static_cast<HMODULE>( ptr->m_handle_ ) )
+                // Only release what LoadLibraryW referenced. A module already mapped as another DLL's import was
+                // found with GetModuleHandleW (m_b_dynamic_ false), which takes no reference; freeing it dropped the
+                // importer's reference.
+                if ( HMODULE module = static_cast<HMODULE>( ptr->m_handle_ ); module && ptr->m_b_dynamic_ )
                 {
                     FreeLibrary( module );
                 }
@@ -426,7 +454,9 @@ namespace Engine::Managers
 #endif
                 module_info->m_module_ )
             {
-				for ( const OnModuleShutdownCallback& callback : m_on_module_shutdown_ )
+				// A copy: a callback that registers another one would reallocate the vector being iterated.
+				const std::vector<OnModuleShutdownCallback> callbacks = m_on_module_shutdown_;
+				for ( const OnModuleShutdownCallback& callback : callbacks )
 				{
 					callback( name );
 				}
@@ -507,8 +537,10 @@ namespace Engine::Managers
 #if IS_DLL
         module_info->m_module_->SetModuleName( name );
 #endif
-        module_info->m_module_->Initialize();
+        // Recorded before Initialize(): if it throws, Shutdown() still runs the module's ShutdownImpl to undo what
+        // it registered so far (Launch does the same for the core and graphics modules).
         m_module_load_order_.emplace_back( name.begin(), name.end() );
+        module_info->m_module_->Initialize();
         std::string conversion( name.begin(), name.end() );
         CONSOLE_OUT( "ModuleManager", "Module {} loaded", conversion.c_str() );
     }

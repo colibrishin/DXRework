@@ -331,6 +331,10 @@ namespace Engine
                 BoostNetwork::deallocate<protocol_to_enum<Protocol>::value>( ( uint8_t* )buffer.data(),
                                                                              buffer.size() );
             }
+
+            // Destroy() runs twice (BoostSocketWrapper::Shutdown, then ~Context); without this the second call
+            // returned the same blocks to the pool again and corrupted its free list.
+            m_recv_buffers_.clear();
         }
 
         uint16_t GetListenPort() const

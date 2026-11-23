@@ -50,6 +50,17 @@ namespace Engine
         static void Render(const float dt);
         static void PostRender(const float dt);
 		
+        // args().Destroy() created the singleton first when it did not exist (e.g. a module whose Initialize failed
+        // before AddManager), only to destroy it again.
+        template <typename T>
+        static void DestroyIfInitialized(T& (*)())
+        {
+            if (T::IsInitialized())
+            {
+                T::Destroy();
+            }
+        }
+
         template <typename... Args>
         static void AddManager(const eLoopType loop_type, Args&&... args)
         {
@@ -60,7 +71,7 @@ namespace Engine
         template <typename... Args>
         static void RemoveManager(const eLoopType loop_type, Args&&... args)
         {
-            (args().Destroy(), ...);
+            (DestroyIfInitialized(args), ...);
 
             std::apply([&](const auto&... ptrs)
             {

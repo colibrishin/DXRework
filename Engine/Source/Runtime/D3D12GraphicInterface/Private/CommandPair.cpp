@@ -385,14 +385,18 @@ namespace Engine
 
 	void CommandPairTask::StopTask()
 	{
-		std::lock_guard l(m_critical_mutex_);
-		m_running_ = false;
+		{
+			std::lock_guard l(m_critical_mutex_);
+			m_running_ = false;
+			// Wake the thread if it is idle in wait(0): wait() only returns once the value changes, so a notify alone
+			// (as Cleanup() does after store(0)) leaves it blocked forever. The loop sees !m_running_ and exits.
+			m_command_pair_count_.fetch_add(1);
+		}
+		m_command_pair_count_.notify_all();
 	}
 
 	void CommandPairTask::StartTask()
 	{
-		m_running_ = true;
-
 		while (m_running_)
 		{
 			if (const UINT64 count = m_command_pair_count_.load())
@@ -479,11 +483,6 @@ namespace Engine
 			queue.Reset();
 		}
 
-		if (m_fence_event_ != nullptr)
-		{
-			CloseHandle(m_fence_event_);
-		}
-
         m_fence_.Reset();
 		m_dev_.Reset();
 		m_pool_.Cleanup();
@@ -524,20 +523,22 @@ namespace Engine
 	{
 		if (m_fence_->GetCompletedValue() < fence_value)
 		{
-			m_fence_event_ = CreateEvent(nullptr, FALSE, FALSE, nullptr);
+			// A local event per wait: the main thread (SwapBuffer) and the command thread (ExecuteImpl) can wait at the
+			// same time, and a shared member would let one thread overwrite or close the other's event.
+			const HANDLE event = CreateEvent(nullptr, FALSE, FALSE, nullptr);
+			if (event == nullptr)
+			{
+				DX::ThrowIfFailed(HRESULT_FROM_WIN32(GetLastError()));
+			}
 
-			DX::ThrowIfFailed
-					(
-					 m_fence_->SetEventOnCompletion
-					 (
-					  fence_value,
-					  m_fence_event_
-					 )
-					);
+			const HRESULT hr = m_fence_->SetEventOnCompletion(fence_value, event);
+			if (SUCCEEDED(hr))
+			{
+				WaitForSingleObject(event, INFINITE);
+			}
 
-			WaitForSingleObject(m_fence_event_, INFINITE);
-			CloseHandle(m_fence_event_);
-			m_fence_event_ = nullptr;
+			CloseHandle(event);
+			DX::ThrowIfFailed(hr);
 		}
 	}
 

@@ -68,7 +68,14 @@ Engine::D3D12GraphicInterface::D3D12GraphicInterface()
 { }
 
 Engine::D3D12GraphicInterface::~D3D12GraphicInterface()
-{ }
+{
+    // Shutdown() normally joined it; a joinable std::thread in a destructor would call std::terminate.
+    if ( m_command_task_thread_.joinable() )
+    {
+        m_command_pair_task_.StopTask();
+        m_command_task_thread_.join();
+    }
+}
 
 void Engine::D3D12GraphicInterface::Initialize()
 {
@@ -104,6 +111,12 @@ void Engine::D3D12GraphicInterface::Initialize()
 void Engine::D3D12GraphicInterface::Shutdown()
 {
 	m_command_pair_task_.StopTask();
+
+	if ( m_command_task_thread_.joinable() )
+	{
+		m_command_task_thread_.join();
+	}
+
     m_command_pair_task_.Cleanup();
 
 	for ( ComPtr<ID3D12Resource>& resource : m_render_targets_ )
@@ -137,9 +150,14 @@ void Engine::D3D12GraphicInterface::Shutdown()
 		reinterpret_cast<decltype(DXGIGetDebugInterface)*>(
 			GetProcAddress(hModule, "DXGIGetDebugInterface"));
 
-	IDXGIDebug* pDXGIDebug;
-	DXGIGetDebugInterfaceFunc(IID_PPV_ARGS(&pDXGIDebug));
-    pDXGIDebug->ReportLiveObjects( DXGI_DEBUG_D3D12, DXGI_DEBUG_RLO_DETAIL );
+	// dxgidebug.dll is loaded only once the debug DXGI factory was created; an initialization that failed
+	// earlier reaches here without it.
+	IDXGIDebug* pDXGIDebug = nullptr;
+	if ( DXGIGetDebugInterfaceFunc && SUCCEEDED( DXGIGetDebugInterfaceFunc( IID_PPV_ARGS( &pDXGIDebug ) ) ) )
+	{
+		pDXGIDebug->ReportLiveObjects( DXGI_DEBUG_D3D12, DXGI_DEBUG_RLO_DETAIL );
+		pDXGIDebug->Release();
+	}
 #endif // WITH_DEBUG
 }
 
@@ -1551,8 +1569,10 @@ void Engine::D3D12GraphicInterface::InitializePipeline()
 
 void Engine::D3D12GraphicInterface::DetachCommandThread()
 {
+    // Joined in Shutdown(): a detached thread outlived this object and the DLL. Running is set before the thread
+    // starts so a StopTask() that comes first is not overwritten by the thread.
+    m_command_pair_task_.MarkRunning();
     m_command_task_thread_ = std::thread(&CommandPairTask::StartTask, &m_command_pair_task_);
-    m_command_task_thread_.detach();
 }
 
 float Engine::D3D12GraphicInterface::GetAspectRatio()

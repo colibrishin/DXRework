@@ -76,7 +76,14 @@ namespace Engine::Managers
 	{
 #if IS_DLL
 		ModuleManager::GetInstance().RegisterOnModuleShutdown(
-			[]( std::wstring_view name ) { Renderer::GetInstance().UnregisterModule( name ); } );
+			[]( std::wstring_view name )
+			{
+				// Modules after RenderPipeline still shut down; GetInstance() would create a new Renderer that is never freed.
+				if ( Renderer::IsInitialized() )
+				{
+					Renderer::GetInstance().UnregisterModule( name );
+				}
+			} );
 #endif
 	}
 

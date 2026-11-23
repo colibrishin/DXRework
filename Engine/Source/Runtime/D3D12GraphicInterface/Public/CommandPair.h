@@ -177,6 +177,7 @@ namespace Engine
 		[[nodiscard]] Weak<CommandPair> Acquire(const D3D12_COMMAND_LIST_TYPE type, const bool heap_allocation, const std::wstring_view debug_name);
 
 		void WaitForCommandsCompletion() const;
+		void MarkRunning() { m_running_ = true; }
 		void StopTask();
 		void StartTask();
         void Cleanup();
@@ -190,7 +191,7 @@ namespace Engine
 		void WaitForEventCompletion(const uint64_t fence_value);
 		void ExecuteImpl(const Strong<CommandPair>& pair);
 
-		std::atomic<bool> m_running_;
+		std::atomic<bool> m_running_{ false };
 
 		CommandPairPool                 m_pool_{};
 		pool_queue<Weak<CommandPair>>   m_command_pairs_{};
@@ -205,7 +206,6 @@ namespace Engine
 		uint64_t                  m_buffer_count_{};
 		uint64_t                  m_buffer_idx_{};
 		ComPtr<ID3D12Fence>       m_fence_{};
-		HANDLE                    m_fence_event_{};
 		std::unique_ptr<uint64_t> m_fence_nonce_{};
 	};
 }

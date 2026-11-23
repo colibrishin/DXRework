@@ -67,14 +67,13 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline
             module.m_module_->Shutdown();
             module.m_module_.reset();
 
-            if ( module.m_handle_ )
+            // Only release what LoadLibraryW referenced (GetModuleHandleW takes no reference).
+            if ( module.m_handle_ && module.m_b_dynamic_ )
             {
                 FreeLibrary( static_cast<HMODULE>( module.m_handle_ ) );
             }
-            else
-            {
-                module.m_handle_ = nullptr;
-            }
+
+            module.m_handle_ = nullptr;
         }
     };
 
@@ -129,10 +128,16 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline
     if ( Engine::Managers::EngineEntryPoint::IsInitialized() )
     {
         Engine::Managers::EngineEntryPoint::Destroy();
-        Engine::Managers::ModuleManager::GetInstance().Shutdown();
     }
 
-    cleanup_seq( *g_core_api );
+    // Also when startup failed before EngineEntryPoint existed: Core registered its shutdown callback at load, and
+    // Shutdown() is what destroys the callbacks. With no managed module loaded it does nothing else.
+    Engine::Managers::ModuleManager::GetInstance().Shutdown();
+
+    if ( g_core_api )
+    {
+        cleanup_seq( *g_core_api );
+    }
 
     if ( g_graphic_api )
     {
@@ -155,7 +160,10 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline
     PoolAllocatorStorage::report_leakage();
     Engine::Managers::ModuleManager::GetInstance().Destroy();
 
-    cleanup_seq( *g_module_api );
+    if ( g_module_api )
+    {
+        cleanup_seq( *g_module_api );
+    }
 
     if ( g_core_mem )
     {
