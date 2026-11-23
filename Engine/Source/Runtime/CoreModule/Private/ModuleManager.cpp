@@ -518,6 +518,14 @@ namespace Engine::Managers
                 static_cast<HMODULE>( module_info->m_handle_ ), "InitializeModule" );
         if ( !init_func )
         {
+            // Not an engine module (boost, assimp, ... found in the same folder). Drop the reference LoadLibraryW
+            // took here; DLLs that modules import stay loaded through their importers.
+            if ( module_info->m_b_dynamic_ )
+            {
+                FreeLibrary( static_cast<HMODULE>( module_info->m_handle_ ) );
+            }
+            module_info->m_handle_    = nullptr;
+            module_info->m_b_dynamic_ = false;
             return false;
         }
         module_info->m_module_ = std::unique_ptr<IModule>( init_func() );
