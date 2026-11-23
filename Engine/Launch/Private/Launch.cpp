@@ -128,8 +128,11 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline
     if ( Engine::Managers::EngineEntryPoint::IsInitialized() )
     {
         Engine::Managers::EngineEntryPoint::Destroy();
-        Engine::Managers::ModuleManager::GetInstance().Shutdown();
     }
+
+    // Also when startup failed before EngineEntryPoint existed: Core registered its shutdown callback at load, and
+    // Shutdown() is what destroys the callbacks. With no managed module loaded it does nothing else.
+    Engine::Managers::ModuleManager::GetInstance().Shutdown();
 
     if ( g_core_api )
     {

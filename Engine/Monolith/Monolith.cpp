@@ -36,8 +36,11 @@ void MonolithicLaunch( HINSTANCE hInstance )
     if ( Engine::Managers::EngineEntryPoint::IsInitialized() )
     {
         Engine::Managers::EngineEntryPoint::Destroy();
-        Engine::Managers::ModuleManager::GetInstance().Shutdown();
     }
+
+    // Also when startup failed before EngineEntryPoint existed: kept the same as Launch; static builds register no
+    // shutdown callbacks. With no managed module loaded it does nothing else.
+    Engine::Managers::ModuleManager::GetInstance().Shutdown();
 
     // Clean up the graphic API.
     if ( g_graphic_api )
