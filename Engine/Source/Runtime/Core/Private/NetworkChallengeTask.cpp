@@ -29,7 +29,11 @@ void Engine::NetworkChallengeTask::Cleanup()
     g_network_accessor.GetMessageTask().onHostAdded.Remove( get_bound_challenge() );
     g_network_accessor.GetMessageTask().onHostRemoved.Remove( get_bound_remove() );
 
-    m_challenge_task_running_ = false;
+    {
+        std::lock_guard l( m_wait_mtx_ );
+        m_challenge_task_running_ = false;
+    }
+    m_wait_cv_.notify_all();
     m_challenge_task_.wait();
 
     m_challenge_status_.clear();
@@ -83,40 +87,49 @@ void Engine::NetworkChallengeTask::Remove( const NetID removal )
 
 void Engine::NetworkChallengeTask::KeepChallenge()
 {
-    constexpr static std::chrono::seconds sleeping( 30 );
+    // Short rounds: while a host owes an answer (NeedAck, before IsWaitDone), each round re-sends the challenge,
+    // so a lost UDP packet is retried within the 30 s wait window.
+    constexpr static std::chrono::seconds sleeping( 5 );
 
     while ( m_challenge_task_running_ )
     {
-        for (auto it = m_challenge_status_.begin(); it != m_challenge_status_.end(); )
+        // Hosts are added and removed from other threads (Consume, onHostAdded/Removed): work on a snapshot.
+        std::vector<NetID> hosts;
         {
-            const decltype( m_challenge_status_ )::value_type& pair = *it;
-
-            if ( NeedAck( pair.first ) && !HaveAck( pair.first ) && IsWaitDone( pair.first ) )
+            std::lock_guard l( m_mtx_ );
+            hosts.reserve( m_challenge_status_.size() );
+            for ( const auto& [ id, status ] : m_challenge_status_ )
             {
-                CONSOLE_OUT( GetTypeName(), "Liveness check failed for {}, Removing from host...", pair.first );
-                const auto next_it = std::next( it );
-                Remove( pair.first );
-                it = next_it;
-                continue;
+                hosts.push_back( id );
             }
-
-            if ( NeedAck( pair.first ) && HaveAck( pair.first ) )
-            {
-                CONSOLE_OUT( GetTypeName(), "Liveness check success with {}", pair.first );
-                std::lock_guard l( m_mtx_ );
-                m_challenge_status_[ pair.first ] = true;
-            }
-
-            if ( NeedAck( pair.first ) )
-            {
-                CONSOLE_OUT( GetTypeName(), "Liveness check time out for {}, Send the challenge to the host...", pair.first );
-                Challenge( pair.first );
-                ++it;
-                continue;
-            }
-
-            ++it;
         }
+
+        for ( const NetID id : hosts )
+        {
+            if ( NeedAck( id ) && !HaveAck( id ) && IsWaitDone( id ) )
+            {
+                CONSOLE_OUT( GetTypeName(), "Liveness check failed for {}, Removing from host...", id );
+                Remove( id );
+                continue;
+            }
+
+            if ( NeedAck( id ) && HaveAck( id ) )
+            {
+                CONSOLE_OUT( GetTypeName(), "Liveness check success with {}", id );
+                std::lock_guard l( m_mtx_ );
+                m_challenge_status_[ id ] = true;
+            }
+
+            if ( NeedAck( id ) )
+            {
+                CONSOLE_OUT( GetTypeName(), "Liveness check time out for {}, Send the challenge to the host...", id );
+                Challenge( id );
+            }
+        }
+
+        // Cleanup() wakes this up to stop.
+        std::unique_lock l( m_wait_mtx_ );
+        m_wait_cv_.wait_for( l, sleeping, [ this ] { return !m_challenge_task_running_; } );
     }
 }
 
