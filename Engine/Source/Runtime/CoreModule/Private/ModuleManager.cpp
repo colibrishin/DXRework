@@ -192,10 +192,10 @@ namespace Engine::Managers
 			{
                 if ( module_info->m_b_lazy )
                 {
+                    m_module_load_order_.emplace_back( name );
                     module_info->m_module_->Initialize();
                     module_info->m_b_lazy = false;
 
-                    m_module_load_order_.emplace_back( name );
                     TryResolveLazyness( name );
                 }
 
@@ -247,8 +247,8 @@ namespace Engine::Managers
                             }
 
 
-                            module_info->m_module_->Initialize();
                             m_module_load_order_.emplace_back( name.begin(), name.end() );
+                            module_info->m_module_->Initialize();
                         }
                     }
                     else
@@ -317,8 +317,8 @@ namespace Engine::Managers
                         }
 
                         module_info->m_module_->SetModuleName( name );
-                        module_info->m_module_->Initialize();
                         m_module_load_order_.emplace_back( name.begin(), name.end() );
+                        module_info->m_module_->Initialize();
                     }
                 }
 
