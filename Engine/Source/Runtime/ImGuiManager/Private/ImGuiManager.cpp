@@ -68,15 +68,27 @@ namespace Engine::Managers
         WinAPI::WinAPIWrapper::UnregisterHandler( "ImGuiManager" );
 
 #if WITH_EDITOR
+        // Initialize() may have stopped before the context or a backend existed; each shutdown asserts (and
+        // dereferences null in release) when its part was never set up.
+        if ( ImGui::GetCurrentContext() )
+        {
+            const ImGuiIO& io = ImGui::GetIO();
 #if USE_D3D12
-        ImGui_ImplDX12_Shutdown();
+            if ( io.BackendRendererUserData )
+            {
+                ImGui_ImplDX12_Shutdown();
+            }
 #endif
 
 #if PLATFORM == Windows
-        ImGui_ImplWin32_Shutdown();
+            if ( io.BackendPlatformUserData )
+            {
+                ImGui_ImplWin32_Shutdown();
+            }
 #endif
 
-        ImGui::DestroyContext();
+            ImGui::DestroyContext();
+        }
 #endif
 	}
 
