@@ -454,7 +454,9 @@ namespace Engine::Managers
 #endif
                 module_info->m_module_ )
             {
-				for ( const OnModuleShutdownCallback& callback : m_on_module_shutdown_ )
+				// A copy: a callback that registers another one would reallocate the vector being iterated.
+				const std::vector<OnModuleShutdownCallback> callbacks = m_on_module_shutdown_;
+				for ( const OnModuleShutdownCallback& callback : callbacks )
 				{
 					callback( name );
 				}
