@@ -1,228 +1,290 @@
 #pragma once
-#include <functional>
-#include <map>
+#include <cstring>
+#include <memory>
+#include <new>
+#include <tuple>
+#include <type_traits>
+#include <utility>
+
 #include "TypeLibrary.h"
+#include "DelegateCore.h"
 
-namespace Engine
+// Delegates call registered listeners on Broadcast. The listener list and every change to it is Core code
+// (DelegateState); these templates only adapt the listener types.
+//
+// Delegate            one thread at a time (the thread that registered its listeners); copying it gives an empty
+//                     delegate, moving it moves the listeners (and the handles follow).
+// ConcurrentDelegate  any thread; listeners may run on several threads at once. Register with ListenScoped only.
+//
+// Listeners may register, remove themselves or broadcast again from inside a callback. A listener removed during
+// a broadcast is not called after the removal, including by the broadcast in progress.
+// Do not register or destroy a handle while holding a lock that a listener may take: removal waits for the calls
+// in progress on other threads. For the same reason, a listener must not destroy the handle of a listener that may
+// be running on another thread and waiting for this one (two listeners removing each other at once deadlock).
+
+namespace Engine::DelegateDetail
 {
-	template <size_t... Indices> struct indices {};
-
-	template <size_t N, size_t... Following>
-	struct build_indices : build_indices<N -1, N-1, Following...> {};
-
-	template <size_t... Indices>
-	struct build_indices<0, Indices...> : indices<Indices...> {};
-
-	template <size_t... Indices, typename T, typename... Args>
-	auto mem_bind_impl(indices<Indices...>, T* this_pointer, void(T::*function)(Args...))
-	{
-		return std::bind(function, this_pointer, std::_Ph<Indices + 1>{}...);
-	}
-
-	template <size_t... Indices, typename T, typename... Args>
-	auto mem_bind_impl(indices<Indices...>, const T* this_pointer, void(T::*function)(Args...) const)
-	{
-		return std::bind(function, this_pointer, std::_Ph<Indices + 1>{}...);
-	}
-
-	template <size_t... Indices, typename T, typename... Args>
-    auto managed_mem_bind_impl( indices<Indices...>, managed_weak_ptr<T> this_pointer, void ( T::*function )( Args... ) )
+    template <typename F, typename... Args>
+    struct Ops
     {
-        return std::bind(
-                []( managed_weak_ptr<T> p, void ( T::*f )( Args... ), Args... ags )
-                {
-                    if ( const managed_shared_ptr<T>& locked = p.lock() )
-                    {
-                        std::bind_front( f, locked.get() )( ags... );
-                    }
-                },
-                this_pointer,
-                function,
-                std::_Ph<Indices + 1>{}... );
+        static void Invoke( void* callable, const void* arguments )
+        {
+            std::apply( *static_cast<F*>( callable ), *static_cast<const std::tuple<const Args&...>*>( arguments ) );
+        }
+
+        static void Destroy( void* callable ) noexcept
+        {
+            static_cast<F*>( callable )->~F();
+        }
+
+        static constexpr DelegateOps value{ &Invoke, &Destroy };
+    };
+
+    template <typename F>
+    void* Construct( F&& function )
+    {
+        using Callable = std::decay_t<F>;
+        void* memory   = DelegateState::AllocateCallable( sizeof( Callable ), alignof( Callable ) );
+        try
+        {
+            new ( memory ) Callable( std::forward<F>( function ) );
+        }
+        catch ( ... )
+        {
+            DelegateState::FreeCallable( memory, alignof( Callable ) );
+            throw;
+        }
+        return memory;
     }
 
-	template <size_t... Indices, typename T, typename... Args>
-    auto managed_mem_bind_impl( indices<Indices...>,
-                                managed_weak_ptr<T> this_pointer,
-                                void ( T::*function )( Args... ) const )
+    // Identity of a function or member function pointer, compared by value. MSVC member function pointers of
+    // classes with more than one base are 16 bytes: the code address, a 4-byte this adjustment and 4 bytes of
+    // padding whose value is not defined, so only the first 12 bytes are part of the key.
+    template <typename P>
+    void KeyOf( const P pointer, uintptr_t ( &key )[ 2 ] )
     {
-        return std::bind(
-                []( managed_weak_ptr<T> p, void ( T::*f )( Args... ) const, Args... ags )
-                {
-                    if ( const managed_shared_ptr<T>& locked = p.lock() )
-                    {
-                        std::bind_front( f, locked.get() )( ags... );
-                    }
-                },
-                this_pointer,
-                function,
-                std::_Ph<Indices + 1>{}... );
+        static_assert( sizeof( P ) == sizeof( void* ) || sizeof( P ) == 2 * sizeof( void* ),
+                       "Delegate: unsupported member function pointer representation" );
+        constexpr size_t significant = sizeof( P ) == sizeof( void* ) ? sizeof( void* ) : sizeof( void* ) + sizeof( int );
+        key[ 0 ] = key[ 1 ] = 0;
+        std::memcpy( key, &pointer, significant );
     }
 
-	template <typename T, typename... Args>
-    auto mem_bind( managed_weak_ptr<T> this_pointer, void ( T::*function )( Args... ) )
+    template <typename F, typename... Args>
+    uint64_t AddCallable( DelegateState&                   state,
+                          const Weak<Abstracts::Entity>&   owner,
+                          const uintptr_t                  ( &key )[ 2 ],
+                          const bool                       deduplicate,
+                          F&&                              function )
     {
-        return managed_mem_bind_impl( build_indices<sizeof...( Args )>{}, this_pointer, function );
+        using Callable = std::decay_t<F>;
+        return state.Add( owner, key, deduplicate, &Ops<Callable, Args...>::value, Construct( std::forward<F>( function ) ),
+                          alignof( Callable ) );
     }
 
-	template <typename T, typename... Args>
-    auto mem_bind( managed_weak_ptr<T> this_pointer, void ( T::*function )( Args... ) const )
-    {
-        return managed_mem_bind_impl( build_indices<sizeof...( Args )>{}, this_pointer, function );
-    }
-
-	template <typename T, typename... Args>
-	auto mem_bind(T* this_pointer, void(T::*function)(Args...))
-	{
-		return mem_bind_impl(build_indices<sizeof...(Args)>{}, this_pointer, function);
-	}
-
-	template <typename T, typename... Args>
-	auto mem_bind(T* this_pointer, void(T::*function)(Args...) const)
-	{
-		return mem_bind_impl(build_indices<sizeof...(Args)>{}, this_pointer, function);
-	}
+    template <typename F, typename... Args>
+    concept Listener = std::is_invocable_v<std::decay_t<F>&, const Args&...>;
 }
 
 template <typename... Args>
 struct Delegate
 {
 public:
-	INLINE_COMPILE_TIME_TYPENAME_NON_ENTITY(Delegate<Args...>)
+    INLINE_COMPILE_TIME_TYPENAME_NON_ENTITY( Delegate<Args...> )
 
-	using address_type = uintptr_t;
+    using base_class_type = Engine::Abstracts::Entity;
 
-	using base_class_type = Engine::Abstracts::Entity;
+    template <typename T>
+    using weak_this_type = Engine::Weak<T>;
 
-	template <typename T>
-	using weak_this_type = Engine::Weak<T>;
-	using func_ptr_type = address_type;
+    using raw_function_type = void ( * )( Args... );
 
-	using bucket_type = std::pair<weak_this_type<base_class_type>, func_ptr_type>;
-	using raw_function_type = void(*)(Args...);
-	using function_type = std::function<void(Args...)>;
+    Delegate() = default;
 
-	template <typename T> requires (std::is_base_of_v<base_class_type, T>)
-    void Listen( const weak_this_type<T>& this_pointer, void ( T::*function )( Args... ) )
-	{
-        if ( !this_pointer.empty() )
-        {
-            uintptr_t     address = reinterpret_cast<address_type&>( function );
-            function_type func    = Engine::mem_bind( this_pointer, function );
+    // A copy (a cloned component or object) starts without listeners: the original's listeners belong to it.
+    Delegate( const Delegate& ) noexcept {}
 
-            auto key = bucket_type{ this_pointer, reinterpret_cast<address_type&>( function ) };
-
-            if ( !m_listener_.contains( key ) )
-            {
-                m_listener_.emplace( key, func );
-            }
-        }
-	}
-
-	// const function
-	template <typename T> requires (std::is_base_of_v<base_class_type, T>)
-    void Listen( const weak_this_type<T>& this_pointer, void ( T::*function )( Args... ) const )
-	{
-        if ( !this_pointer.empty() )
-		{
-            uintptr_t     address = reinterpret_cast<address_type&>( function );
-            function_type func = Engine::mem_bind( this_pointer, function );
-            auto          key     = bucket_type{ this_pointer, reinterpret_cast<address_type&>( function ) };
-
-            if ( !m_listener_.contains( key ) )
-            {
-                m_listener_.emplace( key, func );
-            }
-		}
-	}
-
-	template <typename FunctionT>
-        requires std::is_convertible_v<FunctionT, function_type>
-    void Listen( const FunctionT& func )
+    // Assigning keeps this delegate's own listeners.
+    Delegate& operator=( const Delegate& ) noexcept
     {
-        function_type wrapper       = func;
-        address_type  function_addr = reinterpret_cast<address_type>( wrapper.template target<FunctionT>() );
+        return *this;
+    }
 
-        auto key = bucket_type{ {}, function_addr };
+    Delegate( Delegate&& ) noexcept            = default;
+    Delegate& operator=( Delegate&& ) noexcept = default;
 
-        if ( !m_listener_.contains( key ) )
+    template <typename T> requires ( std::is_base_of_v<base_class_type, T> )
+    void Listen( const weak_this_type<T>& this_pointer, void ( T::*function )( Args... ) )
+    {
+        ListenMember( this_pointer, function );
+    }
+
+    template <typename T> requires ( std::is_base_of_v<base_class_type, T> )
+    void Listen( const weak_this_type<T>& this_pointer, void ( T::*function )( Args... ) const )
+    {
+        ListenMember( this_pointer, function );
+    }
+
+    // A plain function or a callable with no owner; it stays until Remove (plain functions) or for the delegate's
+    // lifetime. Use ListenScoped when the listener must be removable or comes from another module.
+    template <typename FunctionT> requires Engine::DelegateDetail::Listener<FunctionT, Args...>
+    void Listen( FunctionT&& func )
+    {
+        uintptr_t key[ 2 ]{};
+        if constexpr ( std::is_convertible_v<std::decay_t<FunctionT>, raw_function_type> &&
+                       std::is_pointer_v<std::decay_t<FunctionT>> )
         {
-            m_listener_.emplace( key, std::move( wrapper ) );
+            Engine::DelegateDetail::KeyOf( static_cast<raw_function_type>( func ), key );
+        }
+        Engine::DelegateDetail::AddCallable<FunctionT, Args...>( State(), {}, key, false, std::forward<FunctionT>( func ) );
+    }
+
+    // Registers a callable and returns the handle that removes it.
+    template <typename FunctionT> requires Engine::DelegateDetail::Listener<FunctionT, Args...>
+    [[nodiscard]] Engine::DelegateHandle ListenScoped( FunctionT&& func )
+    {
+        constexpr uintptr_t key[ 2 ]{};
+        const uint64_t id = Engine::DelegateDetail::AddCallable<FunctionT, Args...>( State(), {}, key, false,
+                                                                                    std::forward<FunctionT>( func ) );
+        return { m_state_, id };
+    }
+
+    void Broadcast( Args... args )
+    {
+        if ( m_state_ && m_state_->ListenerCount() != 0 )
+        {
+            const std::tuple<const Args&...> arguments( args... );
+            m_state_->Invoke( &arguments );
         }
     }
 
-	void Broadcast(Args... args)
-	{
-		for (typename decltype(m_listener_)::iterator it = m_listener_.begin(); it != m_listener_.end();)
-		{
-			const bucket_type& key = it->first;
-			const function_type& value = it->second;
-
-			const bool weak_valid  = !key.first.empty() && !key.first.expired();
-			const bool static_func = key.first.empty() && value;
-
-			if (weak_valid || static_func)
-			{
-				// does not forward, need to reuse the variable for each invocations.
-				value(args...);
-				++it;
-			}
-			else
-			{
-				it = m_listener_.erase(it);
-			}
-		}
-	}
-
-	template <typename T> requires (std::is_base_of_v<base_class_type, T>)
-	void Remove(const weak_this_type<T>& this_pointer, void(T::*function)(Args...))
-	{
-        address_type address = reinterpret_cast<address_type&>( function );
-
-		const bucket_type key{ this_pointer, address };
-
-        if ( m_listener_.contains( key ) )
-        {
-            m_listener_.erase( key );
-        }
-
-        // Listeners usually remove themselves in PreDeconstruction, where the object's strong count is already zero:
-        // GetWeakPtr() then returns an empty pointer and the key above never matches. Drop this function's entries
-        // whose owner can no longer be locked (dying or gone), so the std::function (code of the listener's module) does not stay behind.
-        for ( auto it = m_listener_.begin(); it != m_listener_.end(); )
-        {
-            if ( it->first.second == address && !it->first.first.empty() && !it->first.first.lock() )
-            {
-                it = m_listener_.erase( it );
-            }
-            else
-            {
-                ++it;
-            }
-        }
-	}
-
-	template <typename FunctionT> requires std::is_convertible_v<FunctionT, function_type>
-	void Remove( const FunctionT& func )
+    template <typename T> requires ( std::is_base_of_v<base_class_type, T> )
+    void Remove( const weak_this_type<T>& this_pointer, void ( T::*function )( Args... ) )
     {
-        function_type wrapper       = func;
-        address_type  function_addr = reinterpret_cast<address_type>( wrapper.template target<FunctionT>() );
+        RemoveMember( this_pointer, function );
+    }
 
-        const bucket_type key { {}, function_addr };
-        
-		if ( m_listener_.contains( key ) )
-		{
-            m_listener_.erase( key );
-		}
+    template <typename T> requires ( std::is_base_of_v<base_class_type, T> )
+    void Remove( const weak_this_type<T>& this_pointer, void ( T::*function )( Args... ) const )
+    {
+        RemoveMember( this_pointer, function );
+    }
+
+    // Removes a plain function registered with Listen. Other callables are removed through their handle.
+    template <typename FunctionT>
+        requires std::is_pointer_v<FunctionT> && std::is_convertible_v<FunctionT, raw_function_type>
+    void Remove( const FunctionT func )
+    {
+        if ( m_state_ && func )
+        {
+            uintptr_t key[ 2 ];
+            Engine::DelegateDetail::KeyOf( func, key );
+            m_state_->RemoveOwnerless( key );
+        }
+    }
+
+    [[nodiscard]] size_t ListenerCount() const noexcept
+    {
+        return m_state_ ? m_state_->ListenerCount() : 0;
     }
 
 private:
-	std::map<bucket_type, function_type> m_listener_{};
+    Engine::DelegateState& State()
+    {
+        if ( !m_state_ )
+        {
+            m_state_ = Engine::DelegateState::Create( Engine::DelegateState::Threading::Single );
+        }
+        return *m_state_;
+    }
 
+    template <typename T, typename F>
+    void ListenMember( const weak_this_type<T>& this_pointer, const F function )
+    {
+        if ( this_pointer.empty() )
+        {
+            return;
+        }
+
+        uintptr_t key[ 2 ];
+        Engine::DelegateDetail::KeyOf( function, key );
+        Engine::DelegateDetail::AddCallable<decltype( MemberCall( this_pointer, function ) ), Args...>(
+                State(), Engine::Weak<base_class_type>( this_pointer ), key, true, MemberCall( this_pointer, function ) );
+    }
+
+    template <typename T, typename F>
+    void RemoveMember( const weak_this_type<T>& this_pointer, const F function )
+    {
+        if ( m_state_ )
+        {
+            uintptr_t key[ 2 ];
+            Engine::DelegateDetail::KeyOf( function, key );
+            m_state_->RemoveByKey( Engine::Weak<base_class_type>( this_pointer ), key );
+        }
+    }
+
+    template <typename T, typename F>
+    static auto MemberCall( const weak_this_type<T>& this_pointer, const F function )
+    {
+        return [ this_pointer, function ]( const Args&... arguments )
+        {
+            if ( const Engine::Strong<T> locked = this_pointer.lock() )
+            {
+                ( locked.get()->*function )( arguments... );
+            }
+        };
+    }
+
+    std::shared_ptr<Engine::DelegateState> m_state_;
+};
+
+template <typename... Args>
+struct ConcurrentDelegate
+{
+public:
+    INLINE_COMPILE_TIME_TYPENAME_NON_ENTITY( ConcurrentDelegate<Args...> )
+
+    ConcurrentDelegate() : m_state_( Engine::DelegateState::Create( Engine::DelegateState::Threading::Concurrent ) ) {}
+
+    ConcurrentDelegate( const ConcurrentDelegate& )            = delete;
+    ConcurrentDelegate& operator=( const ConcurrentDelegate& ) = delete;
+
+    // Registers a callable and returns the handle that removes it. The callable may run on several threads at once.
+    template <typename FunctionT> requires Engine::DelegateDetail::Listener<FunctionT, Args...>
+    [[nodiscard]] Engine::DelegateHandle ListenScoped( FunctionT&& func )
+    {
+        constexpr uintptr_t key[ 2 ]{};
+        const uint64_t id = Engine::DelegateDetail::AddCallable<FunctionT, Args...>( *m_state_, {}, key, false,
+                                                                                    std::forward<FunctionT>( func ) );
+        return { m_state_, id };
+    }
+
+    void Broadcast( Args... args )
+    {
+        if ( m_state_->ListenerCount() != 0 )
+        {
+            const std::tuple<const Args&...> arguments( args... );
+            m_state_->Invoke( &arguments );
+        }
+    }
+
+    [[nodiscard]] size_t ListenerCount() const noexcept
+    {
+        return m_state_->ListenerCount();
+    }
+
+private:
+    std::shared_ptr<Engine::DelegateState> m_state_;
 };
 
 #define DEFINE_DELEGATE(Name, ...) \
 struct Delegate##Name : public Delegate<__VA_ARGS__> \
+{ \
+	INLINE_COMPILE_TIME_TYPENAME_NON_ENTITY(Delegate##Name) \
+}; \
+
+#define DEFINE_CONCURRENT_DELEGATE(Name, ...) \
+struct Delegate##Name : public ConcurrentDelegate<__VA_ARGS__> \
 { \
 	INLINE_COMPILE_TIME_TYPENAME_NON_ENTITY(Delegate##Name) \
 }; \
