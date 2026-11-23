@@ -7,8 +7,8 @@
 
 Engine::NetworkChallengeTask::NetworkChallengeTask()
 {
-    g_network_accessor.GetMessageTask().onHostAdded.Listen( get_bound_challenge() );
-    g_network_accessor.GetMessageTask().onHostRemoved.Listen( get_bound_remove() );
+    m_host_added_   = g_network_accessor.GetMessageTask().onHostAdded.ListenScoped( [ this ]( const NetID id ) { Challenge( id ); } );
+    m_host_removed_ = g_network_accessor.GetMessageTask().onHostRemoved.ListenScoped( [ this ]( const NetID id ) { Remove( id ); } );
    
     m_challenge_task_running_ = true;
     m_challenge_task_ = std::async( std::launch::async, &NetworkChallengeTask::KeepChallenge, this );
@@ -26,8 +26,8 @@ bool Engine::NetworkChallengeTask::Validate( const RawNetMessage& message ) cons
 
 void Engine::NetworkChallengeTask::Cleanup()
 {
-    g_network_accessor.GetMessageTask().onHostAdded.Remove( get_bound_challenge() );
-    g_network_accessor.GetMessageTask().onHostRemoved.Remove( get_bound_remove() );
+    m_host_added_.Reset();
+    m_host_removed_.Reset();
 
     {
         std::lock_guard l( m_wait_mtx_ );

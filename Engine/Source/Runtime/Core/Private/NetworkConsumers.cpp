@@ -46,8 +46,18 @@ void Engine::NetworkConsumers::AddConsumer( INetworkTask* task )
 
 void Engine::NetworkConsumers::Cleanup()
 {
-    std::lock_guard l( m_mutex_ );
-    for ( const Unique<INetworkTask>& task : m_network_consumers_ | std::views::values )
+    // Cleanup waits for the tasks' listeners and threads, which look consumers up through GetConsumer (this mutex):
+    // call it without holding the lock.
+    std::vector<INetworkTask*> tasks;
+    {
+        std::lock_guard l( m_mutex_ );
+        for ( const Unique<INetworkTask>& task : m_network_consumers_ | std::views::values )
+        {
+            tasks.push_back( task.get() );
+        }
+    }
+
+    for ( INetworkTask* task : tasks )
     {
         task->Cleanup();
     }

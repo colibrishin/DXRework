@@ -13,8 +13,9 @@
 
 #include "NetworkMessageTask.generated.h"
 
-DEFINE_DELEGATE( OnHostAdded, const Engine::NetID );
-DEFINE_DELEGATE( OnHostRemoved, const Engine::NetID );
+// Broadcast from the socket's I/O threads.
+DEFINE_CONCURRENT_DELEGATE( OnHostAdded, const Engine::NetID );
+DEFINE_CONCURRENT_DELEGATE( OnHostRemoved, const Engine::NetID );
 
 namespace Engine
 {
