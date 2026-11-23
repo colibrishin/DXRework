@@ -206,7 +206,6 @@ namespace Engine
 		uint64_t                  m_buffer_count_{};
 		uint64_t                  m_buffer_idx_{};
 		ComPtr<ID3D12Fence>       m_fence_{};
-		HANDLE                    m_fence_event_{};
 		std::unique_ptr<uint64_t> m_fence_nonce_{};
 	};
 }
