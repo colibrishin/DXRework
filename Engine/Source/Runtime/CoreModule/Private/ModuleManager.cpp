@@ -150,6 +150,23 @@ namespace Engine::Managers
         {
             std::lock_guard l( m_read_mutex_ );
             m_on_module_shutdown_.clear();
+
+            // Modules created but never initialized (LoadModuleAll stopped by an exception) are not in the load
+            // order. Delete them now, while their DLLs are loaded; their destructors live in those DLLs.
+            for ( auto& [ name, info ] : m_module_loaded_ )
+            {
+                if ( info && info->m_module_ )
+                {
+#if IS_DLL
+                    if ( !GetModuleHandleW( info->m_path_.c_str() ) )
+                    {
+                        ( void )info->m_module_.release(); // its DLL is gone; the destructor code with it
+                        continue;
+                    }
+#endif
+                    info->m_module_.reset();
+                }
+            }
         }
 	}
 
@@ -518,8 +535,10 @@ namespace Engine::Managers
 #if IS_DLL
         module_info->m_module_->SetModuleName( name );
 #endif
-        module_info->m_module_->Initialize();
+        // Recorded before Initialize(): if it throws, Shutdown() still runs the module's ShutdownImpl to undo what
+        // it registered so far (Launch does the same for the core and graphics modules).
         m_module_load_order_.emplace_back( name.begin(), name.end() );
+        module_info->m_module_->Initialize();
         std::string conversion( name.begin(), name.end() );
         CONSOLE_OUT( "ModuleManager", "Module {} loaded", conversion.c_str() );
     }
