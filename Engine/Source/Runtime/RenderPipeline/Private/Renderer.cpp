@@ -41,6 +41,14 @@ namespace Engine::Managers
 				ptr->Run(scene.get(), m_render_candidates_, SHADER_DOMAIN_MAX);
 			}
 		}
+		else
+		{
+			// Nothing to draw: tasks that keep instances across frames drop them.
+			for (const auto& task : m_render_instance_tasks_ | std::views::values)
+			{
+				task->Release(m_render_candidates_, SHADER_DOMAIN_MAX);
+			}
+		}
 	    
 		m_b_ready_ = true;
 	}
@@ -133,9 +141,11 @@ namespace Engine::Managers
 
 	void Renderer::UnregisterRenderInstance(const std::wstring_view name)
 	{
-		if (m_render_instance_tasks_.contains(name.data()))
+		if (const auto it = m_render_instance_tasks_.find(name.data()); it != m_render_instance_tasks_.end())
 		{
-			m_render_instance_tasks_.erase(name.data());
+			// The task's instances must leave the render map before the task (and its buffers) goes away.
+			it->second->Release(m_render_candidates_, SHADER_DOMAIN_MAX);
+			m_render_instance_tasks_.erase(it);
 		}
 	}
 
