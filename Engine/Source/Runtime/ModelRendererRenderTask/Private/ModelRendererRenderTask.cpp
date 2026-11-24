@@ -10,6 +10,8 @@
 #include <unordered_map>
 
 #include "DirtyCheck.h"
+#include "InstanceBuild.h"
+#include "ProxyCheck.h"
 #include "InstanceModelSB.h"
 #include "ModelRenderer.h"
 #include "RenderPipeline.h"
@@ -167,11 +169,25 @@ namespace Engine
         };
     }
 
-    void ModelRendererRenderInstanceTask::Run( Scene const* scene, RenderMap* render_map, const size_t map_size )
+    bool VisibleInHierarchy( const Abstracts::ObjectBase& object )
     {
-        DirtyCheck::Run( *scene );
+        if ( !object.GetActive() )
+        {
+            return false;
+        }
+        for ( Strong<Abstracts::ObjectBase> parent = object.GetParent().lock(); parent; parent = parent->GetParent().lock() )
+        {
+            if ( !parent->GetActive() )
+            {
+                return false;
+            }
+        }
+        return true;
+    }
 
-        const auto& mrs = scene->GetCachedComponentsConcurrent<Components::ModelRenderer>();
+    void BuildAllInstances( const Scene& scene, RenderMap* render_map, const size_t map_size, const BuildOptions& options )
+    {
+        const auto& mrs = scene.GetCachedComponentsConcurrent<Components::ModelRenderer>();
 
         tbb::enumerable_thread_specific<ThreadState> threads;
 
@@ -202,6 +218,10 @@ namespace Engine
                     {
                         return;
                     }
+                    if ( options.skip_hidden && !VisibleInHierarchy( *obj ) )
+                    {
+                        return;
+                    }
 
                     ThreadState& state = threads.local();
                     state.any_renderer = true;
@@ -223,7 +243,7 @@ namespace Engine
 
                         if ( state.spare_instances.empty() )
                         {
-                            GetInstances( 64, state.spare_instances );
+                            options.acquire( 64, state.spare_instances );
                         }
 
                         // Filled locally and moved into the bucket last, so no reference into the bucket is held while
@@ -232,6 +252,12 @@ namespace Engine
                         instance_pair.object   = obj;
                         instance_pair.instance = state.spare_instances.back();
                         state.spare_instances.pop_back();
+                        if ( options.reset_instances )
+                        {
+                            // As the pool hands out a new buffer: zeroed, then constructed (matrices become identity).
+                            std::memset( instance_pair.instance, 0, sizeof( Graphics::SBs::InstanceSB ) );
+                            new ( instance_pair.instance ) Graphics::SBs::InstanceSB();
+                        }
 
                         instance_pair.instance->SetParam( 0, world );
 
@@ -333,6 +359,20 @@ namespace Engine
                 }
             }
         }
+    }
+
+    void ModelRendererRenderInstanceTask::Run( Scene const* scene, RenderMap* render_map, const size_t map_size )
+    {
+        DirtyCheck::Run( *scene );
+
+        BuildOptions options;
+        options.acquire = [ this ]( const size_t count, aligned_vector<Graphics::SBs::InstanceSB*>& out )
+        {
+            GetInstances( count, out );
+        };
+        BuildAllInstances( *scene, render_map, map_size, options );
+
+        ProxyCheck::Run( *scene, render_map, map_size );
     }
 
     void ModelRendererRenderInstanceTask::Cleanup( RenderMap* render_map, const size_t map_size )

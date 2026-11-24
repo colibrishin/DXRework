@@ -410,6 +410,10 @@ namespace Engine::DirtyCheck
             Strong<Abstracts::ObjectBase> parents[ 2 ];
             Strong<Abstracts::ObjectBase> child;
             Strong<Abstracts::ObjectBase> extra;
+            Strong<Abstracts::ObjectBase> grandchild; // nested
+            Strong<Abstracts::ObjectBase> late;       // late_resources
+            Strong<Resources::Shape>      late_shape;
+            Strong<Resources::Material>   late_material;
             Weak<Resources::Shape>        shapes[ 2 ];
             Weak<Resources::Texture>      textures[ 2 ];
             size_t                        parent_index = 0;
@@ -474,7 +478,58 @@ namespace Engine::DirtyCheck
                 parents[ 1 ] = MakeObject( scene, "DirtyParentB", {} );
                 child        = MakeObject( scene, "DirtyChild", shapes[ 0 ] );
                 parents[ 0 ]->AddChild( child );
+                if ( Wants( "nested" ) )
+                {
+                    grandchild = MakeObject( scene, "DirtyGrandchild", shapes[ 1 ] );
+                    child->AddChild( grandchild );
+                }
                 built = true;
+            }
+
+            // Steps between the 10-frame ones above.
+            void StepBetween( Scene& scene, const uint64_t k )
+            {
+                if ( Wants( "nested" ) && grandchild && k % 2 == 1 )
+                {
+                    // An ancestor's Active event together with a component-only event on the object in between: the
+                    // grandchild's visibility follows the ancestor.
+                    parents[ parent_index ]->SetActive( !parents[ parent_index ]->GetActive() );
+                    if ( const auto renderer = child->GetComponent<Components::ModelRenderer>().lock() )
+                    {
+                        renderer->SetActive( !renderer->GetActive() );
+                        renderer->SetActive( !renderer->GetActive() );
+                    }
+                }
+                if ( Wants( "late_resources" ) )
+                {
+                    // A renderer whose shape has no mesh, then a mesh whose material has no shader, then the shader:
+                    // each step makes more of it drawable without an event on the object.
+                    const auto source = shapes[ 0 ].lock();
+                    const auto source_material = source ? source->GetMaterial( 0 ).lock() : nullptr;
+                    switch ( k )
+                    {
+                    case 2:
+                        late_shape = Resources::Shape::Create( "DirtyLateShape", "" );
+                        late       = MakeObject( scene, "DirtyLate", late_shape );
+                        break;
+                    case 4:
+                        if ( late_shape && source )
+                        {
+                            late_material = Resources::Material::Create( "DirtyLateMaterial" );
+                            late_shape->Add( Weak<Abstracts::Resource>( source->GetMesh( 0 ).lock() ) );
+                            late_shape->SetMaterial( 0, late_material );
+                        }
+                        break;
+                    case 6:
+                        if ( late_material && source_material )
+                        {
+                            late_material->SetShader( source_material->GetShader() );
+                        }
+                        break;
+                    default:
+                        break;
+                    }
+                }
             }
 
             void Step( const uint64_t frame )
@@ -495,13 +550,18 @@ namespace Engine::DirtyCheck
                 }
 
                 const uint64_t t = frame - start;
+                // While playing, the rendered scene is a copy; the scenario objects belong to the edited scene. Only
+                // the play/stop step runs until Stop.
+                const bool playing = Managers::SceneManager::GetInstance().IsPlaying();
+                if ( t % 10 == 5 && !playing )
+                {
+                    StepBetween( *scene, t / 10 );
+                    return;
+                }
                 if ( t == 0 || t % 10 != 0 )
                 {
                     return;
                 }
-                // While playing, the rendered scene is a copy; the scenario objects belong to the edited scene. Only
-                // the play/stop step runs until Stop.
-                const bool playing = Managers::SceneManager::GetInstance().IsPlaying();
                 if ( playing && ( t / 10 ) % 10 != 9 )
                 {
                     return;
