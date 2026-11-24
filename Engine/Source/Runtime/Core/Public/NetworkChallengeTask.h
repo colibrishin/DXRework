@@ -3,6 +3,8 @@
 #include <atomic>
 #include <future>
 #include <chrono>
+#include <condition_variable>
+#include <mutex>
 #include "NetworkTask.h"
 
 namespace Engine
@@ -55,5 +57,7 @@ namespace Engine
 
         std::future<void>       m_challenge_task_;
         std::atomic<bool>       m_challenge_task_running_;
+        std::mutex              m_wait_mtx_;
+        std::condition_variable m_wait_cv_;
     };
 }

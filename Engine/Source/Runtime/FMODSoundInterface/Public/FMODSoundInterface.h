@@ -4,6 +4,8 @@
 #include <Public/fmod.hpp>
 #include <Public/fmod_common.h>
 #include <magic_enum/magic_enum.hpp>
+#include <memory>
+#include <vector>
 
 #include "FMODSoundInterface.generated.h"
 
@@ -11,6 +13,10 @@ namespace Engine
 {
 	struct ENGINE_FMODSOUNDINTERFACE_API FMODSoundPrimitive : public ISound
 	{
+        FMODSoundPrimitive() = default;
+        // Owns m_sound_ and releases it in the destructor: a copy would release the same sound twice.
+        FMODSoundPrimitive( const FMODSoundPrimitive& )            = delete;
+        FMODSoundPrimitive& operator=( const FMODSoundPrimitive& ) = delete;
         virtual ~FMODSoundPrimitive();
 
 		void SetMinDistance(float value) override;
@@ -44,6 +50,10 @@ namespace Engine
     struct ENGINE_FMODSOUNDINTERFACE_API FMODSoundInterface : ISoundAPI
     {
         GENERATE_BODY
+        FMODSoundInterface() = default;
+        // Owns the sounds; exported, so the implicit copy would be generated and fail on the unique_ptr storage.
+        FMODSoundInterface( const FMODSoundInterface& )            = delete;
+        FMODSoundInterface& operator=( const FMODSoundInterface& ) = delete;
         ~FMODSoundInterface() override;
 
         void    Initialize() override;
@@ -67,6 +77,7 @@ namespace Engine
         FMOD::ChannelControl* m_channel_control_      = nullptr;
 
         std::array<FMOD::Channel*, g_max_sound_channel>  m_channel_map_{};
-        aligned_vector<FMODSoundPrimitive> m_instanced_primitives_{};
+        // Heap-allocated so the ISound* handed out by NewSound stays valid when the vector grows.
+        std::vector<std::unique_ptr<FMODSoundPrimitive>> m_instanced_primitives_{};
     };
 }
