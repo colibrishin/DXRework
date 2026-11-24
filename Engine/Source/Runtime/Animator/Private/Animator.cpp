@@ -6,6 +6,9 @@
 #include "ObjectBase.h"
 
 #include "ModelRenderer.h"
+#include "ChangeSignal.h"
+
+#include <tuple>
 
 #if CLIENT || WITH_EDITOR
 #include "AtlasAnimation.h"
@@ -43,6 +46,13 @@ namespace Engine::Components
 
 		if (const auto& locked = shape.lock())
 		{
+			const auto values = [this]()
+			{
+				const Graphics::AnimatorPrimitive& p = m_primitive_;
+				return std::make_tuple(p.currentFrame, p.animationID, p.animationDuration, p.noAnimation, p.atlasX,
+				                       p.atlasY, p.atlasW, p.atlasH);
+			};
+			const auto before = values();
 			m_total_dt_ += dt;
 			int duration = 0;
 			
@@ -88,6 +98,12 @@ namespace Engine::Components
 			m_primitive_.animationID = m_animation_id_;
 			m_primitive_.animationDuration = duration;
 			m_primitive_.currentFrame = m_current_frame_;
+
+			// The renderer applies the primitive to every instance of the object.
+			if (values() != before)
+			{
+				SignalComponent("animator", *this, eChange::Modified);
+			}
 		}
 #endif
 	}

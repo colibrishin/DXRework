@@ -5,6 +5,7 @@
 #include <extensions/PxDefaultSimulationFilterShader.h>
 #endif
 #include "Scene.h"
+#include "ChangeSignal.h"
 
 #if WITH_EDITOR
 #include "IUIAPI.h"
@@ -252,6 +253,7 @@ namespace Engine
             }
 
             onObjectAdded.Broadcast( obj );
+            SignalActor( "object.add", *obj, eChange::Added );
 		}	
 	}
 
@@ -265,6 +267,10 @@ namespace Engine
 
 		const Weak<Abstracts::ObjectBase> obj = m_cached_objects_[id];
 		onObjectRemoved.Broadcast(obj);
+		if (const auto locked = obj.lock())
+		{
+			SignalActor("object.remove", *locked, eChange::Removed);
+		}
 		
 		{
 			SpinLockToken token = SingletonSpinLock::GetInstance().Lock(m_component_lock_);
@@ -324,6 +330,7 @@ namespace Engine
 
 	void Scene::synchronize(const Weak<Scene>& ptr_scene)
 	{
+		SignalScene("scene.sync", *this);
 		if (const Strong<Scene>& scene = ptr_scene.lock())
 		{
 #ifdef PHYSX_ENABLED
@@ -691,6 +698,7 @@ namespace Engine
 			ConcurrentWeakComRootMap::accessor comp_acc;
 			if (!m_concurrent_cached_components_.find(comp_acc, type)) m_concurrent_cached_components_.insert(comp_acc, type);
 			comp_acc->second.emplace(component->GetID(), component);
+			SignalComponent("component.cache", *component, eChange::Added);
 
 			if (type->IsDerivedOf(Components::Transform::StaticTypeHash()))
 			{
@@ -717,6 +725,7 @@ namespace Engine
 				ConcurrentWeakComRootMap::accessor comp_acc;
 
 				if (m_concurrent_cached_components_.find(comp_acc, type)) comp_acc->second.erase(component->GetID());
+				SignalComponent("component.uncache", *component, eChange::Removed);
 			}
 
 			if (type->IsDerivedOf(Components::Transform::StaticTypeHash()))
@@ -900,6 +909,7 @@ namespace Engine
 
 	void Scene::OnDeserialized()
 	{
+		SignalScene("scene.deserialize", *this);
 		Renderable::OnDeserialized();
 
 		auto ui = m_layers_[static_cast<size_t>(RESERVED_LAYER_OBSERVER)]->GetGameObjects();

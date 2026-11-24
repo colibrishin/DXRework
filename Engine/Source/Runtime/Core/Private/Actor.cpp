@@ -1,4 +1,5 @@
 #include "Actor.h"
+#include "ChangeSignal.h"
 
 #if WITH_EDITOR
 #include "IUIAPI.h"
@@ -65,6 +66,7 @@ namespace Engine::Abstracts
 	{
 		m_layer_ = layer;
 		onLayerChange.Broadcast(layer);
+		SignalActor("object.layer", *this, eChange::Layer);
 	}
 
 	void Actor::SetScene(const Weak<Scene>& scene)

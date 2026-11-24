@@ -26,7 +26,7 @@ namespace Engine::Components
 		world                  = world.Invert();
 
 		m_position_ = Vector3::Transform(position, world);
-		onTransformChanged.Broadcast();
+		notifyChanged();
 	}
 
 	void __vectorcall Transform::SetWorldRotation(const Quaternion& rotation)
@@ -38,7 +38,7 @@ namespace Engine::Components
 		world.Inverse(world);
 
 		m_rotation_ = rotation * world;
-		onTransformChanged.Broadcast();
+		notifyChanged();
 	}
 
 	void Transform::SetWorldScale(const Vector3& scale)
@@ -48,25 +48,25 @@ namespace Engine::Components
 		world               = world / local;
 
 		m_scale_ = scale / world;
-		onTransformChanged.Broadcast();
+		notifyChanged();
 	}
 
 	void __vectorcall Transform::SetLocalPosition(const Vector3& position)
 	{
 		m_position_ = position;
-		onTransformChanged.Broadcast();
+		notifyChanged();
 	}
 
 	void __vectorcall Transform::SetLocalRotation(const Quaternion& rotation)
 	{
 		m_rotation_ = rotation;
-		onTransformChanged.Broadcast();
+		notifyChanged();
 	}
 
 	void __vectorcall Transform::SetLocalScale(const Vector3& scale)
 	{
 		m_scale_ = scale;
-		onTransformChanged.Broadcast();
+		notifyChanged();
 	}
 
 	void Transform::SetLocalMatrix(const Matrix& matrix)
@@ -76,19 +76,19 @@ namespace Engine::Components
 			throw std::runtime_error
 					("Matrix decomposition failed");
 		}
-		onTransformChanged.Broadcast();
+		notifyChanged();
 	}
 
 	void Transform::SetSizeAbsolute(bool absolute)
 	{
 		m_b_s_absolute_ = absolute;
-		onTransformChanged.Broadcast();
+		notifyChanged();
 	}
 
 	void Transform::SetRotateAbsolute(bool absolute)
 	{
 		m_b_r_absolute_ = absolute;
-		onTransformChanged.Broadcast();
+		notifyChanged();
 	}
 
 	void __vectorcall Transform::SetAnimationPosition(const Vector3& position)
@@ -97,7 +97,7 @@ namespace Engine::Components
 		m_animation_matrix_   = m_animation_matrix_ * Matrix::CreateTranslation(m_animation_position_).Invert();
 		m_animation_position_ = position;
 		m_animation_matrix_   = m_animation_matrix_ * Matrix::CreateTranslation(m_animation_position_);
-		onTransformChanged.Broadcast();
+		notifyChanged();
 	}
 
 	void __vectorcall Transform::SetAnimationRotation(const Quaternion& rotation)
@@ -107,7 +107,7 @@ namespace Engine::Components
 		m_animation_matrix_   = Matrix::CreateScale(m_animation_scale_) *
 		                        Matrix::CreateFromQuaternion(m_animation_rotation_) *
 		                        Matrix::CreateTranslation(m_animation_position_);
-		onTransformChanged.Broadcast();
+		notifyChanged();
 	}
 
 	void __vectorcall Transform::SetAnimationScale(const Vector3& scale)
@@ -116,13 +116,13 @@ namespace Engine::Components
 		m_animation_matrix_ = Matrix::CreateScale(m_animation_scale_).Invert() * m_animation_matrix_;
 		m_animation_scale_  = scale;
 		m_animation_matrix_ = Matrix::CreateScale(m_animation_scale_) * m_animation_matrix_;
-		onTransformChanged.Broadcast();
+		notifyChanged();
 	}
 
 	void Transform::SetAnimationMatrix(const Matrix& matrix)
 	{
 		m_animation_matrix_ = matrix;
-		onTransformChanged.Broadcast();
+		notifyChanged();
 	}
 
 	Vector3 Transform::GetWorldPosition()
@@ -242,7 +242,7 @@ namespace Engine::Components
 	void Transform::Translate(Vector3 translation)
 	{
 		m_position_ += translation;
-		onTransformChanged.Broadcast();
+		notifyChanged();
 	}
 
 	void Transform::Initialize()
@@ -276,6 +276,7 @@ namespace Engine::Components
 			Component::OnUIUpdate(context, dt);
 			(*context |= ui.NewLabelAndVec3( this, "Position", { "Position", &m_position_.x, 0.1f, 0.f, 0.f, true })).SetFunction([&]()
 				{
+					notifyChanged();
 					if (const Strong<Rigidbody>& rb = GetOwner().lock()->GetComponent<Rigidbody>().lock())
 					{
 						// forcefully reset the rigidbody information and sync with the current position.
@@ -290,6 +291,7 @@ namespace Engine::Components
 				m_euler_rotation_ *= M_PI / 180.f;
 				// since z axis is the forward, roll should be z.
 				m_rotation_ = MathExtension::ToQuaternion(m_euler_rotation_.x, m_euler_rotation_.y, m_euler_rotation_.z);
+				notifyChanged();
 
 				if (const Strong<Rigidbody>& rb = GetOwner().lock()->GetComponent<Rigidbody>().lock())
 				{
@@ -301,9 +303,10 @@ namespace Engine::Components
 				}
 			});
 
-            *context |= ui.NewLabelAndVec3(this, "Scale", { "Scale", &m_scale_.x, 0.1f, 0.f, 0.f, true });
-            *context |= ui.NewCheckbox(this, "AbsSize", { "Absolute Size", m_b_s_absolute_, true });
-            *context |= ui.NewCheckbox(this, "AbsRot", { "Absolute Rotation", m_b_r_absolute_, true });
+            // The widgets write the members directly; announce the change like the setters do.
+            (*context |= ui.NewLabelAndVec3(this, "Scale", { "Scale", &m_scale_.x, 0.1f, 0.f, 0.f, true })).SetFunction([this]() { notifyChanged(); });
+            (*context |= ui.NewCheckbox(this, "AbsSize", { "Absolute Size", m_b_s_absolute_, true })).SetFunction([this]() { notifyChanged(); });
+            (*context |= ui.NewCheckbox(this, "AbsRot", { "Absolute Rotation", m_b_r_absolute_, true })).SetFunction([this]() { notifyChanged(); });
         }
 	}
 #endif
@@ -321,6 +324,39 @@ namespace Engine::Components
 	eComponentUpdatePriorities Transform::GetUpdatePriority() const
 	{
 		return eComponentUpdatePriority::COM_PRIORITY_POSITIONAL;
+	}
+
+	void Transform::notifyChanged()
+	{
+		onTransformChanged.Broadcast();
+
+		if ( !ChangeSignalActive() )
+		{
+			return;
+		}
+
+		const uint64_t epoch = ChangeEpoch();
+		if ( m_signal_epoch_.value == epoch )
+		{
+			return;
+		}
+		m_signal_epoch_.value = epoch;
+
+		// Copies of the transform (Rigidbody's) report their owner too: an extra event, never a missed one. The scene
+		// is not looked up per event: a consumer matches the object id against the scene it renders. The owner id is
+		// cached on the component, so no owner lock is taken per event.
+		GlobalEntityID owner_id = GetOwnerID();
+		if ( owner_id == 0 )
+		{
+			if ( const auto owner = GetOwner().lock() )
+			{
+				owner_id = owner->GetID();
+			}
+		}
+		if ( owner_id != 0 )
+		{
+			EmitChange( "transform", { 0, owner_id, 0, eChange::Transform } );
+		}
 	}
 
 	Matrix Transform::GetLocalMatrix() const

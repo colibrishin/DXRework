@@ -33,6 +33,8 @@ namespace Engine::Abstracts
 		Component(const Component&) = default;
 
 		Weak<ObjectBase>   GetOwner() const;
+		// Id of the owner, kept with the owner pointer (no lock). 0 when the owner was not alive when set.
+		[[nodiscard]] GlobalEntityID GetOwnerID() const noexcept { return m_owner_id_; }
 		LocalComponentID GetLocalID() const;
 		bool             IsTicked() const;
 		bool             GetActive() const;
@@ -69,6 +71,7 @@ namespace Engine::Abstracts
 
 		// Non-serialized
 		Weak<ObjectBase> m_owner_{};
+		GlobalEntityID   m_owner_id_{};
 		bool             m_b_ticked_{};
 		bool             m_b_active_{};
 	};
