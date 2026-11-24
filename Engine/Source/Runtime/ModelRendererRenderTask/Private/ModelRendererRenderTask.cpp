@@ -9,6 +9,7 @@
 #include <tuple>
 #include <unordered_map>
 
+#include "DirtyCheck.h"
 #include "InstanceModelSB.h"
 #include "ModelRenderer.h"
 #include "RenderPipeline.h"
@@ -168,6 +169,8 @@ namespace Engine
 
     void ModelRendererRenderInstanceTask::Run( Scene const* scene, RenderMap* render_map, const size_t map_size )
     {
+        DirtyCheck::Run( *scene );
+
         const auto& mrs = scene->GetCachedComponentsConcurrent<Components::ModelRenderer>();
 
         tbb::enumerable_thread_specific<ThreadState> threads;
