@@ -19,7 +19,7 @@
 #include "ModelRenderer.h"
 #include "RenderPipeline.h"
 #include "Renderer.h"
-#include "SceneManager.h"
+#include "ChangeCollector.h"
 
 #include "Animator.h"
 #include "AtlasAnimationTexture.h"
@@ -71,6 +71,9 @@ namespace Engine
             Strong<Resources::Shape>    shape; // keeps the address (the cache key) from being reused within the Run
             std::vector<ResolvedMesh>   meshes;
             Strong<Abstracts::Resource> animations;
+            // Every material and shader the shape refers to, also those of meshes skipped here: a change to one of
+            // them can make a mesh drawable (the persistent list watches their revisions).
+            std::vector<Strong<Abstracts::Resource>> watch;
         };
 
         // Instances of one (domain, shader, mesh) collected by one thread.
@@ -105,18 +108,21 @@ namespace Engine
 
                 for ( const auto& [ mesh, mtr ] : shape->GetMeshes() )
                 {
-                    if ( mesh.expired() || mtr.expired() )
+                    Strong<Resources::Material>   material = mtr.lock();
+                    Strong<Resources::ShaderBase> shader   = material ? material->GetShader().lock() : nullptr;
+                    if ( material )
+                    {
+                        resolved.watch.push_back( material );
+                    }
+                    if ( shader )
+                    {
+                        resolved.watch.push_back( shader );
+                    }
+                    if ( mesh.expired() || !material )
                     {
                         continue;
                     }
 
-                    Strong<Resources::Material> material = mtr.lock();
-                    if ( !material )
-                    {
-                        continue;
-                    }
-
-                    Strong<Resources::ShaderBase> shader = material->GetShader().lock();
                     if ( !shader || shader->GetShaderDomain() >= map_size )
                     {
                         continue;
@@ -355,9 +361,13 @@ namespace Engine
     // ---- Persistent render list (proxy mode) ----------------------------------------------------------------------
     //
     // One proxy per ModelRenderer keeps its InstancePairs in the render map across frames, each with its own
-    // instance buffer. Every frame the proxy's inputs are evaluated again; when its draw lists (domain, shader,
-    // mesh, material, textures) or visibility changed its pairs are moved, otherwise only the buffer values are
-    // written. The map is changed only here, on the main thread, outside the parallel sections.
+    // instance buffer. Change events decide what is evaluated again:
+    // - a scene reset, or any renderer, component or object added, removed or moved to another owner: every renderer
+    //   (this also finds new and removed renderers);
+    // - another component event on an object, an object's Active or Reparented event (with its descendants), or a
+    //   shape/material/shader revision moving: those renderers' lists and buffers;
+    // - a Transform event (with its descendants): only the world matrices.
+    // The map is changed only here, on the main thread, outside the parallel sections.
 
     struct ModelRendererRenderInstanceTask::ProxyTable
     {
@@ -366,7 +376,7 @@ namespace Engine
             size_t                      domain = 0;
             Strong<Abstracts::Resource> shader;
             Strong<Abstracts::Resource> mesh;
-            const void*                 material = nullptr;
+            Strong<Resources::Material> material;
             std::array<const void*, g_max_texture_per_material + 2> textures{};
             size_t                      slot = 0;
             Graphics::SBs::InstanceSB*  sb   = nullptr;
@@ -379,27 +389,47 @@ namespace Engine
 
         struct Proxy
         {
-            std::vector<Entry> entries;
+            Weak<Abstracts::Component>    component;
+            GlobalEntityID                object_id = 0;
+            bool                          visible = false;
+            Strong<Abstracts::ObjectBase> object; // while visible
+            Strong<Resources::Shape>      shape;  // while visible
+            std::vector<Entry>            entries;
+            std::vector<Strong<Abstracts::Resource>> watched; // registered in users
         };
 
         // What a renderer should draw this frame (evaluated in parallel).
         struct Desired
         {
             GlobalEntityID                component = 0;
+            Weak<Abstracts::Component>    weak;
+            GlobalEntityID                object_id = 0;
             bool                          visible   = false;
             Strong<Abstracts::ObjectBase> object;
             Matrix                        world;
             Strong<Components::Animator>  animator;
             const ResolvedShape*          resolved = nullptr;
             Proxy*                        proxy    = nullptr;
-            bool                          moved    = false;
         };
 
-        GlobalEntityID                                                   scene_id = 0;
-        std::unordered_map<GlobalEntityID, Proxy>                        proxies; // by ModelRenderer component id
-        std::map<BucketKey, std::vector<std::pair<GlobalEntityID, size_t>>> owners;  // per list: (component, entry)
-        size_t                                                           visible_entries = 0;
-        aligned_vector<Graphics::SBs::InstanceSB*>                       free_buffers;
+        // Proxies whose lists depend on a resource, and the revision they were built with.
+        struct Users
+        {
+            uint64_t                                   revision = 0;
+            std::unordered_map<GlobalEntityID, size_t> components; // component -> uses
+        };
+
+        GlobalEntityID                                                      scene_id = 0;
+        std::unordered_map<GlobalEntityID, Proxy>                           proxies; // by ModelRenderer component id
+        std::unordered_map<GlobalEntityID, std::vector<GlobalEntityID>>     by_object;
+        std::map<BucketKey, std::vector<std::pair<GlobalEntityID, size_t>>> owners; // per list: (component, entry)
+        std::unordered_map<const Abstracts::Resource*, Users>               users;
+        size_t                                                              visible_proxies = 0;
+        aligned_vector<Graphics::SBs::InstanceSB*>                          free_buffers;
+        std::unique_ptr<ChangeCollector>                                    collector;
+        std::vector<ChangeEvent>                                            events;
+        std::unordered_set<GlobalEntityID>                                  relist; // components
+        std::unordered_set<GlobalEntityID>                                  moved;  // objects
     };
 
     namespace
@@ -420,6 +450,12 @@ namespace Engine
 
         bool SameLists( const ProxyTable::Desired& desired, const ProxyTable::Proxy& proxy )
         {
+            // The pairs hold the object; the shape's revision is watched through proxy.shape.
+            if ( ( desired.visible ? desired.object.get() : nullptr ) != proxy.object.get() ||
+                 ( desired.visible ? desired.resolved->shape.get() : nullptr ) != proxy.shape.get() )
+            {
+                return false;
+            }
             const size_t wanted = desired.visible ? desired.resolved->meshes.size() : 0;
             if ( proxy.entries.size() != wanted )
             {
@@ -430,7 +466,7 @@ namespace Engine
                 const ResolvedMesh&      mesh  = desired.resolved->meshes[ i ];
                 const ProxyTable::Entry& entry = proxy.entries[ i ];
                 if ( entry.domain != mesh.domain || entry.shader.get() != mesh.shader.get() ||
-                     entry.mesh.get() != mesh.mesh.get() || entry.material != mesh.material.get() ||
+                     entry.mesh.get() != mesh.mesh.get() || entry.material.get() != mesh.material.get() ||
                      entry.textures != TexturesOf( *desired.resolved, mesh ) )
                 {
                     return false;
@@ -444,103 +480,292 @@ namespace Engine
             std::memset( sb, 0, sizeof( Graphics::SBs::InstanceSB ) );
             new ( sb ) Graphics::SBs::InstanceSB();
         }
-    }
 
-    namespace
-    {
-    void InsertEntry( ProxyTable& table, RenderMap* render_map, const GlobalEntityID component, const size_t index,
-                      ProxyTable::Entry& entry, InstancePair&& pair )
-    {
-        RenderMap::accessor acc;
-        if ( !render_map[ entry.domain ].find( acc, Components::ModelRenderer::StaticTypeHash() ) )
+        ProxyTable::Desired Evaluate( const Strong<Abstracts::Component>& component, ThreadState& thread, const size_t map_size )
         {
-            render_map[ entry.domain ].insert( acc, Components::ModelRenderer::StaticTypeHash() );
+            ProxyTable::Desired out;
+            out.component = component->GetID();
+            out.weak      = component;
+            Strong<Abstracts::ObjectBase> obj = component->GetOwner().lock();
+            if ( !obj )
+            {
+                return out;
+            }
+            out.object_id = obj->GetID();
+            if ( !component->GetActive() )
+            {
+                return out;
+            }
+            const auto*                    mr    = static_cast<const Components::ModelRenderer*>( component.get() );
+            const Strong<Resources::Shape> shape = mr->GetShape().lock();
+            if ( !shape )
+            {
+                return out;
+            }
+            const Strong<Components::Transform> tr = obj->GetComponent<Components::Transform>().lock();
+            if ( !tr || !VisibleInHierarchy( *obj ) )
+            {
+                return out;
+            }
+            out.visible  = true;
+            out.world    = tr->GetWorldMatrix().Transpose();
+            out.animator = obj->GetComponent<Components::Animator>().lock();
+            out.resolved = &thread.Resolve( shape, map_size );
+            out.object   = std::move( obj );
+            return out;
         }
-        ShaderMap::accessor shader_acc;
-        if ( !acc->second.find( shader_acc, entry.shader ) )
-        {
-            acc->second.insert( shader_acc, entry.shader );
-        }
-        MeshMap::accessor mesh_acc;
-        if ( !shader_acc->second.find( mesh_acc, entry.mesh ) )
-        {
-            shader_acc->second.insert( mesh_acc, entry.mesh );
-        }
-        aligned_vector<InstancePair>& list = mesh_acc->second;
-        entry.slot                         = list.size();
-        list.push_back( std::move( pair ) );
-        auto& owners = table.owners[ entry.Key() ];
-        owners.emplace_back( component, index );
-        assert( owners.size() == list.size() );
-        ++table.visible_entries;
-    }
 
-    void RemoveEntry( ProxyTable& table, RenderMap* render_map, const ProxyTable::Entry& entry )
-    {
-        const BucketKey key    = entry.Key();
-        auto&           owners = table.owners.at( key );
-        bool            empty = false;
+        void AddUse( ProxyTable& table, const Abstracts::Resource* resource, const GlobalEntityID component )
         {
-            RenderMap::accessor acc;
-            ShaderMap::accessor shader_acc;
-            MeshMap::accessor   mesh_acc;
-            const bool found = render_map[ entry.domain ].find( acc, Components::ModelRenderer::StaticTypeHash() ) &&
-                               acc->second.find( shader_acc, entry.shader ) && shader_acc->second.find( mesh_acc, entry.mesh );
-            assert( found );
-            if ( !found )
+            ProxyTable::Users& users = table.users[ resource ];
+            if ( users.components.empty() )
+            {
+                users.revision = resource->GetRevision();
+            }
+            ++users.components[ component ];
+        }
+
+        void DropUse( ProxyTable& table, const Abstracts::Resource* resource, const GlobalEntityID component )
+        {
+            const auto it = table.users.find( resource );
+            if ( it == table.users.end() )
             {
                 return;
             }
-            aligned_vector<InstancePair>& list = mesh_acc->second;
-            assert( owners.size() == list.size() && entry.slot < list.size() );
-            if ( entry.slot + 1 != list.size() )
+            const auto user = it->second.components.find( component );
+            if ( user != it->second.components.end() && --user->second == 0 )
             {
-                list[ entry.slot ]   = std::move( list.back() );
-                owners[ entry.slot ] = owners.back();
-                const auto& [ moved_component, moved_index ] = owners[ entry.slot ];
-                table.proxies.at( moved_component ).entries[ moved_index ].slot = entry.slot;
+                it->second.components.erase( user );
             }
-            list.pop_back();
-            owners.pop_back();
-            empty = list.empty();
+            if ( it->second.components.empty() )
+            {
+                table.users.erase( it );
+            }
         }
-        --table.visible_entries;
-        if ( !empty )
+
+        void InsertEntry( ProxyTable& table, RenderMap* render_map, const GlobalEntityID component, const size_t index,
+                          ProxyTable::Entry& entry, InstancePair&& pair )
         {
-            return;
-        }
-        // Drop the empty list: its keys hold the shader and mesh, which ResourceManager could not unload otherwise.
-        table.owners.erase( key );
-        RenderMap::accessor acc;
-        if ( !render_map[ entry.domain ].find( acc, Components::ModelRenderer::StaticTypeHash() ) )
-        {
-            return;
-        }
-        bool shader_empty = false;
-        {
+            RenderMap::accessor acc;
+            if ( !render_map[ entry.domain ].find( acc, Components::ModelRenderer::StaticTypeHash() ) )
+            {
+                render_map[ entry.domain ].insert( acc, Components::ModelRenderer::StaticTypeHash() );
+            }
             ShaderMap::accessor shader_acc;
-            if ( acc->second.find( shader_acc, entry.shader ) )
+            if ( !acc->second.find( shader_acc, entry.shader ) )
             {
-                shader_acc->second.erase( entry.mesh );
-                shader_empty = shader_acc->second.empty();
+                acc->second.insert( shader_acc, entry.shader );
+            }
+            MeshMap::accessor mesh_acc;
+            if ( !shader_acc->second.find( mesh_acc, entry.mesh ) )
+            {
+                shader_acc->second.insert( mesh_acc, entry.mesh );
+            }
+            aligned_vector<InstancePair>& list = mesh_acc->second;
+            entry.slot                         = list.size();
+            list.push_back( std::move( pair ) );
+            auto& owners = table.owners[ entry.Key() ];
+            owners.emplace_back( component, index );
+            assert( owners.size() == list.size() );
+        }
+
+        void RemoveEntry( ProxyTable& table, RenderMap* render_map, const GlobalEntityID component, const ProxyTable::Entry& entry )
+        {
+            const BucketKey key    = entry.Key();
+            auto&           owners = table.owners.at( key );
+            bool            empty  = false;
+            {
+                RenderMap::accessor acc;
+                ShaderMap::accessor shader_acc;
+                MeshMap::accessor   mesh_acc;
+                const bool found = render_map[ entry.domain ].find( acc, Components::ModelRenderer::StaticTypeHash() ) &&
+                                   acc->second.find( shader_acc, entry.shader ) &&
+                                   shader_acc->second.find( mesh_acc, entry.mesh );
+                assert( found );
+                if ( !found )
+                {
+                    return;
+                }
+                aligned_vector<InstancePair>& list = mesh_acc->second;
+                assert( owners.size() == list.size() && entry.slot < list.size() );
+                if ( entry.slot + 1 != list.size() )
+                {
+                    list[ entry.slot ]   = std::move( list.back() );
+                    owners[ entry.slot ] = owners.back();
+                    const auto& [ moved_component, moved_index ] = owners[ entry.slot ];
+                    table.proxies.at( moved_component ).entries[ moved_index ].slot = entry.slot;
+                }
+                list.pop_back();
+                owners.pop_back();
+                empty = list.empty();
+            }
+            if ( !empty )
+            {
+                return;
+            }
+            // Drop the empty list: its keys hold the shader and mesh, which ResourceManager could not unload otherwise.
+            table.owners.erase( key );
+            RenderMap::accessor acc;
+            if ( !render_map[ entry.domain ].find( acc, Components::ModelRenderer::StaticTypeHash() ) )
+            {
+                return;
+            }
+            bool shader_empty = false;
+            {
+                ShaderMap::accessor shader_acc;
+                if ( acc->second.find( shader_acc, entry.shader ) )
+                {
+                    shader_acc->second.erase( entry.mesh );
+                    shader_empty = shader_acc->second.empty();
+                }
+            }
+            if ( shader_empty )
+            {
+                acc->second.erase( entry.shader );
             }
         }
-        if ( shader_empty )
+
+        void RemoveProxyEntries( ProxyTable& table, RenderMap* render_map, const GlobalEntityID component, ProxyTable::Proxy& proxy )
         {
-            acc->second.erase( entry.shader );
+            // Back to front: a swap-remove only moves entries of other proxies or earlier entries of this one.
+            while ( !proxy.entries.empty() )
+            {
+                RemoveEntry( table, render_map, component, proxy.entries.back() );
+                table.free_buffers.push_back( proxy.entries.back().sb );
+                proxy.entries.pop_back();
+            }
+            proxy.shape.reset();
+            proxy.object.reset();
+        }
+
+        void SetWatched( ProxyTable& table, const GlobalEntityID component, ProxyTable::Proxy& proxy,
+                         std::vector<Strong<Abstracts::Resource>>&& watch )
+        {
+            if ( watch == proxy.watched )
+            {
+                return;
+            }
+            for ( const Strong<Abstracts::Resource>& resource : proxy.watched )
+            {
+                DropUse( table, resource.get(), component );
+            }
+            proxy.watched = std::move( watch );
+            for ( const Strong<Abstracts::Resource>& resource : proxy.watched )
+            {
+                AddUse( table, resource.get(), component );
+            }
+        }
+
+        void Unindex( ProxyTable& table, const GlobalEntityID object, const GlobalEntityID component )
+        {
+            const auto it = table.by_object.find( object );
+            if ( it == table.by_object.end() )
+            {
+                return;
+            }
+            std::erase( it->second, component );
+            if ( it->second.empty() )
+            {
+                table.by_object.erase( it );
+            }
+        }
+
+        void WriteValues( const ProxyTable::Desired& d )
+        {
+            for ( size_t j = 0; j < d.proxy->entries.size(); ++j )
+            {
+                Graphics::SBs::InstanceSB* sb = d.proxy->entries[ j ].sb;
+                ResetBuffer( sb );
+                sb->SetParam( 0, d.world );
+                d.resolved->meshes[ j ].material->GetPrimitive().Apply( *sb );
+                if ( d.animator )
+                {
+                    d.animator->GetPrimitive().Apply( *sb );
+                }
+            }
+        }
+
+        // The object and its descendants.
+        void CollectSubtree( const GlobalEntityID id, const Strong<Abstracts::ObjectBase>& object,
+                             std::unordered_set<GlobalEntityID>& out )
+        {
+            if ( !out.insert( id ).second || !object )
+            {
+                return;
+            }
+            for ( const Weak<Abstracts::ObjectBase>& weak : object->GetChildren() )
+            {
+                if ( const Strong<Abstracts::ObjectBase> child = weak.lock() )
+                {
+                    CollectSubtree( child->GetID(), child, out );
+                }
+            }
         }
     }
 
-    void RemoveProxyEntries( ProxyTable& table, RenderMap* render_map, ProxyTable::Proxy& proxy )
+    void ModelRendererRenderInstanceTask::ApplyDesired( RenderMap* render_map, void* desired_ptr )
     {
-        // Back to front: a swap-remove only moves entries of other proxies or earlier entries of this one.
-        while ( !proxy.entries.empty() )
+        ProxyTable::Desired& d     = *static_cast<ProxyTable::Desired*>( desired_ptr );
+        ProxyTable::Proxy&   proxy = m_proxy_->proxies[ d.component ];
+        d.proxy                    = &proxy;
+        proxy.component            = d.weak;
+        if ( proxy.object_id != d.object_id )
         {
-            RemoveEntry( table, render_map, proxy.entries.back() );
-            table.free_buffers.push_back( proxy.entries.back().sb );
-            proxy.entries.pop_back();
+            Unindex( *m_proxy_, proxy.object_id, d.component );
+            proxy.object_id = d.object_id;
+            if ( d.object_id != 0 )
+            {
+                m_proxy_->by_object[ d.object_id ].push_back( d.component );
+            }
         }
-    }
+        // What decides the lists: the shape and every material and shader it refers to (watched also while nothing of
+        // it can be drawn yet).
+        std::vector<Strong<Abstracts::Resource>> watch;
+        if ( d.visible )
+        {
+            watch.reserve( d.resolved->watch.size() + 1 );
+            watch.push_back( d.resolved->shape );
+            watch.insert( watch.end(), d.resolved->watch.begin(), d.resolved->watch.end() );
+        }
+        SetWatched( *m_proxy_, d.component, proxy, std::move( watch ) );
+        if ( proxy.visible != d.visible )
+        {
+            proxy.visible = d.visible;
+            d.visible ? ++m_proxy_->visible_proxies : --m_proxy_->visible_proxies;
+        }
+        if ( SameLists( d, proxy ) )
+        {
+            return;
+        }
+        RemoveProxyEntries( *m_proxy_, render_map, d.component, proxy );
+        if ( !d.visible )
+        {
+            return;
+        }
+        proxy.object = d.object;
+        proxy.shape  = d.resolved->shape;
+        for ( size_t j = 0; j < d.resolved->meshes.size(); ++j )
+        {
+            const ResolvedMesh& mesh  = d.resolved->meshes[ j ];
+            ProxyTable::Entry&  entry = proxy.entries.emplace_back();
+            entry.domain              = mesh.domain;
+            entry.shader              = mesh.shader;
+            entry.mesh                = mesh.mesh;
+            entry.material            = mesh.material;
+            entry.textures            = TexturesOf( *d.resolved, mesh );
+            entry.sb                  = TakeBuffer();
+
+            InstancePair pair;
+            pair.object   = d.object;
+            pair.instance = entry.sb;
+            for ( size_t idx = 0; idx < mesh.textures.size(); ++idx )
+            {
+                pair.textures[ idx ] = mesh.textures[ idx ];
+            }
+            pair.reservedTextures[ RESERVED_USER_TEX_BONES - RESERVED_USER_TEX_BEGIN ] = d.resolved->animations;
+            pair.reservedTextures[ RESERVED_USER_TEX_ATLAS - RESERVED_USER_TEX_BEGIN ] = mesh.atlas;
+            InsertEntry( *m_proxy_, render_map, d.component, j, entry, std::move( pair ) );
+        }
     }
 
     void ModelRendererRenderInstanceTask::ClearProxies( RenderMap* render_map, const size_t map_size )
@@ -557,8 +782,10 @@ namespace Engine
             }
         }
         m_proxy_->proxies.clear();
+        m_proxy_->by_object.clear();
         m_proxy_->owners.clear();
-        m_proxy_->visible_entries = 0;
+        m_proxy_->users.clear();
+        m_proxy_->visible_proxies = 0;
         m_proxy_->scene_id        = 0;
     }
 
@@ -571,144 +798,230 @@ namespace Engine
             return sb;
         }
         SpinLockToken token = SingletonSpinLock::GetInstance().Lock( m_instance_ticket_ );
-        m_used_count_       = m_allocation_count_; // never hand out a buffer of the per-frame path
+        m_used_count_       = m_allocation_count_; // the per-frame path's buffers are not used in this mode
         return GetInstanceLocked();
     }
 
     void ModelRendererRenderInstanceTask::RunProxies( const Scene& scene, RenderMap* render_map, const size_t map_size )
     {
-        if ( m_proxy_->scene_id != scene.GetID() )
+        ProxyTable& table = *m_proxy_;
+        if ( !table.collector )
+        {
+            table.collector = std::make_unique<ChangeCollector>();
+        }
+        table.collector->Drain( table.events );
+
+        bool everything = false;
+        if ( table.scene_id != scene.GetID() )
         {
             ClearProxies( render_map, map_size );
-            m_proxy_->scene_id = scene.GetID();
+            table.scene_id = scene.GetID();
+            everything     = true;
         }
 
-        const auto mrs = scene.GetCachedComponentsConcurrent<Components::ModelRenderer>();
-        std::vector<ProxyTable::Desired>             desired( mrs.size() );
-        tbb::enumerable_thread_specific<ThreadState> threads;
-
-        // 1. What every renderer should draw (parallel, read only).
-        tbb::parallel_for( size_t{ 0 }, mrs.size(), [ & ]( const size_t i )
+        // Resources whose revision moved: their users are listed again.
+        table.relist.clear();
+        table.moved.clear();
+        for ( auto& [ resource, users ] : table.users )
         {
-            const Strong<Abstracts::Component> component = mrs[ i ].lock();
-            if ( !component )
+            const uint64_t revision = resource->GetRevision();
+            if ( revision != users.revision )
             {
-                return;
+                users.revision = revision;
+                for ( const auto& [ component, uses ] : users.components )
+                {
+                    table.relist.insert( component );
+                }
             }
-            ProxyTable::Desired& out = desired[ i ];
-            out.component            = component->GetID();
-            if ( !component->GetActive() )
-            {
-                return;
-            }
-            const auto*                         mr    = static_cast<const Components::ModelRenderer*>( component.get() );
-            Strong<Abstracts::ObjectBase>       obj   = component->GetOwner().lock();
-            const Strong<Resources::Shape>      shape = mr->GetShape().lock();
-            if ( !obj || !shape )
-            {
-                return;
-            }
-            const Strong<Components::Transform> tr = obj->GetComponent<Components::Transform>().lock();
-            if ( !tr || !VisibleInHierarchy( *obj ) )
-            {
-                return;
-            }
-            out.visible  = true;
-            out.world    = tr->GetWorldMatrix().Transpose();
-            out.animator = obj->GetComponent<Components::Animator>().lock();
-            out.resolved = &threads.local().Resolve( shape, map_size );
-            out.object   = std::move( obj );
-        } );
+        }
 
-        // 2. Proxies of renderers that are gone, then lists that changed (main thread).
-        std::unordered_set<GlobalEntityID> present;
-        present.reserve( desired.size() );
-        for ( const ProxyTable::Desired& d : desired )
+        constexpr uint16_t membership = eChange::Added | eChange::Removed | eChange::Owner;
+        std::unordered_set<GlobalEntityID> relist_objects;
+        for ( const ChangeEvent& event : table.events )
+        {
+            const auto bits = static_cast<uint16_t>( event.kind );
+            if ( event.kind == eChange::SceneReset || ( bits & membership ) )
+            {
+                everything = true;
+                break;
+            }
+            if ( event.component != 0 )
+            {
+                relist_objects.insert( event.object ); // any component of the object: its renderers again
+            }
+            else if ( bits & ( eChange::Active | eChange::Reparented ) )
+            {
+                relist_objects.insert( event.object );
+                table.moved.insert( event.object );
+            }
+            else if ( bits & static_cast<uint16_t>( eChange::Transform ) )
+            {
+                table.moved.insert( event.object );
+            }
+        }
+
+        tbb::enumerable_thread_specific<ThreadState> threads;
+        std::vector<ProxyTable::Desired>             desired;
+        // An object that changed (it may draw nothing itself but have drawn descendants).
+        const auto find_object = [ & ]( const GlobalEntityID id ) -> Strong<Abstracts::ObjectBase>
+        {
+            if ( const auto it = table.by_object.find( id ); it != table.by_object.end() && !it->second.empty() )
+            {
+                if ( const ProxyTable::Proxy& proxy = table.proxies.at( it->second.front() ); proxy.object )
+                {
+                    return proxy.object;
+                }
+            }
+            return const_cast<Scene&>( scene ).FindGameObject( id ).lock();
+        };
+
+        if ( everything )
+        {
+            // Every renderer of the scene: new ones get a proxy, gone ones lose theirs.
+            const auto mrs = scene.GetCachedComponentsConcurrent<Components::ModelRenderer>();
+            desired.resize( mrs.size() );
+            tbb::parallel_for( size_t{ 0 }, mrs.size(), [ & ]( const size_t i )
+            {
+                if ( const Strong<Abstracts::Component> component = mrs[ i ].lock() )
+                {
+                    desired[ i ] = Evaluate( component, threads.local(), map_size );
+                }
+            } );
+            std::unordered_set<GlobalEntityID> present;
+            present.reserve( desired.size() );
+            for ( const ProxyTable::Desired& d : desired )
+            {
+                if ( d.component != 0 )
+                {
+                    present.insert( d.component );
+                }
+            }
+            for ( auto it = table.proxies.begin(); it != table.proxies.end(); )
+            {
+                if ( !present.contains( it->first ) )
+                {
+                    RemoveProxyEntries( table, render_map, it->first, it->second );
+                    SetWatched( table, it->first, it->second, {} );
+                    table.visible_proxies -= it->second.visible ? 1 : 0;
+                    Unindex( table, it->second.object_id, it->first );
+                    it = table.proxies.erase( it );
+                }
+                else
+                {
+                    ++it;
+                }
+            }
+        }
+        else
+        {
+            // Renderers of objects whose state changed (with their descendants for Active and Reparented), and users
+            // of changed resources.
+            // Subtrees first: an object put in the set on its own would end a later walk through it.
+            std::unordered_set<GlobalEntityID> objects;
+            for ( const GlobalEntityID id : relist_objects )
+            {
+                if ( table.moved.contains( id ) )
+                {
+                    CollectSubtree( id, find_object( id ), objects );
+                }
+            }
+            for ( const GlobalEntityID id : relist_objects )
+            {
+                objects.insert( id );
+            }
+            for ( const GlobalEntityID id : objects )
+            {
+                if ( const auto it = table.by_object.find( id ); it != table.by_object.end() )
+                {
+                    table.relist.insert( it->second.begin(), it->second.end() );
+                }
+            }
+            std::vector<Strong<Abstracts::Component>> components;
+            components.reserve( table.relist.size() );
+            for ( const GlobalEntityID id : table.relist )
+            {
+                if ( const auto it = table.proxies.find( id ); it != table.proxies.end() )
+                {
+                    if ( Strong<Abstracts::Component> component = it->second.component.lock() )
+                    {
+                        components.push_back( std::move( component ) );
+                    }
+                }
+            }
+            desired.resize( components.size() );
+            tbb::parallel_for( size_t{ 0 }, components.size(), [ & ]( const size_t i )
+            {
+                desired[ i ] = Evaluate( components[ i ], threads.local(), map_size );
+            } );
+        }
+
+        // Lists of the evaluated renderers (main thread), then their buffers (parallel; one writer per buffer).
+        for ( ProxyTable::Desired& d : desired )
         {
             if ( d.component != 0 )
             {
-                present.insert( d.component );
+                ApplyDesired( render_map, &d );
             }
         }
-        for ( auto it = m_proxy_->proxies.begin(); it != m_proxy_->proxies.end(); )
-        {
-            if ( !present.contains( it->first ) )
-            {
-                RemoveProxyEntries( *m_proxy_, render_map, it->second );
-                it = m_proxy_->proxies.erase( it );
-            }
-            else
-            {
-                ++it;
-            }
-        }
-        for ( ProxyTable::Desired& d : desired )
-        {
-            if ( d.component == 0 )
-            {
-                continue;
-            }
-            ProxyTable::Proxy& proxy = m_proxy_->proxies[ d.component ];
-            d.proxy                  = &proxy;
-            if ( SameLists( d, proxy ) )
-            {
-                continue;
-            }
-            d.moved = true;
-            RemoveProxyEntries( *m_proxy_, render_map, proxy );
-            if ( !d.visible )
-            {
-                continue;
-            }
-            for ( size_t j = 0; j < d.resolved->meshes.size(); ++j )
-            {
-                const ResolvedMesh& mesh  = d.resolved->meshes[ j ];
-                ProxyTable::Entry&  entry = proxy.entries.emplace_back();
-                entry.domain              = mesh.domain;
-                entry.shader              = mesh.shader;
-                entry.mesh                = mesh.mesh;
-                entry.material            = mesh.material.get();
-                entry.textures            = TexturesOf( *d.resolved, mesh );
-                entry.sb                  = TakeBuffer();
-
-                InstancePair pair;
-                pair.object   = d.object;
-                pair.instance = entry.sb;
-                for ( size_t idx = 0; idx < mesh.textures.size(); ++idx )
-                {
-                    pair.textures[ idx ] = mesh.textures[ idx ];
-                }
-                pair.reservedTextures[ RESERVED_USER_TEX_BONES - RESERVED_USER_TEX_BEGIN ] = d.resolved->animations;
-                pair.reservedTextures[ RESERVED_USER_TEX_ATLAS - RESERVED_USER_TEX_BEGIN ] = mesh.atlas;
-                InsertEntry( *m_proxy_, render_map, d.component, j, entry, std::move( pair ) );
-            }
-        }
-
-        // 3. Buffer values of every visible renderer (parallel; each buffer has one writer).
         tbb::parallel_for( size_t{ 0 }, desired.size(), [ & ]( const size_t i )
         {
-            const ProxyTable::Desired& d = desired[ i ];
-            if ( !d.visible )
+            if ( desired[ i ].visible )
             {
-                return;
-            }
-            for ( size_t j = 0; j < d.proxy->entries.size(); ++j )
-            {
-                Graphics::SBs::InstanceSB* sb = d.proxy->entries[ j ].sb;
-                ResetBuffer( sb );
-                sb->SetParam( 0, d.world );
-                d.resolved->meshes[ j ].material->GetPrimitive().Apply( *sb );
-                if ( d.animator )
-                {
-                    d.animator->GetPrimitive().Apply( *sb );
-                }
+                WriteValues( desired[ i ] );
             }
         } );
 
-        // 4. As before: every domain has the renderer key while anything is drawn, none otherwise.
+        // World matrices of moved objects and their descendants that were not evaluated above.
+        if ( !everything && !table.moved.empty() )
+        {
+            std::unordered_set<GlobalEntityID> evaluated;
+            for ( const ProxyTable::Desired& d : desired )
+            {
+                evaluated.insert( d.component );
+            }
+            std::unordered_set<GlobalEntityID> objects;
+            for ( const GlobalEntityID id : table.moved )
+            {
+                if ( objects.contains( id ) )
+                {
+                    continue;
+                }
+                CollectSubtree( id, find_object( id ), objects );
+            }
+            std::vector<ProxyTable::Proxy*> proxies;
+            for ( const GlobalEntityID id : objects )
+            {
+                if ( const auto it = table.by_object.find( id ); it != table.by_object.end() )
+                {
+                    for ( const GlobalEntityID component : it->second )
+                    {
+                        ProxyTable::Proxy& proxy = table.proxies.at( component );
+                        if ( !proxy.entries.empty() && !evaluated.contains( component ) )
+                        {
+                            proxies.push_back( &proxy );
+                        }
+                    }
+                }
+            }
+            tbb::parallel_for( size_t{ 0 }, proxies.size(), [ & ]( const size_t i )
+            {
+                const ProxyTable::Proxy& proxy = *proxies[ i ];
+                if ( const Strong<Components::Transform> tr = proxy.object->GetComponent<Components::Transform>().lock() )
+                {
+                    const Matrix world = tr->GetWorldMatrix().Transpose();
+                    for ( const ProxyTable::Entry& entry : proxy.entries )
+                    {
+                        entry.sb->SetParam( 0, world );
+                    }
+                }
+            } );
+        }
+
+        // As before: every domain has the renderer key while any renderer is visible (even one that draws no mesh),
+        // none otherwise.
         for ( size_t i = 0; i < map_size; ++i )
         {
-            if ( m_proxy_->visible_entries > 0 )
+            if ( table.visible_proxies > 0 )
             {
                 RenderMap::accessor acc;
                 if ( !render_map[ i ].find( acc, Components::ModelRenderer::StaticTypeHash() ) )
@@ -748,12 +1061,7 @@ namespace Engine
     {
         if ( !m_legacy_ )
         {
-            // The list stays across frames; Run is not called without an active scene, so drop it here then.
-            if ( !Managers::SceneManager::GetInstance().GetActiveScene().lock() )
-            {
-                ClearProxies( render_map, map_size );
-            }
-            return;
+            return; // the list stays across frames (Renderer calls Release when there is no scene to draw)
         }
 
         for ( size_t i = 0; i < map_size; ++i )

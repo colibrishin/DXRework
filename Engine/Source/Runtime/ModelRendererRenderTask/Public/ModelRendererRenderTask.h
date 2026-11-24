@@ -41,6 +41,7 @@ namespace Engine
 
         void                       RunProxies( const Scene& scene, RenderMap* render_map, size_t map_size );
         void                       ClearProxies( RenderMap* render_map, size_t map_size );
+        void                       ApplyDesired( RenderMap* render_map, void* desired ); // ProxyTable::Desired
         Graphics::SBs::InstanceSB* TakeBuffer();
 
     public:
