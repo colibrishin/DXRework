@@ -10,6 +10,7 @@
 
 #include "Texture.h"
 #include "ThrowIfFailed.h"
+#include "FrameRelease.h"
 
 #include "CommandPair.h"
 #include "D3D12GraphicInterface.h"
@@ -19,7 +20,11 @@ Engine::D3D12PrimitiveTexture::D3D12PrimitiveTexture()
 { }
 
 Engine::D3D12PrimitiveTexture::~D3D12PrimitiveTexture()
-{ }
+{
+	// Lists of this frame may still sample, render to or copy from them.
+	KeepUntilFrameDone(std::move(m_dx12_texture_));
+	KeepUntilFrameDone(std::move(m_upload_buffer_));
+}
 
 void Engine::D3D12PrimitiveTexture::Generate(Abstracts::Resource* resource)
 {

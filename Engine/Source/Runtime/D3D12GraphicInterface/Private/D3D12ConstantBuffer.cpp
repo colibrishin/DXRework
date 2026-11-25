@@ -1,10 +1,14 @@
 #include "D3D12ConstantBuffer.hpp"
 
 #include "SIMDExtension.hpp"
+#include "FrameRelease.h"
 
 Engine::Graphics::D3D12ConstantBufferTypeless::~D3D12ConstantBufferTypeless()
 {
 	delete[] m_data_;
+	// Lists of this frame may still read or copy into them.
+	KeepUntilFrameDone(std::move(m_buffer_));
+	KeepUntilFrameDone(std::move(m_upload_buffer_));
 }
 
 void Engine::Graphics::D3D12ConstantBufferTypeless::Create(const void* src_data, const size_t stride)

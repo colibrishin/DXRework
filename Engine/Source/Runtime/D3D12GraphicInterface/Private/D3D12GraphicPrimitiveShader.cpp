@@ -3,6 +3,7 @@
 #include <ranges>
 
 #include "ThrowIfFailed.h"
+#include "FrameRelease.h"
 #include "Shader.h"
 #include "ResourceTypeValidation.h"
 
@@ -19,7 +20,9 @@ std::vector<std::tuple<Engine::eShaderType, std::string, std::string>> Engine::D
 namespace Engine
 {
     D3D12GraphicPrimitiveShader::~D3D12GraphicPrimitiveShader()
-    { }
+    {
+        KeepUntilFrameDone(std::move(m_pipeline_state_)); // lists of this frame may still use it
+    }
 
     void D3D12GraphicPrimitiveShader::Generate( const Abstracts::Resource* resource, void* pipeline_signature )
 	{

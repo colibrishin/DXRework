@@ -6,12 +6,21 @@
 #include "SIMDExtension.hpp"
 #include "RaytracingShader.h"
 #include "ThrowIfFailed.h"
+#include "FrameRelease.h"
 #include "ResourceTypeValidation.h"
 
 namespace Engine
 {
     D3D12RaytracingShader::~D3D12RaytracingShader()
-    { }
+    {
+        // Lists of this frame may still dispatch rays with them.
+        KeepUntilFrameDone(std::move(m_raytracing_pso_));
+        KeepUntilFrameDone(std::move(m_local_root_signature_));
+        for (ComPtr<ID3D12Resource>& table : m_shader_tables_)
+        {
+            KeepUntilFrameDone(std::move(table));
+        }
+    }
 
     void D3D12RaytracingShader::Generate( const Abstracts::Resource* resource, void* pipeline_signature )
     {

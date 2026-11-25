@@ -18,16 +18,17 @@ namespace Engine
 {
     D3D12PrimitiveMesh::~D3D12PrimitiveMesh()
     {
-        m_native_vertex_buffer_.Reset();
-        m_native_index_buffer_.Reset();
-        m_native_vertex_upload_buffer_.Reset();
-        m_native_index_upload_buffer_.Reset();
+        // Lists of this frame may still draw or copy from them.
+        KeepUntilFrameDone(std::move(m_native_vertex_buffer_));
+        KeepUntilFrameDone(std::move(m_native_index_buffer_));
+        KeepUntilFrameDone(std::move(m_native_vertex_upload_buffer_));
+        KeepUntilFrameDone(std::move(m_native_index_upload_buffer_));
 
 #if CFG_RAYTRACING
-        m_raytracing_vertex_buffer_.Reset();
-        m_raytracing_index_buffer_.Reset();
-        m_raytracing_vertex_buffer_upload_.Reset();
-		m_raytracing_index_buffer_upload_.Reset();
+        KeepUntilFrameDone(std::move(m_raytracing_vertex_buffer_));
+        KeepUntilFrameDone(std::move(m_raytracing_index_buffer_));
+        KeepUntilFrameDone(std::move(m_raytracing_vertex_buffer_upload_));
+        KeepUntilFrameDone(std::move(m_raytracing_index_buffer_upload_));
 #endif
 	}
 
