@@ -730,7 +730,10 @@ void Engine::D3D12GraphicInterface::SetDefaultComputePipeline(const IGraphicCont
 
 void Engine::D3D12GraphicInterface::Draw(const IGraphicContext* context, const Abstracts::Resource* resource, const UINT instance_count, const UINT instance_offset)
 {
-	D3D12::ExpectMesh( resource );
+	if ( resource )
+	{
+		D3D12::ExpectMesh( resource ); // no mesh: a full-screen triangle (Deferred LightPass), drawn below
+	}
 	auto* mesh = static_cast<const Resources::Mesh*>(resource);
 	const auto cmd = reinterpret_cast<CommandPair*>(context->commandList);
     UINT       index_count = 0;
