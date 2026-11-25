@@ -104,11 +104,27 @@ D3D12_GPU_VIRTUAL_ADDRESS Engine::Graphics::D3D12StructuredBufferTypeless::GetGP
 	return m_buffer_->GetGPUVirtualAddress();
 }
 
+Engine::Graphics::D3D12StructuredBufferTypeless::~D3D12StructuredBufferTypeless()
+{
+	// Lists of this frame may still read or copy into them.
+	KeepUntilFrameDone(std::move(m_buffer_));
+	KeepUntilFrameDone(std::move(m_upload_buffer_));
+	KeepUntilFrameDone(std::move(m_read_buffer_));
+}
+
 void Engine::Graphics::D3D12StructuredBufferTypeless::Create(const IGraphicContext* context, UINT size, const void* initial_data, const size_t stride, const bool uav)
 {
 	if (size == 0)
 	{
 		size = 1;
+	}
+
+	// Growing: lists recorded earlier in this frame may still use the old buffers.
+	if (m_buffer_)
+	{
+		KeepUntilFrameDone(std::move(m_buffer_));
+		KeepUntilFrameDone(std::move(m_upload_buffer_));
+		KeepUntilFrameDone(std::move(m_read_buffer_));
 	}
 
 	m_size_ = size;

@@ -199,6 +199,10 @@ namespace Engine
         
         if (new_size > m_allocated_shader_record_size_[type])
         {
+            if (hit_record)
+            {
+                KeepUntilFrameDone(std::move(hit_record)); // lists of this frame may still read the old table
+            }
             const auto& default_heap = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
             const auto& buffer_desc  = CD3DX12_RESOURCE_DESC::Buffer
                     (

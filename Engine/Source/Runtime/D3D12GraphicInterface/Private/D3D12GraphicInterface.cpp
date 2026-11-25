@@ -194,6 +194,7 @@ void Engine::D3D12GraphicInterface::Present()
 	cmd->GetList()->ResourceBarrier(1, &present_barrier);
 	// Present1 goes to the queue after this list (the frame's last); WaitForNextFrame waits for its fence value.
 	m_frame_fence_ = cmd->Submit();
+	m_command_pair_task_.EndFrame(m_frame_fence_);
 
 	DXGI_PRESENT_PARAMETERS params;
 	params.DirtyRectsCount = 0;

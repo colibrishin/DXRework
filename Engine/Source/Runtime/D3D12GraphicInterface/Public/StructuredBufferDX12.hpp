@@ -11,7 +11,7 @@ namespace Engine::Graphics
 	{
 	public:
 		D3D12StructuredBufferTypeless() = default;
-		~D3D12StructuredBufferTypeless() override = default;
+		~D3D12StructuredBufferTypeless() override;
 
 		void Clear() override;
 

@@ -6,6 +6,21 @@
 
 namespace Engine
 {
+	namespace
+	{
+		std::atomic<CommandPairTask*> s_release_task{ nullptr };
+	}
+
+	void ReleaseAfterFrame(std::function<void()>&& holder)
+	{
+		if (CommandPairTask* task = s_release_task.load())
+		{
+			task->ReleaseAfterFrame(std::move(holder));
+			return;
+		}
+		holder = {};
+	}
+
 	CommandPair::CommandPair
 	(
 		CommandPairPool*    pool,
@@ -353,6 +368,7 @@ namespace Engine
         m_fence_->SetName( L"CommandPairTask Fence" );
 
 		m_pool_.Initialize(dev, heap_handler, this);
+		s_release_task = this;
 	}
 
 	uint64_t CommandPairTask::GetBufferIndex() const
@@ -478,10 +494,30 @@ namespace Engine
 		}
 	}
 
+	void CommandPairTask::ReleaseAfterFrame(std::function<void()>&& holder)
+	{
+		std::lock_guard l(m_frame_release_mutex_);
+		m_frame_releases_.push_back(std::move(holder));
+	}
+
+	void CommandPairTask::EndFrame(const uint64_t frame_fence)
+	{
+		std::vector<std::function<void()>> released;
+		{
+			std::lock_guard l(m_frame_release_mutex_);
+			released.swap(m_frame_releases_);
+		}
+		if (!released.empty())
+		{
+			m_frame_retire_.Push(frame_fence, [released = std::move(released)] {});
+		}
+	}
+
 	void CommandPairTask::SwapBuffer(const uint32_t next_buffer, const uint64_t frame_fence)
 	{
 		WaitForEventCompletion(frame_fence);
 		RetireCompleted();
+		m_frame_retire_.Retire(m_fence_->GetCompletedValue());
 
 		m_buffer_idx_ = next_buffer;
 	}
@@ -505,6 +541,16 @@ namespace Engine
 			WaitForEventCompletion(last);
 			m_retire_.RetireAll();
 		}
+		// From here on ReleaseAfterFrame releases right away.
+		s_release_task = nullptr;
+		{
+			std::vector<std::function<void()>> released;
+			{
+				std::lock_guard l(m_frame_release_mutex_);
+				released.swap(m_frame_releases_);
+			}
+		}
+		m_frame_retire_.RetireAll();
 
 		{
 			std::lock_guard l(m_critical_mutex_);

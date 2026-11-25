@@ -16,6 +16,7 @@
 #include "TypeLibrary.h"
 #include "DescriptorPtrImpl.h"
 #include "FenceRetireQueue.h"
+#include "FrameRelease.h"
 
 namespace Engine
 {
@@ -194,6 +195,9 @@ namespace Engine
         void Cleanup();
 		// frame_fence: the fence value of the frame's last list (Present's).
 		void SwapBuffer(const uint32_t next_buffer, const uint64_t frame_fence);
+		// ReleaseAfterFrame (FrameRelease.h): collected per frame, handed to m_frame_retire_ with the frame's fence.
+		void ReleaseAfterFrame(std::function<void()>&& holder);
+		void EndFrame(const uint64_t frame_fence);
 
 	private:
 		friend struct CommandPair;
@@ -227,5 +231,9 @@ namespace Engine
 		std::mutex                m_signal_mutex_;
 		uint64_t                  m_fence_value_{};
 		FenceRetireQueue          m_retire_;
+
+		std::mutex                         m_frame_release_mutex_;
+		std::vector<std::function<void()>> m_frame_releases_; // of the frame being recorded
+		FenceRetireQueue                   m_frame_retire_;   // run by the main thread (SwapBuffer)
 	};
 }

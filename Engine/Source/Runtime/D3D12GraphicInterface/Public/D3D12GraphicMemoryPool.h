@@ -1,6 +1,7 @@
 ﻿#pragma once
 #include "D3D12GraphicInterface.h"
 #include "D3D12GraphicResourcePrimitive.h"
+#include "FrameRelease.h"
 
 #include "Allocator.h"
 #include "ThrowIfFailed.h"
@@ -13,7 +14,10 @@ namespace Engine
     class D3D12GraphicMemoryPool : public GraphicMemoryPool
     {
     public:
-        ~D3D12GraphicMemoryPool() override { }
+        ~D3D12GraphicMemoryPool() override
+        {
+            KeepUntilFrameDone(std::move(m_resource_)); // lists of this frame may still read it
+        }
         void Map(const void* src_data, const size_t count, const size_t stride) override
         {
             char*      data          = nullptr;
@@ -36,6 +40,10 @@ namespace Engine
     private:
         void InitializeBuffer(const size_t count, const size_t stride) override
         {
+            if (m_resource_)
+            {
+                KeepUntilFrameDone(std::move(m_resource_)); // growing: lists of this frame may still read the old one
+            }
             m_resource_ = std::make_unique<D3D12GraphicResourcePrimitive>();
             
             const auto& heap_desc = CD3DX12_HEAP_PROPERTIES(HeapProperty);
