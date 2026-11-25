@@ -198,6 +198,8 @@ namespace Engine
 		// ReleaseAfterFrame (FrameRelease.h): collected per frame, handed to m_frame_retire_ with the frame's fence.
 		void ReleaseAfterFrame(std::function<void()>&& holder);
 		void EndFrame(const uint64_t frame_fence);
+		// Waits until the GPU finished everything queued so far and runs what waited for it (main thread).
+		void WaitForIdle();
 		[[nodiscard]] uint64_t RecordingFrame() const;
 		[[nodiscard]] uint64_t FramesInFlight() const { return m_frames_in_flight_; }
 		[[nodiscard]] bool     FrameDone(const uint64_t frame) const;

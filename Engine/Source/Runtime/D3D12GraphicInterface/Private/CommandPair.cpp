@@ -682,6 +682,17 @@ namespace Engine
 		}
 	}
 
+	void CommandPairTask::WaitForIdle()
+	{
+		if (!m_fence_)
+		{
+			return;
+		}
+		WaitForEventCompletion(SignalQueue(D3D12_COMMAND_LIST_TYPE_DIRECT));
+		RetireCompleted();
+		m_frame_retire_.Retire(m_fence_->GetCompletedValue());
+	}
+
 	void CommandPairTask::SwapBuffer(const uint32_t next_buffer, const uint64_t frame_fence)
 	{
 		// Before recording the next frame, the frame m_frames_in_flight_ - 1 behind this one must have finished, so

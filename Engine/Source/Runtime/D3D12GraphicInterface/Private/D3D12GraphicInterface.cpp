@@ -99,6 +99,14 @@ void Engine::D3D12GraphicInterface::Initialize()
 	InitializeDevice();
 	DetachCommandThread();
 
+	// The last frames may still be on the GPU when the loop ends, and a module (ImGui, a render pass) releases what
+	// they use when it shuts down: wait for the GPU before each module shutdown (and hot unload). The callbacks are
+	// dropped at the end of ModuleManager::Shutdown, before this interface is cleaned up.
+	Managers::ModuleManager::GetInstance().RegisterOnModuleShutdown([this](std::wstring_view)
+	{
+		m_command_pair_task_.WaitForIdle();
+	});
+
 #if CFG_RAYTRACING
     if (auto& rgi = static_cast<IRaytracingExtension&>(*this);
         rgi.IsRaytracingSupported())
