@@ -4,8 +4,11 @@
 
 #include <array>
 #include <atomic>
+#include <chrono>
+#include <condition_variable>
 #include <deque>
 #include <mutex>
+#include <thread>
 
 #include <directx/d3d12.h>
 #include <wrl/client.h>
@@ -248,6 +251,11 @@ namespace Engine
 		uint32_t                                    m_gpu_delay_ms_ = 0; // KOLIBRI_GPU_DELAY_MS: stall the queue per frame
 		ComPtr<ID3D12Fence>                         m_delay_fence_;
 		uint64_t                                    m_delay_value_ = 0;
+		std::thread                                 m_delay_thread_;   // signals m_delay_fence_ after the delay
+		std::mutex                                  m_delay_mutex_;
+		std::condition_variable                     m_delay_cv_;
+		std::deque<std::pair<std::chrono::steady_clock::time_point, uint64_t>> m_delay_signals_;
+		bool                                        m_delay_stop_ = false;
 		std::array<std::atomic<uint64_t>, s_frame_history> m_frame_fences_{}; // fence value per frame index % history
 	};
 }

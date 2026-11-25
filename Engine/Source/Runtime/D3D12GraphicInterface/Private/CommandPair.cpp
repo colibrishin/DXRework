@@ -493,6 +493,25 @@ namespace Engine
 		if (m_gpu_delay_ms_)
 		{
 			DX::ThrowIfFailed(dev->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(m_delay_fence_.GetAddressOf())));
+			m_delay_stop_   = false;
+			m_delay_thread_ = std::thread([this]
+			{
+				std::unique_lock l(m_delay_mutex_);
+				while (true)
+				{
+					m_delay_cv_.wait(l, [this] { return m_delay_stop_ || !m_delay_signals_.empty(); });
+					if (m_delay_signals_.empty())
+					{
+						return; // stopped
+					}
+					const auto [due, value] = m_delay_signals_.front();
+					m_delay_signals_.pop_front();
+					l.unlock();
+					std::this_thread::sleep_until(due);
+					m_delay_fence_->Signal(value);
+					l.lock();
+				}
+			});
 		}
 		s_release_task = this;
 	}
@@ -677,11 +696,11 @@ namespace Engine
 				delay_value = ++m_delay_value_;
 				DX::ThrowIfFailed(GetCommandQueue(D3D12_COMMAND_LIST_TYPE_DIRECT)->Wait(m_delay_fence_.Get(), delay_value));
 			}
-			std::thread([fence = m_delay_fence_, delay_value, ms = m_gpu_delay_ms_]
 			{
-				std::this_thread::sleep_for(std::chrono::milliseconds(ms));
-				fence->Signal(delay_value);
-			}).detach();
+				std::lock_guard l(m_delay_mutex_);
+				m_delay_signals_.emplace_back(std::chrono::steady_clock::now() + std::chrono::milliseconds(m_gpu_delay_ms_), delay_value);
+			}
+			m_delay_cv_.notify_one();
 		}
 
 		std::vector<std::function<void()>> released;
@@ -736,6 +755,16 @@ namespace Engine
 			// A new value after everything queued, Present1 of the last frame included (frame fences come before it).
 			const uint64_t last = SignalQueue(D3D12_COMMAND_LIST_TYPE_DIRECT);
 			WaitForEventCompletion(last);
+			if (m_delay_thread_.joinable())
+			{
+				// Every delay was signalled (the queue passed them); the worker drains and ends.
+				{
+					std::lock_guard l(m_delay_mutex_);
+					m_delay_stop_ = true;
+				}
+				m_delay_cv_.notify_one();
+				m_delay_thread_.join();
+			}
 			m_retire_.RetireAll();
 		}
 		if (FrameCheckRequested())
