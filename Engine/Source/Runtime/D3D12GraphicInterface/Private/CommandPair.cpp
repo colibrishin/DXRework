@@ -259,8 +259,7 @@ namespace Engine
 	void CommandPair::Execute()
 	{
 		// Waits until the GPU finished this list (and so every list submitted before it). The pair is retired (and
-		// may be handed out again) by the command thread or SwapBuffer once the fence passed; not here, as callers
-		// may hold locks that retiring other pairs' work takes.
+		// may be handed out again) by the command thread, SwapBuffer or an Acquire that finds the pool empty.
 		uint64_t fence_value;
 		{
 			std::lock_guard<std::mutex> l(m_critical_mutex_); // held until submitted: the pair is not returned meanwhile
@@ -530,20 +529,34 @@ namespace Engine
 			return {};
 		}
 
-		if (!m_pool_.HasFree() && !m_retire_.Empty())
+		while (true)
 		{
-			// Every pair is taken and some wait for the GPU: wait for the oldest (outside the task lock, which the
-			// command thread takes to submit).
-			WaitForEventCompletion(m_retire_.OldestPending());
-			RetireCompleted();
+			{
+				std::lock_guard l(m_critical_mutex_);
+				if (const Weak<CommandPair> pair = m_pool_.Allocate(type, m_command_ids_, m_buffer_idx_, debug_name, heap_allocation);
+					!pair.expired())
+				{
+					m_command_pairs_.push(pair);
+					m_command_ids_ += 1;
+					m_command_pair_count_.fetch_add(1);
+					return pair;
+				}
+			}
+
+			// Every pair is taken (pairs return when the GPU finished them, up to two frames later). Wait outside the
+			// task lock, which the command thread takes to submit: for the oldest submitted pair if there is one,
+			// else for one to be submitted. This thread then retires what finished, so post-execution functions
+			// and deferred releases may run here.
+			if (!m_retire_.Empty())
+			{
+				WaitForEventCompletion(m_retire_.OldestPending());
+				RetireCompleted();
+			}
+			else
+			{
+				std::this_thread::yield();
+			}
 		}
-
-		std::lock_guard l(m_critical_mutex_);
-		m_command_pairs_.push(m_pool_.Allocate(type, m_command_ids_, m_buffer_idx_, debug_name, heap_allocation));
-		m_command_ids_ += 1;
-		m_command_pair_count_.fetch_add(1);
-
-		return m_command_pairs_.back();
 	}
 
 	void CommandPairTask::WaitForCommandsCompletion() const
@@ -866,16 +879,17 @@ namespace Engine
 			DX::ThrowIfFailed(queue->Signal(m_fence_.Get(), ++m_fence_value_));
 			fence_value = m_fence_value_;
 			pair->m_latest_fence_value_.store(fence_value);
-			m_retire_.Push(fence_value, [this, pair] { Complete(pair); });
-			if (pair->m_submit_hook_)
+			// The hook and the submitted flag first: once Complete is queued, another thread may retire the pair
+			// (HardReset clears both) as soon as the GPU passed the value.
+			if (const std::function<void()> hook = std::move(pair->m_submit_hook_))
 			{
-				pair->m_submit_hook_();
+				hook();
 			}
-		}
-
-		if (!pair->m_b_submitted_.exchange(true))
-		{
-			pair->m_b_submitted_.notify_all();
+			if (!pair->m_b_submitted_.exchange(true))
+			{
+				pair->m_b_submitted_.notify_all();
+			}
+			m_retire_.Push(fence_value, [this, pair] { Complete(pair); });
 		}
 
 		// Direct lists run in submission order on one queue: the next can be submitted right away. Other queues
