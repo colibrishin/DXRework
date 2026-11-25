@@ -199,6 +199,7 @@ namespace Engine
 		void ReleaseAfterFrame(std::function<void()>&& holder);
 		void EndFrame(const uint64_t frame_fence);
 		[[nodiscard]] uint64_t RecordingFrame() const;
+		[[nodiscard]] uint64_t FramesInFlight() const { return m_frames_in_flight_; }
 		[[nodiscard]] bool     FrameDone(const uint64_t frame) const;
 
 	private:
@@ -240,6 +241,11 @@ namespace Engine
 
 		static constexpr size_t                     s_frame_history = 8;
 		std::atomic<uint64_t>                       m_frame_index_{};    // frames ended
+		uint64_t                                    m_frames_in_flight_ = 1; // Initialize: KOLIBRI_FRAMES_IN_FLIGHT
+		uint64_t                                    m_overlapped_frames_ = 0; // EndFrame: previous frame still on the GPU
+		uint32_t                                    m_gpu_delay_ms_ = 0; // KOLIBRI_GPU_DELAY_MS: stall the queue per frame
+		ComPtr<ID3D12Fence>                         m_delay_fence_;
+		uint64_t                                    m_delay_value_ = 0;
 		std::array<std::atomic<uint64_t>, s_frame_history> m_frame_fences_{}; // fence value per frame index % history
 	};
 }

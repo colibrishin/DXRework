@@ -1260,6 +1260,16 @@ void Engine::D3D12GraphicInterface::InitializeDevice()
 	DX::ThrowIfFailed(D3D12GetDebugInterface(IID_PPV_ARGS(&debug_interface)));
 	DX::ThrowIfFailed(debug_interface->QueryInterface(IID_PPV_ARGS(debug_interface1.GetAddressOf())));
 	debug_interface->EnableDebugLayer();
+	{
+		// KOLIBRI_GPU_VALIDATION=1: GPU-based validation as well (much slower); errors break like the debug layer's.
+		char*  value  = nullptr;
+		size_t length = 0;
+		if (_dupenv_s(&value, &length, "KOLIBRI_GPU_VALIDATION") == 0 && value && value[0] == '1')
+		{
+			debug_interface1->SetEnableGPUBasedValidation(TRUE);
+		}
+		free(value);
+	}
 #endif
 
 #if WITH_DEBUG & defined(SNIFF_DEVICE_REMOVAL)
@@ -1363,7 +1373,10 @@ void Engine::D3D12GraphicInterface::InitializeDevice()
 		)
 	);
 
-	DX::ThrowIfFailed(m_swap_chain_->SetMaximumFrameLatency(s_maximum_frame_latency));
+	// Present queue as deep as the frames in flight (WaitForNextFrame waits on it). The back buffers, and ImGui's
+	// per-frame buffers (ImGuiManager passes CFG_FRAME_BUFFER), must not be fewer.
+	static_assert(CFG_FRAME_BUFFER >= g_max_frames_in_flight);
+	DX::ThrowIfFailed(m_swap_chain_->SetMaximumFrameLatency(static_cast<UINT>(m_command_pair_task_.FramesInFlight())));
 	m_frame_idx_ = m_swap_chain_->GetCurrentBackBufferIndex();
 
 	m_render_targets_.resize(CFG_FRAME_BUFFER);

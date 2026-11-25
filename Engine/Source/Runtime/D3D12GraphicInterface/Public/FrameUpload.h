@@ -22,11 +22,12 @@ namespace Engine
         {
             const uint64_t frame = RecordingFrame();
             const size_t   slot  = frame % g_max_frames_in_flight;
-            CountFrameUpload( m_frames_[ slot ] == frame, m_frames_[ slot ] != s_never && m_frames_[ slot ] != frame &&
-                                                          !FrameDone( m_frames_[ slot ] ), name );
+            const bool rewritten = m_frames_[ slot ] == frame;
+            CountFrameUpload( rewritten, m_frames_[ slot ] != s_never && !rewritten && !FrameDone( m_frames_[ slot ] ), name );
             m_frames_[ slot ] = frame;
 
-            if ( !m_buffers_[ slot ] || m_sizes_[ slot ] < bytes )
+            // Written again in the same frame: a list recorded earlier may not have copied the first write yet.
+            if ( !m_buffers_[ slot ] || m_sizes_[ slot ] < bytes || rewritten )
             {
                 KeepUntilFrameDone( std::move( m_buffers_[ slot ] ) );
                 const auto heap = CD3DX12_HEAP_PROPERTIES( D3D12_HEAP_TYPE_UPLOAD );

@@ -59,12 +59,14 @@ namespace Engine
                 m_count_                = m_slot_counts_[slot];
                 m_slot_                 = slot;
             }
-            CountFrameUpload(m_slot_frames_[slot] == frame,
-                             m_slot_frames_[slot] != UINT64_MAX && m_slot_frames_[slot] != frame && !FrameDone(m_slot_frames_[slot]), L"GraphicMemoryPool");
+            const bool rewritten = m_slot_frames_[slot] == frame;
+            CountFrameUpload(rewritten,
+                             m_slot_frames_[slot] != UINT64_MAX && !rewritten && !FrameDone(m_slot_frames_[slot]), L"GraphicMemoryPool");
             m_slot_frames_[slot] = frame;
-            if (!m_resource_ || m_count_ < count)
+            // Written again in the same frame: a list recorded earlier may still read the first write.
+            if (!m_resource_ || m_count_ < count || rewritten)
             {
-                InitializeBuffer(count, stride);
+                InitializeBuffer((std::max)(count, m_count_), stride); // defers the old resource
             }
         }
 

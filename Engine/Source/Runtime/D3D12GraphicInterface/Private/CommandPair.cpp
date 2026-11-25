@@ -1,4 +1,6 @@
 #include "CommandPair.h"
+#include <chrono>
+#include <thread>
 
 #pragma comment(lib, "d3d12.lib")
 
@@ -27,6 +29,12 @@ namespace Engine
 		return task ? task->RecordingFrame() : 0;
 	}
 
+	uint64_t FramesInFlight()
+	{
+		const CommandPairTask* task = s_release_task.load();
+		return task ? task->FramesInFlight() : 1;
+	}
+
 	bool FrameDone(const uint64_t frame)
 	{
 		const CommandPairTask* task = s_release_task.load();
@@ -37,6 +45,19 @@ namespace Engine
 	{
 		std::atomic<uint64_t> s_upload_rewrites{ 0 };
 		std::atomic<uint64_t> s_upload_unfinished{ 0 };
+
+		uint32_t EnvNumber(const char* name, const uint32_t fallback)
+		{
+			char*    value  = nullptr;
+			size_t   length = 0;
+			uint32_t number = fallback;
+			if (_dupenv_s(&value, &length, name) == 0 && value && value[0])
+			{
+				number = static_cast<uint32_t>(strtoul(value, nullptr, 10));
+			}
+			free(value);
+			return number;
+		}
 
 		bool FrameCheckRequested()
 		{
@@ -55,8 +76,9 @@ namespace Engine
 		{
 			if (FILE* file = nullptr; fopen_s(&file, "framecheck.txt", "a") == 0 && file)
 			{
-				fprintf(file, "FRAMECHECK %s frame=%llu rewrites=%llu unfinished=%llu\n", reason,
+				fprintf(file, "FRAMECHECK %s frame=%llu in_flight=%llu rewrites=%llu unfinished=%llu\n", reason,
 				        static_cast<unsigned long long>(RecordingFrame()),
+				        static_cast<unsigned long long>(FramesInFlight()),
 				        static_cast<unsigned long long>(s_upload_rewrites.load()),
 				        static_cast<unsigned long long>(s_upload_unfinished.load()));
 				fclose(file);
@@ -216,10 +238,18 @@ namespace Engine
 
 	void CommandPair::Execute()
 	{
-		std::lock_guard<std::mutex> l(m_critical_mutex_);
-		m_b_ready_ = true;
-		m_pool_->m_task_->m_command_pair_count_.notify_all();
-		m_b_executed_.wait(false);
+		// Waits until the GPU finished this list (and so every list submitted before it). The pair is retired (and
+		// may be handed out again) by the command thread or SwapBuffer once the fence passed; not here, as callers
+		// may hold locks that retiring other pairs' work takes.
+		uint64_t fence_value;
+		{
+			std::lock_guard<std::mutex> l(m_critical_mutex_); // held until submitted: the pair is not returned meanwhile
+			m_b_ready_ = true;
+			m_pool_->m_task_->m_command_pair_count_.notify_all();
+			m_b_submitted_.wait(false);
+			fence_value = m_latest_fence_value_;
+		}
+		m_pool_->m_task_->WaitForEventCompletion(fence_value);
 	}
 
 	uint64_t CommandPair::Submit()
@@ -436,6 +466,15 @@ namespace Engine
         m_fence_->SetName( L"CommandPairTask Fence" );
 
 		m_pool_.Initialize(dev, heap_handler, this);
+
+		// 2: the CPU records frame N+1 while the GPU runs frame N. 1: every list is waited for (the old behaviour).
+		m_frames_in_flight_ = EnvNumber("KOLIBRI_FRAMES_IN_FLIGHT", g_max_frames_in_flight) == 1 ? 1 : g_max_frames_in_flight;
+		// Test switch: the queue waits KOLIBRI_GPU_DELAY_MS ms per frame, so the GPU runs behind the CPU.
+		m_gpu_delay_ms_ = EnvNumber("KOLIBRI_GPU_DELAY_MS", 0);
+		if (m_gpu_delay_ms_)
+		{
+			DX::ThrowIfFailed(dev->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(m_delay_fence_.GetAddressOf())));
+		}
 		s_release_task = this;
 	}
 
@@ -589,8 +628,28 @@ namespace Engine
 
 	void CommandPairTask::EndFrame(const uint64_t frame_fence)
 	{
+		if (const uint64_t ended = m_frame_index_.load(); ended > 0 &&
+			m_fence_->GetCompletedValue() < m_frame_fences_[(ended - 1) % s_frame_history].load())
+		{
+			++m_overlapped_frames_; // this frame was recorded while the previous one was still on the GPU
+		}
 		m_frame_fences_[m_frame_index_.load() % s_frame_history] = frame_fence;
 		++m_frame_index_;
+
+		if (m_gpu_delay_ms_)
+		{
+			uint64_t delay_value;
+			{
+				std::lock_guard l(m_signal_mutex_);
+				delay_value = ++m_delay_value_;
+				DX::ThrowIfFailed(GetCommandQueue(D3D12_COMMAND_LIST_TYPE_DIRECT)->Wait(m_delay_fence_.Get(), delay_value));
+			}
+			std::thread([fence = m_delay_fence_, delay_value, ms = m_gpu_delay_ms_]
+			{
+				std::this_thread::sleep_for(std::chrono::milliseconds(ms));
+				fence->Signal(delay_value);
+			}).detach();
+		}
 
 		std::vector<std::function<void()>> released;
 		{
@@ -605,7 +664,14 @@ namespace Engine
 
 	void CommandPairTask::SwapBuffer(const uint32_t next_buffer, const uint64_t frame_fence)
 	{
-		WaitForEventCompletion(frame_fence);
+		// Before recording the next frame, the frame m_frames_in_flight_ - 1 behind this one must have finished, so
+		// at most m_frames_in_flight_ frames are on the GPU or being recorded (and per-frame slots are free).
+		uint64_t wait_for = frame_fence;
+		if (const uint64_t ended = m_frame_index_.load(); m_frames_in_flight_ > 1)
+		{
+			wait_for = ended >= m_frames_in_flight_ ? m_frame_fences_[(ended - m_frames_in_flight_) % s_frame_history].load() : 0;
+		}
+		WaitForEventCompletion(wait_for);
 		RetireCompleted();
 		m_frame_retire_.Retire(m_fence_->GetCompletedValue());
 
@@ -623,17 +689,21 @@ namespace Engine
 		// Submitted lists are waited for first, so what waits for them (pair return, post-execution, releases) runs.
 		if (m_fence_)
 		{
-			uint64_t last;
-			{
-				std::lock_guard l(m_signal_mutex_);
-				last = m_fence_value_;
-			}
+			// A new value after everything queued, Present1 of the last frame included (frame fences come before it).
+			const uint64_t last = SignalQueue(D3D12_COMMAND_LIST_TYPE_DIRECT);
 			WaitForEventCompletion(last);
 			m_retire_.RetireAll();
 		}
 		if (FrameCheckRequested())
 		{
 			WriteFrameCheck("END");
+			if (FILE* file = nullptr; fopen_s(&file, "framecheck.txt", "a") == 0 && file)
+			{
+				fprintf(file, "FRAMECHECK OVERLAP frames=%llu overlapped=%llu\n",
+				        static_cast<unsigned long long>(m_frame_index_.load()),
+				        static_cast<unsigned long long>(m_overlapped_frames_));
+				fclose(file);
+			}
 		}
 		// From here on ReleaseAfterFrame releases right away.
 		s_release_task = nullptr;
@@ -776,7 +846,12 @@ namespace Engine
 			pair->m_b_submitted_.notify_all();
 		}
 
-		WaitForEventCompletion(fence_value);
+		// Direct lists run in submission order on one queue: the next can be submitted right away. Other queues
+		// signal the same fence and must finish first (see above); KOLIBRI_FRAMES_IN_FLIGHT=1 waits for every list.
+		if (pair->GetType() != D3D12_COMMAND_LIST_TYPE_DIRECT || m_frames_in_flight_ == 1)
+		{
+			WaitForEventCompletion(fence_value);
+		}
 		RetireCompleted();
 	}
 

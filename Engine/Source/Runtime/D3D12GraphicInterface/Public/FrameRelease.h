@@ -20,6 +20,8 @@ namespace Engine
     // the frame that wrote it before is still on the GPU. With KOLIBRI_FRAME_CHECK=1 an unfinished write ends the
     // process (__fastfail) after writing framecheck.txt; the counts, and the first rewritten names, are written there.
     ENGINE_D3D12GRAPHICINTERFACE_API void CountFrameUpload(bool rewritten, bool unfinished, const wchar_t* name);
+    // Frames in flight in use: g_max_frames_in_flight, or 1 with KOLIBRI_FRAMES_IN_FLIGHT=1 (read once at startup).
+    ENGINE_D3D12GRAPHICINTERFACE_API uint64_t FramesInFlight();
 
     // Runs (destroys) holder after the frame being recorded now has finished on the GPU, on the main thread at the
     // end of a later frame: for what lists of this frame may still read (a buffer being replaced, a descriptor block
