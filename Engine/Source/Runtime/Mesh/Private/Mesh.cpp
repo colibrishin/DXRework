@@ -248,18 +248,11 @@ namespace Engine::Resources
 		m_vertex_buffer_structured_.reset();
 
 #if CFG_RAYTRACING
-		if (m_blas_.resultPool && m_blas_.resultPool->GetResource<void>())
-		{
-			m_blas_.resultPool->Release();
-		}
-		if (m_blas_.scratchPool && m_blas_.scratchPool->GetResource<void>())
-		{
-			m_blas_.scratchPool->Release();
-		}
-		if (m_blas_.instanceDescPool && m_blas_.instanceDescPool->GetResource<void>())
-		{
-			m_blas_.instanceDescPool->Release();
-		}
+		// Destroy the pools instead of Release()-ing their resource: the destructor keeps the resource until the
+		// frames that may still build or trace against this BLAS finished. Generate makes new pools.
+		m_blas_.resultPool.reset();
+		m_blas_.scratchPool.reset();
+		m_blas_.instanceDescPool.reset();
 #endif
 
 #ifdef PHYSX_ENABLED
