@@ -47,6 +47,12 @@ namespace Engine
 		// thread-safety of post_execution inside values should be guaranteed by the caller.
 		void               FlagReady(const std::function<void()>& post_execution = {}) override;
 		void               Execute() override;
+		// Flags the list ready and waits until it is handed to the GPU queue (not until it finished); returns its
+		// fence value. Work queued after this on the same queue runs after the list.
+		uint64_t           Submit();
+		// Runs on the command thread right after the list is handed to the queue (e.g. a fence signal that must
+		// follow it). Set before FlagReady.
+		void               SetSubmitHook(std::function<void()>&& hook);
 		void               DeferRelease(std::function<void()>&& holder) override;
 		[[nodiscard]] bool IsReady();
 		[[nodiscard]] bool IsSubmitted(); // handed to the GPU queue
@@ -79,6 +85,7 @@ namespace Engine
 
 		std::atomic<uint64_t>   m_latest_fence_value_;
 		std::function<void()> m_post_execute_function_;
+		std::function<void()> m_submit_hook_;
 		std::vector<std::function<void()>> m_deferred_release_;
 		std::mutex                         m_deferred_mutex_; // separate: m_critical_mutex_ is held while waiting for execution
 
@@ -185,7 +192,8 @@ namespace Engine
 		void StopTask();
 		void StartTask();
         void Cleanup();
-		void SwapBuffer(const uint32_t next_buffer);
+		// frame_fence: the fence value of the frame's last list (Present's).
+		void SwapBuffer(const uint32_t next_buffer, const uint64_t frame_fence);
 
 	private:
 		friend struct CommandPair;

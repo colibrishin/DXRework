@@ -87,6 +87,7 @@ namespace Engine
 		DX::ThrowIfFailed(m_list_->Reset(m_allocator_.Get(), nullptr));
 		DX::ThrowIfFailed(m_list_->Close());
 		{ std::lock_guard<std::mutex> dl(m_deferred_mutex_); m_deferred_release_.clear(); }
+		m_submit_hook_ = {};
 
 		m_b_ready_     = false;
 		m_b_submitted_ = false;
@@ -100,6 +101,7 @@ namespace Engine
 
 		DX::ThrowIfFailed(m_list_->Reset(m_allocator_.Get(), nullptr));
 		{ std::lock_guard<std::mutex> dl(m_deferred_mutex_); m_deferred_release_.clear(); } // previous recording already finished on the GPU (or never executed)
+		m_submit_hook_ = {};
 
 		m_b_submitted_ = false;
 		m_b_executed_  = false;
@@ -135,6 +137,21 @@ namespace Engine
 		m_b_ready_ = true;
 		m_pool_->m_task_->m_command_pair_count_.notify_all();
 		m_b_executed_.wait(false);
+	}
+
+	uint64_t CommandPair::Submit()
+	{
+		std::lock_guard<std::mutex> l(m_critical_mutex_); // held until submitted: the pair is not returned meanwhile
+		m_b_ready_ = true;
+		m_pool_->m_task_->m_command_pair_count_.notify_all();
+		m_b_submitted_.wait(false);
+		return m_latest_fence_value_;
+	}
+
+	void CommandPair::SetSubmitHook(std::function<void()>&& hook)
+	{
+		std::lock_guard<std::mutex> l(m_critical_mutex_);
+		m_submit_hook_ = std::move(hook);
 	}
 
 	bool CommandPair::IsReady()
@@ -461,9 +478,9 @@ namespace Engine
 		}
 	}
 
-	void CommandPairTask::SwapBuffer(const uint32_t next_buffer)
+	void CommandPairTask::SwapBuffer(const uint32_t next_buffer, const uint64_t frame_fence)
 	{
-		WaitForEventCompletion(SignalQueue(D3D12_COMMAND_LIST_TYPE_DIRECT));
+		WaitForEventCompletion(frame_fence);
 		RetireCompleted();
 
 		m_buffer_idx_ = next_buffer;
@@ -581,6 +598,8 @@ namespace Engine
 
 		if (pair->GetAllocator() == nullptr)
 		{
+			pair->m_b_submitted_ = true;
+			pair->m_b_submitted_.notify_all();
 			Complete(pair);
 			return;
 		}
@@ -606,6 +625,10 @@ namespace Engine
 			fence_value = m_fence_value_;
 			pair->m_latest_fence_value_.store(fence_value);
 			m_retire_.Push(fence_value, [this, pair] { Complete(pair); });
+			if (pair->m_submit_hook_)
+			{
+				pair->m_submit_hook_();
+			}
 		}
 
 		if (!pair->m_b_submitted_.exchange(true))

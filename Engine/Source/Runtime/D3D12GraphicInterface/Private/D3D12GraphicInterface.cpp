@@ -175,7 +175,7 @@ void Engine::D3D12GraphicInterface::WaitForNextFrame()
 	}
 
 	const uint64_t next_buffer = m_swap_chain_->GetCurrentBackBufferIndex();
-	m_command_pair_task_.SwapBuffer(next_buffer);
+	m_command_pair_task_.SwapBuffer(next_buffer, m_frame_fence_);
 	m_frame_idx_ = next_buffer;
 }
 
@@ -192,7 +192,8 @@ void Engine::D3D12GraphicInterface::Present()
 
 	cmd->SoftReset();
 	cmd->GetList()->ResourceBarrier(1, &present_barrier);
-	cmd->Execute();
+	// Present1 goes to the queue after this list (the frame's last); WaitForNextFrame waits for its fence value.
+	m_frame_fence_ = cmd->Submit();
 
 	DXGI_PRESENT_PARAMETERS params;
 	params.DirtyRectsCount = 0;
@@ -200,14 +201,13 @@ void Engine::D3D12GraphicInterface::Present()
 	params.pScrollRect = nullptr;
 	params.pScrollOffset = nullptr;
 
-	DX::ThrowIfFailed
-	(
-		m_swap_chain_->Present1
-		(
-			CFG_VSYNC ? 1 : 0, DXGI_PRESENT_DO_NOT_WAIT,
-			&params
-		)
-	);
+	HRESULT hr = m_swap_chain_->Present1(CFG_VSYNC ? 1 : 0, DXGI_PRESENT_DO_NOT_WAIT, &params);
+	if (hr == DXGI_ERROR_WAS_STILL_DRAWING)
+	{
+		// The present queue is full (frames still on the GPU): wait for room instead of failing.
+		hr = m_swap_chain_->Present1(CFG_VSYNC ? 1 : 0, 0, &params);
+	}
+	DX::ThrowIfFailed(hr);
 }
 
 void* Engine::D3D12GraphicInterface::GetNativeInterface()
@@ -1349,7 +1349,7 @@ void Engine::D3D12GraphicInterface::InitializeDevice()
 		)
 	);
 
-	DX::ThrowIfFailed(m_swap_chain_->SetMaximumFrameLatency(CFG_FRAME_LATENCY_TOLERANCE_SECOND));
+	DX::ThrowIfFailed(m_swap_chain_->SetMaximumFrameLatency(s_maximum_frame_latency));
 	m_frame_idx_ = m_swap_chain_->GetCurrentBackBufferIndex();
 
 	m_render_targets_.resize(CFG_FRAME_BUFFER);

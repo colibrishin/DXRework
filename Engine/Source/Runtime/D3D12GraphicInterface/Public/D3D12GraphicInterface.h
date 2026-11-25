@@ -201,6 +201,9 @@ namespace Engine
         ComPtr<ID3D12Resource>              m_depth_stencil_;
         ComPtr<ID3D12DescriptorHeap>        m_dsv_heap_;
         uint64_t                            m_frame_idx_ = 0;
+        uint64_t                            m_frame_fence_ = 0; // fence value of the last presented frame's last list
+        // Frames the present queue may hold (SetMaximumFrameLatency); separate from the waitable object's timeout.
+        static constexpr UINT               s_maximum_frame_latency = 1;
 
         ComPtr<ID3D12RootSignature> m_pipeline_root_signature_;
 
