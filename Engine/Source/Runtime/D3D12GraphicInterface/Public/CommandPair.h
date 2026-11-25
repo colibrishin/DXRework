@@ -15,6 +15,7 @@
 #include "Allocator.h"
 #include "TypeLibrary.h"
 #include "DescriptorPtrImpl.h"
+#include "FenceRetireQueue.h"
 
 namespace Engine
 {
@@ -48,7 +49,8 @@ namespace Engine
 		void               Execute() override;
 		void               DeferRelease(std::function<void()>&& holder) override;
 		[[nodiscard]] bool IsReady();
-		[[nodiscard]] bool IsExecuted();
+		[[nodiscard]] bool IsSubmitted(); // handed to the GPU queue
+		[[nodiscard]] bool IsExecuted();  // finished on the GPU
 		[[nodiscard]] bool IsDisposed();
 
 		[[nodiscard]] ID3D12GraphicsCommandList1* GetList() const;
@@ -80,6 +82,7 @@ namespace Engine
 		std::vector<std::function<void()>> m_deferred_release_;
 		std::mutex                         m_deferred_mutex_; // separate: m_critical_mutex_ is held while waiting for execution
 
+		std::atomic<bool>       m_b_submitted_{};
 		std::atomic<bool>       m_b_executed_{};
 		std::atomic<bool>       m_b_ready_{};
 		std::atomic<bool>       m_b_disposed_{};
@@ -105,6 +108,7 @@ namespace Engine
 			const std::wstring_view debug_name,
 			const bool heap_allocation);
 		void Deallocate(const Weak<CommandPair>& pointer);
+		[[nodiscard]] bool HasFree();
 		void Initialize(ID3D12Device2* dev, const Weak<DescriptorHandlerBase>& handler, CommandPairTask* task);
 
 	private:
@@ -187,9 +191,11 @@ namespace Engine
 		friend struct CommandPair;
 
 		void Execute(const Strong<CommandPair>& pair, const bool lock_consuming);
-		void Signal(const Strong<CommandPair>& in_pair) const;
+		uint64_t SignalQueue(const D3D12_COMMAND_LIST_TYPE type); // under m_signal_mutex_
 		void WaitForEventCompletion(const uint64_t fence_value);
 		void ExecuteImpl(const Strong<CommandPair>& pair);
+		void Complete(const Strong<CommandPair>& pair); // after the GPU finished the pair's list
+		void RetireCompleted();
 
 		std::atomic<bool> m_running_{ false };
 
@@ -206,6 +212,12 @@ namespace Engine
 		uint64_t                  m_buffer_count_{};
 		uint64_t                  m_buffer_idx_{};
 		ComPtr<ID3D12Fence>       m_fence_{};
-		std::unique_ptr<uint64_t> m_fence_nonce_{};
+
+		// One fence value counter for every queue: incremented and signalled under one lock, so values reach the
+		// queues in increasing order. Lists of queues other than DIRECT are only submitted with the GPU idle and are
+		// waited for, so one queue at a time signals.
+		std::mutex                m_signal_mutex_;
+		uint64_t                  m_fence_value_{};
+		FenceRetireQueue          m_retire_;
 	};
 }

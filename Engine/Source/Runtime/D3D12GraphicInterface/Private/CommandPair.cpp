@@ -18,6 +18,7 @@ namespace Engine
 		: m_command_id_(ID),
 		  m_buffer_idx_(buffer_idx),
 		  m_debug_name_(debug_name),
+		  m_b_submitted_(false),
 		  m_b_executed_(false),
 		  m_b_ready_(false),
 		  m_b_disposed_(false),
@@ -72,9 +73,10 @@ namespace Engine
 		std::lock_guard<std::mutex> l(m_critical_mutex_);
 		DX::ThrowIfFailed(m_list_->Close());
 
-		m_b_ready_    = false;
-		m_b_executed_ = false;
-		m_b_disposed_ = true;
+		m_b_ready_     = false;
+		m_b_submitted_ = false;
+		m_b_executed_  = false;
+		m_b_disposed_  = true;
 	}
 
 	void CommandPair::HardReset()
@@ -86,9 +88,10 @@ namespace Engine
 		DX::ThrowIfFailed(m_list_->Close());
 		{ std::lock_guard<std::mutex> dl(m_deferred_mutex_); m_deferred_release_.clear(); }
 
-		m_b_ready_    = false;
-		m_b_executed_ = false;
-		m_b_disposed_ = false;
+		m_b_ready_     = false;
+		m_b_submitted_ = false;
+		m_b_executed_  = false;
+		m_b_disposed_  = false;
 	}
 
 	void CommandPair::SoftReset()
@@ -98,9 +101,10 @@ namespace Engine
 		DX::ThrowIfFailed(m_list_->Reset(m_allocator_.Get(), nullptr));
 		{ std::lock_guard<std::mutex> dl(m_deferred_mutex_); m_deferred_release_.clear(); } // previous recording already finished on the GPU (or never executed)
 
-		m_b_executed_ = false;
-		m_b_ready_    = false;
-		m_b_disposed_ = false;
+		m_b_submitted_ = false;
+		m_b_executed_  = false;
+		m_b_ready_     = false;
+		m_b_disposed_  = false;
 	}
 
 	void CommandPair::DeferRelease(std::function<void()>&& holder)
@@ -136,6 +140,11 @@ namespace Engine
 	bool CommandPair::IsReady()
 	{
 		return m_b_ready_;
+	}
+
+	bool CommandPair::IsSubmitted()
+	{
+		return m_b_submitted_;
 	}
 
 	bool CommandPair::IsExecuted()
@@ -237,6 +246,12 @@ namespace Engine
 		return m_pool_[available];
 	}
 
+	bool CommandPairPool::HasFree()
+	{
+		std::lock_guard lock(m_mutex_);
+		return std::ranges::any_of(m_allocation_map_, [](const std::pair<const address_value, bool>& kv) { return !kv.second; });
+	}
+
 	void CommandPairPool::Deallocate(const Weak<CommandPair>& pointer)
 	{
 		std::lock_guard lock(m_mutex_);
@@ -315,8 +330,8 @@ namespace Engine
 		}
 
 		m_buffer_count_ = buffer_count;
+		m_fence_value_  = 0;
 
-		m_fence_nonce_ = std::unique_ptr<uint64_t>(new uint64_t[buffer_count]);
 		DX::ThrowIfFailed(dev->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(m_fence_.GetAddressOf())));
         m_fence_->SetName( L"CommandPairTask Fence" );
 
@@ -353,6 +368,14 @@ namespace Engine
 		if (m_buffer_idx_ == -1)
 		{
 			return {};
+		}
+
+		if (!m_pool_.HasFree() && !m_retire_.Empty())
+		{
+			// Every pair is taken and some wait for the GPU: wait for the oldest (outside the task lock, which the
+			// command thread takes to submit).
+			WaitForEventCompletion(m_retire_.OldestPending());
+			RetireCompleted();
 		}
 
 		std::lock_guard l(m_critical_mutex_);
@@ -425,10 +448,9 @@ namespace Engine
 				}
 				else if (queued && queued->IsReady())
 				{
-					Execute(queued, false);
+					Execute(queued, false); // the pair returns to the pool when the GPU finished it (Complete)
 					m_command_pair_count_.fetch_sub(1);
 					m_command_pairs_.pop();
-					m_pool_.Deallocate(queued);
 					m_command_pair_count_.notify_all();
 				}
 			}
@@ -441,12 +463,8 @@ namespace Engine
 
 	void CommandPairTask::SwapBuffer(const uint32_t next_buffer)
 	{
-		m_fence_nonce_.get()[next_buffer] = m_fence_nonce_.get()[m_buffer_idx_];
-			
-		uint64_t& nonce = m_fence_nonce_.get()[next_buffer];
-
-		DX::ThrowIfFailed(GetCommandQueue(D3D12_COMMAND_LIST_TYPE_DIRECT)->Signal(m_fence_.Get(), ++nonce));
-		WaitForEventCompletion(nonce);
+		WaitForEventCompletion(SignalQueue(D3D12_COMMAND_LIST_TYPE_DIRECT));
+		RetireCompleted();
 
 		m_buffer_idx_ = next_buffer;
 	}
@@ -459,6 +477,18 @@ namespace Engine
 		// to reach zero never returned in that case. A discarded list may still be recording, so it is not reset
 		// (resetting the allocator of an open list fails); its D3D objects are released and m_pool_.Cleanup()
 		// below drops the pair. (Close() followed by Deallocate() dereferenced the released allocator.)
+		// Submitted lists are waited for first, so what waits for them (pair return, post-execution, releases) runs.
+		if (m_fence_)
+		{
+			uint64_t last;
+			{
+				std::lock_guard l(m_signal_mutex_);
+				last = m_fence_value_;
+			}
+			WaitForEventCompletion(last);
+			m_retire_.RetireAll();
+		}
+
 		{
 			std::lock_guard l(m_critical_mutex_);
 
@@ -505,18 +535,16 @@ namespace Engine
 		ExecuteImpl(pair);
 	}
 
-	void CommandPairTask::Signal(const Strong<CommandPair>& in_pair) const
+	uint64_t CommandPairTask::SignalQueue(const D3D12_COMMAND_LIST_TYPE type)
 	{
-		if (in_pair->GetAllocator() == nullptr || in_pair->GetList() == nullptr)
-		{
-			return;
-		}
+		std::lock_guard l(m_signal_mutex_);
+		DX::ThrowIfFailed(GetCommandQueue(type)->Signal(m_fence_.Get(), ++m_fence_value_));
+		return m_fence_value_;
+	}
 
-		const auto& fence = m_fence_;
-		uint64_t&   nonce = m_fence_nonce_.get()[in_pair->GetBufferIndex()];
-
-		DX::ThrowIfFailed(GetCommandQueue(in_pair->GetType())->Signal(fence.Get(), ++nonce));
-		in_pair->m_latest_fence_value_.store(nonce);
+	void CommandPairTask::RetireCompleted()
+	{
+		m_retire_.Retire(m_fence_->GetCompletedValue());
 	}
 
 	void CommandPairTask::WaitForEventCompletion(const uint64_t fence_value)
@@ -550,12 +578,47 @@ namespace Engine
 		}
 
 		DX::ThrowIfFailed(pair->GetList()->Close());
-		const std::vector<ID3D12CommandList*> lists(1, pair->GetList());
-		GetCommandQueue(pair->GetType())->ExecuteCommandLists(1, lists.data());
 
-		Signal(pair);
-		WaitForEventCompletion(pair->GetLatestFenceValue());
+		if (pair->GetAllocator() == nullptr)
+		{
+			Complete(pair);
+			return;
+		}
 
+		if (pair->GetType() != D3D12_COMMAND_LIST_TYPE_DIRECT)
+		{
+			// Other queues signal the same fence: start them only when the GPU is idle (and wait for them below).
+			uint64_t last;
+			{
+				std::lock_guard l(m_signal_mutex_);
+				last = m_fence_value_;
+			}
+			WaitForEventCompletion(last);
+		}
+
+		uint64_t fence_value;
+		{
+			std::lock_guard l(m_signal_mutex_);
+			ID3D12CommandList* const list = pair->GetList();
+			ID3D12CommandQueue* const queue = GetCommandQueue(pair->GetType());
+			queue->ExecuteCommandLists(1, &list);
+			DX::ThrowIfFailed(queue->Signal(m_fence_.Get(), ++m_fence_value_));
+			fence_value = m_fence_value_;
+			pair->m_latest_fence_value_.store(fence_value);
+			m_retire_.Push(fence_value, [this, pair] { Complete(pair); });
+		}
+
+		if (!pair->m_b_submitted_.exchange(true))
+		{
+			pair->m_b_submitted_.notify_all();
+		}
+
+		WaitForEventCompletion(fence_value);
+		RetireCompleted();
+	}
+
+	void CommandPairTask::Complete(const Strong<CommandPair>& pair)
+	{
 		if (pair->m_post_execute_function_)
 		{
 			pair->m_post_execute_function_();
@@ -576,5 +639,7 @@ namespace Engine
 		{
 			pair->m_b_executed_.notify_all();
 		}
+
+		m_pool_.Deallocate(pair);
 	}
 }
