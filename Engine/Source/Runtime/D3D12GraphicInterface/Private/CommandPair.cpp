@@ -11,6 +11,26 @@ namespace Engine
 	namespace
 	{
 		std::atomic<CommandPairTask*> s_release_task{ nullptr };
+
+		// A holder does its work when called (DescriptorHandlerBase::Release gives the block back) or when destroyed
+		// (KeepUntilFrameDone's captured owner): call it, then destroy it.
+		void RunReleases(std::function<void()>& holder)
+		{
+			if (holder)
+			{
+				holder();
+			}
+			holder = {};
+		}
+
+		void RunReleases(std::vector<std::function<void()>>& holders)
+		{
+			for (std::function<void()>& holder : holders)
+			{
+				RunReleases(holder);
+			}
+			holders.clear();
+		}
 	}
 
 	void ReleaseAfterFrame(std::function<void()>&& holder)
@@ -20,7 +40,7 @@ namespace Engine
 			task->ReleaseAfterFrame(std::move(holder));
 			return;
 		}
-		holder = {};
+		RunReleases(holder);
 	}
 
 	uint64_t RecordingFrame()
@@ -658,7 +678,7 @@ namespace Engine
 		}
 		if (!released.empty())
 		{
-			m_frame_retire_.Push(frame_fence, [released = std::move(released)] {});
+			m_frame_retire_.Push(frame_fence, [released = std::move(released)]() mutable { RunReleases(released); });
 		}
 	}
 
@@ -713,6 +733,7 @@ namespace Engine
 				std::lock_guard l(m_frame_release_mutex_);
 				released.swap(m_frame_releases_);
 			}
+			RunReleases(released);
 		}
 		m_frame_retire_.RetireAll();
 
