@@ -60,7 +60,7 @@ namespace Engine
                 m_slot_                 = slot;
             }
             CountFrameUpload(m_slot_frames_[slot] == frame,
-                             m_slot_frames_[slot] != UINT64_MAX && m_slot_frames_[slot] != frame && !FrameDone(m_slot_frames_[slot]));
+                             m_slot_frames_[slot] != UINT64_MAX && m_slot_frames_[slot] != frame && !FrameDone(m_slot_frames_[slot]), L"GraphicMemoryPool");
             m_slot_frames_[slot] = frame;
             if (!m_resource_ || m_count_ < count)
             {

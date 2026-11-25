@@ -759,10 +759,20 @@ void Engine::D3D12GraphicInterface::Dispatch(
 {
 	D3D12::ExpectComputeShader( resource );
 	auto* shader = static_cast<const Resources::ComputeShader*>(resource);
-	if (!m_local_param_)
+	StructuredBufferTypeProxy<Graphics::SBs::LocalParamSB>* local_param_buffer = nullptr;
 	{
-		IGraphicAPI& gi = g_graphic_accessor.GetInterface(); 	
-		m_local_param_ = gi.GetStructuredBuffer<Graphics::SBs::LocalParamSB>();
+		std::lock_guard l(m_local_param_mutex_);
+		if (const uint64_t frame = RecordingFrame(); frame != m_local_param_frame_)
+		{
+			m_local_param_frame_ = frame;
+			m_local_param_next_  = 0;
+		}
+		if (m_local_param_next_ == m_local_params_.size())
+		{
+			IGraphicAPI& gi = g_graphic_accessor.GetInterface();
+			m_local_params_.push_back(gi.GetStructuredBuffer<Graphics::SBs::LocalParamSB>());
+		}
+		local_param_buffer = &m_local_params_[m_local_param_next_++];
 	}
 
 	const auto cmd  = static_cast<CommandPair*>(context->commandList);
@@ -771,13 +781,13 @@ void Engine::D3D12GraphicInterface::Dispatch(
 	SetDefaultComputePipeline(context);
 	BindCompute(context, shader);
 	
-	m_local_param_.SetData(context, 1, &local_param);
-	m_local_param_.TransitionToSRV(context);
-	m_local_param_.CopySRVHeap(context);
+	local_param_buffer->SetData(context, 1, &local_param);
+	local_param_buffer->TransitionToSRV(context);
+	local_param_buffer->CopySRVHeap(context);
 	heap->BindCompute(context);
 
 	cmd->GetList()->Dispatch(group_count[0], group_count[1], group_count[2]);
-	m_local_param_.TransitionCommon(context);
+	local_param_buffer->TransitionCommon(context);
 }
 
 void Engine::D3D12GraphicInterface::BindGraphic(const IGraphicContext* context, const Abstracts::Resource* resource)

@@ -64,11 +64,19 @@ namespace Engine
 		}
 	}
 
-	void CountFrameUpload(const bool rewritten, const bool unfinished)
+	void CountFrameUpload(const bool rewritten, const bool unfinished, const wchar_t* name)
 	{
 		if (rewritten)
 		{
-			++s_upload_rewrites;
+			if (++s_upload_rewrites <= 16 && FrameCheckRequested())
+			{
+				if (FILE* file = nullptr; fopen_s(&file, "framecheck.txt", "a") == 0 && file)
+				{
+					fprintf(file, "FRAMECHECK REWRITE frame=%llu name=%ls\n",
+					        static_cast<unsigned long long>(RecordingFrame()), name ? name : L"?");
+					fclose(file);
+				}
+			}
 		}
 		if (unfinished)
 		{

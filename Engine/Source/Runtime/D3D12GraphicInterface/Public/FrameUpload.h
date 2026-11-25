@@ -23,7 +23,7 @@ namespace Engine
             const uint64_t frame = RecordingFrame();
             const size_t   slot  = frame % g_max_frames_in_flight;
             CountFrameUpload( m_frames_[ slot ] == frame, m_frames_[ slot ] != s_never && m_frames_[ slot ] != frame &&
-                                                          !FrameDone( m_frames_[ slot ] ) );
+                                                          !FrameDone( m_frames_[ slot ] ), name );
             m_frames_[ slot ] = frame;
 
             if ( !m_buffers_[ slot ] || m_sizes_[ slot ] < bytes )

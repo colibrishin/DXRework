@@ -18,8 +18,8 @@ namespace Engine
     ENGINE_D3D12GRAPHICINTERFACE_API bool FrameDone(uint64_t frame);
     // Upload check (FrameUploadSlots): rewritten = a slot written twice in one frame; unfinished = a slot written while
     // the frame that wrote it before is still on the GPU. With KOLIBRI_FRAME_CHECK=1 an unfinished write ends the
-    // process (__fastfail) after writing framecheck.txt; the counts are written there at shutdown.
-    ENGINE_D3D12GRAPHICINTERFACE_API void CountFrameUpload(bool rewritten, bool unfinished);
+    // process (__fastfail) after writing framecheck.txt; the counts, and the first rewritten names, are written there.
+    ENGINE_D3D12GRAPHICINTERFACE_API void CountFrameUpload(bool rewritten, bool unfinished, const wchar_t* name);
 
     // Runs (destroys) holder after the frame being recorded now has finished on the GPU, on the main thread at the
     // end of a later frame: for what lists of this frame may still read (a buffer being replaced, a descriptor block

@@ -1,4 +1,6 @@
 #pragma once
+#include <deque>
+#include <mutex>
 #include "IModule.h"
 #include "CommandPair.h"
 #include "IGraphicAPI.h"
@@ -190,7 +192,12 @@ namespace Engine
         void  DetachCommandThread();
         float GetAspectRatio();
 
-        StructuredBufferTypeProxy<Graphics::SBs::LocalParamSB> m_local_param_;
+        // Dispatch: one local parameter buffer per dispatch of a frame (the n-th dispatch uses the n-th), so lists
+        // recorded before the GPU ran an earlier dispatch do not overwrite its parameters. A deque keeps them in place.
+        std::mutex                                                         m_local_param_mutex_;
+        uint64_t                                                           m_local_param_frame_ = UINT64_MAX;
+        size_t                                                             m_local_param_next_  = 0;
+        std::deque<StructuredBufferTypeProxy<Graphics::SBs::LocalParamSB>> m_local_params_;
 
         ComPtr<ID3D12Device2>   m_dev_;
         ComPtr<IDXGISwapChain4> m_swap_chain_ = nullptr;
