@@ -21,6 +21,66 @@ namespace Engine
 		holder = {};
 	}
 
+	uint64_t RecordingFrame()
+	{
+		const CommandPairTask* task = s_release_task.load();
+		return task ? task->RecordingFrame() : 0;
+	}
+
+	bool FrameDone(const uint64_t frame)
+	{
+		const CommandPairTask* task = s_release_task.load();
+		return !task || task->FrameDone(frame);
+	}
+
+	namespace
+	{
+		std::atomic<uint64_t> s_upload_rewrites{ 0 };
+		std::atomic<uint64_t> s_upload_unfinished{ 0 };
+
+		bool FrameCheckRequested()
+		{
+			static const bool requested = []
+			{
+				char*  value  = nullptr;
+				size_t length = 0;
+				const bool set = _dupenv_s(&value, &length, "KOLIBRI_FRAME_CHECK") == 0 && value && value[0] == '1';
+				free(value);
+				return set;
+			}();
+			return requested;
+		}
+
+		void WriteFrameCheck(const char* reason)
+		{
+			if (FILE* file = nullptr; fopen_s(&file, "framecheck.txt", "a") == 0 && file)
+			{
+				fprintf(file, "FRAMECHECK %s frame=%llu rewrites=%llu unfinished=%llu\n", reason,
+				        static_cast<unsigned long long>(RecordingFrame()),
+				        static_cast<unsigned long long>(s_upload_rewrites.load()),
+				        static_cast<unsigned long long>(s_upload_unfinished.load()));
+				fclose(file);
+			}
+		}
+	}
+
+	void CountFrameUpload(const bool rewritten, const bool unfinished)
+	{
+		if (rewritten)
+		{
+			++s_upload_rewrites;
+		}
+		if (unfinished)
+		{
+			++s_upload_unfinished;
+			if (FrameCheckRequested())
+			{
+				WriteFrameCheck("UNFINISHED");
+				__fastfail(FAST_FAIL_INVALID_ARG);
+			}
+		}
+	}
+
 	CommandPair::CommandPair
 	(
 		CommandPairPool*    pool,
@@ -500,8 +560,30 @@ namespace Engine
 		m_frame_releases_.push_back(std::move(holder));
 	}
 
+	uint64_t CommandPairTask::RecordingFrame() const
+	{
+		return m_frame_index_.load();
+	}
+
+	bool CommandPairTask::FrameDone(const uint64_t frame) const
+	{
+		const uint64_t recording = m_frame_index_.load();
+		if (frame >= recording)
+		{
+			return false;
+		}
+		if (recording - frame > s_frame_history)
+		{
+			return true;
+		}
+		return m_fence_->GetCompletedValue() >= m_frame_fences_[frame % s_frame_history].load();
+	}
+
 	void CommandPairTask::EndFrame(const uint64_t frame_fence)
 	{
+		m_frame_fences_[m_frame_index_.load() % s_frame_history] = frame_fence;
+		++m_frame_index_;
+
 		std::vector<std::function<void()>> released;
 		{
 			std::lock_guard l(m_frame_release_mutex_);
@@ -540,6 +622,10 @@ namespace Engine
 			}
 			WaitForEventCompletion(last);
 			m_retire_.RetireAll();
+		}
+		if (FrameCheckRequested())
+		{
+			WriteFrameCheck("END");
 		}
 		// From here on ReleaseAfterFrame releases right away.
 		s_release_task = nullptr;

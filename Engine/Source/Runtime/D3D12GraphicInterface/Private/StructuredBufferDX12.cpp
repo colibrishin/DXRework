@@ -14,7 +14,7 @@ void Engine::Graphics::D3D12StructuredBufferTypeless::Clear()
 {
 	m_buffer_.Reset();
 	m_read_buffer_.Reset();
-	m_upload_buffer_.Reset();
+	m_upload_.Release();
 }
 
 void Engine::Graphics::D3D12StructuredBufferTypeless::TransitionToSRV(const IGraphicContext* context)
@@ -108,7 +108,6 @@ Engine::Graphics::D3D12StructuredBufferTypeless::~D3D12StructuredBufferTypeless(
 {
 	// Lists of this frame may still read or copy into them.
 	KeepUntilFrameDone(std::move(m_buffer_));
-	KeepUntilFrameDone(std::move(m_upload_buffer_));
 	KeepUntilFrameDone(std::move(m_read_buffer_));
 }
 
@@ -123,7 +122,6 @@ void Engine::Graphics::D3D12StructuredBufferTypeless::Create(const IGraphicConte
 	if (m_buffer_)
 	{
 		KeepUntilFrameDone(std::move(m_buffer_));
-		KeepUntilFrameDone(std::move(m_upload_buffer_));
 		KeepUntilFrameDone(std::move(m_read_buffer_));
 	}
 
@@ -155,15 +153,16 @@ void Engine::Graphics::D3D12StructuredBufferTypeless::SetData(const IGraphicCont
 	}
 
 	char* data = nullptr;
+	ID3D12Resource* upload = UploadBuffer(size, stride);
 
-	DX::ThrowIfFailed(m_upload_buffer_->Map(0, nullptr, reinterpret_cast<void**>(&data)));
+	DX::ThrowIfFailed(upload->Map(0, nullptr, reinterpret_cast<void**>(&data)));
 
 	SIMDExtension::_mm256_memcpy(data, src_ptr, stride * size);
 
-	m_upload_buffer_->Unmap(0, nullptr);
+	upload->Unmap(0, nullptr);
 
 	// Only the written elements (at least one, so the copy always promotes the buffer to COPY_DEST for the barrier).
-	cmd->GetList4()->CopyBufferRegion(m_buffer_.Get(), 0, m_upload_buffer_.Get(), 0, static_cast<UINT64>((std::max)(size, 1u)) * stride);
+	cmd->GetList4()->CopyBufferRegion(m_buffer_.Get(), 0, upload, 0, static_cast<UINT64>((std::max)(size, 1u)) * stride);
 
 	const auto& common_transition = CD3DX12_RESOURCE_BARRIER::Transition
 	(
@@ -191,18 +190,19 @@ void Engine::Graphics::D3D12StructuredBufferTypeless::SetDataContainer(const IGr
 	}
 
 	char* data = nullptr;
+	ID3D12Resource* upload = UploadBuffer(size, stride);
 
-	DX::ThrowIfFailed(m_upload_buffer_->Map(0, nullptr, reinterpret_cast<void**>(&data)));
+	DX::ThrowIfFailed(upload->Map(0, nullptr, reinterpret_cast<void**>(&data)));
 
 	for (UINT i = 0; i < size; ++i)
 	{
 		SIMDExtension::_mm256_memcpy(data + (i * stride), *(src_ptr + i), stride);
 	}
 
-	m_upload_buffer_->Unmap(0, nullptr);
+	upload->Unmap(0, nullptr);
 
 	// Only the written elements (at least one, so the copy always promotes the buffer to COPY_DEST for the barrier).
-	cmd->GetList4()->CopyBufferRegion(m_buffer_.Get(), 0, m_upload_buffer_.Get(), 0, static_cast<UINT64>((std::max)(size, 1u)) * stride);
+	cmd->GetList4()->CopyBufferRegion(m_buffer_.Get(), 0, upload, 0, static_cast<UINT64>((std::max)(size, 1u)) * stride);
 
 	const auto& common_transition = CD3DX12_RESOURCE_BARRIER::Transition
 	(
@@ -232,18 +232,19 @@ void Engine::Graphics::D3D12StructuredBufferTypeless::SetDataPointerContainer(
 	}
 
 	char* data = nullptr;
+	ID3D12Resource* upload = UploadBuffer(size, stride);
 
-	DX::ThrowIfFailed(m_upload_buffer_->Map(0, nullptr, reinterpret_cast<void**>(&data)));
+	DX::ThrowIfFailed(upload->Map(0, nullptr, reinterpret_cast<void**>(&data)));
 
 	for (UINT i = 0; i < size; ++i)
 	{
 		SIMDExtension::_mm256_memcpy(data + (i * stride), *(src_ptr + i), stride);
 	}
 
-	m_upload_buffer_->Unmap(0, nullptr);
+	upload->Unmap(0, nullptr);
 
 	// Only the written elements (at least one, so the copy always promotes the buffer to COPY_DEST for the barrier).
-	cmd->GetList4()->CopyBufferRegion(m_buffer_.Get(), 0, m_upload_buffer_.Get(), 0, static_cast<UINT64>((std::max)(size, 1u)) * stride);
+	cmd->GetList4()->CopyBufferRegion(m_buffer_.Get(), 0, upload, 0, static_cast<UINT64>((std::max)(size, 1u)) * stride);
 
 	const auto& common_transition = CD3DX12_RESOURCE_BARRIER::Transition
 	(
@@ -401,52 +402,37 @@ void Engine::Graphics::D3D12StructuredBufferTypeless::InitializeMainBuffer(UINT 
 	DX::ThrowIfFailed(m_buffer_->SetName(buffer_name.c_str()));
 }
 
+ID3D12Resource* Engine::Graphics::D3D12StructuredBufferTypeless::UploadBuffer(const UINT size, const size_t stride)
+{
+	const auto dev = static_cast<ID3D12Device2*>(g_graphic_accessor.GetInterface().GetNativeInterface());
+	return m_upload_.Get(dev, static_cast<UINT64>((std::max)(size, 1u)) * stride, D3D12_RESOURCE_STATE_COMMON, L"StructuredBuffer Write");
+}
+
 void Engine::Graphics::D3D12StructuredBufferTypeless::InitializeUploadBuffer(const IGraphicContext* context, UINT size, const void* initial_data, const size_t stride)
 {
-	const auto& upload_heap = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
-	const auto& buffer_desc = CD3DX12_RESOURCE_DESC::Buffer(stride * size);
-	const auto  dev         = static_cast<ID3D12Device2*>(g_graphic_accessor.GetInterface().GetNativeInterface());
-	const auto  cmd         = static_cast<CommandPair*>(context->commandList);
-	
-	DX::ThrowIfFailed
-	(
-		dev->CreateCommittedResource
-		(
-			&upload_heap,
-			D3D12_HEAP_FLAG_CREATE_NOT_ZEROED,
-			&buffer_desc,
-			D3D12_RESOURCE_STATE_COMMON,
-			nullptr,
-			IID_PPV_ARGS(m_upload_buffer_.ReleaseAndGetAddressOf())
-		)
-	);
-	
-	const std::wstring write_buffer_name = L"StructuredBuffer Write";
-
-	DX::ThrowIfFailed(m_upload_buffer_->SetName(write_buffer_name.c_str()));
-
-	if (initial_data != nullptr)
+	if (initial_data == nullptr)
 	{
-		char* data = nullptr;
-		DX::ThrowIfFailed(m_upload_buffer_->Map(0, nullptr, reinterpret_cast<void**>(&data)));
-		SIMDExtension::_mm256_memcpy(data, initial_data, stride * size);
-		m_upload_buffer_->Unmap(0, nullptr);
-
-		cmd->GetList()->CopyResource
-		(
-			m_buffer_.Get(),
-			m_upload_buffer_.Get()
-		);
-
-		const auto& common_transition = CD3DX12_RESOURCE_BARRIER::Transition
-		(
-			m_buffer_.Get(),
-			D3D12_RESOURCE_STATE_COPY_DEST,
-			D3D12_RESOURCE_STATE_COMMON
-		);
-
-		cmd->GetList()->ResourceBarrier(1, &common_transition);
+		return; // the upload buffer of a frame is made when that frame writes
 	}
+
+	const auto      cmd    = static_cast<CommandPair*>(context->commandList);
+	ID3D12Resource* upload = UploadBuffer(size, stride);
+
+	char* data = nullptr;
+	DX::ThrowIfFailed(upload->Map(0, nullptr, reinterpret_cast<void**>(&data)));
+	SIMDExtension::_mm256_memcpy(data, initial_data, stride * size);
+	upload->Unmap(0, nullptr);
+
+	cmd->GetList()->CopyBufferRegion(m_buffer_.Get(), 0, upload, 0, static_cast<UINT64>(size) * stride);
+
+	const auto& common_transition = CD3DX12_RESOURCE_BARRIER::Transition
+	(
+		m_buffer_.Get(),
+		D3D12_RESOURCE_STATE_COPY_DEST,
+		D3D12_RESOURCE_STATE_COMMON
+	);
+
+	cmd->GetList()->ResourceBarrier(1, &common_transition);
 }
 
 void Engine::Graphics::D3D12StructuredBufferTypeless::InitializeReadBuffer(UINT size, const size_t stride)

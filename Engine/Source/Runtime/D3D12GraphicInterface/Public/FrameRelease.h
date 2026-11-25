@@ -8,6 +8,19 @@
 
 namespace Engine
 {
+    // Frames the GPU may still run while the CPU records the next one. Per-frame copies (FrameUploadSlots) use this
+    // many slots.
+    constexpr uint64_t g_max_frames_in_flight = 2;
+
+    // Index of the frame being recorded (frames presented so far).
+    ENGINE_D3D12GRAPHICINTERFACE_API uint64_t RecordingFrame();
+    // The frame finished on the GPU (true for frames too old to remember; false for the one being recorded).
+    ENGINE_D3D12GRAPHICINTERFACE_API bool FrameDone(uint64_t frame);
+    // Upload check (FrameUploadSlots): rewritten = a slot written twice in one frame; unfinished = a slot written while
+    // the frame that wrote it before is still on the GPU. With KOLIBRI_FRAME_CHECK=1 an unfinished write ends the
+    // process (__fastfail) after writing framecheck.txt; the counts are written there at shutdown.
+    ENGINE_D3D12GRAPHICINTERFACE_API void CountFrameUpload(bool rewritten, bool unfinished);
+
     // Runs (destroys) holder after the frame being recorded now has finished on the GPU, on the main thread at the
     // end of a later frame: for what lists of this frame may still read (a buffer being replaced, a descriptor block
     // given back). Without a running command task (before startup, after shutdown) holder runs right away.

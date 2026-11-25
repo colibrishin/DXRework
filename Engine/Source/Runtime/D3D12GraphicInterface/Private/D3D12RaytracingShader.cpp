@@ -201,37 +201,13 @@ namespace Engine
         IGraphicAPI& gi = g_graphic_accessor.GetInterface();
         auto* dev = static_cast<ID3D12Device2*>(gi.GetNativeInterface());
         
-        auto& hit_record = m_shader_tables_[type];
         const auto& new_size = Align(
             records.size(),
             D3D12_RAYTRACING_SHADER_TABLE_BYTE_ALIGNMENT);
-        
-        if (new_size > m_allocated_shader_record_size_[type])
-        {
-            if (hit_record)
-            {
-                KeepUntilFrameDone(std::move(hit_record)); // lists of this frame may still read the old table
-            }
-            const auto& default_heap = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
-            const auto& buffer_desc  = CD3DX12_RESOURCE_DESC::Buffer
-                    (
-                     new_size,
-                     D3D12_RESOURCE_FLAG_NONE
-                    );
 
-            DX::ThrowIfFailed(
-                     dev->CreateCommittedResource
-                     (
-                      &default_heap,
-                      D3D12_HEAP_FLAG_NONE,
-                      &buffer_desc,
-                      D3D12_RESOURCE_STATE_GENERIC_READ,
-                      nullptr,
-                      IID_PPV_ARGS(hit_record.ReleaseAndGetAddressOf())
-                     ));
-
-            m_allocated_shader_record_size_[type] = new_size;
-        }
+        // The GPU reads the table from upload memory: one per frame in flight, GetShaderRecord returns this frame's.
+        auto& hit_record = m_shader_tables_[type];
+        hit_record = m_shader_table_slots_[type].Get(dev, new_size, D3D12_RESOURCE_STATE_GENERIC_READ, L"Raytracing shader table");
 
         const wchar_t* key;
         switch (type)

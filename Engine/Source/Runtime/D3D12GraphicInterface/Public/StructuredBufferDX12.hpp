@@ -4,6 +4,7 @@
 #include <wrl/client.h>
 
 #include "TypeLibrary.h"
+#include "FrameUpload.h"
 
 namespace Engine::Graphics
 {
@@ -37,6 +38,7 @@ namespace Engine::Graphics
 		void InitializeMainBuffer(UINT size, size_t stride);
 		void InitializeUploadBuffer(const IGraphicContext* context, UINT size, const void* initial_data, const size_t stride);
 		void InitializeReadBuffer(UINT size, const size_t stride);
+		ID3D12Resource* UploadBuffer(UINT size, size_t stride); // of the frame being recorded
 
     public:
         [[nodiscard]] void* GetResource() const override;
@@ -47,7 +49,7 @@ namespace Engine::Graphics
 		ComPtr<ID3D12DescriptorHeap> m_srv_heap_{};
 		ComPtr<ID3D12DescriptorHeap> m_uav_heap_{};
 
-		ComPtr<ID3D12Resource> m_upload_buffer_{};
+		FrameUploadSlots       m_upload_;
 		ComPtr<ID3D12Resource> m_read_buffer_{};
 		ComPtr<ID3D12Resource> m_buffer_{};
 

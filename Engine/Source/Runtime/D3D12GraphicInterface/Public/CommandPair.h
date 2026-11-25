@@ -198,6 +198,8 @@ namespace Engine
 		// ReleaseAfterFrame (FrameRelease.h): collected per frame, handed to m_frame_retire_ with the frame's fence.
 		void ReleaseAfterFrame(std::function<void()>&& holder);
 		void EndFrame(const uint64_t frame_fence);
+		[[nodiscard]] uint64_t RecordingFrame() const;
+		[[nodiscard]] bool     FrameDone(const uint64_t frame) const;
 
 	private:
 		friend struct CommandPair;
@@ -235,5 +237,9 @@ namespace Engine
 		std::mutex                         m_frame_release_mutex_;
 		std::vector<std::function<void()>> m_frame_releases_; // of the frame being recorded
 		FenceRetireQueue                   m_frame_retire_;   // run by the main thread (SwapBuffer)
+
+		static constexpr size_t                     s_frame_history = 8;
+		std::atomic<uint64_t>                       m_frame_index_{};    // frames ended
+		std::array<std::atomic<uint64_t>, s_frame_history> m_frame_fences_{}; // fence value per frame index % history
 	};
 }

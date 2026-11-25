@@ -8,7 +8,6 @@ Engine::Graphics::D3D12ConstantBufferTypeless::~D3D12ConstantBufferTypeless()
 	delete[] m_data_;
 	// Lists of this frame may still read or copy into them.
 	KeepUntilFrameDone(std::move(m_buffer_));
-	KeepUntilFrameDone(std::move(m_upload_buffer_));
 }
 
 void Engine::Graphics::D3D12ConstantBufferTypeless::Create(const void* src_data, const size_t stride)
@@ -44,35 +43,16 @@ void Engine::Graphics::D3D12ConstantBufferTypeless::Create(const void* src_data,
 	const std::wstring buffer_name   = L"Constant Buffer Creation";
 	DX::ThrowIfFailed(m_buffer_->SetName(buffer_name.c_str()));
 
-	const auto& upload_heap = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
-	const auto& buffer_desc = CD3DX12_RESOURCE_DESC::Buffer(m_alignment_);
-
-	DX::ThrowIfFailed
-			(
-			 dev->CreateCommittedResource
-			 (
-			  &upload_heap,
-			  D3D12_HEAP_FLAG_CREATE_NOT_ZEROED,
-			  &buffer_desc,
-			  D3D12_RESOURCE_STATE_GENERIC_READ,
-			  nullptr,
-			  IID_PPV_ARGS(m_upload_buffer_.GetAddressOf())
-			 )
-			);
-
-	const std::wstring upload_buffer_name = L" Constant Buffer Upload Buffer";
-
-	DX::ThrowIfFailed(m_upload_buffer_->SetName(upload_buffer_name.c_str()));
-
 	if (src_data != nullptr)
 	{
+		ID3D12Resource* upload = m_upload_.Get(dev, m_alignment_, D3D12_RESOURCE_STATE_GENERIC_READ, L" Constant Buffer Upload Buffer");
 		char* data = nullptr;
 
-		DX::ThrowIfFailed(m_upload_buffer_->Map(0, nullptr, reinterpret_cast<void**>(&data)));
+		DX::ThrowIfFailed(upload->Map(0, nullptr, reinterpret_cast<void**>(&data)));
 		SIMDExtension::_mm256_memcpy(data, src_data, stride);
-		m_upload_buffer_->Unmap(0, nullptr);
+		upload->Unmap(0, nullptr);
 
-		cmd->GetList()->CopyResource(m_buffer_.Get(), m_upload_buffer_.Get());
+		cmd->GetList()->CopyResource(m_buffer_.Get(), upload);
 	}
 
 	const auto& cb_trans = CD3DX12_RESOURCE_BARRIER::Transition
@@ -172,10 +152,12 @@ void Engine::Graphics::D3D12ConstantBufferTypeless::Flush(const CommandPair* cmd
                  D3D12_RESOURCE_STATE_COPY_DEST
                 );
 
+        const auto      dev    = static_cast<ID3D12Device2*>(g_graphic_accessor.GetInterface().GetNativeInterface());
+        ID3D12Resource* upload = m_upload_.Get(dev, m_alignment_, D3D12_RESOURCE_STATE_GENERIC_READ, L" Constant Buffer Upload Buffer");
         char* data = nullptr;
-        DX::ThrowIfFailed(m_upload_buffer_->Map(0, nullptr, reinterpret_cast<void**>(&data)));
+        DX::ThrowIfFailed(upload->Map(0, nullptr, reinterpret_cast<void**>(&data)));
         SIMDExtension::_mm256_memcpy(data, m_data_, m_stride_);
-        m_upload_buffer_->Unmap(0, nullptr);
+        upload->Unmap(0, nullptr);
 
         const auto& cb_trans = CD3DX12_RESOURCE_BARRIER::Transition
                 (
@@ -185,7 +167,7 @@ void Engine::Graphics::D3D12ConstantBufferTypeless::Flush(const CommandPair* cmd
                 );
 
         cmd->GetList()->ResourceBarrier(1, &copy_trans);
-        cmd->GetList()->CopyResource(m_buffer_.Get(), m_upload_buffer_.Get());
+        cmd->GetList()->CopyResource(m_buffer_.Get(), upload);
         cmd->GetList()->ResourceBarrier(1, &cb_trans);
 
         m_b_dirty_ = false;

@@ -1,6 +1,7 @@
 #pragma once
 #if CFG_RAYTRACING
 #include "D3D12GraphicPrimitiveShader.h"
+#include "FrameUpload.h"
 
 namespace Engine
 {
@@ -35,6 +36,7 @@ namespace Engine
         ComPtr<ID3D12Resource> m_shader_tables_[RAY_SHADER_REC_MAX];
         
         size_t m_allocated_shader_record_size_[RAY_SHADER_REC_MAX]{};
+        FrameUploadSlots m_shader_table_slots_[RAY_SHADER_REC_MAX];
     };
 }
 #endif
