@@ -354,6 +354,7 @@ bool Engine::D3D12GraphicInterface::BuildTopLevelAccelerationBuffer(
 
     if (prebuild_info.ResultDataMaxSizeInBytes == 0)
     {
+        out_tlas_buffer.empty = true;
         return false;
     }
 
@@ -373,8 +374,11 @@ bool Engine::D3D12GraphicInterface::BuildTopLevelAccelerationBuffer(
         out_tlas_buffer.resultPool = std::make_unique<D3D12GraphicMemoryPool<D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BYTE_ALIGNMENT, D3D12_HEAP_TYPE_DEFAULT, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_RAYTRACING_ACCELERATION_STRUCTURE>>();
     }
 
-    out_tlas_buffer.scratchPool->Update(nullptr, 1, scratch_size);
-    out_tlas_buffer.resultPool->Update(nullptr, 1, result_size);
+    // Sized in alignment units: the pools grow by element count, so a single element of the first frame's size
+    // never grew when instances were added.
+    constexpr UINT64 unit = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BYTE_ALIGNMENT;
+    out_tlas_buffer.scratchPool->Update(nullptr, scratch_size / unit, unit);
+    out_tlas_buffer.resultPool->Update(nullptr, result_size / unit, unit);
 
     D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_DESC build_desc = {};
 
@@ -402,14 +406,16 @@ void Engine::D3D12GraphicInterface::DispatchRay(
     const byte_stream& hit_records,
     const AccelStructBuffer& top_level_accel_buffer)
 {
+    // Nothing to trace without a pipeline (shader bypass) or a built top level structure.
+    if ( !shader || top_level_accel_buffer.empty || !top_level_accel_buffer.resultPool )
+    {
+        return;
+    }
+
     const auto& cmd = static_cast<CommandPair*>( context->commandList );
 
     cmd->GetList4()->SetComputeRootSignature( m_raytracing_root_pipeline_.Get() );
-
-    if ( shader )
-    {
-        cmd->GetList4()->SetPipelineState1(static_cast<ID3D12StateObject*>(shader->GetPrimitive().GetNativeShader()));
-    }
+    cmd->GetList4()->SetPipelineState1(static_cast<ID3D12StateObject*>(shader->GetPrimitive().GetNativeShader()));
 
     perspective.Flush(context);
     param.Flush(context);
