@@ -145,7 +145,6 @@ void Engine::D3D12GraphicInterface::Shutdown()
     m_raytracing_root_pipeline_.Reset();
     m_raytracing_sampler_heap_.Reset();
     m_output_buffer_.Reset();
-    m_output_heap_.Reset();
     m_raytracing_dev_.Reset();
 #endif
 
@@ -251,6 +250,13 @@ void Engine::D3D12GraphicInterface::InitializeRaytracing()
 }
 
 void                                    Engine::D3D12GraphicInterface::ShutdownRaytracing() { }
+
+void Engine::D3D12GraphicInterface::ReserveRaytracingHeap(const size_t tables)
+{
+    CheckSize<UINT>(tables, L"Warning: too many ray tracing descriptor tables!");
+    const D3D12_CPU_DESCRIPTOR_HANDLE output = m_raytracing_heap_handler_->BeginFrame(static_cast<UINT>(tables));
+    m_dev_->CreateUnorderedAccessView(m_output_buffer_.Get(), nullptr, nullptr, output);
+}
 
 Engine::Unique<Engine::IHeapBase> Engine::D3D12GraphicInterface::GetRaytracingHeap()
 {
@@ -420,8 +426,9 @@ void Engine::D3D12GraphicInterface::DispatchRay(
     perspective.Flush(context);
     param.Flush(context);
 
-    ID3D12DescriptorHeap* heaps[] = { m_output_heap_.Get() };
-    cmd->GetList4()->SetDescriptorHeaps(1, heaps);
+    // The hit records' descriptor tables and the output UAV are all in this frame's ray tracing heap pair.
+    ID3D12DescriptorHeap* heaps[] = { m_raytracing_heap_handler_->GetBufferHeap(), m_raytracing_heap_handler_->GetSamplerHeap() };
+    cmd->GetList4()->SetDescriptorHeaps(2, heaps);
     
     cmd->GetList4()->SetComputeRootShaderResourceView(
         RAYTRACING_GLOBAL_SLOT_TLAS,
@@ -437,7 +444,7 @@ void Engine::D3D12GraphicInterface::DispatchRay(
         
     cmd->GetList4()->SetComputeRootDescriptorTable(
         RAYTRACING_GLOBAL_SLOT_OUTPUT,
-        m_output_heap_->GetGPUDescriptorHandleForHeapStart());
+        m_raytracing_heap_handler_->GetOutputGPUHandle());
     
     cmd->GetList4()->SetComputeRootConstantBufferView(
         RAYTRACING_GLOBAL_SLOT_WVP,
@@ -630,18 +637,7 @@ void Engine::D3D12GraphicInterface::InitializeOutputBuffer()
           IID_PPV_ARGS( m_output_buffer_.ReleaseAndGetAddressOf() ) ) );
 
     SET_NAME( m_output_buffer_, L"Raytracing Output Buffer" )
-
-    constexpr D3D12_DESCRIPTOR_HEAP_DESC desc
-    {
-        .Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV,
-        .NumDescriptors = 1,
-        .Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE,
-        .NodeMask = 0
-    };
-
-    DX::ThrowIfFailed( m_dev_->CreateDescriptorHeap( &desc, IID_PPV_ARGS( m_output_heap_.GetAddressOf() ) ) );
-
-    m_dev_->CreateUnorderedAccessView( m_output_buffer_.Get(), nullptr, nullptr, m_output_heap_->GetCPUDescriptorHandleForHeapStart() );
+    // Its UAV is written into each frame's ray tracing heap (ReserveRaytracingHeap).
 }
 #endif
 

@@ -20,9 +20,7 @@
 #include "IGraphicAPI_Extensions.h"
 #include "IRaytracingExtension.h"
 
-#include "raytracing_heap_allocator.hpp"
-#include "raytracing_heap_binder.hpp"
-#include "raytracing_heap_getter.hpp"
+#include "raytracing_frame_heap.hpp"
 #endif
 
 #include "D3D12GraphicInterface.generated.h"
@@ -63,6 +61,7 @@ namespace Engine
         void ShutdownRaytracing() override;
 
         Unique<IHeapBase> GetRaytracingHeap() override;
+        void              ReserveRaytracingHeap(size_t tables) override;
 
         IRaytracingShader* GetNewRaytracingShader() override;
 
@@ -95,12 +94,10 @@ namespace Engine
         ComPtr<ID3D12Device5>       m_raytracing_dev_           = nullptr;
         ComPtr<ID3D12RootSignature> m_raytracing_root_pipeline_ = nullptr;
 
-        Strong<DescriptorHandler<raytracing_heap_allocator, raytracing_heap_getter, raytracing_heap_binder>>
-                m_raytracing_heap_handler_{};
+        Strong<raytracing_frame_heap> m_raytracing_heap_handler_{};
 
         ComPtr<ID3D12DescriptorHeap> m_raytracing_sampler_heap_ = nullptr;
         ComPtr<ID3D12Resource>       m_output_buffer_           = nullptr;
-        ComPtr<ID3D12DescriptorHeap> m_output_heap_             = nullptr;
 
     public:
 #endif

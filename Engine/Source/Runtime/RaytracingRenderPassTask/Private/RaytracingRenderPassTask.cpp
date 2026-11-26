@@ -69,6 +69,11 @@ namespace Engine
 		    uint64_t instance_count = 0;
 		    IntermediateShaderMap intermediate_shader_map;
 		    PredicateObject(predicate, domain_map, instance_count, intermediate_shader_map);
+		    if (instance_count == 0)
+		    {
+		        return;
+		    }
+		    rgi.ReserveRaytracingHeap(instance_count); // one hit record table per instance (upper bound)
 
 		    // The per-batch pools grow in advance(); sizing them to the instance count allocated one GPU buffer and one
 		    // descriptor heap per object (E_OUTOFMEMORY at ~5k objects).
