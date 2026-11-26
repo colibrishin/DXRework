@@ -17,12 +17,12 @@
 
 groupshared int global_lock;
 
-[numthreads(32, 32, 1)]
+[numthreads(1024, 1, 1)]
 void cs_main(
 	uint3 dispatchThreadId : SV_DispatchThreadID
 )
 {
-	const uint  flat_idx             = dispatchThreadId.x + dispatchThreadId.y * 32;
+	const uint  flat_idx             = dispatchThreadId.x;
 	const uint  total_particle_count = PARAM_NUM_PARTICLE;
 	const float dt                   = PARAM_DT;
 	const float duration             = PARAM_DURATION;
