@@ -246,12 +246,8 @@ namespace Engine
 		gi.SetDefaultRenderTarget(&temp_context);
 		gi.SetViewport(&temp_context, Managers::RenderPipeline::GetInstance().GetViewport());
 
-		if (prerender_predicate) { prerender_predicate(&temp_context); }
-
-		for ( const auto& func : prerender_predicates | std::views::values )
-		{
-			func( &temp_context );
-		}
+		// The pre/post render predicates bind raster resources (shadow maps, reflection map) into a heap; the ray
+		// tracing pass has none and traces its own shadow and reflection rays, so it does not run them.
 		
 		// Manual release
 		auto instance_token = SingletonSpinLock::GetInstance().Lock( m_instance_pool_ticket_ );
@@ -327,12 +323,6 @@ namespace Engine
 		
 		DispatchPhase_MultiThread( dt, shader_bypass, idx, instance, shader, hit_records, &temp_context, instances );
 
-		if (postrender_predicate) { postrender_predicate( &temp_context ); }
-
-		for ( const auto& func : postrender_predicates | std::views::values )
-		{
-			func( &temp_context );
-		}
 		
 		for ( const StructuredBufferDecorator* additional_sb : additional_sbs )
 		{
