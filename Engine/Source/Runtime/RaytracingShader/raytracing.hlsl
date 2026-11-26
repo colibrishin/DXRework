@@ -43,6 +43,12 @@ float3 BarycentricCoordinates(float3 pt, float3 v0, float3 v1, float3 v2)
 	return float3(u, v, w);
 }
 
+float3 SafeNormalize(float3 v)
+{
+	const float len2 = dot(v, v);
+	return len2 > 0.f ? v * rsqrt(len2) : v;
+}
+
 float4 CalculateSpecular(in float3 hitPosition, in float3 lightDir, in float3 normal, in float specularPower)
 {
 	const float3 reflected = normalize(reflect(lightDir, normal));
@@ -109,18 +115,19 @@ void closest_hit_main(inout Payload payload, Attributes attr)
 		w_position[vi] = mul(objectToWorld, float4(v_vertex[vi].position, 1.f));
 	}
 
-	// Barycentric interpolation of normal (normals use the inverse transpose)
-	const float3 baryNormal = normalize(mul(v_vertex[0].normal * barycentrics.x +
-	                                        v_vertex[1].normal * barycentrics.y +
-	                                        v_vertex[2].normal * barycentrics.z, worldToObject));
+	// Barycentric interpolation of normal (normals use the inverse transpose); unit length in world space, zero
+	// vectors (meshes without tangents) stay zero instead of becoming NaN.
+	const float3 baryNormal = SafeNormalize(mul(v_vertex[0].normal * barycentrics.x +
+	                                            v_vertex[1].normal * barycentrics.y +
+	                                            v_vertex[2].normal * barycentrics.z, worldToObject));
 
-	const float3 baryTangent = mul((float3x3)objectToWorld, v_vertex[0].tangent * barycentrics.x +
-	                                                        v_vertex[1].tangent * barycentrics.y +
-	                                                        v_vertex[2].tangent * barycentrics.z);
+	const float3 baryTangent = SafeNormalize(mul((float3x3)objectToWorld, v_vertex[0].tangent * barycentrics.x +
+	                                                                      v_vertex[1].tangent * barycentrics.y +
+	                                                                      v_vertex[2].tangent * barycentrics.z));
 
-	const float3 baryBinormal = mul((float3x3)objectToWorld, v_vertex[0].binormal * barycentrics.x +
-	                                                         v_vertex[1].binormal * barycentrics.y +
-	                                                         v_vertex[2].binormal * barycentrics.z);
+	const float3 baryBinormal = SafeNormalize(mul((float3x3)objectToWorld, v_vertex[0].binormal * barycentrics.x +
+	                                                                       v_vertex[1].binormal * barycentrics.y +
+	                                                                       v_vertex[2].binormal * barycentrics.z));
 
 	float4 baryColor = float4(0.0f, 0.0f, 0.0f, 1.0f);
 	// Barycentric interpolation of coloring
