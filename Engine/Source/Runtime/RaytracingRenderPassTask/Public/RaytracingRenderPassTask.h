@@ -89,7 +89,7 @@ namespace Engine
                                 const ContextSetupFunction&                                       postrender_predicate,
                                 const std::unordered_map<std::string_view, ContextSetupFunction>& prerender_predicates,
                                 const std::unordered_map<std::string_view, ContextSetupFunction>& postrender_predicates,
-                                const aligned_vector<InstancePair>&                               instance_pairs );
+                                const std::vector<const InstancePair*>&                           instance_pairs );
 	    
 		void RecordUsedTexture( const IGraphicContext* context,
                                 IGraphicAPI&                       gi,

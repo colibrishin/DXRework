@@ -54,8 +54,21 @@ namespace Engine
 		    // order. Objects of other shaders are not traced.
 		    Strong<Resources::RaytracingShader>     shader;
 		    std::vector<RaytracingMeshInstancePair> meshes;
-		    aligned_vector<InstancePair>            instance_pairs;
+		    std::vector<const InstancePair*>        instance_pairs; // into the render map, valid during Run
 		    std::vector<RaytracingInstance>         tlas_instances;
+		    size_t                                  upper_bound = 0;
+		    for (const auto& renderer : *domain_map | std::views::values)
+		    {
+		        for (const auto& mesh_map : renderer | std::views::values)
+		        {
+		            for (const auto& instances : mesh_map | std::views::values)
+		            {
+		                upper_bound += instances.size();
+		            }
+		        }
+		    }
+		    instance_pairs.reserve(upper_bound);
+		    tlas_instances.reserve(upper_bound);
 		    for (const auto& renderer : *domain_map | std::views::values)
 		    {
 		        for (const auto& [shader_resource, mesh_map] : renderer)
@@ -100,7 +113,7 @@ namespace Engine
 		                    {
 		                        continue;
 		                    }
-		                    instance_pairs.push_back(instance_pair);
+		                    instance_pairs.push_back(&instance_pair); // no copy: an InstancePair is about 870 bytes
 		                    tlas_instances.push_back({ mesh_ptr, instance_pair.instance });
 		                    ++count;
 		                }
@@ -211,7 +224,7 @@ namespace Engine
 		const ContextSetupFunction&                                       postrender_predicate,
 		const std::unordered_map<std::string_view, ContextSetupFunction>& prerender_predicates,
 		const std::unordered_map<std::string_view, ContextSetupFunction>& postrender_predicates,
-		const aligned_vector<InstancePair>&                               instance_pairs
+		const std::vector<const InstancePair*>&                           instance_pairs
 	)
 	{
         IGraphicAPI& gi = g_graphic_accessor.GetInterface();
@@ -255,9 +268,9 @@ namespace Engine
 		aligned_vector<Graphics::SBs::InstanceSB*> instances( instance_pairs.size() );
 
 		size_t idx = 0;
-		for ( const InstancePair& instance_pair : instance_pairs )
+		for ( const InstancePair* instance_pair : instance_pairs )
 		{
-			instances[ idx ] = instance_pair.instance;
+			instances[ idx ] = instance_pair->instance;
 			++idx;
 		}
 
@@ -285,13 +298,13 @@ namespace Engine
                         .heap = heap
                     };
 	                
-	            for ( size_t j = 0; j < instance_pairs[instance_pos + i].textures.size(); ++j )
+	            for ( size_t j = 0; j < instance_pairs[instance_pos + i]->textures.size(); ++j )
 	            {
-	                if ( instance_pairs[instance_pos + i].textures[j] )
+	                if ( instance_pairs[instance_pos + i]->textures[j] )
 	                {
-	                    RecordUsedTexture( &local_sig_context, gi, instance_pairs[instance_pos + i].textures[j] );
-	                    instance_pairs[instance_pos + i].instance->SetTextureSlot( j, static_cast<int>( j ) ); // bound at BIND_SLOT_TEX + j below
-	                    gi.Bind( &local_sig_context, instance_pairs[instance_pos + i].textures[j].get(), BIND_TYPE_SRV, BIND_SLOT_TEX, j );
+	                    RecordUsedTexture( &local_sig_context, gi, instance_pairs[instance_pos + i]->textures[j] );
+	                    instance_pairs[instance_pos + i]->instance->SetTextureSlot( j, static_cast<int>( j ) ); // bound at BIND_SLOT_TEX + j below
+	                    gi.Bind( &local_sig_context, instance_pairs[instance_pos + i]->textures[j].get(), BIND_TYPE_SRV, BIND_SLOT_TEX, j );
 	                }
 	            }
 
