@@ -104,6 +104,12 @@ namespace Engine
 
                                     for ( auto &particle : particles )
                                     {
+                                        // Retired particles stay in the buffer (the simulation skips them).
+                                        if ( !reinterpret_cast<Graphics::SBs::InstanceParticleSB &>( particle ).GetActive() )
+                                        {
+                                            continue;
+                                        }
+
                                         InstancePair instance_pair;
                                         instance_pair.object   = obj;
                                         instance_pair.instance = GetInstance();

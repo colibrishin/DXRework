@@ -8,6 +8,8 @@
 
 #include "Transform.h"
 
+#include <cstring>
+
 namespace Engine::Components
 {
 	ParticleRenderer::ParticleRenderer(const Weak<Engine::Abstracts::ObjectBase>& owner)
@@ -31,6 +33,7 @@ namespace Engine::Components
 			m_cs_               = other.m_cs_;
 			m_cs_meta_path_ = other.m_cs_meta_path_;
 			m_instances_        = other.m_instances_;
+			m_instances_dirty_  = true;
 			m_b_follow_owner_   = other.m_b_follow_owner_;
 		}
 		return *this;
@@ -46,11 +49,34 @@ namespace Engine::Components
 		m_sb_buffer_ = std::make_unique<decltype(m_sb_buffer_)::element_type>( gi.GetStructuredBuffer<Graphics::SBs::InstanceParticleSB>() );
 	}
 
+	namespace
+	{
+		size_t CountActive(InstanceParticles& instances)
+		{
+			size_t active = 0;
+			for (auto& instance : instances)
+			{
+				active += instance.GetActive() ? 1 : 0;
+			}
+			return active;
+		}
+	}
+
 	void ParticleRenderer::Update(const float dt)
 	{
-		if (m_cs_ && GetShape().lock())
+		if (!m_cs_ || !GetShape().lock())
 		{
-			IGraphicAPI& gi = g_graphic_accessor.GetInterface();
+#if WITH_EDITOR
+			m_ui_seen_           = false;
+			m_ui_snapshot_valid_ = false;
+#endif
+			return;
+		}
+
+		IGraphicAPI& gi = g_graphic_accessor.GetInterface();
+		static const bool sync = [] { const char* v = std::getenv("KOLIBRI_PARTICLE_SYNC"); return v && v[0] == '1'; }();
+		if (sync)
+		{
 			const IGraphicContextImpl& context = gi.GetNewContext(0, true, L"Particle Renderer Update");
 			const IGraphicContext& primitive = context.GetPointers();
 			
@@ -88,7 +114,94 @@ namespace Engine::Components
 					++it;
 				}
 			}
+			return;
 		}
+
+		std::lock_guard lock(m_instances_mutex_);
+#if WITH_EDITOR
+		// The editor writes the CPU copy directly (Linear Spread): upload it when it differs from what this component
+		// last put there, before a readback would overwrite it.
+		if (m_ui_seen_ && m_ui_snapshot_valid_ &&
+			(m_ui_snapshot_.size() != m_instances_.size() ||
+			 std::memcmp(m_ui_snapshot_.data(), m_instances_.data(), m_instances_.size() * sizeof(m_instances_[0])) != 0))
+		{
+			m_instances_dirty_ = true;
+		}
+#endif
+
+		// The newest finished readback of the current upload becomes the CPU copy (no wait: earlier ones are dropped).
+		if (const uint64_t tag = m_sb_buffer_->ReadyData())
+		{
+			while (!m_readbacks_.empty() && m_readbacks_.front().tag < tag)
+			{
+				m_readbacks_.pop_front();
+			}
+			if (!m_readbacks_.empty() && m_readbacks_.front().tag == tag)
+			{
+				const PendingReadback done = m_readbacks_.front();
+				m_readbacks_.pop_front();
+				if (!m_instances_dirty_ && done.generation == m_generation_ && done.count == m_instances_.size())
+				{
+					m_sb_buffer_->ReadData(tag, static_cast<UINT>(done.count), m_instances_.data());
+					m_active_ = CountActive(m_instances_);
+				}
+			}
+		}
+
+		// Once every particle retired (the newest readback says so), there is nothing to simulate until an upload.
+		const bool upload   = m_instances_dirty_;
+		const bool simulate = dt > 0.f && (upload ? CountActive(m_instances_) : m_active_) > 0;
+		if (upload || simulate)
+		{
+			const IGraphicContextImpl& context   = gi.GetNewContext(0, true, L"Particle Renderer Update");
+			const IGraphicContext&     primitive = context.GetPointers();
+			primitive.commandList->SoftReset();
+
+			if (upload)
+			{
+				CheckSize<UINT>(m_instances_.size(), L"Warning: Particle instance size is too much for structured buffer!");
+				m_sb_buffer_->SetData(&primitive, static_cast<UINT>(m_instances_.size()), m_instances_.data());
+				m_generation_ += 1;
+				m_instances_dirty_ = false;
+				m_active_          = CountActive(m_instances_);
+			}
+
+			if (simulate)
+			{
+				m_sb_buffer_->TransitionToUAV(&primitive);
+				m_sb_buffer_->CopyUAVHeap(&primitive);
+
+				const auto thread      = m_cs_->GetThread();
+				const auto flatten     = thread[0] * thread[1] * thread[2];
+				const UINT group_count = static_cast<UINT>(m_instances_.size() / flatten);
+				const UINT remainder   = static_cast<UINT>(m_instances_.size() % flatten);
+
+				const UINT groups[3] = {group_count + (remainder ? 1 : 0), 1, 1};
+				m_cs_->Dispatch(&primitive, groups, m_params_, dt);
+				m_sb_buffer_->TransitionCommon(&primitive);
+
+				m_readback_tag_ += 1;
+				if (m_sb_buffer_->RequestData(&primitive, static_cast<UINT>(m_instances_.size()), m_readback_tag_))
+				{
+					m_readbacks_.push_back({ m_readback_tag_, m_generation_, m_instances_.size() });
+				}
+			}
+
+			primitive.commandList->FlagReady();
+		}
+
+#if WITH_EDITOR
+		if (m_ui_seen_)
+		{
+			m_ui_snapshot_       = m_instances_;
+			m_ui_snapshot_valid_ = true;
+		}
+		else
+		{
+			m_ui_snapshot_valid_ = false;
+		}
+		m_ui_seen_ = false;
+#endif
 	}
 
 	void ParticleRenderer::PreUpdate(const float dt) {}
@@ -122,6 +235,7 @@ namespace Engine::Components
         if ( parent )
         {
             Base::OnUIUpdate( parent, dt );
+            m_ui_seen_ = true; // Update compares the CPU copy with what it last wrote
 
             IUIAPI &ui = g_ui_accessor.GetInterface();
 
@@ -215,6 +329,7 @@ namespace Engine::Components
 		std::lock_guard lock(m_instances_mutex_);
 		m_count_ = count;
 		m_instances_.resize(m_count_, {});
+		m_instances_dirty_ = true;
 		m_params_.SetParam(particle_count_slot, static_cast<int>(m_count_));
 
 		// Life is the time a particle has lived (the shader adds dt and retires it past the duration).
@@ -263,5 +378,11 @@ namespace Engine::Components
 	InstanceParticles& ParticleRenderer::GetInstances()
 	{
 		return m_instances_;
+	}
+
+	void ParticleRenderer::MarkInstancesChanged()
+	{
+		std::lock_guard lock(m_instances_mutex_);
+		m_instances_dirty_ = true;
 	}
 }
