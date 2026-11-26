@@ -1171,6 +1171,13 @@ namespace Engine
 		virtual void SetDataContainer(const IGraphicContext* context, const UINT size, const void* const* container_ptr, const size_t stride) = 0;
 		virtual void SetDataPointerContainer(const IGraphicContext* context, const UINT size, const void* const* container_ptr, const size_t stride) = 0;
 		virtual void GetData(const IGraphicContext* context, const UINT size, void* dst_ptr, const size_t stride) = 0;
+		// Records a copy of the first size elements into a readback buffer of the frame being recorded, without waiting.
+		// tag (not 0) names the copy. Skipped (returns false) when that buffer is still in use.
+		virtual bool RequestData(const IGraphicContext* context, const UINT size, const size_t stride, const uint64_t tag) = 0;
+		// The tag of the newest requested copy whose frame finished on the GPU, 0 if none since the last call; older
+		// copies are dropped. ReadData copies elements of that copy out.
+		virtual uint64_t ReadyData() = 0;
+		virtual void ReadData(const uint64_t tag, const UINT size, void* dst_ptr, const size_t stride) = 0;
 		virtual void Clear() = 0;
 
 		virtual void TransitionToSRV(const IGraphicContext* context) = 0;
@@ -1229,6 +1236,18 @@ namespace Engine
 		void GetData(const IGraphicContext* context, const UINT size, void* dst_ptr, const size_t stride) const
 		{
 			if (m_base_) m_base_->GetData(context, size, dst_ptr, stride);
+		}
+		bool RequestData(const IGraphicContext* context, const UINT size, const size_t stride, const uint64_t tag) const
+		{
+			return m_base_ && m_base_->RequestData(context, size, stride, tag);
+		}
+		[[nodiscard]] uint64_t ReadyData() const
+		{
+			return m_base_ ? m_base_->ReadyData() : 0;
+		}
+		void ReadData(const uint64_t tag, const UINT size, void* dst_ptr, const size_t stride) const
+		{
+			if (m_base_) m_base_->ReadData(tag, size, dst_ptr, stride);
 		}
 		void Clear() const
 		{
@@ -1320,6 +1339,17 @@ namespace Engine
 		{
 			if (!m_base_) return;
 			m_base_->GetData(context, size, dst_ptr, sizeof(T));
+		}
+
+		bool RequestData(const IGraphicContext* context, const UINT size, const uint64_t tag)
+		{
+			return m_base_ && m_base_->RequestData(context, size, sizeof(T), tag);
+		}
+
+		void ReadData(const uint64_t tag, const UINT size, T* dst_ptr)
+		{
+			if (!m_base_) return;
+			m_base_->ReadData(tag, size, dst_ptr, sizeof(T));
 		}
 		
 		void CopySRVHeap(const IGraphicContext* context) const override
