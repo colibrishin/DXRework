@@ -261,10 +261,9 @@ namespace Engine
 			++idx;
 		}
 
-		for ( const StructuredBufferDecorator* additional_sb : additional_sbs )
-		{
-			additional_sb->TransitionToSRV(&temp_context);
-		}
+		// The shared buffers (lights) are read without transitions, as in the raster passes, whose lists record in parallel:
+		// they stay COMMON, are promoted implicitly on read and decay when their ExecuteCommandLists
+		// finishes (this engine submits one list per call).
 	    
 	    byte_stream& hit_records = GetByteStream();
 	    size_t instance_pos = 0;
@@ -321,10 +320,6 @@ namespace Engine
 		DispatchPhase_MultiThread( dt, shader_bypass, idx, instance, shader, hit_records, &temp_context, instances );
 
 		
-		for ( const StructuredBufferDecorator* additional_sb : additional_sbs )
-		{
-			additional_sb->TransitionCommon( &temp_context );
-		}
 
 		sb.TransitionCommon( &temp_context );
 		temp_context.commandList->FlagReady();

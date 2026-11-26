@@ -233,9 +233,12 @@ namespace Engine
 			++idx;
 		}
 
+		// Shared buffers (lights, light view-projections) are read by lists recorded in parallel, so they are not transitioned
+		// here: they stay COMMON, are promoted implicitly on read and decay when their ExecuteCommandLists
+		// finishes (this engine submits one list per call). A tracked state shared
+		// across lists raced and recorded barriers with matching states.
 		for (const StructuredBufferDecorator* additional_sb : additional_sbs)
 		{
-			additional_sb->TransitionToSRV(&temp_context);
 			additional_sb->CopySRVHeap(&temp_context);
 		}
 		
@@ -287,10 +290,6 @@ namespace Engine
 			func(&temp_context);
 		}
 		
-		for (const StructuredBufferDecorator* additional_sb : additional_sbs)
-		{
-			additional_sb->TransitionCommon(&temp_context);
-		}
 
 		sb.TransitionCommon(&temp_context);
 		temp_context.commandList->FlagReady();
