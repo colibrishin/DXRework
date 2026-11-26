@@ -217,10 +217,11 @@ namespace Engine::Components
 		m_instances_.resize(m_count_, {});
 		m_params_.SetParam(particle_count_slot, static_cast<int>(m_count_));
 
+		// Life is the time a particle has lived (the shader adds dt and retires it past the duration).
 		for (auto& instance : m_instances_)
 		{
 			instance.SetActive(true);
-			instance.SetLife(m_duration_);
+			instance.SetLife(0.f);
 		}
 	}
 
@@ -229,11 +230,6 @@ namespace Engine::Components
 		std::lock_guard lock(m_instances_mutex_);
 		m_duration_ = duration;
 		m_params_.SetParam(duration_slot, m_duration_);
-
-		for (auto& instance : m_instances_)
-		{
-			instance.SetLife(m_duration_);
-		}
 	}
 
 	void ParticleRenderer::SetSize(const float size)

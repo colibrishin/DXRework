@@ -10,12 +10,12 @@ Engine::Graphics::SBs::InstanceParticleSB::InstanceParticleSB()
 
 void Engine::Graphics::SBs::InstanceParticleSB::SetLife(const float life)
 {
-    SetParam(6, life);
+    SetParam(5, life); // INST_PARTICLE_LIFE: fParam[1].y
 }
 
 void Engine::Graphics::SBs::InstanceParticleSB::SetActive(const bool active)
 {
-    SetParam(15, static_cast<int>(active));
+    SetParam(26, static_cast<int>(active)); // INST_PARTICLE_ACTIVE: iParam[6].z
 }
 
 void Engine::Graphics::SBs::InstanceParticleSB::SetVelocity(const Vector3& velocity)
