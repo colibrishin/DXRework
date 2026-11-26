@@ -8,6 +8,7 @@
 #include "ThrowIfFailed.h"
 #include "FrameRelease.h"
 #include "ResourceTypeValidation.h"
+#include "D3D12SamplerAddress.h"
 
 namespace Engine
 {
@@ -161,9 +162,9 @@ namespace Engine
 
         const D3D12_SAMPLER_DESC sampler{
             .Filter         = static_cast<D3D12_FILTER>( shader->GetSamplerFilter() ),
-            .AddressU       = static_cast<D3D12_TEXTURE_ADDRESS_MODE>( shader->GetSamplerAddressMode() ),
-            .AddressV       = static_cast<D3D12_TEXTURE_ADDRESS_MODE>( shader->GetSamplerAddressMode() ),
-            .AddressW       = static_cast<D3D12_TEXTURE_ADDRESS_MODE>( shader->GetSamplerAddressMode() ),
+            .AddressU       = ToD3D12AddressMode( shader->GetSamplerAddressMode() ),
+            .AddressV       = ToD3D12AddressMode( shader->GetSamplerAddressMode() ),
+            .AddressW       = ToD3D12AddressMode( shader->GetSamplerAddressMode() ),
             .MipLODBias     = 0,
             .MaxAnisotropy  = 0,
             .ComparisonFunc = static_cast<D3D12_COMPARISON_FUNC>( shader->GetSamplerFunction() ),

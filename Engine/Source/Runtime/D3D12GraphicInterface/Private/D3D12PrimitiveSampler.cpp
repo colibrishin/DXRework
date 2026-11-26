@@ -1,5 +1,6 @@
 #include "D3D12PrimitiveSampler.h"
 #include "D3D12GraphicInterface.h"
+#include "D3D12SamplerAddress.h"
 
 Engine::D3D12PrimitiveSampler::~D3D12PrimitiveSampler()
 { }
@@ -19,7 +20,7 @@ void Engine::D3D12PrimitiveSampler::Generate( eShaderSamplerAddress  addr,
     };
     dev->CreateDescriptorHeap( &desc, IID_PPV_ARGS( m_sampler_heap_.GetAddressOf() ) );
 
-    m_addr_ = static_cast<decltype( m_addr_ )>( addr );
+    m_addr_ = ToD3D12AddressMode( addr );
     m_func_ = static_cast<decltype( m_func_ )>( function );
     m_filter_ = static_cast<decltype( m_filter_ )>( filter );
 
