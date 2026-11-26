@@ -99,18 +99,28 @@ void closest_hit_main(inout Payload payload, Attributes attr)
 	v_vertex[1] = l_vertex[v_index.y];
 	v_vertex[2] = l_vertex[v_index.z];
 
-	// Barycentric interpolation of normal
-	const float3 baryNormal = v_vertex[0].normal * barycentrics.x +
-	                          v_vertex[1].normal * barycentrics.y +
-	                          v_vertex[2].normal * barycentrics.z;
+	// The vertices are in object space; lighting, reflection and the UV derivatives work in world space.
+	const float3x4 objectToWorld = ObjectToWorld3x4();
+	const float3x3 worldToObject = (float3x3)WorldToObject3x4();
 
-	const float3 baryTangent = v_vertex[0].tangent * barycentrics.x +
-	                           v_vertex[1].tangent * barycentrics.y +
-	                           v_vertex[2].tangent * barycentrics.z;
+	float3 w_position[3];
+	[unroll] for (uint vi = 0; vi < 3; ++vi)
+	{
+		w_position[vi] = mul(objectToWorld, float4(v_vertex[vi].position, 1.f));
+	}
 
-	const float3 baryBinormal = v_vertex[0].binormal * barycentrics.x +
-	                            v_vertex[1].binormal * barycentrics.y +
-	                            v_vertex[2].binormal * barycentrics.z;
+	// Barycentric interpolation of normal (normals use the inverse transpose)
+	const float3 baryNormal = normalize(mul(v_vertex[0].normal * barycentrics.x +
+	                                        v_vertex[1].normal * barycentrics.y +
+	                                        v_vertex[2].normal * barycentrics.z, worldToObject));
+
+	const float3 baryTangent = mul((float3x3)objectToWorld, v_vertex[0].tangent * barycentrics.x +
+	                                                        v_vertex[1].tangent * barycentrics.y +
+	                                                        v_vertex[2].tangent * barycentrics.z);
+
+	const float3 baryBinormal = mul((float3x3)objectToWorld, v_vertex[0].binormal * barycentrics.x +
+	                                                         v_vertex[1].binormal * barycentrics.y +
+	                                                         v_vertex[2].binormal * barycentrics.z);
 
 	float4 baryColor = float4(0.0f, 0.0f, 0.0f, 1.0f);
 	// Barycentric interpolation of coloring
@@ -139,8 +149,8 @@ void closest_hit_main(inout Payload payload, Attributes attr)
 			(
 			 cross
 			 (
-			  v_vertex[2].position - v_vertex[0].position,
-			  v_vertex[1].position - v_vertex[0].position
+			  w_position[2] - w_position[0],
+			  w_position[1] - w_position[0]
 			 )
 			);
 
@@ -157,8 +167,8 @@ void closest_hit_main(inout Payload payload, Attributes attr)
 	float3 yOffset = RayPlaneIntersection(hitPos, nonbary_normal, ddyOrigin, ddyDir);
 
 	// Compute the barycentric coordinates of the intersection points
-	float3 baryX = BarycentricCoordinates(xOffset, v_vertex[0].position, v_vertex[1].position, v_vertex[2].position);
-	float3 baryY = BarycentricCoordinates(yOffset, v_vertex[0].position, v_vertex[1].position, v_vertex[2].position);
+	float3 baryX = BarycentricCoordinates(xOffset, w_position[0], w_position[1], w_position[2]);
+	float3 baryY = BarycentricCoordinates(yOffset, w_position[0], w_position[1], w_position[2]);
 
 	// Compute the UV derivatives
 	float3x2 uvMat  = float3x2(v_vertex[0].tex, v_vertex[1].tex, v_vertex[2].tex);
