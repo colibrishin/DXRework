@@ -8,7 +8,14 @@
 
 namespace Engine
 {
-namespace Resources { class RaytracingShader; }
+namespace Resources { class RaytracingShader; class Mesh; }
+
+    // One top level instance: entry i uses hit record i and instance buffer element i.
+    struct RaytracingInstance
+    {
+        Resources::Mesh*                  mesh;
+        const Graphics::SBs::InstanceSB*  instance;
+    };
 
     struct ENGINE_RENDERPIPELINE_API IRaytracingExtension : public virtual IGraphicAPIBase
     {
@@ -39,11 +46,10 @@ namespace Resources { class RaytracingShader; }
         virtual void* GetRaytracingNativeInterface() = 0;
         virtual void* GetRaytracingNativePipeline()  = 0;
 
-        virtual bool BuildTopLevelAccelerationBuffer( const IGraphicContext*   context,
-                                                      RenderMap const*         render_map,
-                                                      size_t                   render_map_size,
-                                                      AccelStructBuffer&       out_tlas_buffer,
-                                                      const ObjectPredication& predication = {} ) = 0;
+        virtual bool BuildTopLevelAccelerationBuffer( const IGraphicContext*    context,
+                                                      const RaytracingInstance* instances,
+                                                      size_t                    instance_count,
+                                                      AccelStructBuffer&        out_tlas_buffer ) = 0;
 
         virtual void DispatchRay( const IGraphicContext*                                       context,
                                   const Resources::RaytracingShader*                           shader,

@@ -359,6 +359,12 @@ namespace Engine
 	{
 	    return m_index_buffer_view_.BufferLocation;
     }
+
+    uint64_t D3D12PrimitiveMesh::GetRaytracingIndexBufferGPUAddress() const
+	{
+	    // The copy made with the bottom level structure stays in NON_PIXEL_SHADER_RESOURCE.
+	    return m_raytracing_index_buffer_ ? m_raytracing_index_buffer_->GetGPUVirtualAddress() : GetNativeIndexBufferGPUAddress();
+    }
     const void* D3D12PrimitiveMesh::GetNativeVertexBufferInternal() const
     {
         return &m_vertex_buffer_view_;

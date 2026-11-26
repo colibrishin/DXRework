@@ -275,68 +275,26 @@ void* Engine::D3D12GraphicInterface::GetRaytracingNativePipeline()
 
 bool Engine::D3D12GraphicInterface::BuildTopLevelAccelerationBuffer(
     const IGraphicContext* context,
-    RenderMap const* render_map,
-    const size_t render_map_size,
-    AccelStructBuffer& out_tlas_buffer,
-    const ObjectPredication& predication)
+    const RaytracingInstance* instances,
+    const size_t instance_count,
+    AccelStructBuffer& out_tlas_buffer)
 {
     const auto& cmd = static_cast<CommandPair*>(context->commandList);
-    std::vector<D3D12_RAYTRACING_INSTANCE_DESC> instance_descs;
-    concurrent_fast_pool_map<Resources::ShaderBase*, size_t> hit_group_id;
+    std::vector<D3D12_RAYTRACING_INSTANCE_DESC> instance_descs(instance_count);
 
-    size_t shader_count = 0;
-    size_t instance_count = 0;
-    
-    for (size_t map_idx = 0; map_idx < render_map_size; ++map_idx)
+    // Entry i uses hit record i (InstanceContributionToHitGroupIndex, the rays add no offset) and reads instance
+    // buffer element i (InstanceIndex() in the shader).
+    for (size_t i = 0; i < instance_count; ++i)
     {
-        for (const auto& mesh_map : render_map[map_idx] | std::views::values)
-        {
-            for (const auto& [shader, shader_map] : mesh_map)
-            {
-                for (const auto& [mesh, instance] : shader_map)
-                {
-                    size_t current_hit_group;
-                    
-                    auto* const shader_ptr = static_cast<Resources::ShaderBase*>(shader.get());
-                    if (decltype(hit_group_id)::accessor acc;
-                        hit_group_id.find(acc, shader_ptr))
-                    {
-                        current_hit_group = acc->second;
-                    }
-                    else
-                    {
-                        hit_group_id.emplace(shader_ptr, shader_count);
-                        current_hit_group = shader_count;
-                        ++shader_count;
-                    }
-                    
-                    for (size_t i = 0; i < instance.size(); ++i)
-                    {
-                        if (predication && !predication(instance[i].object))
-                        {
-                            continue;
-                        }
-                        
-                        auto* const mesh_ptr = static_cast<Resources::Mesh*>(mesh.get());
-                        D3D12_RAYTRACING_INSTANCE_DESC desc
-                        {
-                            .Transform = {},
-                            .InstanceID = static_cast<UINT>(instance_count + i),
-                            .InstanceMask = 1,
-                            .InstanceContributionToHitGroupIndex = static_cast<UINT>(current_hit_group),
-                            .Flags = D3D12_RAYTRACING_INSTANCE_FLAG_NONE,
-                            .AccelerationStructure = mesh_ptr->GetBLAS().resultPool->GetResource<ID3D12Resource>()->GetGPUVirtualAddress()
-                        };
+        D3D12_RAYTRACING_INSTANCE_DESC& desc = instance_descs[i];
+        desc.InstanceID                          = static_cast<UINT>(i);
+        desc.InstanceMask                        = 1;
+        desc.InstanceContributionToHitGroupIndex = static_cast<UINT>(i);
+        desc.Flags                               = D3D12_RAYTRACING_INSTANCE_FLAG_NONE;
+        desc.AccelerationStructure = instances[i].mesh->GetBLAS().resultPool->GetResource<ID3D12Resource>()->GetGPUVirtualAddress();
 
-                        const auto& world = instance[i].instance->GetParam<Matrix>(0);
-                        SIMDExtension::_mm256_memcpy(desc.Transform, &world, sizeof(desc.Transform));
-                        instance_descs.push_back(desc);
-                    }
-
-                    instance_count += instance.size();
-                }
-            }
-        }
+        const auto& world = instances[i].instance->GetParam<Matrix>(0); // stored transposed: rows are the 3x4 rows
+        SIMDExtension::_mm256_memcpy(desc.Transform, &world, sizeof(desc.Transform));
     }
 
     if (!out_tlas_buffer.instanceDescPool)
@@ -487,9 +445,11 @@ void Engine::D3D12GraphicInterface::DispatchRay(
             case RAY_SHADER_REC_HIT:
                 {
                     auto resource = static_cast<ID3D12Resource*>(shader_primitive.GetShaderRecord(RAY_SHADER_REC_HIT));
+                    // One HitShaderRecord per top level instance (the serialized record size is not used).
+                    static_assert(sizeof(HitShaderRecord) % D3D12_RAYTRACING_SHADER_RECORD_BYTE_ALIGNMENT == 0);
                     ray_desc.HitGroupTable.StartAddress = resource->GetGPUVirtualAddress();
                     ray_desc.HitGroupTable.SizeInBytes = hit_records.size();
-                    ray_desc.HitGroupTable.StrideInBytes = record_sizes[i];
+                    ray_desc.HitGroupTable.StrideInBytes = sizeof(HitShaderRecord);
                     break;
                 }
             case RAY_SHADER_REC_MISS:

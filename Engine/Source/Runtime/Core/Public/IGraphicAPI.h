@@ -952,6 +952,8 @@ namespace Engine
             return static_cast<const T*>( GetNativeIndexBufferInternal() );
 		}
 	    [[nodiscard]] virtual uint64_t GetNativeIndexBufferGPUAddress() const = 0;
+	    // Index buffer the ray tracing hit shaders read (a shader resource, unlike the raster index buffer).
+	    [[nodiscard]] virtual uint64_t GetRaytracingIndexBufferGPUAddress() const { return GetNativeIndexBufferGPUAddress(); }
 	    [[nodiscard]] virtual uint64_t GetNativeVertexBufferGPUAddress() const = 0;
 
 	protected:

@@ -226,10 +226,18 @@ namespace Engine
             throw std::runtime_error("Unknown type iterated");
         }
         
+        // Hit records are one per instance (HitShaderRecord each) and every record starts with the identifier.
+        const bool   per_record = type == RAY_SHADER_REC_HIT;
+        const void*  id         = m_raytracing_pso_properties_->GetShaderIdentifier(key);
+
         char* copy_dst = nullptr;
         DX::ThrowIfFailed(hit_record->Map(0, nullptr, reinterpret_cast<void**>(&copy_dst)));
         SIMDExtension::_mm256_memcpy(copy_dst, records.data(), records.size());
-        std::memcpy(copy_dst, m_raytracing_pso_properties_->GetShaderIdentifier(key), D3D12_SHADER_IDENTIFIER_SIZE_IN_BYTES);
+        std::memcpy(copy_dst, id, D3D12_SHADER_IDENTIFIER_SIZE_IN_BYTES);
+        for (size_t offset = sizeof(HitShaderRecord); per_record && offset < records.size(); offset += sizeof(HitShaderRecord))
+        {
+            std::memcpy(copy_dst + offset, id, D3D12_SHADER_IDENTIFIER_SIZE_IN_BYTES);
+        }
         hit_record->Unmap(0, nullptr);
     }
 

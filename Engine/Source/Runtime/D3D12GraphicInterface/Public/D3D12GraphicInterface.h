@@ -68,11 +68,10 @@ namespace Engine
         void* GetRaytracingNativeInterface() override;
         void* GetRaytracingNativePipeline() override;
 
-        bool BuildTopLevelAccelerationBuffer( const IGraphicContext*   context,
-                                              RenderMap const*         render_map,
-                                              size_t                   render_map_size,
-                                              AccelStructBuffer&       out_tlas_buffer,
-                                              const ObjectPredication& predication = {} ) override;
+        bool BuildTopLevelAccelerationBuffer( const IGraphicContext*    context,
+                                              const RaytracingInstance* instances,
+                                              size_t                    instance_count,
+                                              AccelStructBuffer&        out_tlas_buffer ) override;
 
         void DispatchRay( const IGraphicContext*                                       context,
                           const Resources::RaytracingShader*                           shader,

@@ -24,24 +24,7 @@ namespace Engine
 
     void RaytracingRenderPassTask::PreRun(RenderMap const* render_map, const size_t render_map_count, const ObjectPredication& predication)
 	{
-	    IGraphicAPI& gi = g_graphic_accessor.GetInterface();
-
-        if ( IRaytracingExtension& rgi = g_graphic_accessor.GetRaytracingInterface();
-             rgi.ShouldUseRaytracing() )
-	    {
-	        const auto& context = gi.GetNewContext(0, false, L"Building Top Level Acceleration Buffer");
-	        const auto& primitive = context.GetPointers();
-	        primitive.commandList->SoftReset();
-	    
-	        rgi.BuildTopLevelAccelerationBuffer(
-                &primitive,
-                render_map,
-                render_map_count,
-                m_top_level_acceleration_buffer_,
-                predication);
-	    
-	        primitive.commandList->FlagReady();   
-	    }
+	    // The top level structure is built in Run, from the same instance list as the hit records and instance buffer.
 	}
 
 	void RaytracingRenderPassTask::Run(
@@ -65,68 +48,90 @@ namespace Engine
         if ( IRaytracingExtension& rgi = g_graphic_accessor.GetRaytracingInterface();
              rgi.ShouldUseRaytracing() )
 		{
-		    // Filter the instances by the predicate
-		    uint64_t instance_count = 0;
-		    IntermediateShaderMap intermediate_shader_map;
-		    PredicateObject(predicate, domain_map, instance_count, intermediate_shader_map);
-		    if (instance_count == 0)
+		    // One list feeds the top level structure, the hit records and the instance buffer, so TLAS entry i, hit
+		    // record i and instance i are the same object (the shader reads g_Instance[InstanceIndex()] and the hit
+		    // group index is i): instances of the ray tracing shader whose mesh has a bottom level structure, in mesh
+		    // order. Objects of other shaders are not traced.
+		    Strong<Resources::RaytracingShader>     shader;
+		    std::vector<RaytracingMeshInstancePair> meshes;
+		    aligned_vector<InstancePair>            instance_pairs;
+		    std::vector<RaytracingInstance>         tlas_instances;
+		    for (const auto& renderer : *domain_map | std::views::values)
+		    {
+		        for (const auto& [shader_resource, mesh_map] : renderer)
+		        {
+		            const Strong<Resources::RaytracingShader> rt_shader = Cast<Resources::RaytracingShader>(shader_resource);
+		            if (!rt_shader)
+		            {
+		                continue;
+		            }
+		            if (!shader)
+		            {
+		                shader = rt_shader;
+		            }
+		            else if (rt_shader != shader)
+		            {
+		                // One dispatch writes the whole output: a second shader would need its own hit groups.
+		                static std::atomic<bool> s_warned{ false };
+		                if (!s_warned.exchange(true))
+		                {
+		                    OutputDebugStringA("WARNING: ray tracing pass traces one ray tracing shader; others are skipped\n");
+		                }
+		                continue;
+		            }
+
+		            for (const auto& [mesh, instances] : mesh_map)
+		            {
+		                auto* const mesh_ptr = static_cast<Resources::Mesh*>(mesh.get());
+		                if (mesh_ptr->GetBLAS().empty)
+		                {
+		                    static std::atomic<bool> s_warned{ false };
+		                    if (!s_warned.exchange(true))
+		                    {
+		                        OutputDebugStringA("WARNING: ray tracing pass skips meshes without a bottom level structure\n");
+		                    }
+		                    continue;
+		                }
+
+		                size_t count = 0;
+		                for (const InstancePair& instance_pair : instances)
+		                {
+		                    if (predicate && !predicate(instance_pair.object))
+		                    {
+		                        continue;
+		                    }
+		                    instance_pairs.push_back(instance_pair);
+		                    tlas_instances.push_back({ mesh_ptr, instance_pair.instance });
+		                    ++count;
+		                }
+		                if (count != 0)
+		                {
+		                    meshes.emplace_back(mesh_ptr, count);
+		                }
+		            }
+		        }
+		    }
+
+		    if (instance_pairs.empty())
 		    {
 		        return;
 		    }
-		    rgi.ReserveRaytracingHeap(instance_count); // one hit record table per instance (upper bound)
 
-		    // The per-batch pools grow in advance(); sizing them to the instance count allocated one GPU buffer and one
-		    // descriptor heap per object (E_OUTOFMEMORY at ~5k objects).
+		    {
+		        IGraphicAPI& gi       = g_graphic_accessor.GetInterface();
+		        const auto&  context  = gi.GetNewContext(0, false, L"Building Top Level Acceleration Buffer");
+		        const auto&  primitive = context.GetPointers();
+		        primitive.commandList->SoftReset();
+		        rgi.BuildTopLevelAccelerationBuffer(&primitive, tlas_instances.data(), tlas_instances.size(),
+		                                            m_top_level_acceleration_buffer_);
+		        primitive.commandList->FlagReady();
+		    }
 
-            for (const auto& renderer : *domain_map | std::views::values)
-            {
-                tbb::parallel_for_each
-                    (
-                     renderer.begin(), renderer.end(),
-                     [this, &predicate, &dt, &shader_bypass, &additional_sbs, &local_param,
-                         &prerender_predicate, &postrender_predicate, &prerender_predicates, &postrender_predicates]
-                         (const ShaderMap::value_type& pair)
-                     {
-                         const Strong<Resources::RaytracingShader>& locked_shader =
-                                 Cast<Resources::RaytracingShader>(pair.first);
-                         if (!locked_shader)
-                         {
-                             return;
-                         }
+		    rgi.ReserveRaytracingHeap(instance_pairs.size()); // one hit record table per instance
 
-                         // Hit records index instance_pairs as [mesh offset + i], so the per-mesh counts and the
-                         // flattened list must come from the same predicate-filtered source, in mesh order.
-                         std::vector<RaytracingMeshInstancePair> meshes;
-                         aligned_vector<InstancePair>            instance_pairs;
-                         meshes.reserve(pair.second.size());
-                         for (const auto& [mesh, instances] : pair.second)
-                         {
-                             size_t count = 0;
-                             for (const InstancePair& instance_pair : instances)
-                             {
-                                 if (predicate && !predicate(instance_pair.object))
-                                 {
-                                     continue;
-                                 }
-                                 instance_pairs.push_back(instance_pair);
-                                 ++count;
-                             }
-                             if (count != 0)
-                             {
-                                 meshes.emplace_back(static_cast<Resources::Mesh*>(mesh.get()), count);
-                             }
-                         }
-
-                         if (!instance_pairs.empty())
-                         {
-                             StartPhase_MultiThread(
-                                  dt, shader_bypass, meshes, locked_shader.get(), additional_sbs, local_param,
-                                  prerender_predicate, postrender_predicate, prerender_predicates, postrender_predicates,
-                                  instance_pairs);
-                         }
-                     }
-                    );
-            }
+		    StartPhase_MultiThread(
+		         dt, shader_bypass, meshes, shader.get(), additional_sbs, local_param,
+		         prerender_predicate, postrender_predicate, prerender_predicates, postrender_predicates, instance_pairs);
 
 		    auto& gi = g_graphic_accessor.GetInterface();
 		    auto context = gi.GetNewContext(0, false, L"Lazy Shader Resource Texture Transition Back");
@@ -172,40 +177,6 @@ namespace Engine
 	    
 	        std::ranges::fill(m_used_shader_textures_, nullptr);
 	    }
-	}
-
-	void RaytracingRenderPassTask::PredicateObject(const ObjectPredication& predicate, RenderMap const* domain_map, uint64_t& instance_count, IntermediateShaderMap& out_map) const
-	{
-		out_map.clear();
-		
-		for (const auto& meshes : *domain_map | std::views::values)
-		{
-			tbb::parallel_for_each
-			(
-				meshes.begin(), meshes.end(), [&](const ShaderMap::value_type& shader_pair)
-				{
-					for (const aligned_vector<InstancePair>& instances : shader_pair.second | std::views::values)
-					{
-						for (const InstancePair& instance_pair : instances)
-						{
-							if (predicate && !predicate(instance_pair.object))
-							{
-								continue;
-							}
-
-							std::remove_reference_t<decltype(out_map)>::accessor acc;
-							if (!out_map.find(acc, static_cast<Resources::ShaderBase*>(shader_pair.first.get())))
-							{
-								out_map.insert(acc, static_cast<Resources::ShaderBase*>(shader_pair.first.get()));
-							}
-
-							acc->second.push_back(instance_pair);
-							std::atomic_ref(instance_count).fetch_add(1);
-						}
-					}
-				}
-			);
-		}
 	}
 
     void RaytracingRenderPassTask::StartPhase_MultiThread(
@@ -318,7 +289,7 @@ namespace Engine
 	            record.addresses[ RAYTRACING_LOCAL_SLOT_SAMPLER ] = heap->GetSamplerHeapGPUAddress(0);
 	            
 	            record.addresses[ RAYTRACING_LOCAL_SLOT_VERTEX ] = mesh->GetVertexStructuredBuffer().GetGPUAddress();
-	            record.addresses[ RAYTRACING_LOCAL_SLOT_INDEX ] = mesh->GetPrimitive()->GetNativeIndexBufferGPUAddress();
+	            record.addresses[ RAYTRACING_LOCAL_SLOT_INDEX ] = mesh->GetPrimitive()->GetRaytracingIndexBufferGPUAddress();
 	            
 	            hit_records.push_back(&record, sizeof(HitShaderRecord));
 	        }

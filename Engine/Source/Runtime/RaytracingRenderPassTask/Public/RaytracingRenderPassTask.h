@@ -78,10 +78,6 @@ namespace Engine
 		void Cleanup() override;
 
 	private:
-		using IntermediateShaderMap = concurrent_fast_pool_map<Resources::ShaderBase*, aligned_vector<InstancePair>>;
-		
-		inline void PredicateObject(const ObjectPredication& predicate, RenderMap const* domain_map, uint64_t& instance_count, IntermediateShaderMap& out_map) const;
-
         inline void
         StartPhase_MultiThread( float                                                             dt,
                                 bool                                                              shader_bypass,
