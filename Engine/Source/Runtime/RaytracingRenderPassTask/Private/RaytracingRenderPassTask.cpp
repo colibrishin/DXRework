@@ -1,6 +1,8 @@
 #include "RaytracingRenderPassTask.h"
 
 #include <ranges>
+#include <array>
+#include <unordered_map>
 #include <vector>
 #include <tbb/parallel_for_each.h>
 
@@ -12,11 +14,29 @@
 #include "Shape.h"
 #include "RaytracingShader.h"
 
+namespace
+{
+    // Texture pointers of one instance: instances with the same set share a hit group descriptor table.
+    using RaytracingTextureSet = std::array<const Engine::Abstracts::Resource*, Engine::g_max_texture_per_material>;
+
+    struct RaytracingTextureSetHash
+    {
+        size_t operator()(const RaytracingTextureSet& set) const noexcept
+        {
+            size_t h = 0;
+            for (const Engine::Abstracts::Resource* res : set)
+            {
+                h = h * 1000003u ^ std::hash<const void*>{}(res);
+            }
+            return h;
+        }
+    };
+}
+
 namespace Engine
 {
 	RaytracingRenderPassTask::RaytracingRenderPassTask()
         : m_gi_ticket_(SingletonSpinLock::GetInstance().Register()),
-          m_local_param_pool_ticket_(SingletonSpinLock::GetInstance().Register()),
           m_instance_pool_ticket_(SingletonSpinLock::GetInstance().Register()),
           m_texture_record_ticket_(SingletonSpinLock::GetInstance().Register()),
           m_heap_ticket_(SingletonSpinLock::GetInstance().Register()),
@@ -195,7 +215,6 @@ namespace Engine
         if ( IRaytracingExtension& rgi = g_graphic_accessor.GetRaytracingInterface();
              rgi.ShouldUseRaytracing() )
 	    {
-	        m_local_param_pool_.reset();
 	        m_instance_pool_.reset();
 	        m_local_heaps_.clear();
 
@@ -238,20 +257,12 @@ namespace Engine
 		const IGraphicContext& primitive = context.GetPointers();
 		primitive.commandList->SoftReset();
 
-		// Manual release
-		SpinLockToken local_param_token = SingletonSpinLock::GetInstance().Lock(m_local_param_pool_ticket_);
-		m_local_param_pool_.advance();
-		StructuredBufferTypeProxy<Graphics::SBs::LocalParamSB>& sb = m_local_param_pool_.get();
-		local_param_token.Release();
-
 		const IGraphicContext temp_context
 		{
 			.commandList = primitive.commandList,
 			.heap = nullptr
 		};
 
-		sb.SetData(&temp_context, 1, &local_param);
-		sb.TransitionToSRV(&temp_context);
 	    
 		gi.SetDefaultRenderTarget(&temp_context);
 		gi.SetViewport(&temp_context, Managers::RenderPipeline::GetInstance().GetViewport());
@@ -278,6 +289,7 @@ namespace Engine
 		// they stay COMMON, are promoted implicitly on read and decay when their ExecuteCommandLists
 		// finishes (this engine submits one list per call).
 	    
+	    std::unordered_map<RaytracingTextureSet, IHeapBase*, RaytracingTextureSetHash> tables;
 	    byte_stream& hit_records = GetByteStream();
 	    size_t instance_pos = 0;
 	    for ( const auto& [ mesh, instance_count ] : meshes )
@@ -286,36 +298,56 @@ namespace Engine
 	        {
 	            HitShaderRecord record{};
 
-	            // Manual Release
-	            auto token = SingletonSpinLock::GetInstance().Lock(m_heap_ticket_);
-	            m_local_heaps_.push_back( rgi.GetRaytracingHeap() );
-	            IHeapBase* heap = m_local_heaps_.back().get();
-	            token.Release();
+	            const InstancePair& pair = *instance_pairs[instance_pos + i];
 
-	            const IGraphicContext local_sig_context
-                    {
-                        .commandList = primitive.commandList,
-                        .heap = heap
-                    };
-	                
-	            for ( size_t j = 0; j < instance_pairs[instance_pos + i]->textures.size(); ++j )
+	            // Instances with the same textures share one descriptor table (the sampler table is shared by all):
+	            // only the hit record, which holds the mesh buffers, is per instance.
+	            RaytracingTextureSet key{};
+	            for ( size_t j = 0; j < pair.textures.size(); ++j )
 	            {
-	                if ( instance_pairs[instance_pos + i]->textures[j] )
+	                key[ j ] = pair.textures[ j ].get();
+	            }
+
+	            auto [ table, inserted ] = tables.try_emplace( key, nullptr );
+	            if ( inserted )
+	            {
+	                // Manual Release
+	                auto token = SingletonSpinLock::GetInstance().Lock(m_heap_ticket_);
+	                m_local_heaps_.push_back( rgi.GetRaytracingHeap() );
+	                table->second = m_local_heaps_.back().get();
+	                token.Release();
+
+	                const IGraphicContext local_sig_context
 	                {
-	                    RecordUsedTexture( &local_sig_context, gi, instance_pairs[instance_pos + i]->textures[j] );
-	                    instance_pairs[instance_pos + i]->instance->SetTextureSlot( j, static_cast<int>( j ) ); // bound at BIND_SLOT_TEX + j below
-	                    gi.Bind( &local_sig_context, instance_pairs[instance_pos + i]->textures[j].get(), BIND_TYPE_SRV, BIND_SLOT_TEX, j );
+	                    .commandList = primitive.commandList,
+	                    .heap = table->second
+	                };
+
+	                for ( size_t j = 0; j < pair.textures.size(); ++j )
+	                {
+	                    if ( pair.textures[j] )
+	                    {
+	                        RecordUsedTexture( &local_sig_context, gi, pair.textures[j] );
+	                        gi.Bind( &local_sig_context, pair.textures[j].get(), BIND_TYPE_SRV, BIND_SLOT_TEX, j );
+	                    }
+	                }
+
+	                // raytracing.hlsl reads only tex[] and PSSampler through the local tables (lights, instances and
+	                // parameters come from the global root arguments), so the structured buffers are not copied here.
+	                if ( tables.size() == 1 )
+	                {
+	                    table->second->SetSampler( shader, SAMPLER_TEXTURE );
 	                }
 	            }
+	            IHeapBase* heap = table->second;
 
-	            sb.CopySRVHeap( &local_sig_context );
-	                
-	            for ( const StructuredBufferDecorator* additional_sb : additional_sbs )
+	            for ( size_t j = 0; j < pair.textures.size(); ++j )
 	            {
-	                additional_sb->CopySRVHeap( &local_sig_context );
+	                if ( pair.textures[j] )
+	                {
+	                    pair.instance->SetTextureSlot( j, static_cast<int>( j ) ); // bound at BIND_SLOT_TEX + j
+	                }
 	            }
-
-	            heap->SetSampler( shader, SAMPLER_TEXTURE );
 
 	            record.addresses[ RAYTRACING_LOCAL_SLOT_SRV ] = heap->GetBufferHeapGPUAddress( g_local_raytracing_srv_offset );
 	            record.addresses[ RAYTRACING_LOCAL_SLOT_UAV ] = heap->GetBufferHeapGPUAddress( g_local_raytracing_uav_offset );
@@ -334,7 +366,6 @@ namespace Engine
 
 		
 
-		sb.TransitionCommon( &temp_context );
 		temp_context.commandList->FlagReady();
 	}
 
