@@ -38,9 +38,15 @@ namespace Engine
             }
         }
 
-        // Makes this frame's heap hold at least tables tables and returns the CPU handle of its output UAV slot.
-        D3D12_CPU_DESCRIPTOR_HANDLE BeginFrame(const UINT tables)
+        // Tables one shader-visible heap can hold on every resource binding tier (plus the output UAV).
+        static constexpr UINT s_max_tables =
+                (D3D12_MAX_SHADER_VISIBLE_DESCRIPTOR_HEAP_SIZE_TIER_1 - 1) / g_local_raytracing_total_engine_slots;
+
+        // Makes this frame's heap hold min(tables, s_max_tables) tables; returns that count and the CPU handle of the
+        // output UAV slot.
+        UINT BeginFrame(UINT tables, D3D12_CPU_DESCRIPTOR_HANDLE& output)
         {
+            tables = (std::min)(tables, s_max_tables);
             std::lock_guard<std::mutex> l(m_slot_mutex_);
             const uint64_t frame     = RecordingFrame();
             const size_t   slot      = frame % g_max_frames_in_flight;
@@ -50,7 +56,7 @@ namespace Engine
             if (!m_main_descriptor_heap_[slot] || m_capacity_[slot] < tables || rewritten)
             {
                 KeepUntilFrameDone(std::move(m_main_descriptor_heap_[slot]));
-                const UINT capacity = (std::max)(tables + tables / 2, 64u);
+                const UINT capacity = (std::min)((std::max)(tables + tables / 2, 64u), s_max_tables);
                 const D3D12_DESCRIPTOR_HEAP_DESC desc{ .Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV,
                                                        .NumDescriptors = capacity * g_local_raytracing_total_engine_slots + 1,
                                                        .Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE,
@@ -61,8 +67,9 @@ namespace Engine
 
             m_slot_ = slot;
             m_next_.store(0);
-            return CD3DX12_CPU_DESCRIPTOR_HANDLE(m_main_descriptor_heap_[slot]->GetCPUDescriptorHandleForHeapStart(),
-                                                 OutputIndex(slot), m_buffer_size_);
+            output = CD3DX12_CPU_DESCRIPTOR_HANDLE(m_main_descriptor_heap_[slot]->GetCPUDescriptorHandleForHeapStart(),
+                                                   OutputIndex(slot), m_buffer_size_);
+            return tables;
         }
 
         [[nodiscard]] ID3D12DescriptorHeap* GetBufferHeap() const { return GetMainDescriptorHeap(m_slot_); }

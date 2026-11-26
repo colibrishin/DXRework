@@ -251,11 +251,13 @@ void Engine::D3D12GraphicInterface::InitializeRaytracing()
 
 void                                    Engine::D3D12GraphicInterface::ShutdownRaytracing() { }
 
-void Engine::D3D12GraphicInterface::ReserveRaytracingHeap(const size_t tables)
+size_t Engine::D3D12GraphicInterface::ReserveRaytracingHeap(const size_t tables)
 {
-    CheckSize<UINT>(tables, L"Warning: too many ray tracing descriptor tables!");
-    const D3D12_CPU_DESCRIPTOR_HANDLE output = m_raytracing_heap_handler_->BeginFrame(static_cast<UINT>(tables));
+    D3D12_CPU_DESCRIPTOR_HANDLE output{};
+    const UINT reserved = m_raytracing_heap_handler_->BeginFrame(
+        static_cast<UINT>((std::min)(tables, static_cast<size_t>(raytracing_frame_heap::s_max_tables))), output);
     m_dev_->CreateUnorderedAccessView(m_output_buffer_.Get(), nullptr, nullptr, output);
+    return reserved;
 }
 
 Engine::Unique<Engine::IHeapBase> Engine::D3D12GraphicInterface::GetRaytracingHeap()
@@ -447,6 +449,7 @@ void Engine::D3D12GraphicInterface::DispatchRay(
                     auto resource = static_cast<ID3D12Resource*>(shader_primitive.GetShaderRecord(RAY_SHADER_REC_HIT));
                     // One HitShaderRecord per top level instance (the serialized record size is not used).
                     static_assert(sizeof(HitShaderRecord) % D3D12_RAYTRACING_SHADER_RECORD_BYTE_ALIGNMENT == 0);
+                    static_assert(offsetof(HitShaderRecord, addresses) == D3D12_SHADER_IDENTIFIER_SIZE_IN_BYTES); // local args follow the identifier
                     ray_desc.HitGroupTable.StartAddress = resource->GetGPUVirtualAddress();
                     ray_desc.HitGroupTable.SizeInBytes = hit_records.size();
                     ray_desc.HitGroupTable.StrideInBytes = sizeof(HitShaderRecord);

@@ -39,7 +39,8 @@ namespace Resources { class RaytracingShader; class Mesh; }
         }
 
         // Hit record descriptor tables come from one heap per frame: reserve the frame's table count before taking any.
-        virtual void               ReserveRaytracingHeap( size_t tables ) = 0;
+        // Returns how many were reserved (one shader-visible heap caps it).
+        virtual size_t             ReserveRaytracingHeap( size_t tables ) = 0;
         virtual Unique<IHeapBase>  GetRaytracingHeap()      = 0;
         virtual IRaytracingShader* GetNewRaytracingShader() = 0;
 

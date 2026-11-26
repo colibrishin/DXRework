@@ -61,7 +61,7 @@ namespace Engine
         void ShutdownRaytracing() override;
 
         Unique<IHeapBase> GetRaytracingHeap() override;
-        void              ReserveRaytracingHeap(size_t tables) override;
+        size_t            ReserveRaytracingHeap(size_t tables) override;
 
         IRaytracingShader* GetNewRaytracingShader() override;
 

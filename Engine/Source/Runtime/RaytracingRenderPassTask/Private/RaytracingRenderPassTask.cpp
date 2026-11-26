@@ -117,6 +117,29 @@ namespace Engine
 		        return;
 		    }
 
+		    // One hit record table per instance, from one shader-visible heap: past its size the rest is not traced.
+		    if (const size_t reserved = rgi.ReserveRaytracingHeap(instance_pairs.size()); reserved < instance_pairs.size())
+		    {
+		        static std::atomic<bool> s_warned{ false };
+		        if (!s_warned.exchange(true))
+		        {
+		            OutputDebugStringA("WARNING: ray tracing pass traces only the instances one descriptor heap holds\n");
+		        }
+		        instance_pairs.resize(reserved);
+		        tlas_instances.resize(reserved);
+		        size_t kept = 0;
+		        for (auto it = meshes.begin(); it != meshes.end(); ++it)
+		        {
+		            if (kept + it->instanceCount >= reserved)
+		            {
+		                it->instanceCount = reserved - kept;
+		                meshes.erase(it->instanceCount == 0 ? it : it + 1, meshes.end());
+		                break;
+		            }
+		            kept += it->instanceCount;
+		        }
+		    }
+
 		    {
 		        IGraphicAPI& gi       = g_graphic_accessor.GetInterface();
 		        const auto&  context  = gi.GetNewContext(0, false, L"Building Top Level Acceleration Buffer");
@@ -126,8 +149,6 @@ namespace Engine
 		                                            m_top_level_acceleration_buffer_);
 		        primitive.commandList->FlagReady();
 		    }
-
-		    rgi.ReserveRaytracingHeap(instance_pairs.size()); // one hit record table per instance
 
 		    StartPhase_MultiThread(
 		         dt, shader_bypass, meshes, shader.get(), additional_sbs, local_param,
