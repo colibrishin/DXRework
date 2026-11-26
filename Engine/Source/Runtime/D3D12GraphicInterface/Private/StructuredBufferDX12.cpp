@@ -144,7 +144,8 @@ void Engine::Graphics::D3D12StructuredBufferTypeless::SetData(const IGraphicCont
 
 	if (m_size_ < size)
 	{
-		Create(context, size, src_ptr, stride, uav);
+		// Without the data: it is copied below (Create would write this frame's upload buffer a first time).
+		Create(context, size, nullptr, stride, uav);
 	}
 
 	if (src_ptr == nullptr)
