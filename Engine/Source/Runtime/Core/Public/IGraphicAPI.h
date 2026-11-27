@@ -1538,6 +1538,9 @@ namespace Engine
         Unique<GraphicMemoryPool> resultPool;
         Unique<GraphicMemoryPool> scratchPool;
 
+        // Top level only: the instance descriptions the structure was last built from.
+        std::vector<uint8_t> builtInstances;
+
         bool empty = true;
     };
 

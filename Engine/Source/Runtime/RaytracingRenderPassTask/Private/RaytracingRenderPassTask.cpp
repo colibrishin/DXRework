@@ -60,8 +60,13 @@ namespace Engine
 		const std::unordered_map<std::string_view, ContextSetupFunction>& postrender_predicates
 	)
 	{
+		// Without a TLAS build this frame, a BLAS may be freed and another one created at its address before the next
+		// build: forget the last build so the next one is not skipped as unchanged.
+		const auto forget_tlas = [this] { m_top_level_acceleration_buffer_.builtInstances.clear(); };
+
 		if (domain_map->empty())
 		{
+			forget_tlas();
 			return;
 		}
 
@@ -147,6 +152,7 @@ namespace Engine
 
 		    if (instance_pairs.empty())
 		    {
+		        forget_tlas();
 		        return;
 		    }
 
@@ -207,6 +213,10 @@ namespace Engine
 		    }
             rgi.CopyRaytracingToRenderTarget( &primitive );
 		    primitive.commandList->FlagReady();
+		}
+		else
+		{
+			forget_tlas();
 		}
 	}
 

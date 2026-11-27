@@ -299,6 +299,20 @@ bool Engine::D3D12GraphicInterface::BuildTopLevelAccelerationBuffer(
         SIMDExtension::_mm256_memcpy(desc.Transform, &world, sizeof(desc.Transform));
     }
 
+    // Nothing moved, appeared or disappeared since the last build: the structure is still valid.
+    static const bool s_always_rebuild = []
+    {
+        const char* v = std::getenv("KOLIBRI_RT_TLAS_REBUILD");
+        return v && v[0] == '1';
+    }();
+    const size_t instance_bytes = instance_descs.size() * sizeof(D3D12_RAYTRACING_INSTANCE_DESC);
+    if (!s_always_rebuild && !out_tlas_buffer.empty && out_tlas_buffer.resultPool &&
+        out_tlas_buffer.builtInstances.size() == instance_bytes &&
+        std::memcmp(out_tlas_buffer.builtInstances.data(), instance_descs.data(), instance_bytes) == 0)
+    {
+        return true;
+    }
+
     if (!out_tlas_buffer.instanceDescPool)
     {
         out_tlas_buffer.instanceDescPool = std::make_unique<D3D12GraphicMemoryPool<D3D12_RAYTRACING_INSTANCE_DESCS_BYTE_ALIGNMENT, D3D12_HEAP_TYPE_UPLOAD, D3D12_RESOURCE_FLAG_NONE, D3D12_RESOURCE_STATE_GENERIC_READ>>();
@@ -357,6 +371,8 @@ bool Engine::D3D12GraphicInterface::BuildTopLevelAccelerationBuffer(
     const auto& uav_barrier = CD3DX12_RESOURCE_BARRIER::UAV(out_tlas_buffer.resultPool->GetResource<ID3D12Resource>());
     cmd->GetList4()->ResourceBarrier(1, &uav_barrier);
 
+    const auto* desc_bytes = reinterpret_cast<const uint8_t*>(instance_descs.data());
+    out_tlas_buffer.builtInstances.assign(desc_bytes, desc_bytes + instance_bytes);
     out_tlas_buffer.empty = false;
 
     return true;
