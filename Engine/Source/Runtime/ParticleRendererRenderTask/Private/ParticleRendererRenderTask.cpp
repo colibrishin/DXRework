@@ -24,7 +24,8 @@ namespace Engine
     }
 
     ParticleRendererRenderInstanceTask::ParticleRendererRenderInstanceTask() :
-        m_instance_ticket_(SingletonSpinLock::GetInstance().Register())
+        m_instance_ticket_(SingletonSpinLock::GetInstance().Register()),
+        m_block_ticket_(SingletonSpinLock::GetInstance().Register())
     {}
 
     void ParticleRendererRenderInstanceTask::Run(
@@ -34,6 +35,15 @@ namespace Engine
     )
     {
         const auto &prs = scene->GetCachedComponentsConcurrent<Components::ParticleRenderer>();
+
+        static const bool legacy = []
+        {
+            const auto set = []( const char* name ) { const char* v = std::getenv( name ); return v && v[ 0 ] == '1'; };
+            const bool on = set( "KOLIBRI_PARTICLE_LEGACY" ) || set( "KOLIBRI_RENDER_LEGACY" );
+            OutputDebugStringA( on ? "KOLIBRI particles: one render entry per particle (KOLIBRI_PARTICLE_LEGACY)\n"
+                                   : "KOLIBRI particles: one render entry per emitter mesh\n" );
+            return on;
+        }();
 
         tbb::parallel_for_each(
                 prs.begin(),
@@ -120,9 +130,21 @@ namespace Engine
                                 tmpl.reservedTextures[ RESERVED_USER_TEX_ATLAS - RESERVED_USER_TEX_BEGIN ] = atlas;
                             }
 
-                            // Build outside the render map lock, so emitters run in parallel.
-                            aligned_vector<InstancePair> pairs( active, tmpl );
-                            GetInstances( active, pairs );
+                            // Build outside the render map lock, so emitters run in parallel. One entry draws the emitter's
+                            // instances from a contiguous block; KOLIBRI_PARTICLE_LEGACY=1 (or KOLIBRI_RENDER_LEGACY=1) keeps
+                            // one entry per particle.
+                            aligned_vector<InstancePair> pairs;
+                            if ( legacy )
+                            {
+                                pairs.assign( active, tmpl );
+                                GetInstances( active, pairs );
+                            }
+                            else
+                            {
+                                tmpl.instance      = GetBlock( active );
+                                tmpl.instanceCount = active;
+                            }
+
                             size_t k = 0;
                             for ( auto &particle : particles )
                             {
@@ -131,7 +153,8 @@ namespace Engine
                                     continue;
                                 }
 
-                                Graphics::SBs::InstanceSB &instance = *pairs[ k++ ].instance;
+                                Graphics::SBs::InstanceSB &instance = legacy ? *pairs[ k ].instance : tmpl.instance[ k ];
+                                ++k;
                                 instance = particle;
                                 if ( follow_owner )
                                 {
@@ -161,7 +184,14 @@ namespace Engine
                             }
 
                             auto &list = mesh_acc->second;
-                            list.insert( list.end(), std::make_move_iterator( pairs.begin() ), std::make_move_iterator( pairs.end() ) );
+                            if ( legacy )
+                            {
+                                list.insert( list.end(), std::make_move_iterator( pairs.begin() ), std::make_move_iterator( pairs.end() ) );
+                            }
+                            else
+                            {
+                                list.push_back( std::move( tmpl ) );
+                            }
                         }
                     }
         });
@@ -176,6 +206,22 @@ namespace Engine
         }
 
         m_used_count_ = 0;
+        m_blocks_used_ = 0;
+    }
+
+    Graphics::SBs::InstanceSB* ParticleRendererRenderInstanceTask::GetBlock( const size_t count )
+    {
+        // Reused every frame after Cleanup; the passes copy the block when they record.
+        SpinLockToken token = SingletonSpinLock::GetInstance().Lock( m_block_ticket_ );
+        if ( m_blocks_used_ == m_blocks_.size() )
+        {
+            m_blocks_.push_back( std::make_unique<aligned_vector<Graphics::SBs::InstanceSB>>() );
+        }
+        aligned_vector<Graphics::SBs::InstanceSB>& block = *m_blocks_[ m_blocks_used_++ ];
+        token.Release();
+
+        block.resize( count );
+        return block.data();
     }
 
     void ParticleRendererRenderInstanceTask::GetInstances( const size_t count, aligned_vector<InstancePair>& out )
