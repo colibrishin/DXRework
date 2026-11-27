@@ -53,7 +53,7 @@ void Engine::RaytracingExtension::SetRaytracing( const bool flag )
 #if CFG_RENDERTYPE_FORWARDONLY
     for (size_t i = 0; i < SHADER_DOMAIN_MAX; ++i)
     {
-        RenderPass(!flag)( df_type_name_wstr, (eShaderDomain)i );
+        RenderPass(!flag)( fd_type_name_wstr, (eShaderDomain)i );
     }
 #endif
 }
