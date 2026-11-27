@@ -21,6 +21,8 @@ namespace Engine
         virtual RenderPassTask* New() = 0;
         virtual void Release( RenderPassTask* task ) = 0;
         [[nodiscard]] virtual HashType GetTaskType() const = 0;
+        // Passes of one domain run in ascending order (then by name). A task sets it with a static RenderPassOrder.
+        [[nodiscard]] virtual int GetOrder() const { return 0; }
     };
 
     template <typename T> requires std::is_base_of_v<RenderPassTask, T>
@@ -56,6 +58,18 @@ namespace Engine
         [[nodiscard]] HashType GetTaskType() const override
         {
             return T::StaticTypeHash();
+        }
+
+        [[nodiscard]] int GetOrder() const override
+        {
+            if constexpr ( requires { T::RenderPassOrder; } )
+            {
+                return T::RenderPassOrder;
+            }
+            else
+            {
+                return 0;
+            }
         }
 
     private:

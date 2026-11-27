@@ -24,6 +24,9 @@ namespace Engine
 	struct ENGINE_RAYTRACINGRENDERPASSTASK_API RaytracingRenderPassTask : RenderPassTask
 	{
 		GENERATE_BODY
+		// Before the raster passes of the same domain: they draw over the ray traced image.
+		static constexpr int RenderPassOrder = -10;
+
 		RaytracingRenderPassTask();
 
 		RaytracingRenderPassTask( RaytracingRenderPassTask&& other ) noexcept

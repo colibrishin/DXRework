@@ -1,5 +1,7 @@
 #include "Renderer.h"
 
+#include <algorithm>
+
 #include "ConcurrentTypeLibrary.h"
 #include "ModuleManager.h"
 #include "RenderPipeline.h"
@@ -57,7 +59,22 @@ namespace Engine::Managers
 	{
 		for (size_t i = 0; i < SHADER_DOMAIN_MAX; ++i)
 		{
-			for (IRenderPassTaskFactory* factory : m_render_pass_tasks_factories_[i] | std::views::values)
+			// Sorted every frame (a domain has a few passes): a pass may come or go with its module.
+			std::vector<std::pair<const std::wstring*, IRenderPassTaskFactory*>> passes;
+			passes.reserve( m_render_pass_tasks_factories_[ i ].size() );
+			for ( const auto& [ name, factory ] : m_render_pass_tasks_factories_[ i ] )
+			{
+				passes.emplace_back( &name, factory );
+			}
+			std::ranges::sort( passes,
+			                   []( const auto& a, const auto& b )
+			                   {
+				                   const int oa = a.second->GetOrder();
+				                   const int ob = b.second->GetOrder();
+				                   return oa != ob ? oa < ob : *a.first < *b.first;
+			                   } );
+
+			for ( IRenderPassTaskFactory* factory : passes | std::views::values )
 			{
                 RenderPassAssisted( factory,
                                     dt,
