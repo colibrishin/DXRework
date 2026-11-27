@@ -320,10 +320,30 @@ bool Engine::D3D12GraphicInterface::BuildTopLevelAccelerationBuffer(
     
     out_tlas_buffer.instanceDescPool->Update(instance_descs.data(), instance_descs.size(), sizeof(D3D12_RAYTRACING_INSTANCE_DESC));
 
+    // Only transforms changed (same instances on the same bottom level structures): update the structure in place
+    // instead of rebuilding it. Updates lower the trace quality, so rebuild after a number of them.
+    constexpr uint32_t updates_per_rebuild = 60;
+    bool update = !s_always_rebuild && !out_tlas_buffer.empty && out_tlas_buffer.resultPool &&
+                  out_tlas_buffer.builtInstances.size() == instance_bytes &&
+                  out_tlas_buffer.updatesSinceBuild < updates_per_rebuild;
+    if (update)
+    {
+        const auto* built = reinterpret_cast<const D3D12_RAYTRACING_INSTANCE_DESC*>(out_tlas_buffer.builtInstances.data());
+        for (size_t i = 0; i < instance_count; ++i)
+        {
+            if (built[i].AccelerationStructure != instance_descs[i].AccelerationStructure)
+            {
+                update = false;
+                break;
+            }
+        }
+    }
+
     const D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_INPUTS tlas_input
     {
         .Type = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_TYPE_TOP_LEVEL,
-        .Flags = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_PREFER_FAST_TRACE,
+        .Flags = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_PREFER_FAST_TRACE |
+                 D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_ALLOW_UPDATE,
         .NumDescs = static_cast<UINT>(instance_descs.size()),
         .DescsLayout = D3D12_ELEMENTS_LAYOUT_ARRAY,
         .InstanceDescs = out_tlas_buffer.instanceDescPool->GetResource<ID3D12Resource>()->GetGPUVirtualAddress()
@@ -342,7 +362,8 @@ bool Engine::D3D12GraphicInterface::BuildTopLevelAccelerationBuffer(
         prebuild_info.ResultDataMaxSizeInBytes, D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BYTE_ALIGNMENT);
 
     const auto& scratch_size = Align(
-        prebuild_info.ScratchDataSizeInBytes, D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BYTE_ALIGNMENT);
+        std::max(prebuild_info.ScratchDataSizeInBytes, prebuild_info.UpdateScratchDataSizeInBytes),
+        D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BYTE_ALIGNMENT);
 
     if (!out_tlas_buffer.scratchPool)
     {
@@ -358,13 +379,24 @@ bool Engine::D3D12GraphicInterface::BuildTopLevelAccelerationBuffer(
     // never grew when instances were added.
     constexpr UINT64 unit = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BYTE_ALIGNMENT;
     out_tlas_buffer.scratchPool->Update(nullptr, scratch_size / unit, unit);
+    // Read only after a build: a new pool has no resource yet.
+    const ID3D12Resource* const last_result = update ? out_tlas_buffer.resultPool->GetResource<ID3D12Resource>() : nullptr;
     out_tlas_buffer.resultPool->Update(nullptr, result_size / unit, unit);
+    if (update && out_tlas_buffer.resultPool->GetResource<ID3D12Resource>() != last_result)
+    {
+        update = false; // the result buffer was replaced: nothing to update from
+    }
 
     D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_DESC build_desc = {};
 
     build_desc.Inputs                           = tlas_input;
     build_desc.DestAccelerationStructureData    = out_tlas_buffer.resultPool->GetResource<ID3D12Resource>()->GetGPUVirtualAddress();
     build_desc.ScratchAccelerationStructureData = out_tlas_buffer.scratchPool->GetResource<ID3D12Resource>()->GetGPUVirtualAddress();
+    if (update)
+    {
+        build_desc.Inputs.Flags |= D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_PERFORM_UPDATE;
+        build_desc.SourceAccelerationStructureData = build_desc.DestAccelerationStructureData;
+    }
 
     cmd->GetList4()->BuildRaytracingAccelerationStructure(&build_desc, 0, nullptr);
 
@@ -373,6 +405,7 @@ bool Engine::D3D12GraphicInterface::BuildTopLevelAccelerationBuffer(
 
     const auto* desc_bytes = reinterpret_cast<const uint8_t*>(instance_descs.data());
     out_tlas_buffer.builtInstances.assign(desc_bytes, desc_bytes + instance_bytes);
+    out_tlas_buffer.updatesSinceBuild = update ? out_tlas_buffer.updatesSinceBuild + 1 : 0;
     out_tlas_buffer.empty = false;
 
     return true;

@@ -1540,6 +1540,8 @@ namespace Engine
 
         // Top level only: the instance descriptions the structure was last built from.
         std::vector<uint8_t> builtInstances;
+        // Top level only: in-place updates since the last full build.
+        uint32_t updatesSinceBuild = 0;
 
         bool empty = true;
     };
