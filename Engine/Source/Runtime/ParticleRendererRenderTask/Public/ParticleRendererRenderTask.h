@@ -21,7 +21,8 @@ namespace Engine
 
 		void Cleanup(RenderMap* render_map, const size_t map_size) override;
         
-        Graphics::SBs::InstanceSB* GetInstance();
+        // Instances for count pairs, from the per-frame pool.
+        void GetInstances(size_t count, aligned_vector<InstancePair>& out);
 
         SpinLockTicket m_instance_ticket_;
         aligned_vector<Graphics::SBs::InstanceSB*> m_instance_generated_;
