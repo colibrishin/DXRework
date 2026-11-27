@@ -289,12 +289,13 @@ bool Engine::D3D12GraphicInterface::BuildTopLevelAccelerationBuffer(
     std::vector<D3D12_RAYTRACING_INSTANCE_DESC> instance_descs(instance_count);
 
     // Entry i uses hit record i (InstanceContributionToHitGroupIndex, the rays add no offset) and reads instance
-    // buffer element i (InstanceIndex() in the shader).
+    // buffer element i (InstanceIndex() in the shader). A raster object has mask 2 (primary rays trace mask 1) and
+    // bit 23 of its InstanceID set (the shader reads its textures in the raster material layout).
     for (size_t i = 0; i < instance_count; ++i)
     {
         D3D12_RAYTRACING_INSTANCE_DESC& desc = instance_descs[i];
-        desc.InstanceID                          = static_cast<UINT>(i);
-        desc.InstanceMask                        = 1;
+        desc.InstanceID                          = static_cast<UINT>(i) | (instances[i].raster ? 0x800000u : 0u);
+        desc.InstanceMask                        = instances[i].raster ? 2 : 1;
         desc.InstanceContributionToHitGroupIndex = static_cast<UINT>(i);
         desc.Flags                               = D3D12_RAYTRACING_INSTANCE_FLAG_NONE;
         desc.AccelerationStructure = instances[i].mesh->GetBLAS().resultPool->GetResource<ID3D12Resource>()->GetGPUVirtualAddress();

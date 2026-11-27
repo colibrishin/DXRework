@@ -15,6 +15,8 @@ namespace Resources { class RaytracingShader; class Mesh; }
     {
         Resources::Mesh*                  mesh;
         const Graphics::SBs::InstanceSB*  instance;
+        // Drawn by the raster passes: hidden from primary rays, seen by shadow and reflection rays.
+        bool                              raster = false;
     };
 
     struct ENGINE_RENDERPIPELINE_API IRaytracingExtension : public virtual IGraphicAPIBase

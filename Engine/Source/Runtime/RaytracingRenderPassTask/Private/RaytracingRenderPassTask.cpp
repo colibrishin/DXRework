@@ -13,6 +13,7 @@
 #include "Material.h"
 #include "Shape.h"
 #include "RaytracingShader.h"
+#include "Shader.h"
 
 namespace
 {
@@ -76,7 +77,7 @@ namespace Engine
 		    // One list feeds the top level structure, the hit records and the instance buffer, so TLAS entry i, hit
 		    // record i and instance i are the same object (the shader reads g_Instance[InstanceIndex()] and the hit
 		    // group index is i): instances of the ray tracing shader whose mesh has a bottom level structure, in mesh
-		    // order. Objects of other shaders are not traced.
+		    // order, then those of graphic shaders (drawn by the raster passes; traced for shadows and reflections).
 		    Strong<Resources::RaytracingShader>     shader;
 		    std::vector<RaytracingMeshInstancePair> meshes;
 		    std::vector<const InstancePair*>        instance_pairs; // into the render map, valid during Run
@@ -94,6 +95,56 @@ namespace Engine
 		    }
 		    instance_pairs.reserve(upper_bound);
 		    tlas_instances.reserve(upper_bound);
+		    // Raster objects (raster == true) are traced only by the shadow and reflection rays (instance mask 2), and only
+		    // scene objects: the layers the shadow maps leave out (camera, UI, environment, lights, skybox) neither occlude
+		    // nor reflect.
+		    const auto collect = [&](const auto& mesh_map, const bool raster)
+		    {
+		        for (const auto& [mesh, instances] : mesh_map)
+		        {
+		            auto* const mesh_ptr = static_cast<Resources::Mesh*>(mesh.get());
+		            if (mesh_ptr->GetBLAS().empty || !mesh_ptr->GetBLAS().resultPool || !mesh_ptr->GetPrimitive())
+		            {
+		                static std::atomic<bool> s_warned{ false };
+		                if (!s_warned.exchange(true))
+		                {
+		                    OutputDebugStringA("WARNING: ray tracing pass skips meshes without a bottom level structure\n");
+		                }
+		                continue;
+		            }
+
+		            size_t count = 0;
+		            for (const InstancePair& instance_pair : instances)
+		            {
+		                if (predicate && !predicate(instance_pair.object))
+		                {
+		                    continue;
+		                }
+		                if (raster)
+		                {
+		                    const auto layer = instance_pair.object->GetLayer();
+		                    if (layer == RESERVED_LAYER_CAMERA || layer == RESERVED_LAYER_UI || layer == RESERVED_LAYER_ENVIRONMENT ||
+		                        layer == RESERVED_LAYER_LIGHT || layer == RESERVED_LAYER_SKYBOX)
+		                    {
+		                        continue;
+		                    }
+		                }
+		                // A block (particles) is traced per instance, each with its own record.
+		                const size_t block = std::max<size_t>(instance_pair.instanceCount, 1);
+		                for (size_t k = 0; k < block; ++k)
+		                {
+		                    instance_pairs.push_back(&instance_pair); // no copy: an InstancePair is about 870 bytes
+		                    tlas_instances.push_back({ mesh_ptr, instance_pair.instance + k, raster });
+		                }
+		                count += block;
+		            }
+		            if (count != 0)
+		            {
+		                meshes.emplace_back(mesh_ptr, count);
+		            }
+		        }
+		    };
+
 		    for (const auto& renderer : *domain_map | std::views::values)
 		    {
 		        for (const auto& [shader_resource, mesh_map] : renderer)
@@ -118,38 +169,24 @@ namespace Engine
 		                continue;
 		            }
 
-		            for (const auto& [mesh, instances] : mesh_map)
-		            {
-		                auto* const mesh_ptr = static_cast<Resources::Mesh*>(mesh.get());
-		                if (mesh_ptr->GetBLAS().empty || !mesh_ptr->GetBLAS().resultPool || !mesh_ptr->GetPrimitive())
-		                {
-		                    static std::atomic<bool> s_warned{ false };
-		                    if (!s_warned.exchange(true))
-		                    {
-		                        OutputDebugStringA("WARNING: ray tracing pass skips meshes without a bottom level structure\n");
-		                    }
-		                    continue;
-		                }
+		            collect(mesh_map, false);
+		        }
+		    }
 
-		                size_t count = 0;
-		                for (const InstancePair& instance_pair : instances)
+		    // Objects of graphic shaders occlude and are reflected: after the ray tracing shader's objects, so that a
+		    // truncated heap drops raster objects first. They use its hit group, so only when it traces something.
+		    if (shader)
+		    {
+		        for (const auto& renderer : *domain_map | std::views::values)
+		        {
+		            for (const auto& [shader_resource, mesh_map] : renderer)
+		            {
+		                // G-buffer materials only (several render targets): the deferred pass draws them, and the closest
+		                // hit shader reads their texture layout. Forward-only shaders are not drawn in this configuration.
+		                if (const Strong<Resources::Shader> graphic = Cast<Resources::Shader>(shader_resource);
+		                    graphic && graphic->GetRTVFormat().size() > 1)
 		                {
-		                    if (predicate && !predicate(instance_pair.object))
-		                    {
-		                        continue;
-		                    }
-		                    // A block (particles) is traced per instance, each with its own record.
-		                    const size_t block = std::max<size_t>(instance_pair.instanceCount, 1);
-		                    for (size_t k = 0; k < block; ++k)
-		                    {
-		                        instance_pairs.push_back(&instance_pair); // no copy: an InstancePair is about 870 bytes
-		                        tlas_instances.push_back({ mesh_ptr, instance_pair.instance + k });
-		                    }
-		                    count += block;
-		                }
-		                if (count != 0)
-		                {
-		                    meshes.emplace_back(mesh_ptr, count);
+		                    collect(mesh_map, true);
 		                }
 		            }
 		        }

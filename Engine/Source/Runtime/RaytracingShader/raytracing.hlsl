@@ -80,7 +80,9 @@ void raygen_main()
 	payload.isShadow  = false;
 	payload.isReflect = false;
 
-	TraceRay(g_tlas, RAY_FLAG_NONE, 0xFF, 0, 0, 0, ray, payload);
+	// Mask 1: the ray tracing shader's objects. Raster objects (mask 2) are drawn by the raster passes over this image;
+	// shadow and reflection rays see both.
+	TraceRay(g_tlas, RAY_FLAG_NONE, 0x01, 0, 0, 0, ray, payload);
 
 	g_output[dispatchRaysIndex.xy] = float4(payload.colorAndDist.rgb, 1.f);
 
@@ -193,17 +195,25 @@ void closest_hit_main(inout Payload payload, Attributes attr)
 	float2   ddx_uv = mul(baryX, uvMat) - baryUV;
 	float2   ddy_uv = mul(baryY, uvMat) - baryUV;
 
-	if (INST_TEX_SLOT0_ENABLE(g_Instance, instanceId))
+	// Ray tracing materials: slot 0 base colour, slot 1 normal. Raster materials (InstanceID bit 23, seen by shadow and
+	// reflection rays): slot 0 normal, slot 1 base colour.
+	const bool rasterLayout = (InstanceID() & 0x800000) != 0;
+	const bool baseEnabled  = rasterLayout ? INST_TEX_SLOT1_ENABLE(g_Instance, instanceId) : INST_TEX_SLOT0_ENABLE(g_Instance, instanceId);
+	const int  baseSlot     = rasterLayout ? INST_TEX_SLOT1(g_Instance, instanceId) : INST_TEX_SLOT0(g_Instance, instanceId);
+	const bool normalEnabled = rasterLayout ? INST_TEX_SLOT0_ENABLE(g_Instance, instanceId) : INST_TEX_SLOT1_ENABLE(g_Instance, instanceId);
+	const int  normalSlot    = rasterLayout ? INST_TEX_SLOT0(g_Instance, instanceId) : INST_TEX_SLOT1(g_Instance, instanceId);
+
+	if (baseEnabled)
 	{
 		// Sampling the texture with the gradient changes.
-		baryColor = SampleGrad(PSSampler, baryUV, ddx_uv, ddy_uv, INST_TEX_SLOT0(g_Instance, instanceId));
+		baryColor = SampleGrad(PSSampler, baryUV, ddx_uv, ddy_uv, baseSlot);
 	}
 
 	float3 bumpNormal = float3(0.f, 0.f, 0.f);
 
-	if (INST_TEX_SLOT1_ENABLE(g_Instance, instanceId))
+	if (normalEnabled)
 	{
-		float3 normalMap = SampleGrad(PSSampler, baryUV, ddx_uv, ddy_uv, INST_TEX_SLOT1(g_Instance, instanceId)).rgb;
+		float3 normalMap = SampleGrad(PSSampler, baryUV, ddx_uv, ddy_uv, normalSlot).rgb;
 		normalMap        = (normalMap * 2.0f) - 1.0f;
 
 		bumpNormal = (normalMap.x * baryTangent) +
@@ -238,7 +248,7 @@ void closest_hit_main(inout Payload payload, Attributes attr)
 
 		// const float sphere = 4.f * PI * g_Light[i].radius.x * g_Light[i].radius.x;
 
-		if (INST_TEX_SLOT1_ENABLE(g_Instance, instanceId))
+		if (normalEnabled)
 		{
 			normalLightIntensity[i] = saturate(dot(bumpNormal, lightDir));
 			normalColorArray[i]     = g_Light[i].color * normalLightIntensity[i];
@@ -321,7 +331,7 @@ void closest_hit_main(inout Payload payload, Attributes attr)
 
 	float4 lightColor = saturate(colorSum);
 
-	if (INST_TEX_SLOT1_ENABLE(g_Instance, instanceId))
+	if (normalEnabled)
 	{
 		lightColor += saturate(normalColorSum);
 	}
