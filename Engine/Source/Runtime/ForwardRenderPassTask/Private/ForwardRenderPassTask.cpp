@@ -6,6 +6,9 @@
 
 #include "RenderPipeline.h"
 #include "Renderer.h"
+#if CFG_RAYTRACING
+#include "IRaytracingExtension.h"
+#endif
 
 #include "AtlasAnimationTexture.h"
 #include "Material.h"
@@ -45,6 +48,12 @@ namespace Engine
 		// The per-batch pools grow in advance(); sizing them to the instance count allocated one GPU buffer and one
 		// descriptor heap per object (E_OUTOFMEMORY at ~5k objects).
 
+#if CFG_RAYTRACING
+		const bool trace_bypass = shader_bypass && g_graphic_accessor.GetRaytracingInterface().ShouldUseRaytracing();
+#else
+		constexpr bool trace_bypass = false;
+#endif
+
 		for (const auto& renderer : *domain_map | std::views::values)
 		{
             for ( const auto &[ shader, mesh_map ] : renderer )
@@ -61,18 +70,22 @@ namespace Engine
                           &postrender_predicate,
                           &additional_sbs,
                           &shader_bypass,
+                          trace_bypass,
                           &dt,
                           &intermediate_shader_map ](
                                 const MeshMap::value_type &pair )
                         {
-                            if ( const Strong<Resources::Shader> &locked = Cast<Resources::Shader>( shader ) )
+                            // A bypass pass (shadow maps) draws with its own shader, so with ray tracing on it also draws
+                            // the ray tracing shader's objects: they cast shadows on raster objects.
+                            const Strong<Resources::Shader> &locked = Cast<Resources::Shader>( shader );
+                            if ( locked || trace_bypass ) // the other shaders are the ray tracing shaders
                             {
                                 if ( decltype( intermediate_shader_map )::const_accessor acc;
                                      intermediate_shader_map.find( acc, &pair.second ) )
                                 {
                                     StartPhase_MultiThread( dt,
                                                             shader_bypass,
-                                                            locked.get(),
+                                                            locked.get(), // null only when bypassed: not bound
                                                             static_cast<const Resources::Mesh*>( pair.first.get() ),
                                                             additional_sbs,
                                                             local_param,
