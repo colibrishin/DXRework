@@ -18,6 +18,7 @@ namespace Engine
 
         const std::array<Strong<Abstracts::Resource>, g_max_texture_per_material>*                      textures;
         const std::array<Strong<Abstracts::Resource>, RESERVED_USER_TEX_END - RESERVED_USER_TEX_BEGIN>* reservedTextures;
+        size_t instanceCount = 0; // InstancePair::instanceCount: a block of contiguous instances, drawn alone
 
         [[nodiscard]] size_t GetTextureCount() const
         {

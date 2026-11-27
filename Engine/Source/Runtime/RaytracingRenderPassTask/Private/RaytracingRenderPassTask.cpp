@@ -138,9 +138,14 @@ namespace Engine
 		                    {
 		                        continue;
 		                    }
-		                    instance_pairs.push_back(&instance_pair); // no copy: an InstancePair is about 870 bytes
-		                    tlas_instances.push_back({ mesh_ptr, instance_pair.instance });
-		                    ++count;
+		                    // A block (particles) is traced per instance, each with its own record.
+		                    const size_t block = std::max<size_t>(instance_pair.instanceCount, 1);
+		                    for (size_t k = 0; k < block; ++k)
+		                    {
+		                        instance_pairs.push_back(&instance_pair); // no copy: an InstancePair is about 870 bytes
+		                        tlas_instances.push_back({ mesh_ptr, instance_pair.instance + k });
+		                    }
+		                    count += block;
 		                }
 		                if (count != 0)
 		                {
@@ -288,10 +293,15 @@ namespace Engine
 		
 		aligned_vector<Graphics::SBs::InstanceSB*> instances( instance_pairs.size() );
 
-		size_t idx = 0;
+		// A block's pair repeats once per instance (Run), its instances are contiguous.
+		size_t              idx      = 0;
+		size_t              in_block = 0;
+		const InstancePair* previous = nullptr;
 		for ( const InstancePair* instance_pair : instance_pairs )
 		{
-			instances[ idx ] = instance_pair->instance;
+			in_block         = instance_pair == previous ? in_block + 1 : 0;
+			previous         = instance_pair;
+			instances[ idx ] = instance_pair->instance + in_block;
 			++idx;
 		}
 
@@ -355,7 +365,7 @@ namespace Engine
 	            {
 	                if ( pair.textures[j] )
 	                {
-	                    pair.instance->SetTextureSlot( j, static_cast<int>( j ) ); // bound at BIND_SLOT_TEX + j
+	                    instances[ instance_pos + i ]->SetTextureSlot( j, static_cast<int>( j ) ); // bound at BIND_SLOT_TEX + j
 	                }
 	            }
 

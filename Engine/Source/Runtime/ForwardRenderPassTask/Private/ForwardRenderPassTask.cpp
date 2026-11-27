@@ -230,6 +230,7 @@ namespace Engine
 		{
 			instances[idx] = instance_pair->instance;
 			texture_pairs[idx] = TexturePair(&instance_pair->textures, &instance_pair->reservedTextures);
+			texture_pairs[ idx ].instanceCount = instance_pair->instanceCount;
 			++idx;
 		}
 
@@ -356,6 +357,18 @@ namespace Engine
 				}
 				
 				const TexturePair& pair = texture_pairs[ instance_resolved + instance_to_resolve ];
+				// A block of instances (InstancePair::instanceCount) is drawn by itself, from an empty batch.
+				if ( pair.instanceCount != 0 && instance_to_resolve != 0 )
+				{
+				    break;
+				}
+				const auto set_texture_slot = [ &, first = instances[ instance_resolved + instance_to_resolve ] ]( const size_t i, const size_t slot )
+				{
+				    for ( size_t n = 0; n < std::max<size_t>( pair.instanceCount, 1 ); ++n )
+				    {
+				        first[ n ].SetTextureSlot( i, static_cast<int>( slot ) );
+				    }
+				};
 				// Reserved textures (bones, atlas) bind one texture per slot for the whole batch: an instance
 				// with a different one, or one whose textures no longer fit, starts the next batch.
 				bool reserved_conflict = false;
@@ -386,13 +399,13 @@ namespace Engine
 								it != std::end( assigned_texture ) )
 							{
                                 const size_t bind_slot = std::distance( std::begin( assigned_texture ), it );
-                                instances[ instance_resolved + instance_to_resolve ]->SetTextureSlot( i, bind_slot );
+                                set_texture_slot( i, bind_slot );
 							}
 							else
 							{
                                 tex_bind_mask |= 1 << msb;
                                 assigned_texture[ lsb ] = static_cast<Resources::Texture*>( pair.textures->at( i ).get() );
-                                instances[ instance_resolved + instance_to_resolve ]->SetTextureSlot( i, lsb );
+                                set_texture_slot( i, lsb );
                                 --msb;
                                 ++lsb;
 							}
@@ -408,10 +421,23 @@ namespace Engine
 					}
 
 					instance_to_resolve++;
+					if ( pair.instanceCount != 0 )
+					{
+					    break; // the block fills the batch
+					}
 				}
 			}
 
-			instance_buffer.SetDataPointerContainer(context, static_cast<UINT>(instance_to_resolve), instances.data() + instance_resolved);
+			// A block uploads its contiguous instances; otherwise gather the batch's instances.
+			const size_t block = texture_pairs[ instance_resolved ].instanceCount;
+			if ( block != 0 )
+			{
+			    instance_buffer.SetData( context, static_cast<UINT>( block ), instances[ instance_resolved ] );
+			}
+			else
+			{
+			    instance_buffer.SetDataPointerContainer( context, static_cast<UINT>( instance_to_resolve ), instances.data() + instance_resolved );
+			}
 			instance_buffer.TransitionToSRV(context);
 			instance_buffer.CopySRVHeap(context);
 			
@@ -449,7 +475,7 @@ namespace Engine
                 }
             }
 
-			gi.Draw( context, mesh, instance_to_resolve, instance_resolved );
+			gi.Draw( context, mesh, static_cast<UINT>( block != 0 ? block : instance_to_resolve ), instance_resolved );
 			
 			instance_buffer.TransitionCommon(context);
 			return instance_to_resolve;
