@@ -253,6 +253,7 @@ namespace Engine::Resources
 		m_blas_.resultPool.reset();
 		m_blas_.scratchPool.reset();
 		m_blas_.instanceDescPool.reset();
+		m_blas_.empty = true; // the ray tracing pass skips meshes without a BLAS (and their freed buffers)
 #endif
 
 #ifdef PHYSX_ENABLED

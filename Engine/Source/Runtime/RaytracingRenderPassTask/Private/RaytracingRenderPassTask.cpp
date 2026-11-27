@@ -116,7 +116,7 @@ namespace Engine
 		            for (const auto& [mesh, instances] : mesh_map)
 		            {
 		                auto* const mesh_ptr = static_cast<Resources::Mesh*>(mesh.get());
-		                if (mesh_ptr->GetBLAS().empty)
+		                if (mesh_ptr->GetBLAS().empty || !mesh_ptr->GetBLAS().resultPool || !mesh_ptr->GetPrimitive())
 		                {
 		                    static std::atomic<bool> s_warned{ false };
 		                    if (!s_warned.exchange(true))
