@@ -97,6 +97,10 @@ namespace Engine
 
         ComPtr<ID3D12DescriptorHeap> m_raytracing_sampler_heap_ = nullptr;
         ComPtr<ID3D12Resource>       m_output_buffer_           = nullptr;
+        // Depth of the primary ray hits (raster depth convention, 1 where nothing is hit), next to the colour output.
+        ComPtr<ID3D12Resource>       m_depth_output_buffer_     = nullptr;
+        // Frame whose rays are in the outputs; they are copied out only in that frame.
+        uint64_t                     m_raytracing_output_frame_ = UINT64_MAX;
 
     public:
 #endif

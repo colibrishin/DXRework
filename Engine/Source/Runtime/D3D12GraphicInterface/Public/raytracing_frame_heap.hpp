@@ -38,12 +38,13 @@ namespace Engine
             }
         }
 
-        // Tables one shader-visible heap can hold on every resource binding tier (plus the output UAV).
+        // Tables one shader-visible heap can hold on every resource binding tier (plus the colour and depth output UAVs).
+        static constexpr UINT s_output_slots = 2;
         static constexpr UINT s_max_tables =
-                (D3D12_MAX_SHADER_VISIBLE_DESCRIPTOR_HEAP_SIZE_TIER_1 - 1) / g_local_raytracing_total_engine_slots;
+                (D3D12_MAX_SHADER_VISIBLE_DESCRIPTOR_HEAP_SIZE_TIER_1 - s_output_slots) / g_local_raytracing_total_engine_slots;
 
         // Makes this frame's heap hold min(tables, s_max_tables) tables; returns that count and the CPU handle of the
-        // output UAV slot.
+        // output UAV slots (colour, then depth).
         UINT BeginFrame(UINT tables, D3D12_CPU_DESCRIPTOR_HANDLE& output)
         {
             tables = (std::min)(tables, s_max_tables);
@@ -58,7 +59,7 @@ namespace Engine
                 KeepUntilFrameDone(std::move(m_main_descriptor_heap_[slot]));
                 const UINT capacity = (std::min)((std::max)(tables + tables / 2, 64u), s_max_tables);
                 const D3D12_DESCRIPTOR_HEAP_DESC desc{ .Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV,
-                                                       .NumDescriptors = capacity * g_local_raytracing_total_engine_slots + 1,
+                                                       .NumDescriptors = capacity * g_local_raytracing_total_engine_slots + s_output_slots,
                                                        .Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE,
                                                        .NodeMask = 0 };
                 DX::ThrowIfFailed(m_dev_->CreateDescriptorHeap(&desc, IID_PPV_ARGS(m_main_descriptor_heap_[slot].GetAddressOf())));

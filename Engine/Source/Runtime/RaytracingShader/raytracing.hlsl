@@ -61,6 +61,7 @@ StructuredBuffer<ParamElement>    g_Instance : register(t2, space1);
 StructuredBuffer<VertexInputType> l_vertex : register(t3, space1);
 ByteAddressBuffer                 l_index : register(t4, space1);
 RWTexture2D<float4>               g_output : register(u0, space1);
+RWTexture2D<float>                g_depthOutput : register(u1, space1);
 SamplerState                      g_outputSampler : register(s0, space1);
 
 [shader("raygeneration")]
@@ -82,6 +83,16 @@ void raygen_main()
 	TraceRay(g_tlas, RAY_FLAG_NONE, 0xFF, 0, 0, 0, ray, payload);
 
 	g_output[dispatchRaysIndex.xy] = float4(payload.colorAndDist.rgb, 1.f);
+
+	// The raster depth of the hit (same camera), so raster objects can be depth tested against it; 1 on a miss.
+	float depth = 1.f;
+	if (payload.colorAndDist.w >= 0.f)
+	{
+		const float3 hit  = ray.Origin + ray.Direction * payload.colorAndDist.w;
+		const float4 clip = mul(mul(float4(hit, 1.f), g_camView), g_camProj);
+		depth             = saturate(clip.z / clip.w); // TMin is nearer than the near plane
+	}
+	g_depthOutput[dispatchRaysIndex.xy] = depth;
 }
 
 [shader("closesthit")]
@@ -368,6 +379,6 @@ void miss_main(inout Payload payload)
 		return;
 	}
 
-	// Black, like the raster background (no ambient term where nothing is hit).
-	payload.colorAndDist = float4(0.0f, 0.0f, 0.0f, RayTCurrent());
+	// Black, like the raster background (no ambient term where nothing is hit); w < 0 marks the miss.
+	payload.colorAndDist = float4(0.0f, 0.0f, 0.0f, -1.0f);
 }

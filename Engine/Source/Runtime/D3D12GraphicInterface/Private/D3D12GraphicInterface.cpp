@@ -145,6 +145,7 @@ void Engine::D3D12GraphicInterface::Shutdown()
     m_raytracing_root_pipeline_.Reset();
     m_raytracing_sampler_heap_.Reset();
     m_output_buffer_.Reset();
+    m_depth_output_buffer_.Reset();
     m_raytracing_dev_.Reset();
 #endif
 
@@ -257,6 +258,9 @@ size_t Engine::D3D12GraphicInterface::ReserveRaytracingHeap(const size_t tables)
     const UINT reserved = m_raytracing_heap_handler_->BeginFrame(
         static_cast<UINT>((std::min)(tables, static_cast<size_t>(raytracing_frame_heap::s_max_tables))), output);
     m_dev_->CreateUnorderedAccessView(m_output_buffer_.Get(), nullptr, nullptr, output);
+    const CD3DX12_CPU_DESCRIPTOR_HANDLE depth_output(
+        output, 1, m_dev_->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
+    m_dev_->CreateUnorderedAccessView(m_depth_output_buffer_.Get(), nullptr, nullptr, depth_output);
     return reserved;
 }
 
@@ -466,6 +470,8 @@ void Engine::D3D12GraphicInterface::DispatchRay(
     auto& shader_primitive = static_cast<IRaytracingShader&>(shader->GetPrimitive());
     shader_primitive.UpdateShaderRecords(RAY_SHADER_REC_HIT, hit_records);
     
+    m_raytracing_output_frame_ = RecordingFrame();
+
     D3D12_DISPATCH_RAYS_DESC ray_desc{};
     ray_desc.Width = CFG_WIDTH;
     ray_desc.Height = CFG_HEIGHT;
@@ -523,6 +529,12 @@ void Engine::D3D12GraphicInterface::DispatchRay(
 
 void Engine::D3D12GraphicInterface::CopyRaytracingToRenderTarget(const IGraphicContext* context)
 {
+    // Not traced this frame (nothing to trace, or no top level structure): the output holds an older frame.
+    if ( m_raytracing_output_frame_ != RecordingFrame() )
+    {
+        return;
+    }
+
     const auto& cmd = static_cast<CommandPair*>(context->commandList);
     
     const auto& copy_barrier = CD3DX12_RESOURCE_BARRIER::Transition
@@ -580,7 +592,7 @@ void Engine::D3D12GraphicInterface::InitializeRaytracingDescriptorHeaps()
 void Engine::D3D12GraphicInterface::InitializeGlobalRootSignature()
 {
     CD3DX12_DESCRIPTOR_RANGE1 range;
-    range.Init(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, 1, 0, 1);
+    range.Init(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, 2, 0, 1); // u0 colour, u1 depth (space1)
     
 	CD3DX12_ROOT_PARAMETER1 root_param[RAYTRACING_GLOBAL_SLOT_COUNT];
 	root_param[RAYTRACING_GLOBAL_SLOT_TLAS].InitAsShaderResourceView( 0, 1 ); // TLAS Buffer
@@ -649,7 +661,19 @@ void Engine::D3D12GraphicInterface::InitializeOutputBuffer()
           IID_PPV_ARGS( m_output_buffer_.ReleaseAndGetAddressOf() ) ) );
 
     SET_NAME( m_output_buffer_, L"Raytracing Output Buffer" )
-    // Its UAV is written into each frame's ray tracing heap (ReserveRaytracingHeap).
+
+    const auto& depth_desc = CD3DX12_RESOURCE_DESC::Tex2D(DXGI_FORMAT_R32_FLOAT, CFG_WIDTH, CFG_HEIGHT, 1, 1, 1, 0, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
+    DX::ThrowIfFailed(
+         m_dev_->CreateCommittedResource(
+          &default_heap,
+          D3D12_HEAP_FLAG_NONE,
+          &depth_desc,
+          D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
+          nullptr,
+          IID_PPV_ARGS( m_depth_output_buffer_.ReleaseAndGetAddressOf() ) ) );
+
+    SET_NAME( m_depth_output_buffer_, L"Raytracing Depth Output Buffer" )
+    // Their UAVs are written into each frame's ray tracing heap (ReserveRaytracingHeap).
 }
 #endif
 
