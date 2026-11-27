@@ -300,8 +300,12 @@ namespace Engine::Managers
         BorrowedRenderPassFactories& borrowed_factories_ = GetFactories( traits );
         std::once_flag               delegate_flag;
 
-        auto binder = managed_bind( &Renderer::ResolveDirty, GetWeakPtr<Renderer>(), types, borrowed_factories_, inclusion );
+        // By reference: the binder stores decayed copies of its arguments, so the list it re-resolved was its own.
+        auto tasks  = std::ref( borrowed_factories_ );
+        auto binder = managed_bind( &Renderer::ResolveDirty, GetWeakPtr<Renderer>(), types, tasks, inclusion );
         onRenderTaskDirty.Listen( binder );
+        // Passes registered before this first call do not signal again.
+        ResolveDirty( types, borrowed_factories_, inclusion );
 
 		return borrowed_factories_;
     }
