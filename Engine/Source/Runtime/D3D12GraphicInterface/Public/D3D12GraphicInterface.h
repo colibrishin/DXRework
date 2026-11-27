@@ -83,6 +83,7 @@ namespace Engine
                           const AccelStructBuffer& top_level_accel_buffer ) override;
 
         void CopyRaytracingToRenderTarget( const IGraphicContext* context ) override;
+        bool CopyRaytracingDepthTo( const IGraphicContext* context, const Abstracts::Resource* depth ) override;
 
     private:
         void QueryDevice();

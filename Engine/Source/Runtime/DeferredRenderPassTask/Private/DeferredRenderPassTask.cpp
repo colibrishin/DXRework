@@ -10,6 +10,9 @@
 #include <vector>
 #include <tbb/parallel_for_each.h>
 #include "Texture2D.h"
+#if CFG_RAYTRACING
+#include "IRaytracingExtension.h"
+#endif
 
 Engine::DeferredRenderPassTask::DeferredRenderPassTask()
     : m_gi_ticket_( SingletonSpinLock::GetInstance().Register() ),
@@ -54,6 +57,14 @@ void Engine::DeferredRenderPassTask::Run(
         const Abstracts::Resource* rtv_ptrs[ g_deferred_count ];
         for ( size_t i = 0; i < g_deferred_count; ++i ) rtv_ptrs[ i ] = m_deferred_render_targets_raw_[ i ];
         gi.TransitToMultiple( &primitive, rtv_ptrs, g_deferred_count, BIND_TYPE_RTV );
+#if CFG_RAYTRACING
+        // Start from the ray traced depth (the clear stays if this frame was not traced): raster objects behind a ray
+        // traced surface fail the depth test, so the light pass keeps the ray traced pixel there.
+        if ( IRaytracingExtension& rgi = g_graphic_accessor.GetRaytracingInterface(); rgi.ShouldUseRaytracing() )
+        {
+            rgi.CopyRaytracingDepthTo( &primitive, m_deferred_depth_raw_ );
+        }
+#endif
         gi.TransitTo( &primitive, m_deferred_depth_raw_, BIND_TYPE_DSV );
         primitive.commandList->FlagReady();
     }

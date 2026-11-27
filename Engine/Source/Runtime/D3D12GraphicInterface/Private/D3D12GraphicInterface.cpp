@@ -578,6 +578,35 @@ void Engine::D3D12GraphicInterface::CopyRaytracingToRenderTarget(const IGraphicC
     cmd->GetList4()->ResourceBarrier(1, &rtv_barrier);
 }
 
+bool Engine::D3D12GraphicInterface::CopyRaytracingDepthTo(const IGraphicContext* context, const Abstracts::Resource* depth)
+{
+    if ( m_raytracing_output_frame_ != RecordingFrame() )
+    {
+        return false;
+    }
+
+    D3D12::ExpectTexture( depth );
+    const auto* primitive = reinterpret_cast<D3D12PrimitiveTexture*>(static_cast<const Resources::Texture*>(depth)->GetPrimitiveTexture());
+    auto*       dst       = static_cast<ID3D12Resource*>(primitive->GetNativeTexture());
+    const auto& cmd       = static_cast<CommandPair*>(context->commandList);
+
+    // R32_FLOAT into the depth texture's R32_TYPELESS (one format group).
+    const D3D12_RESOURCE_BARRIER before[] =
+    {
+        CD3DX12_RESOURCE_BARRIER::Transition(m_depth_output_buffer_.Get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_COPY_SOURCE),
+        CD3DX12_RESOURCE_BARRIER::Transition(dst, D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_COPY_DEST)
+    };
+    cmd->GetList4()->ResourceBarrier(static_cast<UINT>(std::size(before)), before);
+    cmd->GetList4()->CopyResource(dst, m_depth_output_buffer_.Get());
+    const D3D12_RESOURCE_BARRIER after[] =
+    {
+        CD3DX12_RESOURCE_BARRIER::Transition(m_depth_output_buffer_.Get(), D3D12_RESOURCE_STATE_COPY_SOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS),
+        CD3DX12_RESOURCE_BARRIER::Transition(dst, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_COMMON)
+    };
+    cmd->GetList4()->ResourceBarrier(static_cast<UINT>(std::size(after)), after);
+    return true;
+}
+
 void Engine::D3D12GraphicInterface::QueryDevice()
 {
 	DX::ThrowIfFailed(m_dev_->QueryInterface(IID_PPV_ARGS(m_raytracing_dev_.GetAddressOf())));

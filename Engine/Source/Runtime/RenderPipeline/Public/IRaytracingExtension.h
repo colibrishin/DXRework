@@ -62,6 +62,10 @@ namespace Resources { class RaytracingShader; class Mesh; }
                                   const AccelStructBuffer& top_level_accel_buffer ) = 0;
 
         virtual void CopyRaytracingToRenderTarget( const IGraphicContext* context ) = 0;
+        // Copies this frame's ray traced depth into a depth texture of the screen size in its resting (common) state,
+        // so raster objects are depth tested against the ray traced image. False (nothing copied) if this frame was not
+        // traced.
+        virtual bool CopyRaytracingDepthTo( const IGraphicContext* context, const Abstracts::Resource* depth ) = 0;
 
     private:
         bool m_b_raytracing_ = false;
