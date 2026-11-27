@@ -368,5 +368,6 @@ void miss_main(inout Payload payload)
 		return;
 	}
 
-	payload.colorAndDist = float4(g_ambientColor.xyz, RayTCurrent());
+	// Black, like the raster background (no ambient term where nothing is hit).
+	payload.colorAndDist = float4(0.0f, 0.0f, 0.0f, RayTCurrent());
 }
