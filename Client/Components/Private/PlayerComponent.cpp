@@ -388,10 +388,16 @@ void PlayerComponent::checkGround()
 
 		for (const auto v : value)
 		{
+			// The tree can still hold an object that was dropped since its last full update.
+			const auto other = v.lock();
+			if (!other)
+			{
+				continue;
+			}
 			const auto lcl = GetOwner().lock()->GetComponent<Engine::Components::Collider>().lock();
-			const auto rcl = v.lock()->GetComponent<Engine::Components::Collider>().lock();
+			const auto rcl = other->GetComponent<Engine::Components::Collider>().lock();
 
-			if (!Engine::Managers::CollisionDetector::GetInstance().IsCollisionLayer(GetOwner().lock()->GetLayer(), v.lock()->GetLayer()))
+			if (!Engine::Managers::CollisionDetector::GetInstance().IsCollisionLayer(GetOwner().lock()->GetLayer(), other->GetLayer()))
 			{
 				continue;
 			}
