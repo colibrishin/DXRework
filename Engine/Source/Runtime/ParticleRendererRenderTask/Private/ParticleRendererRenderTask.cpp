@@ -24,7 +24,8 @@ namespace Engine
     }
 
     ParticleRendererRenderInstanceTask::ParticleRendererRenderInstanceTask() :
-        m_instance_ticket_(SingletonSpinLock::GetInstance().Register())
+        m_instance_ticket_(SingletonSpinLock::GetInstance().Register()),
+        m_block_ticket_(SingletonSpinLock::GetInstance().Register())
     {}
 
     void ParticleRendererRenderInstanceTask::Run(
@@ -34,6 +35,15 @@ namespace Engine
     )
     {
         const auto &prs = scene->GetCachedComponentsConcurrent<Components::ParticleRenderer>();
+
+        static const bool legacy = []
+        {
+            const auto set = []( const char* name ) { const char* v = std::getenv( name ); return v && v[ 0 ] == '1'; };
+            const bool on = set( "KOLIBRI_PARTICLE_LEGACY" ) || set( "KOLIBRI_RENDER_LEGACY" );
+            OutputDebugStringA( on ? "KOLIBRI particles: one render entry per particle (KOLIBRI_PARTICLE_LEGACY)\n"
+                                   : "KOLIBRI particles: one render entry per emitter mesh\n" );
+            return on;
+        }();
 
         tbb::parallel_for_each(
                 prs.begin(),
@@ -58,104 +68,132 @@ namespace Engine
                             return;
                         }
 
-                        // Pre-mapping by the shader domain.
-                        for ( auto i = 0; i < map_size; ++i )
+                        // One render map key per domain, as before (the passes look it up).
+                        for ( size_t i = 0; i < map_size; ++i )
                         {
-                            const auto domain     = static_cast<eShaderDomain>( i );
-                            auto      &domain_map = render_map[ domain ];
-
                             RenderMap::accessor acc;
-                            if ( !domain_map.find( acc, Components::ParticleRenderer::StaticTypeHash() ) )
+                            if ( !render_map[ i ].find( acc, Components::ParticleRenderer::StaticTypeHash() ) )
                             {
-                                domain_map.insert( acc, Components::ParticleRenderer::StaticTypeHash() );
+                                render_map[ i ].insert( acc, Components::ParticleRenderer::StaticTypeHash() );
+                            }
+                        }
+
+                        // Per emitter, not per particle: the owner transform, animator and textures.
+                        const bool                                follow_owner = pr->IsFollowOwner();
+                        const Matrix                              owner_world  = tr->GetWorldMatrix().Transpose();
+                        const Strong<Components::Animator>        anim         = obj->GetComponent<Components::Animator>().lock();
+                        const Strong<Resources::AnimationTexture> anims        = shape->GetAnimations().lock();
+
+                        auto &particles = reinterpret_cast<aligned_vector<Graphics::SBs::InstanceSB> &>( pr->GetInstances() );
+                        size_t active = 0;
+                        for ( auto &particle : particles )
+                        {
+                            // Retired particles stay in the buffer (the simulation skips them).
+                            active += reinterpret_cast<Graphics::SBs::InstanceParticleSB &>( particle ).GetActive() ? 1 : 0;
+                        }
+                        if ( active == 0 )
+                        {
+                            return;
+                        }
+
+                        for ( const auto &[ mesh, mtr ] : shape->GetMeshes() )
+                        {
+                            const Strong<Resources::Mesh>     locked_mesh = mesh.lock();
+                            const Strong<Resources::Material> locked_mtr  = mtr.lock();
+                            if ( !locked_mesh || !locked_mtr )
+                            {
+                                continue;
                             }
 
-                            for ( const auto &[ mesh, mtr ] : shape->GetMeshes() )
+                            const Strong<Resources::ShaderBase> locked_shader = locked_mtr->GetShader().lock();
+                            const auto domain = static_cast<size_t>( locked_shader->GetShaderDomain() );
+                            if ( domain >= map_size )
                             {
-                                if ( mesh.expired() || mtr.expired() )
+                                continue;
+                            }
+
+                            InstancePair tmpl;
+                            tmpl.object = obj;
+                            for ( auto it = locked_mtr->GetTextures().begin(); it != locked_mtr->GetTextures().end(); ++it )
+                            {
+                                if ( const Strong<Resources::Texture> &locked = it->lock() )
+                                {
+                                    tmpl.textures[ std::distance( locked_mtr->GetTextures().begin(), it ) ] = locked;
+                                }
+                            }
+                            if ( anims )
+                            {
+                                tmpl.reservedTextures[ RESERVED_USER_TEX_BONES - RESERVED_USER_TEX_BEGIN ] = anims;
+                            }
+                            if ( const Strong<Resources::AtlasAnimationTexture> &atlas = locked_mtr->GetAtlasTexture().lock() )
+                            {
+                                tmpl.reservedTextures[ RESERVED_USER_TEX_ATLAS - RESERVED_USER_TEX_BEGIN ] = atlas;
+                            }
+
+                            // Build outside the render map lock, so emitters run in parallel. One entry draws the emitter's
+                            // instances from a contiguous block; KOLIBRI_PARTICLE_LEGACY=1 (or KOLIBRI_RENDER_LEGACY=1) keeps
+                            // one entry per particle.
+                            aligned_vector<InstancePair> pairs;
+                            if ( legacy )
+                            {
+                                pairs.assign( active, tmpl );
+                                GetInstances( active, pairs );
+                            }
+                            else
+                            {
+                                tmpl.instance      = GetBlock( active );
+                                tmpl.instanceCount = active;
+                            }
+
+                            size_t k = 0;
+                            for ( auto &particle : particles )
+                            {
+                                if ( !reinterpret_cast<Graphics::SBs::InstanceParticleSB &>( particle ).GetActive() )
                                 {
                                     continue;
                                 }
 
-                                const Strong<Resources::Material>   &locked_mtr    = mtr.lock();
-                                const Strong<Resources::ShaderBase>& locked_shader = locked_mtr->GetShader().lock();
-
-                                if (locked_shader->GetShaderDomain() != domain)
-                        {
-                            continue;
-                        }
-                        
-                        ShaderMap::accessor shader_acc;
-                                if ( !acc->second.find( shader_acc, locked_shader ) )
+                                Graphics::SBs::InstanceSB &instance = legacy ? *pairs[ k ].instance : tmpl.instance[ k ];
+                                ++k;
+                                instance = particle;
+                                if ( follow_owner )
                                 {
-                                    acc->second.insert( shader_acc, locked_shader);
-                        }
-                        
-                        if (const Strong<Resources::Mesh>& locked_mesh = mesh.lock())
-                        {
-                                    decltype( shader_acc->second )::accessor mesh_acc;
-                                    if ( !shader_acc->second.find( mesh_acc, locked_mesh ) )
-                                    {
-                                        shader_acc->second.insert( mesh_acc, locked_mesh );
-                                    }
-
-                                    auto &particles = reinterpret_cast<aligned_vector<Graphics::SBs::InstanceSB> &>(
-                                            pr->GetInstances() );
-
-                                    for ( auto &particle : particles )
-                                    {
-                                        InstancePair instance_pair;
-                                        instance_pair.object   = obj;
-                                        instance_pair.instance = GetInstance();
-
-                                        *instance_pair.instance = particle;
-                                        if ( pr->IsFollowOwner() )
-                                        {
-                                            auto mat = particle.GetParam<Matrix>( 0 );
-                                            mat      = tr->GetWorldMatrix().Transpose() * mat;
-                                            instance_pair.instance->SetParam( 0, mat );
-                                        }
-
-                                        locked_mtr->GetPrimitive().Apply( *instance_pair.instance );
-
-                                        if ( const Strong<Components::Animator> &anim =
-                                                     obj->GetComponent<Components::Animator>().lock() )
-                                        {
-                                            anim->GetPrimitive().Apply( *instance_pair.instance );
-                                        }
-
-                                        for ( auto it = locked_mtr->GetTextures().begin();
-                                              it != locked_mtr->GetTextures().end();
-                                              ++it )
-                                        {
-                                            const size_t idx = std::distance( locked_mtr->GetTextures().begin(), it );
-                                            if ( const Strong<Resources::Texture> &locked = it->lock() )
-                                            {
-                                                instance_pair.textures[ idx ] = locked;
-                                            }
-                                        }
-
-                                        if ( const Strong<Resources::AnimationTexture> &anims =
-                                                     shape->GetAnimations().lock() )
-                                        {
-                                            instance_pair.reservedTextures[ RESERVED_USER_TEX_BONES -
-                                                                            RESERVED_USER_TEX_BEGIN ] = anims;
-                                        }
-
-                                        if ( const Strong<Resources::AtlasAnimationTexture> &atlas =
-                                                     locked_mtr->GetAtlasTexture().lock() )
-                                        {
-                                            instance_pair.reservedTextures[ RESERVED_USER_TEX_ATLAS -
-                                                                            RESERVED_USER_TEX_BEGIN ] = atlas;
-                                        }
-
-                                        mesh_acc->second.push_back( instance_pair );
-                                    }
+                                    instance.SetParam( 0, owner_world * particle.GetParam<Matrix>( 0 ) );
                                 }
-                            
+
+                                locked_mtr->GetPrimitive().Apply( instance );
+                                if ( anim )
+                                {
+                                    anim->GetPrimitive().Apply( instance );
+                                }
+                            }
+
+                            RenderMap::accessor acc;
+                            render_map[ domain ].find( acc, Components::ParticleRenderer::StaticTypeHash() );
+
+                            ShaderMap::accessor shader_acc;
+                            if ( !acc->second.find( shader_acc, locked_shader ) )
+                            {
+                                acc->second.insert( shader_acc, locked_shader );
+                            }
+
+                            decltype( shader_acc->second )::accessor mesh_acc;
+                            if ( !shader_acc->second.find( mesh_acc, locked_mesh ) )
+                            {
+                                shader_acc->second.insert( mesh_acc, locked_mesh );
+                            }
+
+                            auto &list = mesh_acc->second;
+                            if ( legacy )
+                            {
+                                list.insert( list.end(), std::make_move_iterator( pairs.begin() ), std::make_move_iterator( pairs.end() ) );
+                            }
+                            else
+                            {
+                                list.push_back( std::move( tmpl ) );
+                            }
+                        }
                     }
-                }
-            }
         });
     }
 
@@ -168,41 +206,58 @@ namespace Engine
         }
 
         m_used_count_ = 0;
+        m_blocks_used_ = 0;
     }
 
-    Graphics::SBs::InstanceSB* ParticleRendererRenderInstanceTask::GetInstance()
+    Graphics::SBs::InstanceSB* ParticleRendererRenderInstanceTask::GetBlock( const size_t count )
     {
+        // Reused every frame after Cleanup; the passes copy the block when they record.
+        SpinLockToken token = SingletonSpinLock::GetInstance().Lock( m_block_ticket_ );
+        if ( m_blocks_used_ == m_blocks_.size() )
+        {
+            m_blocks_.push_back( std::make_unique<aligned_vector<Graphics::SBs::InstanceSB>>() );
+        }
+        aligned_vector<Graphics::SBs::InstanceSB>& block = *m_blocks_[ m_blocks_used_++ ];
+        token.Release();
+
+        block.resize( count );
+        return block.data();
+    }
+
+    void ParticleRendererRenderInstanceTask::GetInstances( const size_t count, aligned_vector<InstancePair>& out )
+    {
+        // One lock for all particles of a mesh.
         SpinLockToken token = SingletonSpinLock::GetInstance().Lock( m_instance_ticket_ );
 
-        if ( m_allocation_count_ > m_used_count_ )
-        {
-            return m_instance_generated_[ m_used_count_++ ];
-        }
-
         auto& alloc = get_instance_sb_pool_allocator();
-        Graphics::SBs::InstanceSB* generated = alloc.allocate( 1 );
-        try
+        for ( size_t i = 0; i < count; ++i )
         {
-            std::memset(generated, 0, sizeof(decltype(*generated)));
-            alloc.construct( generated );
+            if ( m_allocation_count_ == m_used_count_ )
+            {
+                Graphics::SBs::InstanceSB* generated = alloc.allocate( 1 );
+                try
+                {
+                    std::memset(generated, 0, sizeof(decltype(*generated)));
+                    alloc.construct( generated );
+                }
+                catch ( ... )
+                {
+                    alloc.deallocate( generated, 1 );
+                    throw;
+                }
+                try
+                {
+                    m_instance_generated_.push_back( generated );
+                }
+                catch ( ... )
+                {
+                    alloc.destroy( generated );
+                    alloc.deallocate( generated, 1 );
+                    throw;
+                }
+                ++m_allocation_count_;
+            }
+            out[ i ].instance = m_instance_generated_[ m_used_count_++ ];
         }
-        catch ( ... )
-        {
-            alloc.deallocate( generated, 1 );
-            throw;
-        }
-        try
-        {
-            m_instance_generated_.push_back( generated );
-        }
-        catch ( ... )
-        {
-            alloc.destroy( generated );
-            alloc.deallocate( generated, 1 );
-            throw;
-        }
-        ++m_allocation_count_;
-        ++m_used_count_;
-        return generated;
     }
 }

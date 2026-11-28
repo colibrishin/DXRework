@@ -23,4 +23,9 @@ namespace Engine
 		bounding.Transform(tr->GetWorldMatrix());
 		return bounding;
 	}
+
+	GlobalEntityID bounding_getter::id(const Weak<Abstracts::ObjectBase>& object)
+	{
+		return object.lock()->GetID();
+	}
 }

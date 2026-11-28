@@ -117,12 +117,15 @@ namespace Engine::Managers
 		}
 
 		m_primitive_batch_->End();
+		// GraphicsMemory::Commit signals the queue to mark this frame's pages: it must follow the lists that use them.
+		p_cmd->SetSubmitHook([this, queue = gi.GetCommandTask().GetCommandQueue(D3D12_COMMAND_LIST_TYPE_DIRECT)]
+		{
+			m_graphics_memory_->Commit(queue);
+		});
 		p_cmd->FlagReady();
 		
 		m_sprite_batch_callbacks_.clear();
 		m_primitive_batch_callbacks_.clear();
-
-		m_graphics_memory_->Commit(gi.GetCommandTask().GetCommandQueue(D3D12_COMMAND_LIST_TYPE_DIRECT));
 	}
 
 	void ToolkitAPI::PostRender(const float dt) {}

@@ -99,9 +99,18 @@ void Engine::Resources::SimpleParticleComputeShader::loadDerived()
 
     std::ranges::shuffle( f_name, rng );
 
-    m_noises_[ 0 ] = Texture2D::Create( "RandomNoiseTexture1", f_name[ 0 ], GenericTextureDescription{ } );
-    m_noises_[ 1 ] = Texture2D::Create( "RandomNoiseTexture2", f_name[ 1 ], GenericTextureDescription{ } );
-    m_noises_[ 2 ] = Texture2D::Create( "RandomNoiseTexture3", f_name[ 2 ], GenericTextureDescription{ } );
+    // Create returns nothing when a texture of that name exists already (an earlier load of this shader, or one
+    // loaded with the scene): use that one.
+    static const char* names[] = { "RandomNoiseTexture1", "RandomNoiseTexture2", "RandomNoiseTexture3" };
+    for ( size_t i = 0; i < m_noises_.size(); ++i )
+    {
+        m_noises_[ i ] = Texture2D::Create( names[ i ], f_name[ i ], GenericTextureDescription{ } );
+        if ( !m_noises_[ i ] )
+        {
+            m_noises_[ i ] = Texture2D::Get( names[ i ] ).lock();
+            m_noises_[ i ]->Load();
+        }
+    }
 }
 
 void Engine::Resources::SimpleParticleComputeShader::unloadDerived()

@@ -34,6 +34,11 @@ namespace Engine::Abstracts
 		[[nodiscard]] bool                         IsLoaded() const;
 		[[nodiscard]] const std::filesystem::path& GetPath() const;
 		[[nodiscard]] Strong<Resource> Clone() const;
+
+		// Counts changes of what a renderer reads from this resource (contents, load state). A consumer compares it
+		// with the value it saw last instead of being told; MarkModified() is called by every such change.
+		[[nodiscard]] uint64_t GetRevision() const;
+		void                   MarkModified();
 		
 		void SetPath(const std::filesystem::path& path);
 
@@ -49,6 +54,7 @@ namespace Engine::Abstracts
 		friend class Managers::ResourceManager;
 
 		bool                    m_bLoaded_;
+		uint64_t                m_revision_ = 0;
 
 		EPROPERTY()
 		std::filesystem::path m_path_;

@@ -9,7 +9,7 @@ bool Engine::RaytracingShaderModule::InitializeImpl()
     Resources::RaytracingShader::Create(
         "raytracing", "./raytracing.hlsl", SHADER_DOMAIN_OPAQUE,
         std::array{true, false, true, true}, L"hitgroup0", SAMPLER_FILTER_MIN_MAG_MIP_LINEAR,
-        SHADER_SAMPLER_CLAMP, SHADER_SAMPLER_LESS_EQUAL);
+        SHADER_SAMPLER_WRAP, SHADER_SAMPLER_LESS_EQUAL); // repeats like the raster materials (and as before the address fix)
 
     return true;
 }

@@ -6,6 +6,7 @@
 #include <condition_variable>
 #include <mutex>
 #include "NetworkTask.h"
+#include "DelegateCore.h"
 
 namespace Engine
 {
@@ -39,17 +40,6 @@ namespace Engine
         bool IsWaitDone( const NetID id ) const;
         void KeepChallenge();
 
-        auto get_bound_challenge()
-        {
-            static auto bounded = std::bind( &NetworkChallengeTask::Challenge, this, std::placeholders::_1 );
-            return bounded;
-        }
-
-        auto get_bound_remove()
-        {
-            static auto bounded = std::bind( &NetworkChallengeTask::Remove, this, std::placeholders::_1 );
-            return bounded;
-        }
 
         mutable std::recursive_mutex                                     m_mtx_;
         std::unordered_map<NetID, bool>                                  m_challenge_status_{};
@@ -59,5 +49,10 @@ namespace Engine
         std::atomic<bool>       m_challenge_task_running_;
         std::mutex              m_wait_mtx_;
         std::condition_variable m_wait_cv_;
+
+        // Registrations on the message task's host events (their listeners use the members above); released in
+        // Cleanup(), and declared last so they would also go first on destruction.
+        DelegateHandle m_host_added_;
+        DelegateHandle m_host_removed_;
     };
 }

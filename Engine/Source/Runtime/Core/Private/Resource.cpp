@@ -22,6 +22,7 @@ namespace Engine::Abstracts
 		{
 			Load_INTERNAL();
 			m_bLoaded_ = true;
+			MarkModified();
 		}
 	}
 
@@ -31,7 +32,18 @@ namespace Engine::Abstracts
 		{
 			Unload_INTERNAL();
 			m_bLoaded_ = false;
+			MarkModified();
 		}
+	}
+
+	uint64_t Resource::GetRevision() const
+	{
+		return m_revision_;
+	}
+
+	void Resource::MarkModified()
+	{
+		++m_revision_;
 	}
 
 	Resource::Resource(std::filesystem::path path)

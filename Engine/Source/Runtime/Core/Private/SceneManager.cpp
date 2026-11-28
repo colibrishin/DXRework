@@ -1,4 +1,5 @@
 #include "SceneManager.h"
+#include "ChangeSignal.h"
 
 #if WITH_EDITOR
 #include "IUIAPI.h"
@@ -17,6 +18,10 @@ namespace Engine::Managers
 {
 	void SceneManager::SetActiveFinalize(const Weak<Scene>& it)
 	{
+		if (const auto& previous = m_active_scene_.lock(); previous && previous != it.lock())
+		{
+			previous->StopTrackingTreeChanges();
+		}
 		m_active_scene_ = it;
 
 		if (const auto& scene = m_active_scene_.lock())
@@ -29,6 +34,10 @@ namespace Engine::Managers
 			//g_raytracing = scene->m_b_scene_raytracing_;
 		}
 
+		if (const auto& active = m_active_scene_.lock())
+		{
+			SignalScene("scene.active", *active);
+		}
 		onSceneActive.Broadcast(m_active_scene_.lock());
     }
 
@@ -38,6 +47,10 @@ namespace Engine::Managers
         {
             m_playing_scene_ = play_scene;
             std::swap( m_playing_scene_, m_active_scene_ );
+            if ( const auto &edited = m_playing_scene_.lock() )
+            {
+                edited->StopTrackingTreeChanges();
+            }
 
             if ( !play_scene->IsInitialized() )
             {
@@ -46,6 +59,7 @@ namespace Engine::Managers
 
 			m_b_playing_ = true;
             play_scene->BeginPlay( dt );
+            SignalScene( "scene.play", *play_scene );
 
             // g_raytracing = scene->m_b_scene_raytracing_;
 
@@ -59,9 +73,14 @@ namespace Engine::Managers
 		{
             m_b_playing_ = false;
             play_scene->EndPlay( dt );
+            play_scene->StopTrackingTreeChanges(); // a copy that is dropped; someone may still hold it
 
             m_active_scene_ = {};
             std::swap( m_active_scene_, m_playing_scene_ );
+            if ( const auto& active = m_active_scene_.lock() )
+            {
+                SignalScene( "scene.stop", *active );
+            }
 
             const decltype( m_scenes_ )::iterator &found_scene = std::ranges::find_if(
                     m_scenes_, [ play_scene ]( const auto &v_scene ) { return play_scene == v_scene; } );
@@ -73,12 +92,14 @@ namespace Engine::Managers
 
 	void SceneManager::RemoveSceneFinalize(const Strong<Scene>& scene)
 	{
+		scene->StopTrackingTreeChanges();
 		if (scene == m_active_scene_.lock())
 		{
 #if WITH_DEBUG
 			Managers::Debugger::GetInstance().Log("Warning: Active scene has been removed.", {1.f, 0.f, 0.f, 1.f});
 #endif
 			onSceneRemoved.Broadcast(m_active_scene_);
+			SignalScene("scene.remove", *scene);
 			m_active_scene_.reset();
 		}
 

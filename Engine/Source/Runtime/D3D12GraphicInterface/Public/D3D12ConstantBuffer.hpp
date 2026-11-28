@@ -3,6 +3,7 @@
 
 #include "CommandPair.h"
 #include "DescriptorPtrImpl.h"
+#include "FrameUpload.h"
 
 namespace Engine::Graphics
 {
@@ -51,7 +52,7 @@ namespace Engine::Graphics
 		size_t m_alignment_;
 
 		ComPtr<ID3D12DescriptorHeap> m_cpu_cbv_heap_;
-		ComPtr<ID3D12Resource> m_upload_buffer_;
+		FrameUploadSlots       m_upload_;
 		ComPtr<ID3D12Resource> m_buffer_;
 	};
 }

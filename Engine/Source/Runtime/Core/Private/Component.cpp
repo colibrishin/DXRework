@@ -1,4 +1,5 @@
 #include "Component.h"
+#include "ChangeSignal.h"
 
 namespace Engine
 {
@@ -38,7 +39,11 @@ namespace Engine::Abstracts
 
     void Component::SetActive( bool active )
 	{
-		m_b_active_ = active;
+		if ( m_b_active_ != active )
+		{
+			m_b_active_ = active;
+			SignalComponent( "component.active", *this, eChange::Active );
+		}
 	}
 
 	void Component::Initialize()
@@ -85,13 +90,21 @@ namespace Engine::Abstracts
 	m_local_id_(g_invalid_id),
 	m_owner_(owner),
 	m_b_ticked_(false),
-	m_b_active_(true) {}
+	m_b_active_(true)
+	{
+		if (const auto obj = owner.lock())
+		{
+			m_owner_id_ = obj->GetID();
+		}
+	}
 
 	void Component::SetOwner(const Weak<ObjectBase>& owner)
 	{
 		if (const auto obj = owner.lock())
 		{
 			m_owner_ = owner;
+			m_owner_id_ = obj->GetID();
+			SignalComponent("component.owner", *this, eChange::Owner);
 		}
 	}
 

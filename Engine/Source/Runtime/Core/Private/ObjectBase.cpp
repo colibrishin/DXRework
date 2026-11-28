@@ -1,4 +1,5 @@
 #include "ObjectBase.h"
+#include "ChangeSignal.h"
 
 #include <any>
 
@@ -24,7 +25,11 @@ namespace Engine::Abstracts
 
 	void ObjectBase::SetActive(bool active)
 	{
-		m_active_ = active;
+		if (m_active_ != active)
+		{
+			m_active_ = active;
+			SignalActor("object.active", *this, eChange::Active);
+		}
 	}
 
 	void ObjectBase::SetCulled(bool culled)
@@ -142,6 +147,7 @@ namespace Engine::Abstracts
 
 			locked->m_parent_id_ = GetLocalID();
 			locked->m_parent_    = GetSharedPtr<ObjectBase>();
+			SignalActor("object.reparent", *locked, eChange::Reparented);
 		}
 	}
 
@@ -183,6 +189,7 @@ namespace Engine::Abstracts
 			{
 				locked->m_parent_id_ = g_invalid_id;
 				locked->m_parent_.reset();
+				SignalActor("object.reparent", *locked, eChange::Reparented);
 			}
 
 			m_children_cache_.erase(id);
@@ -266,6 +273,11 @@ namespace Engine::Abstracts
 					 obj->m_assigned_component_ids_.erase(comp->GetLocalID());
 					 obj->m_cached_component_.erase(comp);
 					 obj->m_components_.erase(type);
+					 // A component moved to another object meanwhile already announced it with Owner.
+					 if (comp->GetOwnerID() == obj->GetID())
+					 {
+						 SignalComponent("component.remove", *comp, eChange::Removed);
+					 }
 				 }
 				);
 	}
@@ -318,6 +330,7 @@ namespace Engine::Abstracts
 
 		m_cached_component_.insert(component);
 	    addComponentToSceneCache(component);
+	    SignalComponent("component.add", *component, eChange::Added);
 
 	    onComponentAdded.Broadcast(component);
 	}

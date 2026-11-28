@@ -99,6 +99,14 @@ void Engine::D3D12GraphicInterface::Initialize()
 	InitializeDevice();
 	DetachCommandThread();
 
+	// The last frames may still be on the GPU when the loop ends, and a module (ImGui, a render pass) releases what
+	// they use when it shuts down: wait for the GPU before each module shutdown (and hot unload). The callbacks are
+	// dropped at the end of ModuleManager::Shutdown, before this interface is cleaned up.
+	Managers::ModuleManager::GetInstance().RegisterOnModuleShutdown([this](std::wstring_view)
+	{
+		m_command_pair_task_.WaitForIdle();
+	});
+
 #if CFG_RAYTRACING
     if (auto& rgi = static_cast<IRaytracingExtension&>(*this);
         rgi.IsRaytracingSupported())
@@ -137,7 +145,7 @@ void Engine::D3D12GraphicInterface::Shutdown()
     m_raytracing_root_pipeline_.Reset();
     m_raytracing_sampler_heap_.Reset();
     m_output_buffer_.Reset();
-    m_output_heap_.Reset();
+    m_depth_output_buffer_.Reset();
     m_raytracing_dev_.Reset();
 #endif
 
@@ -175,7 +183,7 @@ void Engine::D3D12GraphicInterface::WaitForNextFrame()
 	}
 
 	const uint64_t next_buffer = m_swap_chain_->GetCurrentBackBufferIndex();
-	m_command_pair_task_.SwapBuffer(next_buffer);
+	m_command_pair_task_.SwapBuffer(next_buffer, m_frame_fence_);
 	m_frame_idx_ = next_buffer;
 }
 
@@ -192,7 +200,9 @@ void Engine::D3D12GraphicInterface::Present()
 
 	cmd->SoftReset();
 	cmd->GetList()->ResourceBarrier(1, &present_barrier);
-	cmd->Execute();
+	// Present1 goes to the queue after this list (the frame's last); WaitForNextFrame waits for its fence value.
+	m_frame_fence_ = cmd->Submit();
+	m_command_pair_task_.EndFrame(m_frame_fence_);
 
 	DXGI_PRESENT_PARAMETERS params;
 	params.DirtyRectsCount = 0;
@@ -200,14 +210,13 @@ void Engine::D3D12GraphicInterface::Present()
 	params.pScrollRect = nullptr;
 	params.pScrollOffset = nullptr;
 
-	DX::ThrowIfFailed
-	(
-		m_swap_chain_->Present1
-		(
-			CFG_VSYNC ? 1 : 0, DXGI_PRESENT_DO_NOT_WAIT,
-			&params
-		)
-	);
+	HRESULT hr = m_swap_chain_->Present1(CFG_VSYNC ? 1 : 0, DXGI_PRESENT_DO_NOT_WAIT, &params);
+	if (hr == DXGI_ERROR_WAS_STILL_DRAWING)
+	{
+		// The present queue is full (frames still on the GPU): wait for room instead of failing.
+		hr = m_swap_chain_->Present1(CFG_VSYNC ? 1 : 0, 0, &params);
+	}
+	DX::ThrowIfFailed(hr);
 }
 
 void* Engine::D3D12GraphicInterface::GetNativeInterface()
@@ -243,6 +252,18 @@ void Engine::D3D12GraphicInterface::InitializeRaytracing()
 
 void                                    Engine::D3D12GraphicInterface::ShutdownRaytracing() { }
 
+size_t Engine::D3D12GraphicInterface::ReserveRaytracingHeap(const size_t tables)
+{
+    D3D12_CPU_DESCRIPTOR_HANDLE output{};
+    const UINT reserved = m_raytracing_heap_handler_->BeginFrame(
+        static_cast<UINT>((std::min)(tables, static_cast<size_t>(raytracing_frame_heap::s_max_tables))), output);
+    m_dev_->CreateUnorderedAccessView(m_output_buffer_.Get(), nullptr, nullptr, output);
+    const CD3DX12_CPU_DESCRIPTOR_HANDLE depth_output(
+        output, 1, m_dev_->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
+    m_dev_->CreateUnorderedAccessView(m_depth_output_buffer_.Get(), nullptr, nullptr, depth_output);
+    return reserved;
+}
+
 Engine::Unique<Engine::IHeapBase> Engine::D3D12GraphicInterface::GetRaytracingHeap()
 {
     return m_raytracing_heap_handler_->Acquire();
@@ -260,68 +281,41 @@ void* Engine::D3D12GraphicInterface::GetRaytracingNativePipeline()
 
 bool Engine::D3D12GraphicInterface::BuildTopLevelAccelerationBuffer(
     const IGraphicContext* context,
-    RenderMap const* render_map,
-    const size_t render_map_size,
-    AccelStructBuffer& out_tlas_buffer,
-    const ObjectPredication& predication)
+    const RaytracingInstance* instances,
+    const size_t instance_count,
+    AccelStructBuffer& out_tlas_buffer)
 {
     const auto& cmd = static_cast<CommandPair*>(context->commandList);
-    std::vector<D3D12_RAYTRACING_INSTANCE_DESC> instance_descs;
-    concurrent_fast_pool_map<Resources::ShaderBase*, size_t> hit_group_id;
+    std::vector<D3D12_RAYTRACING_INSTANCE_DESC> instance_descs(instance_count);
 
-    size_t shader_count = 0;
-    size_t instance_count = 0;
-    
-    for (size_t map_idx = 0; map_idx < render_map_size; ++map_idx)
+    // Entry i uses hit record i (InstanceContributionToHitGroupIndex, the rays add no offset) and reads instance
+    // buffer element i (InstanceIndex() in the shader). A raster object has mask 2 (primary rays trace mask 1) and
+    // bit 23 of its InstanceID set (the shader reads its textures in the raster material layout).
+    for (size_t i = 0; i < instance_count; ++i)
     {
-        for (const auto& mesh_map : render_map[map_idx] | std::views::values)
-        {
-            for (const auto& [shader, shader_map] : mesh_map)
-            {
-                for (const auto& [mesh, instance] : shader_map)
-                {
-                    size_t current_hit_group;
-                    
-                    auto* const shader_ptr = static_cast<Resources::ShaderBase*>(shader.get());
-                    if (decltype(hit_group_id)::accessor acc;
-                        hit_group_id.find(acc, shader_ptr))
-                    {
-                        current_hit_group = acc->second;
-                    }
-                    else
-                    {
-                        hit_group_id.emplace(shader_ptr, shader_count);
-                        current_hit_group = shader_count;
-                        ++shader_count;
-                    }
-                    
-                    for (size_t i = 0; i < instance.size(); ++i)
-                    {
-                        if (predication && !predication(instance[i].object))
-                        {
-                            continue;
-                        }
-                        
-                        auto* const mesh_ptr = static_cast<Resources::Mesh*>(mesh.get());
-                        D3D12_RAYTRACING_INSTANCE_DESC desc
-                        {
-                            .Transform = {},
-                            .InstanceID = static_cast<UINT>(instance_count + i),
-                            .InstanceMask = 1,
-                            .InstanceContributionToHitGroupIndex = static_cast<UINT>(current_hit_group),
-                            .Flags = D3D12_RAYTRACING_INSTANCE_FLAG_NONE,
-                            .AccelerationStructure = mesh_ptr->GetBLAS().resultPool->GetResource<ID3D12Resource>()->GetGPUVirtualAddress()
-                        };
+        D3D12_RAYTRACING_INSTANCE_DESC& desc = instance_descs[i];
+        desc.InstanceID                          = static_cast<UINT>(i) | (instances[i].raster ? 0x800000u : 0u);
+        desc.InstanceMask                        = instances[i].raster ? 2 : 1;
+        desc.InstanceContributionToHitGroupIndex = static_cast<UINT>(i);
+        desc.Flags                               = D3D12_RAYTRACING_INSTANCE_FLAG_NONE;
+        desc.AccelerationStructure = instances[i].mesh->GetBLAS().resultPool->GetResource<ID3D12Resource>()->GetGPUVirtualAddress();
 
-                        const auto& world = instance[i].instance->GetParam<Matrix>(0);
-                        SIMDExtension::_mm256_memcpy(desc.Transform, &world, sizeof(desc.Transform));
-                        instance_descs.push_back(desc);
-                    }
+        const auto& world = instances[i].instance->GetParam<Matrix>(0); // stored transposed: rows are the 3x4 rows
+        SIMDExtension::_mm256_memcpy(desc.Transform, &world, sizeof(desc.Transform));
+    }
 
-                    instance_count += instance.size();
-                }
-            }
-        }
+    // Nothing moved, appeared or disappeared since the last build: the structure is still valid.
+    static const bool s_always_rebuild = []
+    {
+        const char* v = std::getenv("KOLIBRI_RT_TLAS_REBUILD");
+        return v && v[0] == '1';
+    }();
+    const size_t instance_bytes = instance_descs.size() * sizeof(D3D12_RAYTRACING_INSTANCE_DESC);
+    if (!s_always_rebuild && !out_tlas_buffer.empty && out_tlas_buffer.resultPool &&
+        out_tlas_buffer.builtInstances.size() == instance_bytes &&
+        std::memcmp(out_tlas_buffer.builtInstances.data(), instance_descs.data(), instance_bytes) == 0)
+    {
+        return true;
     }
 
     if (!out_tlas_buffer.instanceDescPool)
@@ -331,10 +325,30 @@ bool Engine::D3D12GraphicInterface::BuildTopLevelAccelerationBuffer(
     
     out_tlas_buffer.instanceDescPool->Update(instance_descs.data(), instance_descs.size(), sizeof(D3D12_RAYTRACING_INSTANCE_DESC));
 
+    // Only transforms changed (same instances on the same bottom level structures): update the structure in place
+    // instead of rebuilding it. Updates lower the trace quality, so rebuild after a number of them.
+    constexpr uint32_t updates_per_rebuild = 60;
+    bool update = !s_always_rebuild && !out_tlas_buffer.empty && out_tlas_buffer.resultPool &&
+                  out_tlas_buffer.builtInstances.size() == instance_bytes &&
+                  out_tlas_buffer.updatesSinceBuild < updates_per_rebuild;
+    if (update)
+    {
+        const auto* built = reinterpret_cast<const D3D12_RAYTRACING_INSTANCE_DESC*>(out_tlas_buffer.builtInstances.data());
+        for (size_t i = 0; i < instance_count; ++i)
+        {
+            if (built[i].AccelerationStructure != instance_descs[i].AccelerationStructure)
+            {
+                update = false;
+                break;
+            }
+        }
+    }
+
     const D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_INPUTS tlas_input
     {
         .Type = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_TYPE_TOP_LEVEL,
-        .Flags = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_PREFER_FAST_TRACE,
+        .Flags = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_PREFER_FAST_TRACE |
+                 D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_ALLOW_UPDATE,
         .NumDescs = static_cast<UINT>(instance_descs.size()),
         .DescsLayout = D3D12_ELEMENTS_LAYOUT_ARRAY,
         .InstanceDescs = out_tlas_buffer.instanceDescPool->GetResource<ID3D12Resource>()->GetGPUVirtualAddress()
@@ -345,6 +359,7 @@ bool Engine::D3D12GraphicInterface::BuildTopLevelAccelerationBuffer(
 
     if (prebuild_info.ResultDataMaxSizeInBytes == 0)
     {
+        out_tlas_buffer.empty = true;
         return false;
     }
 
@@ -352,7 +367,8 @@ bool Engine::D3D12GraphicInterface::BuildTopLevelAccelerationBuffer(
         prebuild_info.ResultDataMaxSizeInBytes, D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BYTE_ALIGNMENT);
 
     const auto& scratch_size = Align(
-        prebuild_info.ScratchDataSizeInBytes, D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BYTE_ALIGNMENT);
+        std::max(prebuild_info.ScratchDataSizeInBytes, prebuild_info.UpdateScratchDataSizeInBytes),
+        D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BYTE_ALIGNMENT);
 
     if (!out_tlas_buffer.scratchPool)
     {
@@ -364,20 +380,37 @@ bool Engine::D3D12GraphicInterface::BuildTopLevelAccelerationBuffer(
         out_tlas_buffer.resultPool = std::make_unique<D3D12GraphicMemoryPool<D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BYTE_ALIGNMENT, D3D12_HEAP_TYPE_DEFAULT, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_RAYTRACING_ACCELERATION_STRUCTURE>>();
     }
 
-    out_tlas_buffer.scratchPool->Update(nullptr, 1, scratch_size);
-    out_tlas_buffer.resultPool->Update(nullptr, 1, result_size);
+    // Sized in alignment units: the pools grow by element count, so a single element of the first frame's size
+    // never grew when instances were added.
+    constexpr UINT64 unit = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BYTE_ALIGNMENT;
+    out_tlas_buffer.scratchPool->Update(nullptr, scratch_size / unit, unit);
+    // Read only after a build: a new pool has no resource yet.
+    const ID3D12Resource* const last_result = update ? out_tlas_buffer.resultPool->GetResource<ID3D12Resource>() : nullptr;
+    out_tlas_buffer.resultPool->Update(nullptr, result_size / unit, unit);
+    if (update && out_tlas_buffer.resultPool->GetResource<ID3D12Resource>() != last_result)
+    {
+        update = false; // the result buffer was replaced: nothing to update from
+    }
 
     D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_DESC build_desc = {};
 
     build_desc.Inputs                           = tlas_input;
     build_desc.DestAccelerationStructureData    = out_tlas_buffer.resultPool->GetResource<ID3D12Resource>()->GetGPUVirtualAddress();
     build_desc.ScratchAccelerationStructureData = out_tlas_buffer.scratchPool->GetResource<ID3D12Resource>()->GetGPUVirtualAddress();
+    if (update)
+    {
+        build_desc.Inputs.Flags |= D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_PERFORM_UPDATE;
+        build_desc.SourceAccelerationStructureData = build_desc.DestAccelerationStructureData;
+    }
 
     cmd->GetList4()->BuildRaytracingAccelerationStructure(&build_desc, 0, nullptr);
 
     const auto& uav_barrier = CD3DX12_RESOURCE_BARRIER::UAV(out_tlas_buffer.resultPool->GetResource<ID3D12Resource>());
     cmd->GetList4()->ResourceBarrier(1, &uav_barrier);
 
+    const auto* desc_bytes = reinterpret_cast<const uint8_t*>(instance_descs.data());
+    out_tlas_buffer.builtInstances.assign(desc_bytes, desc_bytes + instance_bytes);
+    out_tlas_buffer.updatesSinceBuild = update ? out_tlas_buffer.updatesSinceBuild + 1 : 0;
     out_tlas_buffer.empty = false;
 
     return true;
@@ -393,20 +426,23 @@ void Engine::D3D12GraphicInterface::DispatchRay(
     const byte_stream& hit_records,
     const AccelStructBuffer& top_level_accel_buffer)
 {
+    // Nothing to trace without a pipeline (shader bypass) or a built top level structure.
+    if ( !shader || top_level_accel_buffer.empty || !top_level_accel_buffer.resultPool )
+    {
+        return;
+    }
+
     const auto& cmd = static_cast<CommandPair*>( context->commandList );
 
     cmd->GetList4()->SetComputeRootSignature( m_raytracing_root_pipeline_.Get() );
-
-    if ( shader )
-    {
-        cmd->GetList4()->SetPipelineState1(static_cast<ID3D12StateObject*>(shader->GetPrimitive().GetNativeShader()));
-    }
+    cmd->GetList4()->SetPipelineState1(static_cast<ID3D12StateObject*>(shader->GetPrimitive().GetNativeShader()));
 
     perspective.Flush(context);
     param.Flush(context);
 
-    ID3D12DescriptorHeap* heaps[] = { m_output_heap_.Get() };
-    cmd->GetList4()->SetDescriptorHeaps(1, heaps);
+    // The hit records' descriptor tables and the output UAV are all in this frame's ray tracing heap pair.
+    ID3D12DescriptorHeap* heaps[] = { m_raytracing_heap_handler_->GetBufferHeap(), m_raytracing_heap_handler_->GetSamplerHeap() };
+    cmd->GetList4()->SetDescriptorHeaps(2, heaps);
     
     cmd->GetList4()->SetComputeRootShaderResourceView(
         RAYTRACING_GLOBAL_SLOT_TLAS,
@@ -422,7 +458,7 @@ void Engine::D3D12GraphicInterface::DispatchRay(
         
     cmd->GetList4()->SetComputeRootDescriptorTable(
         RAYTRACING_GLOBAL_SLOT_OUTPUT,
-        m_output_heap_->GetGPUDescriptorHandleForHeapStart());
+        m_raytracing_heap_handler_->GetOutputGPUHandle());
     
     cmd->GetList4()->SetComputeRootConstantBufferView(
         RAYTRACING_GLOBAL_SLOT_WVP,
@@ -435,6 +471,8 @@ void Engine::D3D12GraphicInterface::DispatchRay(
     auto& shader_primitive = static_cast<IRaytracingShader&>(shader->GetPrimitive());
     shader_primitive.UpdateShaderRecords(RAY_SHADER_REC_HIT, hit_records);
     
+    m_raytracing_output_frame_ = RecordingFrame();
+
     D3D12_DISPATCH_RAYS_DESC ray_desc{};
     ray_desc.Width = CFG_WIDTH;
     ray_desc.Height = CFG_HEIGHT;
@@ -465,9 +503,12 @@ void Engine::D3D12GraphicInterface::DispatchRay(
             case RAY_SHADER_REC_HIT:
                 {
                     auto resource = static_cast<ID3D12Resource*>(shader_primitive.GetShaderRecord(RAY_SHADER_REC_HIT));
+                    // One HitShaderRecord per top level instance (the serialized record size is not used).
+                    static_assert(sizeof(HitShaderRecord) % D3D12_RAYTRACING_SHADER_RECORD_BYTE_ALIGNMENT == 0);
+                    static_assert(offsetof(HitShaderRecord, addresses) == D3D12_SHADER_IDENTIFIER_SIZE_IN_BYTES); // local args follow the identifier
                     ray_desc.HitGroupTable.StartAddress = resource->GetGPUVirtualAddress();
                     ray_desc.HitGroupTable.SizeInBytes = hit_records.size();
-                    ray_desc.HitGroupTable.StrideInBytes = record_sizes[i];
+                    ray_desc.HitGroupTable.StrideInBytes = sizeof(HitShaderRecord);
                     break;
                 }
             case RAY_SHADER_REC_MISS:
@@ -489,6 +530,12 @@ void Engine::D3D12GraphicInterface::DispatchRay(
 
 void Engine::D3D12GraphicInterface::CopyRaytracingToRenderTarget(const IGraphicContext* context)
 {
+    // Not traced this frame (nothing to trace, or no top level structure): the output holds an older frame.
+    if ( m_raytracing_output_frame_ != RecordingFrame() )
+    {
+        return;
+    }
+
     const auto& cmd = static_cast<CommandPair*>(context->commandList);
     
     const auto& copy_barrier = CD3DX12_RESOURCE_BARRIER::Transition
@@ -532,6 +579,35 @@ void Engine::D3D12GraphicInterface::CopyRaytracingToRenderTarget(const IGraphicC
     cmd->GetList4()->ResourceBarrier(1, &rtv_barrier);
 }
 
+bool Engine::D3D12GraphicInterface::CopyRaytracingDepthTo(const IGraphicContext* context, const Abstracts::Resource* depth)
+{
+    if ( m_raytracing_output_frame_ != RecordingFrame() )
+    {
+        return false;
+    }
+
+    D3D12::ExpectTexture( depth );
+    const auto* primitive = reinterpret_cast<D3D12PrimitiveTexture*>(static_cast<const Resources::Texture*>(depth)->GetPrimitiveTexture());
+    auto*       dst       = static_cast<ID3D12Resource*>(primitive->GetNativeTexture());
+    const auto& cmd       = static_cast<CommandPair*>(context->commandList);
+
+    // R32_FLOAT into the depth texture's R32_TYPELESS (one format group).
+    const D3D12_RESOURCE_BARRIER before[] =
+    {
+        CD3DX12_RESOURCE_BARRIER::Transition(m_depth_output_buffer_.Get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_COPY_SOURCE),
+        CD3DX12_RESOURCE_BARRIER::Transition(dst, D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_COPY_DEST)
+    };
+    cmd->GetList4()->ResourceBarrier(static_cast<UINT>(std::size(before)), before);
+    cmd->GetList4()->CopyResource(dst, m_depth_output_buffer_.Get());
+    const D3D12_RESOURCE_BARRIER after[] =
+    {
+        CD3DX12_RESOURCE_BARRIER::Transition(m_depth_output_buffer_.Get(), D3D12_RESOURCE_STATE_COPY_SOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS),
+        CD3DX12_RESOURCE_BARRIER::Transition(dst, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_COMMON)
+    };
+    cmd->GetList4()->ResourceBarrier(static_cast<UINT>(std::size(after)), after);
+    return true;
+}
+
 void Engine::D3D12GraphicInterface::QueryDevice()
 {
 	DX::ThrowIfFailed(m_dev_->QueryInterface(IID_PPV_ARGS(m_raytracing_dev_.GetAddressOf())));
@@ -546,7 +622,7 @@ void Engine::D3D12GraphicInterface::InitializeRaytracingDescriptorHeaps()
 void Engine::D3D12GraphicInterface::InitializeGlobalRootSignature()
 {
     CD3DX12_DESCRIPTOR_RANGE1 range;
-    range.Init(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, 1, 0, 1);
+    range.Init(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, 2, 0, 1); // u0 colour, u1 depth (space1)
     
 	CD3DX12_ROOT_PARAMETER1 root_param[RAYTRACING_GLOBAL_SLOT_COUNT];
 	root_param[RAYTRACING_GLOBAL_SLOT_TLAS].InitAsShaderResourceView( 0, 1 ); // TLAS Buffer
@@ -616,17 +692,18 @@ void Engine::D3D12GraphicInterface::InitializeOutputBuffer()
 
     SET_NAME( m_output_buffer_, L"Raytracing Output Buffer" )
 
-    constexpr D3D12_DESCRIPTOR_HEAP_DESC desc
-    {
-        .Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV,
-        .NumDescriptors = 1,
-        .Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE,
-        .NodeMask = 0
-    };
+    const auto& depth_desc = CD3DX12_RESOURCE_DESC::Tex2D(DXGI_FORMAT_R32_FLOAT, CFG_WIDTH, CFG_HEIGHT, 1, 1, 1, 0, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
+    DX::ThrowIfFailed(
+         m_dev_->CreateCommittedResource(
+          &default_heap,
+          D3D12_HEAP_FLAG_NONE,
+          &depth_desc,
+          D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
+          nullptr,
+          IID_PPV_ARGS( m_depth_output_buffer_.ReleaseAndGetAddressOf() ) ) );
 
-    DX::ThrowIfFailed( m_dev_->CreateDescriptorHeap( &desc, IID_PPV_ARGS( m_output_heap_.GetAddressOf() ) ) );
-
-    m_dev_->CreateUnorderedAccessView( m_output_buffer_.Get(), nullptr, nullptr, m_output_heap_->GetCPUDescriptorHandleForHeapStart() );
+    SET_NAME( m_depth_output_buffer_, L"Raytracing Depth Output Buffer" )
+    // Their UAVs are written into each frame's ray tracing heap (ReserveRaytracingHeap).
 }
 #endif
 
@@ -729,7 +806,10 @@ void Engine::D3D12GraphicInterface::SetDefaultComputePipeline(const IGraphicCont
 
 void Engine::D3D12GraphicInterface::Draw(const IGraphicContext* context, const Abstracts::Resource* resource, const UINT instance_count, const UINT instance_offset)
 {
-	D3D12::ExpectMesh( resource );
+	if ( resource )
+	{
+		D3D12::ExpectMesh( resource ); // no mesh: a full-screen triangle (Deferred LightPass), drawn below
+	}
 	auto* mesh = static_cast<const Resources::Mesh*>(resource);
 	const auto cmd = reinterpret_cast<CommandPair*>(context->commandList);
     UINT       index_count = 0;
@@ -758,10 +838,20 @@ void Engine::D3D12GraphicInterface::Dispatch(
 {
 	D3D12::ExpectComputeShader( resource );
 	auto* shader = static_cast<const Resources::ComputeShader*>(resource);
-	if (!m_local_param_)
+	StructuredBufferTypeProxy<Graphics::SBs::LocalParamSB>* local_param_buffer = nullptr;
 	{
-		IGraphicAPI& gi = g_graphic_accessor.GetInterface(); 	
-		m_local_param_ = gi.GetStructuredBuffer<Graphics::SBs::LocalParamSB>();
+		std::lock_guard l(m_local_param_mutex_);
+		if (const uint64_t frame = RecordingFrame(); frame != m_local_param_frame_)
+		{
+			m_local_param_frame_ = frame;
+			m_local_param_next_  = 0;
+		}
+		if (m_local_param_next_ == m_local_params_.size())
+		{
+			IGraphicAPI& gi = g_graphic_accessor.GetInterface();
+			m_local_params_.push_back(gi.GetStructuredBuffer<Graphics::SBs::LocalParamSB>());
+		}
+		local_param_buffer = &m_local_params_[m_local_param_next_++];
 	}
 
 	const auto cmd  = static_cast<CommandPair*>(context->commandList);
@@ -770,13 +860,13 @@ void Engine::D3D12GraphicInterface::Dispatch(
 	SetDefaultComputePipeline(context);
 	BindCompute(context, shader);
 	
-	m_local_param_.SetData(context, 1, &local_param);
-	m_local_param_.TransitionToSRV(context);
-	m_local_param_.CopySRVHeap(context);
+	local_param_buffer->SetData(context, 1, &local_param);
+	local_param_buffer->TransitionToSRV(context);
+	local_param_buffer->CopySRVHeap(context);
 	heap->BindCompute(context);
 
 	cmd->GetList()->Dispatch(group_count[0], group_count[1], group_count[2]);
-	m_local_param_.TransitionCommon(context);
+	local_param_buffer->TransitionCommon(context);
 }
 
 void Engine::D3D12GraphicInterface::BindGraphic(const IGraphicContext* context, const Abstracts::Resource* resource)
@@ -1246,6 +1336,16 @@ void Engine::D3D12GraphicInterface::InitializeDevice()
 	DX::ThrowIfFailed(D3D12GetDebugInterface(IID_PPV_ARGS(&debug_interface)));
 	DX::ThrowIfFailed(debug_interface->QueryInterface(IID_PPV_ARGS(debug_interface1.GetAddressOf())));
 	debug_interface->EnableDebugLayer();
+	{
+		// KOLIBRI_GPU_VALIDATION=1: GPU-based validation as well (much slower); errors break like the debug layer's.
+		char*  value  = nullptr;
+		size_t length = 0;
+		if (_dupenv_s(&value, &length, "KOLIBRI_GPU_VALIDATION") == 0 && value && value[0] == '1')
+		{
+			debug_interface1->SetEnableGPUBasedValidation(TRUE);
+		}
+		free(value);
+	}
 #endif
 
 #if WITH_DEBUG & defined(SNIFF_DEVICE_REMOVAL)
@@ -1349,7 +1449,10 @@ void Engine::D3D12GraphicInterface::InitializeDevice()
 		)
 	);
 
-	DX::ThrowIfFailed(m_swap_chain_->SetMaximumFrameLatency(CFG_FRAME_LATENCY_TOLERANCE_SECOND));
+	// Present queue as deep as the frames in flight (WaitForNextFrame waits on it). The back buffers, and ImGui's
+	// per-frame buffers (ImGuiManager passes CFG_FRAME_BUFFER), must not be fewer.
+	static_assert(CFG_FRAME_BUFFER >= g_max_frames_in_flight);
+	DX::ThrowIfFailed(m_swap_chain_->SetMaximumFrameLatency(static_cast<UINT>(m_command_pair_task_.FramesInFlight())));
 	m_frame_idx_ = m_swap_chain_->GetCurrentBackBufferIndex();
 
 	m_render_targets_.resize(CFG_FRAME_BUFFER);

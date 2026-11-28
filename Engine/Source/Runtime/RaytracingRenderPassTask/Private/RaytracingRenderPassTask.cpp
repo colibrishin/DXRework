@@ -1,6 +1,8 @@
 #include "RaytracingRenderPassTask.h"
 
 #include <ranges>
+#include <array>
+#include <unordered_map>
 #include <vector>
 #include <tbb/parallel_for_each.h>
 
@@ -11,12 +13,31 @@
 #include "Material.h"
 #include "Shape.h"
 #include "RaytracingShader.h"
+#include "Shader.h"
+
+namespace
+{
+    // Texture pointers of one instance: instances with the same set share a hit group descriptor table.
+    using RaytracingTextureSet = std::array<const Engine::Abstracts::Resource*, Engine::g_max_texture_per_material>;
+
+    struct RaytracingTextureSetHash
+    {
+        size_t operator()(const RaytracingTextureSet& set) const noexcept
+        {
+            size_t h = 0;
+            for (const Engine::Abstracts::Resource* res : set)
+            {
+                h = h * 1000003u ^ std::hash<const void*>{}(res);
+            }
+            return h;
+        }
+    };
+}
 
 namespace Engine
 {
 	RaytracingRenderPassTask::RaytracingRenderPassTask()
         : m_gi_ticket_(SingletonSpinLock::GetInstance().Register()),
-          m_local_param_pool_ticket_(SingletonSpinLock::GetInstance().Register()),
           m_instance_pool_ticket_(SingletonSpinLock::GetInstance().Register()),
           m_texture_record_ticket_(SingletonSpinLock::GetInstance().Register()),
           m_heap_ticket_(SingletonSpinLock::GetInstance().Register()),
@@ -24,24 +45,7 @@ namespace Engine
 
     void RaytracingRenderPassTask::PreRun(RenderMap const* render_map, const size_t render_map_count, const ObjectPredication& predication)
 	{
-	    IGraphicAPI& gi = g_graphic_accessor.GetInterface();
-
-        if ( IRaytracingExtension& rgi = g_graphic_accessor.GetRaytracingInterface();
-             rgi.ShouldUseRaytracing() )
-	    {
-	        const auto& context = gi.GetNewContext(0, false, L"Building Top Level Acceleration Buffer");
-	        const auto& primitive = context.GetPointers();
-	        primitive.commandList->SoftReset();
-	    
-	        rgi.BuildTopLevelAccelerationBuffer(
-                &primitive,
-                render_map,
-                render_map_count,
-                m_top_level_acceleration_buffer_,
-                predication);
-	    
-	        primitive.commandList->FlagReady();   
-	    }
+	    // The top level structure is built in Run, from the same instance list as the hit records and instance buffer.
 	}
 
 	void RaytracingRenderPassTask::Run(
@@ -57,71 +61,179 @@ namespace Engine
 		const std::unordered_map<std::string_view, ContextSetupFunction>& postrender_predicates
 	)
 	{
+		// Without a TLAS build this frame, a BLAS may be freed and another one created at its address before the next
+		// build: forget the last build so the next one is not skipped as unchanged.
+		const auto forget_tlas = [this] { m_top_level_acceleration_buffer_.builtInstances.clear(); };
+
 		if (domain_map->empty())
 		{
+			forget_tlas();
 			return;
 		}
 
         if ( IRaytracingExtension& rgi = g_graphic_accessor.GetRaytracingInterface();
              rgi.ShouldUseRaytracing() )
 		{
-		    // Filter the instances by the predicate
-		    uint64_t instance_count = 0;
-		    IntermediateShaderMap intermediate_shader_map;
-		    PredicateObject(predicate, domain_map, instance_count, intermediate_shader_map);
+		    // One list feeds the top level structure, the hit records and the instance buffer, so TLAS entry i, hit
+		    // record i and instance i are the same object (the shader reads g_Instance[InstanceIndex()] and the hit
+		    // group index is i): instances of the ray tracing shader whose mesh has a bottom level structure, in mesh
+		    // order, then those of graphic shaders (drawn by the raster passes; traced for shadows and reflections).
+		    Strong<Resources::RaytracingShader>     shader;
+		    std::vector<RaytracingMeshInstancePair> meshes;
+		    std::vector<const InstancePair*>        instance_pairs; // into the render map, valid during Run
+		    std::vector<RaytracingInstance>         tlas_instances;
+		    size_t                                  upper_bound = 0;
+		    for (const auto& renderer : *domain_map | std::views::values)
+		    {
+		        for (const auto& mesh_map : renderer | std::views::values)
+		        {
+		            for (const auto& instances : mesh_map | std::views::values)
+		            {
+		                upper_bound += instances.size();
+		            }
+		        }
+		    }
+		    instance_pairs.reserve(upper_bound);
+		    tlas_instances.reserve(upper_bound);
+		    // Raster objects (raster == true) are traced only by the shadow and reflection rays (instance mask 2), and only
+		    // scene objects: the layers the shadow maps leave out (camera, UI, environment, lights, skybox) neither occlude
+		    // nor reflect.
+		    const auto collect = [&](const auto& mesh_map, const bool raster)
+		    {
+		        for (const auto& [mesh, instances] : mesh_map)
+		        {
+		            auto* const mesh_ptr = static_cast<Resources::Mesh*>(mesh.get());
+		            if (mesh_ptr->GetBLAS().empty || !mesh_ptr->GetBLAS().resultPool || !mesh_ptr->GetPrimitive())
+		            {
+		                static std::atomic<bool> s_warned{ false };
+		                if (!s_warned.exchange(true))
+		                {
+		                    OutputDebugStringA("WARNING: ray tracing pass skips meshes without a bottom level structure\n");
+		                }
+		                continue;
+		            }
 
-		    // The per-batch pools grow in advance(); sizing them to the instance count allocated one GPU buffer and one
-		    // descriptor heap per object (E_OUTOFMEMORY at ~5k objects).
+		            size_t count = 0;
+		            for (const InstancePair& instance_pair : instances)
+		            {
+		                if (predicate && !predicate(instance_pair.object))
+		                {
+		                    continue;
+		                }
+		                if (raster)
+		                {
+		                    const auto layer = instance_pair.object->GetLayer();
+		                    if (layer == RESERVED_LAYER_CAMERA || layer == RESERVED_LAYER_UI || layer == RESERVED_LAYER_ENVIRONMENT ||
+		                        layer == RESERVED_LAYER_LIGHT || layer == RESERVED_LAYER_SKYBOX)
+		                    {
+		                        continue;
+		                    }
+		                }
+		                // A block (particles) is traced per instance, each with its own record.
+		                const size_t block = std::max<size_t>(instance_pair.instanceCount, 1);
+		                for (size_t k = 0; k < block; ++k)
+		                {
+		                    instance_pairs.push_back(&instance_pair); // no copy: an InstancePair is about 870 bytes
+		                    tlas_instances.push_back({ mesh_ptr, instance_pair.instance + k, raster });
+		                }
+		                count += block;
+		            }
+		            if (count != 0)
+		            {
+		                meshes.emplace_back(mesh_ptr, count);
+		            }
+		        }
+		    };
 
-            for (const auto& renderer : *domain_map | std::views::values)
-            {
-                tbb::parallel_for_each
-                    (
-                     renderer.begin(), renderer.end(),
-                     [this, &predicate, &dt, &shader_bypass, &additional_sbs, &local_param,
-                         &prerender_predicate, &postrender_predicate, &prerender_predicates, &postrender_predicates]
-                         (const ShaderMap::value_type& pair)
-                     {
-                         const Strong<Resources::RaytracingShader>& locked_shader =
-                                 Cast<Resources::RaytracingShader>(pair.first);
-                         if (!locked_shader)
-                         {
-                             return;
-                         }
+		    for (const auto& renderer : *domain_map | std::views::values)
+		    {
+		        for (const auto& [shader_resource, mesh_map] : renderer)
+		        {
+		            const Strong<Resources::RaytracingShader> rt_shader = Cast<Resources::RaytracingShader>(shader_resource);
+		            if (!rt_shader)
+		            {
+		                continue;
+		            }
+		            if (!shader)
+		            {
+		                shader = rt_shader;
+		            }
+		            else if (rt_shader != shader)
+		            {
+		                // One dispatch writes the whole output: a second shader would need its own hit groups.
+		                static std::atomic<bool> s_warned{ false };
+		                if (!s_warned.exchange(true))
+		                {
+		                    OutputDebugStringA("WARNING: ray tracing pass traces one ray tracing shader; others are skipped\n");
+		                }
+		                continue;
+		            }
 
-                         // Hit records index instance_pairs as [mesh offset + i], so the per-mesh counts and the
-                         // flattened list must come from the same predicate-filtered source, in mesh order.
-                         std::vector<RaytracingMeshInstancePair> meshes;
-                         aligned_vector<InstancePair>            instance_pairs;
-                         meshes.reserve(pair.second.size());
-                         for (const auto& [mesh, instances] : pair.second)
-                         {
-                             size_t count = 0;
-                             for (const InstancePair& instance_pair : instances)
-                             {
-                                 if (predicate && !predicate(instance_pair.object))
-                                 {
-                                     continue;
-                                 }
-                                 instance_pairs.push_back(instance_pair);
-                                 ++count;
-                             }
-                             if (count != 0)
-                             {
-                                 meshes.emplace_back(static_cast<Resources::Mesh*>(mesh.get()), count);
-                             }
-                         }
+		            collect(mesh_map, false);
+		        }
+		    }
 
-                         if (!instance_pairs.empty())
-                         {
-                             StartPhase_MultiThread(
-                                  dt, shader_bypass, meshes, locked_shader.get(), additional_sbs, local_param,
-                                  prerender_predicate, postrender_predicate, prerender_predicates, postrender_predicates,
-                                  instance_pairs);
-                         }
-                     }
-                    );
-            }
+		    // Objects of graphic shaders occlude and are reflected: after the ray tracing shader's objects, so that a
+		    // truncated heap drops raster objects first. They use its hit group, so only when it traces something.
+		    if (shader)
+		    {
+		        for (const auto& renderer : *domain_map | std::views::values)
+		        {
+		            for (const auto& [shader_resource, mesh_map] : renderer)
+		            {
+		                // G-buffer materials only (several render targets): the deferred pass draws them, and the closest
+		                // hit shader reads their texture layout. Forward-only shaders are not drawn in this configuration.
+		                if (const Strong<Resources::Shader> graphic = Cast<Resources::Shader>(shader_resource);
+		                    graphic && graphic->GetRTVFormat().size() > 1)
+		                {
+		                    collect(mesh_map, true);
+		                }
+		            }
+		        }
+		    }
+
+		    if (instance_pairs.empty())
+		    {
+		        forget_tlas();
+		        return;
+		    }
+
+		    // One hit record table per instance, from one shader-visible heap: past its size the rest is not traced.
+		    if (const size_t reserved = rgi.ReserveRaytracingHeap(instance_pairs.size()); reserved < instance_pairs.size())
+		    {
+		        static std::atomic<bool> s_warned{ false };
+		        if (!s_warned.exchange(true))
+		        {
+		            OutputDebugStringA("WARNING: ray tracing pass traces only the instances one descriptor heap holds\n");
+		        }
+		        instance_pairs.resize(reserved);
+		        tlas_instances.resize(reserved);
+		        size_t kept = 0;
+		        for (auto it = meshes.begin(); it != meshes.end(); ++it)
+		        {
+		            if (kept + it->instanceCount >= reserved)
+		            {
+		                it->instanceCount = reserved - kept;
+		                meshes.erase(it->instanceCount == 0 ? it : it + 1, meshes.end());
+		                break;
+		            }
+		            kept += it->instanceCount;
+		        }
+		    }
+
+		    {
+		        IGraphicAPI& gi       = g_graphic_accessor.GetInterface();
+		        const auto&  context  = gi.GetNewContext(0, false, L"Building Top Level Acceleration Buffer");
+		        const auto&  primitive = context.GetPointers();
+		        primitive.commandList->SoftReset();
+		        rgi.BuildTopLevelAccelerationBuffer(&primitive, tlas_instances.data(), tlas_instances.size(),
+		                                            m_top_level_acceleration_buffer_);
+		        primitive.commandList->FlagReady();
+		    }
+
+		    StartPhase_MultiThread(
+		         dt, shader_bypass, meshes, shader.get(), additional_sbs, local_param,
+		         prerender_predicate, postrender_predicate, prerender_predicates, postrender_predicates, instance_pairs);
 
 		    auto& gi = g_graphic_accessor.GetInterface();
 		    auto context = gi.GetNewContext(0, false, L"Lazy Shader Resource Texture Transition Back");
@@ -144,6 +256,10 @@ namespace Engine
             rgi.CopyRaytracingToRenderTarget( &primitive );
 		    primitive.commandList->FlagReady();
 		}
+		else
+		{
+			forget_tlas();
+		}
 	}
 
 	void RaytracingRenderPassTask::Cleanup()
@@ -151,7 +267,6 @@ namespace Engine
         if ( IRaytracingExtension& rgi = g_graphic_accessor.GetRaytracingInterface();
              rgi.ShouldUseRaytracing() )
 	    {
-	        m_local_param_pool_.reset();
 	        m_instance_pool_.reset();
 	        m_local_heaps_.clear();
 
@@ -169,40 +284,6 @@ namespace Engine
 	    }
 	}
 
-	void RaytracingRenderPassTask::PredicateObject(const ObjectPredication& predicate, RenderMap const* domain_map, uint64_t& instance_count, IntermediateShaderMap& out_map) const
-	{
-		out_map.clear();
-		
-		for (const auto& meshes : *domain_map | std::views::values)
-		{
-			tbb::parallel_for_each
-			(
-				meshes.begin(), meshes.end(), [&](const ShaderMap::value_type& shader_pair)
-				{
-					for (const aligned_vector<InstancePair>& instances : shader_pair.second | std::views::values)
-					{
-						for (const InstancePair& instance_pair : instances)
-						{
-							if (predicate && !predicate(instance_pair.object))
-							{
-								continue;
-							}
-
-							std::remove_reference_t<decltype(out_map)>::accessor acc;
-							if (!out_map.find(acc, static_cast<Resources::ShaderBase*>(shader_pair.first.get())))
-							{
-								out_map.insert(acc, static_cast<Resources::ShaderBase*>(shader_pair.first.get()));
-							}
-
-							acc->second.push_back(instance_pair);
-							std::atomic_ref(instance_count).fetch_add(1);
-						}
-					}
-				}
-			);
-		}
-	}
-
     void RaytracingRenderPassTask::StartPhase_MultiThread(
 		const float                                                       dt,
 		const bool                                                        shader_bypass,
@@ -214,7 +295,7 @@ namespace Engine
 		const ContextSetupFunction&                                       postrender_predicate,
 		const std::unordered_map<std::string_view, ContextSetupFunction>& prerender_predicates,
 		const std::unordered_map<std::string_view, ContextSetupFunction>& postrender_predicates,
-		const aligned_vector<InstancePair>&                               instance_pairs
+		const std::vector<const InstancePair*>&                           instance_pairs
 	)
 	{
         IGraphicAPI& gi = g_graphic_accessor.GetInterface();
@@ -228,30 +309,18 @@ namespace Engine
 		const IGraphicContext& primitive = context.GetPointers();
 		primitive.commandList->SoftReset();
 
-		// Manual release
-		SpinLockToken local_param_token = SingletonSpinLock::GetInstance().Lock(m_local_param_pool_ticket_);
-		m_local_param_pool_.advance();
-		StructuredBufferTypeProxy<Graphics::SBs::LocalParamSB>& sb = m_local_param_pool_.get();
-		local_param_token.Release();
-
 		const IGraphicContext temp_context
 		{
 			.commandList = primitive.commandList,
 			.heap = nullptr
 		};
 
-		sb.SetData(&temp_context, 1, &local_param);
-		sb.TransitionToSRV(&temp_context);
 	    
 		gi.SetDefaultRenderTarget(&temp_context);
 		gi.SetViewport(&temp_context, Managers::RenderPipeline::GetInstance().GetViewport());
 
-		if (prerender_predicate) { prerender_predicate(&temp_context); }
-
-		for ( const auto& func : prerender_predicates | std::views::values )
-		{
-			func( &temp_context );
-		}
+		// The pre/post render predicates bind raster resources (shadow maps, reflection map) into a heap; the ray
+		// tracing pass has none and traces its own shadow and reflection rays, so it does not run them.
 		
 		// Manual release
 		auto instance_token = SingletonSpinLock::GetInstance().Lock( m_instance_pool_ticket_ );
@@ -261,18 +330,23 @@ namespace Engine
 		
 		aligned_vector<Graphics::SBs::InstanceSB*> instances( instance_pairs.size() );
 
-		size_t idx = 0;
-		for ( const InstancePair& instance_pair : instance_pairs )
+		// A block's pair repeats once per instance (Run), its instances are contiguous.
+		size_t              idx      = 0;
+		size_t              in_block = 0;
+		const InstancePair* previous = nullptr;
+		for ( const InstancePair* instance_pair : instance_pairs )
 		{
-			instances[ idx ] = instance_pair.instance;
+			in_block         = instance_pair == previous ? in_block + 1 : 0;
+			previous         = instance_pair;
+			instances[ idx ] = instance_pair->instance + in_block;
 			++idx;
 		}
 
-		for ( const StructuredBufferDecorator* additional_sb : additional_sbs )
-		{
-			additional_sb->TransitionToSRV(&temp_context);
-		}
+		// The shared buffers (lights) are read without transitions, as in the raster passes, whose lists record in parallel:
+		// they stay COMMON, are promoted implicitly on read and decay when their ExecuteCommandLists
+		// finishes (this engine submits one list per call).
 	    
+	    std::unordered_map<RaytracingTextureSet, IHeapBase*, RaytracingTextureSetHash> tables;
 	    byte_stream& hit_records = GetByteStream();
 	    size_t instance_pos = 0;
 	    for ( const auto& [ mesh, instance_count ] : meshes )
@@ -281,43 +355,63 @@ namespace Engine
 	        {
 	            HitShaderRecord record{};
 
-	            // Manual Release
-	            auto token = SingletonSpinLock::GetInstance().Lock(m_heap_ticket_);
-	            m_local_heaps_.push_back( rgi.GetRaytracingHeap() );
-	            IHeapBase* heap = m_local_heaps_.back().get();
-	            token.Release();
+	            const InstancePair& pair = *instance_pairs[instance_pos + i];
 
-	            const IGraphicContext local_sig_context
-                    {
-                        .commandList = primitive.commandList,
-                        .heap = heap
-                    };
-	                
-	            for ( size_t j = 0; j < instance_pairs[instance_pos + i].textures.size(); ++j )
+	            // Instances with the same textures share one descriptor table (the sampler table is shared by all):
+	            // only the hit record, which holds the mesh buffers, is per instance.
+	            RaytracingTextureSet key{};
+	            for ( size_t j = 0; j < pair.textures.size(); ++j )
 	            {
-	                if ( instance_pairs[instance_pos + i].textures[j] )
+	                key[ j ] = pair.textures[ j ].get();
+	            }
+
+	            auto [ table, inserted ] = tables.try_emplace( key, nullptr );
+	            if ( inserted )
+	            {
+	                // Manual Release
+	                auto token = SingletonSpinLock::GetInstance().Lock(m_heap_ticket_);
+	                m_local_heaps_.push_back( rgi.GetRaytracingHeap() );
+	                table->second = m_local_heaps_.back().get();
+	                token.Release();
+
+	                const IGraphicContext local_sig_context
 	                {
-	                    RecordUsedTexture( &local_sig_context, gi, instance_pairs[instance_pos + i].textures[j] );
-	                    instance_pairs[instance_pos + i].instance->SetTextureSlot( j, static_cast<int>( j ) ); // bound at BIND_SLOT_TEX + j below
-	                    gi.Bind( &local_sig_context, instance_pairs[instance_pos + i].textures[j].get(), BIND_TYPE_SRV, BIND_SLOT_TEX, j );
+	                    .commandList = primitive.commandList,
+	                    .heap = table->second
+	                };
+
+	                for ( size_t j = 0; j < pair.textures.size(); ++j )
+	                {
+	                    if ( pair.textures[j] )
+	                    {
+	                        RecordUsedTexture( &local_sig_context, gi, pair.textures[j] );
+	                        gi.Bind( &local_sig_context, pair.textures[j].get(), BIND_TYPE_SRV, BIND_SLOT_TEX, j );
+	                    }
+	                }
+
+	                // raytracing.hlsl reads only tex[] and PSSampler through the local tables (lights, instances and
+	                // parameters come from the global root arguments), so the structured buffers are not copied here.
+	                if ( tables.size() == 1 )
+	                {
+	                    table->second->SetSampler( shader, SAMPLER_TEXTURE );
 	                }
 	            }
+	            IHeapBase* heap = table->second;
 
-	            sb.CopySRVHeap( &local_sig_context );
-	                
-	            for ( const StructuredBufferDecorator* additional_sb : additional_sbs )
+	            for ( size_t j = 0; j < pair.textures.size(); ++j )
 	            {
-	                additional_sb->CopySRVHeap( &local_sig_context );
+	                if ( pair.textures[j] )
+	                {
+	                    instances[ instance_pos + i ]->SetTextureSlot( j, static_cast<int>( j ) ); // bound at BIND_SLOT_TEX + j
+	                }
 	            }
-
-	            heap->SetSampler( shader, SAMPLER_TEXTURE );
 
 	            record.addresses[ RAYTRACING_LOCAL_SLOT_SRV ] = heap->GetBufferHeapGPUAddress( g_local_raytracing_srv_offset );
 	            record.addresses[ RAYTRACING_LOCAL_SLOT_UAV ] = heap->GetBufferHeapGPUAddress( g_local_raytracing_uav_offset );
 	            record.addresses[ RAYTRACING_LOCAL_SLOT_SAMPLER ] = heap->GetSamplerHeapGPUAddress(0);
 	            
 	            record.addresses[ RAYTRACING_LOCAL_SLOT_VERTEX ] = mesh->GetVertexStructuredBuffer().GetGPUAddress();
-	            record.addresses[ RAYTRACING_LOCAL_SLOT_INDEX ] = mesh->GetPrimitive()->GetNativeIndexBufferGPUAddress();
+	            record.addresses[ RAYTRACING_LOCAL_SLOT_INDEX ] = mesh->GetPrimitive()->GetRaytracingIndexBufferGPUAddress();
 	            
 	            hit_records.push_back(&record, sizeof(HitShaderRecord));
 	        }
@@ -327,19 +421,8 @@ namespace Engine
 		
 		DispatchPhase_MultiThread( dt, shader_bypass, idx, instance, shader, hit_records, &temp_context, instances );
 
-		if (postrender_predicate) { postrender_predicate( &temp_context ); }
-
-		for ( const auto& func : postrender_predicates | std::views::values )
-		{
-			func( &temp_context );
-		}
 		
-		for ( const StructuredBufferDecorator* additional_sb : additional_sbs )
-		{
-			additional_sb->TransitionCommon( &temp_context );
-		}
 
-		sb.TransitionCommon( &temp_context );
 		temp_context.commandList->FlagReady();
 	}
 

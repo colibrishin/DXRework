@@ -1,4 +1,6 @@
 #include "CommandPair.h"
+#include <chrono>
+#include <thread>
 
 #pragma comment(lib, "d3d12.lib")
 
@@ -6,6 +8,129 @@
 
 namespace Engine
 {
+	namespace
+	{
+		std::atomic<CommandPairTask*> s_release_task{ nullptr };
+
+		// A holder does its work when called (DescriptorHandlerBase::Release gives the block back) or when destroyed
+		// (KeepUntilFrameDone's captured owner): call it, then destroy it.
+		void RunReleases(std::function<void()>& holder)
+		{
+			if (holder)
+			{
+				holder();
+			}
+			holder = {};
+		}
+
+		void RunReleases(std::vector<std::function<void()>>& holders)
+		{
+			for (std::function<void()>& holder : holders)
+			{
+				RunReleases(holder);
+			}
+			holders.clear();
+		}
+	}
+
+	void ReleaseAfterFrame(std::function<void()>&& holder)
+	{
+		if (CommandPairTask* task = s_release_task.load())
+		{
+			task->ReleaseAfterFrame(std::move(holder));
+			return;
+		}
+		RunReleases(holder);
+	}
+
+	uint64_t RecordingFrame()
+	{
+		const CommandPairTask* task = s_release_task.load();
+		return task ? task->RecordingFrame() : 0;
+	}
+
+	uint64_t FramesInFlight()
+	{
+		const CommandPairTask* task = s_release_task.load();
+		return task ? task->FramesInFlight() : 1;
+	}
+
+	bool FrameDone(const uint64_t frame)
+	{
+		const CommandPairTask* task = s_release_task.load();
+		return !task || task->FrameDone(frame);
+	}
+
+	namespace
+	{
+		std::atomic<uint64_t> s_upload_rewrites{ 0 };
+		std::atomic<uint64_t> s_upload_unfinished{ 0 };
+
+		uint32_t EnvNumber(const char* name, const uint32_t fallback)
+		{
+			char*    value  = nullptr;
+			size_t   length = 0;
+			uint32_t number = fallback;
+			if (_dupenv_s(&value, &length, name) == 0 && value && value[0])
+			{
+				number = static_cast<uint32_t>(strtoul(value, nullptr, 10));
+			}
+			free(value);
+			return number;
+		}
+
+		bool FrameCheckRequested()
+		{
+			static const bool requested = []
+			{
+				char*  value  = nullptr;
+				size_t length = 0;
+				const bool set = _dupenv_s(&value, &length, "KOLIBRI_FRAME_CHECK") == 0 && value && value[0] == '1';
+				free(value);
+				return set;
+			}();
+			return requested;
+		}
+
+		void WriteFrameCheck(const char* reason)
+		{
+			if (FILE* file = nullptr; fopen_s(&file, "framecheck.txt", "a") == 0 && file)
+			{
+				fprintf(file, "FRAMECHECK %s frame=%llu in_flight=%llu rewrites=%llu unfinished=%llu\n", reason,
+				        static_cast<unsigned long long>(RecordingFrame()),
+				        static_cast<unsigned long long>(FramesInFlight()),
+				        static_cast<unsigned long long>(s_upload_rewrites.load()),
+				        static_cast<unsigned long long>(s_upload_unfinished.load()));
+				fclose(file);
+			}
+		}
+	}
+
+	void CountFrameUpload(const bool rewritten, const bool unfinished, const wchar_t* name)
+	{
+		if (rewritten)
+		{
+			if (++s_upload_rewrites <= 16 && FrameCheckRequested())
+			{
+				if (FILE* file = nullptr; fopen_s(&file, "framecheck.txt", "a") == 0 && file)
+				{
+					fprintf(file, "FRAMECHECK REWRITE frame=%llu name=%ls\n",
+					        static_cast<unsigned long long>(RecordingFrame()), name ? name : L"?");
+					fclose(file);
+				}
+			}
+		}
+		if (unfinished)
+		{
+			++s_upload_unfinished;
+			if (FrameCheckRequested())
+			{
+				WriteFrameCheck("UNFINISHED");
+				__fastfail(FAST_FAIL_INVALID_ARG);
+			}
+		}
+	}
+
 	CommandPair::CommandPair
 	(
 		CommandPairPool*    pool,
@@ -18,6 +143,7 @@ namespace Engine
 		: m_command_id_(ID),
 		  m_buffer_idx_(buffer_idx),
 		  m_debug_name_(debug_name),
+		  m_b_submitted_(false),
 		  m_b_executed_(false),
 		  m_b_ready_(false),
 		  m_b_disposed_(false),
@@ -72,9 +198,10 @@ namespace Engine
 		std::lock_guard<std::mutex> l(m_critical_mutex_);
 		DX::ThrowIfFailed(m_list_->Close());
 
-		m_b_ready_    = false;
-		m_b_executed_ = false;
-		m_b_disposed_ = true;
+		m_b_ready_     = false;
+		m_b_submitted_ = false;
+		m_b_executed_  = false;
+		m_b_disposed_  = true;
 	}
 
 	void CommandPair::HardReset()
@@ -85,10 +212,12 @@ namespace Engine
 		DX::ThrowIfFailed(m_list_->Reset(m_allocator_.Get(), nullptr));
 		DX::ThrowIfFailed(m_list_->Close());
 		{ std::lock_guard<std::mutex> dl(m_deferred_mutex_); m_deferred_release_.clear(); }
+		m_submit_hook_ = {};
 
-		m_b_ready_    = false;
-		m_b_executed_ = false;
-		m_b_disposed_ = false;
+		m_b_ready_     = false;
+		m_b_submitted_ = false;
+		m_b_executed_  = false;
+		m_b_disposed_  = false;
 	}
 
 	void CommandPair::SoftReset()
@@ -97,10 +226,12 @@ namespace Engine
 
 		DX::ThrowIfFailed(m_list_->Reset(m_allocator_.Get(), nullptr));
 		{ std::lock_guard<std::mutex> dl(m_deferred_mutex_); m_deferred_release_.clear(); } // previous recording already finished on the GPU (or never executed)
+		m_submit_hook_ = {};
 
-		m_b_executed_ = false;
-		m_b_ready_    = false;
-		m_b_disposed_ = false;
+		m_b_submitted_ = false;
+		m_b_executed_  = false;
+		m_b_ready_     = false;
+		m_b_disposed_  = false;
 	}
 
 	void CommandPair::DeferRelease(std::function<void()>&& holder)
@@ -127,15 +258,42 @@ namespace Engine
 
 	void CommandPair::Execute()
 	{
-		std::lock_guard<std::mutex> l(m_critical_mutex_);
+		// Waits until the GPU finished this list (and so every list submitted before it). The pair is retired (and
+		// may be handed out again) by the command thread, SwapBuffer or an Acquire that finds the pool empty.
+		uint64_t fence_value;
+		{
+			std::lock_guard<std::mutex> l(m_critical_mutex_); // held until submitted: the pair is not returned meanwhile
+			m_b_ready_ = true;
+			m_pool_->m_task_->m_command_pair_count_.notify_all();
+			m_b_submitted_.wait(false);
+			fence_value = m_latest_fence_value_;
+		}
+		m_pool_->m_task_->WaitForEventCompletion(fence_value);
+	}
+
+	uint64_t CommandPair::Submit()
+	{
+		std::lock_guard<std::mutex> l(m_critical_mutex_); // held until submitted: the pair is not returned meanwhile
 		m_b_ready_ = true;
 		m_pool_->m_task_->m_command_pair_count_.notify_all();
-		m_b_executed_.wait(false);
+		m_b_submitted_.wait(false);
+		return m_latest_fence_value_;
+	}
+
+	void CommandPair::SetSubmitHook(std::function<void()>&& hook)
+	{
+		std::lock_guard<std::mutex> l(m_critical_mutex_);
+		m_submit_hook_ = std::move(hook);
 	}
 
 	bool CommandPair::IsReady()
 	{
 		return m_b_ready_;
+	}
+
+	bool CommandPair::IsSubmitted()
+	{
+		return m_b_submitted_;
 	}
 
 	bool CommandPair::IsExecuted()
@@ -237,6 +395,12 @@ namespace Engine
 		return m_pool_[available];
 	}
 
+	bool CommandPairPool::HasFree()
+	{
+		std::lock_guard lock(m_mutex_);
+		return std::ranges::any_of(m_allocation_map_, [](const std::pair<const address_value, bool>& kv) { return !kv.second; });
+	}
+
 	void CommandPairPool::Deallocate(const Weak<CommandPair>& pointer)
 	{
 		std::lock_guard lock(m_mutex_);
@@ -315,12 +479,41 @@ namespace Engine
 		}
 
 		m_buffer_count_ = buffer_count;
+		m_fence_value_  = 0;
 
-		m_fence_nonce_ = std::unique_ptr<uint64_t>(new uint64_t[buffer_count]);
 		DX::ThrowIfFailed(dev->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(m_fence_.GetAddressOf())));
         m_fence_->SetName( L"CommandPairTask Fence" );
 
 		m_pool_.Initialize(dev, heap_handler, this);
+
+		// 2: the CPU records frame N+1 while the GPU runs frame N. 1: every list is waited for (the old behaviour).
+		m_frames_in_flight_ = EnvNumber("KOLIBRI_FRAMES_IN_FLIGHT", g_max_frames_in_flight) == 1 ? 1 : g_max_frames_in_flight;
+		// Test switch: the queue waits KOLIBRI_GPU_DELAY_MS ms per frame, so the GPU runs behind the CPU.
+		m_gpu_delay_ms_ = EnvNumber("KOLIBRI_GPU_DELAY_MS", 0);
+		if (m_gpu_delay_ms_)
+		{
+			DX::ThrowIfFailed(dev->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(m_delay_fence_.GetAddressOf())));
+			m_delay_stop_   = false;
+			m_delay_thread_ = std::thread([this]
+			{
+				std::unique_lock l(m_delay_mutex_);
+				while (true)
+				{
+					m_delay_cv_.wait(l, [this] { return m_delay_stop_ || !m_delay_signals_.empty(); });
+					if (m_delay_signals_.empty())
+					{
+						return; // stopped
+					}
+					const auto [due, value] = m_delay_signals_.front();
+					m_delay_signals_.pop_front();
+					l.unlock();
+					std::this_thread::sleep_until(due);
+					m_delay_fence_->Signal(value);
+					l.lock();
+				}
+			});
+		}
+		s_release_task = this;
 	}
 
 	uint64_t CommandPairTask::GetBufferIndex() const
@@ -355,12 +548,34 @@ namespace Engine
 			return {};
 		}
 
-		std::lock_guard l(m_critical_mutex_);
-		m_command_pairs_.push(m_pool_.Allocate(type, m_command_ids_, m_buffer_idx_, debug_name, heap_allocation));
-		m_command_ids_ += 1;
-		m_command_pair_count_.fetch_add(1);
+		while (true)
+		{
+			{
+				std::lock_guard l(m_critical_mutex_);
+				if (const Weak<CommandPair> pair = m_pool_.Allocate(type, m_command_ids_, m_buffer_idx_, debug_name, heap_allocation);
+					!pair.expired())
+				{
+					m_command_pairs_.push(pair);
+					m_command_ids_ += 1;
+					m_command_pair_count_.fetch_add(1);
+					return pair;
+				}
+			}
 
-		return m_command_pairs_.back();
+			// Every pair is taken (pairs return when the GPU finished them, up to two frames later). Wait outside the
+			// task lock, which the command thread takes to submit: for the oldest submitted pair if there is one,
+			// else for one to be submitted. This thread then retires what finished, so post-execution functions
+			// and deferred releases may run here.
+			if (!m_retire_.Empty())
+			{
+				WaitForEventCompletion(m_retire_.OldestPending());
+				RetireCompleted();
+			}
+			else
+			{
+				std::this_thread::yield();
+			}
+		}
 	}
 
 	void CommandPairTask::WaitForCommandsCompletion() const
@@ -425,10 +640,9 @@ namespace Engine
 				}
 				else if (queued && queued->IsReady())
 				{
-					Execute(queued, false);
+					Execute(queued, false); // the pair returns to the pool when the GPU finished it (Complete)
 					m_command_pair_count_.fetch_sub(1);
 					m_command_pairs_.pop();
-					m_pool_.Deallocate(queued);
 					m_command_pair_count_.notify_all();
 				}
 			}
@@ -439,14 +653,90 @@ namespace Engine
 		}
 	}
 
-	void CommandPairTask::SwapBuffer(const uint32_t next_buffer)
+	void CommandPairTask::ReleaseAfterFrame(std::function<void()>&& holder)
 	{
-		m_fence_nonce_.get()[next_buffer] = m_fence_nonce_.get()[m_buffer_idx_];
-			
-		uint64_t& nonce = m_fence_nonce_.get()[next_buffer];
+		std::lock_guard l(m_frame_release_mutex_);
+		m_frame_releases_.push_back(std::move(holder));
+	}
 
-		DX::ThrowIfFailed(GetCommandQueue(D3D12_COMMAND_LIST_TYPE_DIRECT)->Signal(m_fence_.Get(), ++nonce));
-		WaitForEventCompletion(nonce);
+	uint64_t CommandPairTask::RecordingFrame() const
+	{
+		return m_frame_index_.load();
+	}
+
+	bool CommandPairTask::FrameDone(const uint64_t frame) const
+	{
+		const uint64_t recording = m_frame_index_.load();
+		if (frame >= recording)
+		{
+			return false;
+		}
+		if (recording - frame > s_frame_history)
+		{
+			return true;
+		}
+		return m_fence_->GetCompletedValue() >= m_frame_fences_[frame % s_frame_history].load();
+	}
+
+	void CommandPairTask::EndFrame(const uint64_t frame_fence)
+	{
+		if (const uint64_t ended = m_frame_index_.load(); ended > 0 &&
+			m_fence_->GetCompletedValue() < m_frame_fences_[(ended - 1) % s_frame_history].load())
+		{
+			++m_overlapped_frames_; // this frame was recorded while the previous one was still on the GPU
+		}
+		m_frame_fences_[m_frame_index_.load() % s_frame_history] = frame_fence;
+		++m_frame_index_;
+
+		if (m_gpu_delay_ms_)
+		{
+			uint64_t delay_value;
+			{
+				std::lock_guard l(m_signal_mutex_);
+				delay_value = ++m_delay_value_;
+				DX::ThrowIfFailed(GetCommandQueue(D3D12_COMMAND_LIST_TYPE_DIRECT)->Wait(m_delay_fence_.Get(), delay_value));
+			}
+			{
+				std::lock_guard l(m_delay_mutex_);
+				m_delay_signals_.emplace_back(std::chrono::steady_clock::now() + std::chrono::milliseconds(m_gpu_delay_ms_), delay_value);
+			}
+			m_delay_cv_.notify_one();
+		}
+
+		std::vector<std::function<void()>> released;
+		{
+			std::lock_guard l(m_frame_release_mutex_);
+			released.swap(m_frame_releases_);
+		}
+		if (!released.empty())
+		{
+			m_frame_retire_.Push(frame_fence, [released = std::move(released)]() mutable { RunReleases(released); });
+		}
+	}
+
+	void CommandPairTask::WaitForIdle()
+	{
+		if (!m_fence_)
+		{
+			return;
+		}
+		WaitForEventCompletion(SignalQueue(D3D12_COMMAND_LIST_TYPE_DIRECT));
+		RetireCompleted();
+		m_frame_retire_.Retire(m_fence_->GetCompletedValue());
+	}
+
+	void CommandPairTask::SwapBuffer(const uint32_t next_buffer, const uint64_t frame_fence)
+	{
+		// Before recording the next frame, the frame m_frames_in_flight_ - 1 behind this one must have finished, so
+		// at most m_frames_in_flight_ frames are on the GPU or being recorded (and per-frame slots are free).
+		uint64_t wait_for = frame_fence;
+		if (const uint64_t ended = m_frame_index_.load(); m_frames_in_flight_ > 1)
+		{
+			wait_for = ended >= m_frames_in_flight_ ? m_frame_fences_[(ended - m_frames_in_flight_) % s_frame_history].load() : 0;
+		}
+		WaitForEventCompletion(wait_for);
+		RetireCompleted();
+		m_frame_retire_.Retire(m_fence_->GetCompletedValue());
 
 		m_buffer_idx_ = next_buffer;
 	}
@@ -459,6 +749,47 @@ namespace Engine
 		// to reach zero never returned in that case. A discarded list may still be recording, so it is not reset
 		// (resetting the allocator of an open list fails); its D3D objects are released and m_pool_.Cleanup()
 		// below drops the pair. (Close() followed by Deallocate() dereferenced the released allocator.)
+		// Submitted lists are waited for first, so what waits for them (pair return, post-execution, releases) runs.
+		if (m_fence_)
+		{
+			// A new value after everything queued, Present1 of the last frame included (frame fences come before it).
+			const uint64_t last = SignalQueue(D3D12_COMMAND_LIST_TYPE_DIRECT);
+			WaitForEventCompletion(last);
+			if (m_delay_thread_.joinable())
+			{
+				// Every delay was signalled (the queue passed them); the worker drains and ends.
+				{
+					std::lock_guard l(m_delay_mutex_);
+					m_delay_stop_ = true;
+				}
+				m_delay_cv_.notify_one();
+				m_delay_thread_.join();
+			}
+			m_retire_.RetireAll();
+		}
+		if (FrameCheckRequested())
+		{
+			WriteFrameCheck("END");
+			if (FILE* file = nullptr; fopen_s(&file, "framecheck.txt", "a") == 0 && file)
+			{
+				fprintf(file, "FRAMECHECK OVERLAP frames=%llu overlapped=%llu\n",
+				        static_cast<unsigned long long>(m_frame_index_.load()),
+				        static_cast<unsigned long long>(m_overlapped_frames_));
+				fclose(file);
+			}
+		}
+		// From here on ReleaseAfterFrame releases right away.
+		s_release_task = nullptr;
+		{
+			std::vector<std::function<void()>> released;
+			{
+				std::lock_guard l(m_frame_release_mutex_);
+				released.swap(m_frame_releases_);
+			}
+			RunReleases(released);
+		}
+		m_frame_retire_.RetireAll();
+
 		{
 			std::lock_guard l(m_critical_mutex_);
 
@@ -505,18 +836,16 @@ namespace Engine
 		ExecuteImpl(pair);
 	}
 
-	void CommandPairTask::Signal(const Strong<CommandPair>& in_pair) const
+	uint64_t CommandPairTask::SignalQueue(const D3D12_COMMAND_LIST_TYPE type)
 	{
-		if (in_pair->GetAllocator() == nullptr || in_pair->GetList() == nullptr)
-		{
-			return;
-		}
+		std::lock_guard l(m_signal_mutex_);
+		DX::ThrowIfFailed(GetCommandQueue(type)->Signal(m_fence_.Get(), ++m_fence_value_));
+		return m_fence_value_;
+	}
 
-		const auto& fence = m_fence_;
-		uint64_t&   nonce = m_fence_nonce_.get()[in_pair->GetBufferIndex()];
-
-		DX::ThrowIfFailed(GetCommandQueue(in_pair->GetType())->Signal(fence.Get(), ++nonce));
-		in_pair->m_latest_fence_value_.store(nonce);
+	void CommandPairTask::RetireCompleted()
+	{
+		m_retire_.Retire(m_fence_->GetCompletedValue());
 	}
 
 	void CommandPairTask::WaitForEventCompletion(const uint64_t fence_value)
@@ -550,12 +879,59 @@ namespace Engine
 		}
 
 		DX::ThrowIfFailed(pair->GetList()->Close());
-		const std::vector<ID3D12CommandList*> lists(1, pair->GetList());
-		GetCommandQueue(pair->GetType())->ExecuteCommandLists(1, lists.data());
 
-		Signal(pair);
-		WaitForEventCompletion(pair->GetLatestFenceValue());
+		if (pair->GetAllocator() == nullptr)
+		{
+			pair->m_b_submitted_ = true;
+			pair->m_b_submitted_.notify_all();
+			Complete(pair);
+			return;
+		}
 
+		if (pair->GetType() != D3D12_COMMAND_LIST_TYPE_DIRECT)
+		{
+			// Other queues signal the same fence: start them only when the GPU is idle (and wait for them below).
+			uint64_t last;
+			{
+				std::lock_guard l(m_signal_mutex_);
+				last = m_fence_value_;
+			}
+			WaitForEventCompletion(last);
+		}
+
+		uint64_t fence_value;
+		{
+			std::lock_guard l(m_signal_mutex_);
+			ID3D12CommandList* const list = pair->GetList();
+			ID3D12CommandQueue* const queue = GetCommandQueue(pair->GetType());
+			queue->ExecuteCommandLists(1, &list);
+			DX::ThrowIfFailed(queue->Signal(m_fence_.Get(), ++m_fence_value_));
+			fence_value = m_fence_value_;
+			pair->m_latest_fence_value_.store(fence_value);
+			// The hook and the submitted flag first: once Complete is queued, another thread may retire the pair
+			// (HardReset clears both) as soon as the GPU passed the value.
+			if (const std::function<void()> hook = std::move(pair->m_submit_hook_))
+			{
+				hook();
+			}
+			if (!pair->m_b_submitted_.exchange(true))
+			{
+				pair->m_b_submitted_.notify_all();
+			}
+			m_retire_.Push(fence_value, [this, pair] { Complete(pair); });
+		}
+
+		// Direct lists run in submission order on one queue: the next can be submitted right away. Other queues
+		// signal the same fence and must finish first (see above); KOLIBRI_FRAMES_IN_FLIGHT=1 waits for every list.
+		if (pair->GetType() != D3D12_COMMAND_LIST_TYPE_DIRECT || m_frames_in_flight_ == 1)
+		{
+			WaitForEventCompletion(fence_value);
+		}
+		RetireCompleted();
+	}
+
+	void CommandPairTask::Complete(const Strong<CommandPair>& pair)
+	{
 		if (pair->m_post_execute_function_)
 		{
 			pair->m_post_execute_function_();
@@ -576,5 +952,7 @@ namespace Engine
 		{
 			pair->m_b_executed_.notify_all();
 		}
+
+		m_pool_.Deallocate(pair);
 	}
 }

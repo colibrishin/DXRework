@@ -267,7 +267,8 @@ namespace Engine::Managers
                             } );
 #else
             static RenderTaskTraits                     traits{ &type_hash<PredicationT>::value, Domain };
-            static std::vector<IRenderPassTaskFactory*> borrowed_factories_ =
+            // The renderer's list, resolved now and again when passes change (a copy taken here stayed empty).
+            static std::vector<IRenderPassTaskFactory*>& borrowed_factories_ =
                     GetRenderTasks( traits, PredicationT::GetValue(), PredicationT::Inclusion );
 #endif
 
@@ -312,7 +313,8 @@ namespace Engine::Managers
                             } );
 #else
             static RenderTaskTraits                     traits{ &type_hash<PredicationT>::value, Domain };
-            static std::vector<IRenderPassTaskFactory*> borrowed_factories_ =
+            // The renderer's list, resolved now and again when passes change (a copy taken here stayed empty).
+            static std::vector<IRenderPassTaskFactory*>& borrowed_factories_ =
                     GetRenderTasks( traits, PredicationT::GetValue(), PredicationT::Inclusion );
 #endif
 

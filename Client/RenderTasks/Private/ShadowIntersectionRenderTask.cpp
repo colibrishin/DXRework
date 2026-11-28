@@ -366,7 +366,8 @@ void ShadowIntersectionRenderTask::ThirdPass( const float dt, const ShadowInters
         Graphics::SBs::LocalParamSB empty_param{};
         cast->Dispatch(&primitive, group, empty_param, dt);
     }
-    primitive.commandList->Execute();
+    // Nothing on the CPU reads the light table: queue the list instead of waiting for the GPU.
+    primitive.commandList->FlagReady();
 }
 
 void ShadowIntersectionRenderTask::PreRun( const RenderMap *render_map,

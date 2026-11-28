@@ -1,4 +1,5 @@
 #include "ShapeRenderComponent.h"
+#include "ChangeSignal.h"
 
 #include "UIHelpersResourceManager.h"
 
@@ -22,6 +23,7 @@ namespace Engine::Components
 		if (const Strong<Resources::Shape>& shape = Resources::Shape::GetByMetadataPath(m_shape_meta_path_).lock())
 		{
 			m_shape_ = shape;
+			SignalComponent("component.shape", *this, eChange::Modified);
 		}
 	}
 
@@ -75,6 +77,7 @@ namespace Engine::Components
 
 			m_shape_ = locked;
 			m_shape_meta_path_ = locked->GetMetadataPath();
+			SignalComponent("component.shape", *this, eChange::Modified);
 		}
 	}
 

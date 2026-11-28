@@ -28,14 +28,14 @@ namespace Engine::Resources
 
 			IUIAPI& ui = g_ui_accessor.GetInterface();
 
-			*parent |= ui.NewLabelAndFloat(this, "SpecularPower", {"Specular Power", m_material_sb_.specularPower, 0.1f, 0.f, std::numeric_limits<float>::max(), true});
-			*parent |= ui.NewLabelAndFloat(this, "ReflectionScale", {"Reflection Scale", m_material_sb_.reflectionScale, 0.1f, 0.f, std::numeric_limits<float>::max(), true});
-			*parent |= ui.NewLabelAndFloat(this, "RefractionScale", {"Refraction Scale", m_material_sb_.refractionScale, 0.1f, 0.f, std::numeric_limits<float>::max(), true});
-			*parent |= ui.NewLabelAndFloat(this, "ReflectionTranslation", {"Reflection Translation", m_material_sb_.reflectionTranslation, 0.1f, 0.f, 0.f, true});
-			*parent |= ui.NewLabelAndVec4(this, "OverrideColor", {"Override Color", &m_material_sb_.overrideColor.x, 0.01f, 0.1, 1.f, true});
-			*parent |= ui.NewLabelAndVec4(this, "SpecularColor", {"Specular Color", &m_material_sb_.specularColor.x, 0.01f, 0.1, 1.f, true});
-			*parent |= ui.NewLabelAndVec3(this, "ClipPlane", {"Clip Plane", &m_material_sb_.clipPlane.x, 0.01f, 0.f, 0.f, true});
-			*parent |= ui.NewCheckbox(this, "RepeatTexture", {"Repeat Texture", reinterpret_cast<bool&>(m_material_sb_.repeatTexture), true});
+			(*parent |= ui.NewLabelAndFloat(this, "SpecularPower", {"Specular Power", m_material_sb_.specularPower, 0.1f, 0.f, std::numeric_limits<float>::max(), true})).SetFunction([this]() { MarkModified(); });
+			(*parent |= ui.NewLabelAndFloat(this, "ReflectionScale", {"Reflection Scale", m_material_sb_.reflectionScale, 0.1f, 0.f, std::numeric_limits<float>::max(), true})).SetFunction([this]() { MarkModified(); });
+			(*parent |= ui.NewLabelAndFloat(this, "RefractionScale", {"Refraction Scale", m_material_sb_.refractionScale, 0.1f, 0.f, std::numeric_limits<float>::max(), true})).SetFunction([this]() { MarkModified(); });
+			(*parent |= ui.NewLabelAndFloat(this, "ReflectionTranslation", {"Reflection Translation", m_material_sb_.reflectionTranslation, 0.1f, 0.f, 0.f, true})).SetFunction([this]() { MarkModified(); });
+			(*parent |= ui.NewLabelAndVec4(this, "OverrideColor", {"Override Color", &m_material_sb_.overrideColor.x, 0.01f, 0.1, 1.f, true})).SetFunction([this]() { MarkModified(); });
+			(*parent |= ui.NewLabelAndVec4(this, "SpecularColor", {"Specular Color", &m_material_sb_.specularColor.x, 0.01f, 0.1, 1.f, true})).SetFunction([this]() { MarkModified(); });
+			(*parent |= ui.NewLabelAndVec3(this, "ClipPlane", {"Clip Plane", &m_material_sb_.clipPlane.x, 0.01f, 0.f, 0.f, true})).SetFunction([this]() { MarkModified(); });
+			(*parent |= ui.NewCheckbox(this, "RepeatTexture", {"Repeat Texture", reinterpret_cast<bool&>(m_material_sb_.repeatTexture), true})).SetFunction([this]() { MarkModified(); });
 
             *parent += ui.NewListBox( this, "TexturesListBox", { "Textures", 0, 0 } );
             for ( auto it = m_cached_textures_.begin(); it != m_cached_textures_.end(); ++it )
@@ -203,6 +203,7 @@ namespace Engine::Resources
 	void Material::OnDeserialized()
 	{
 		Resource::OnDeserialized();
+		MarkModified();
 
 		if (!m_shader_path_.empty())
 		{
@@ -247,6 +248,7 @@ namespace Engine::Resources
 			}
 			
 			m_cached_textures_[slot] = locked;
+			MarkModified();
 			m_material_sb_.texEnabled[slot] = true;
 
 			if (set_path)
@@ -274,6 +276,7 @@ namespace Engine::Resources
 		    std::swap(m_material_sb_.texEnabled[before], m_material_sb_.texEnabled[after]);
 			std::swap(m_material_sb_.texSlot[before], m_material_sb_.texSlot[after]);
 			std::swap(m_texture_paths_[before], m_texture_paths_[after]);
+			MarkModified();
 		}
 	}
 
@@ -288,6 +291,7 @@ namespace Engine::Resources
 			}
 			
 			m_cached_atlas_ = locked;
+			MarkModified();
 			m_atlas_path_ = locked->GetMetadataPath();
 		}
 	}
@@ -303,6 +307,7 @@ namespace Engine::Resources
 			}
 			
 			m_cached_shader_ = locked;
+			MarkModified();
 			m_shader_path_ = locked->GetMetadataPath();
 		}
 	}

@@ -20,7 +20,9 @@ std::vector<std::tuple<Engine::eShaderType, std::string, std::string>> Engine::D
 namespace Engine
 {
     D3D12ComputePrimitiveShader::~D3D12ComputePrimitiveShader()
-    { }
+    {
+        KeepUntilFrameDone(std::move(m_pipeline_state_)); // lists of this frame may still use it
+    }
     D3D12ComputePrimitiveShader::D3D12ComputePrimitiveShader()
     { }
 

@@ -6,6 +6,9 @@
 
 #include "RenderPipeline.h"
 #include "Renderer.h"
+#if CFG_RAYTRACING
+#include "IRaytracingExtension.h"
+#endif
 
 #include "AtlasAnimationTexture.h"
 #include "Material.h"
@@ -45,6 +48,12 @@ namespace Engine
 		// The per-batch pools grow in advance(); sizing them to the instance count allocated one GPU buffer and one
 		// descriptor heap per object (E_OUTOFMEMORY at ~5k objects).
 
+#if CFG_RAYTRACING
+		const bool trace_bypass = shader_bypass && g_graphic_accessor.GetRaytracingInterface().ShouldUseRaytracing();
+#else
+		constexpr bool trace_bypass = false;
+#endif
+
 		for (const auto& renderer : *domain_map | std::views::values)
 		{
             for ( const auto &[ shader, mesh_map ] : renderer )
@@ -61,18 +70,22 @@ namespace Engine
                           &postrender_predicate,
                           &additional_sbs,
                           &shader_bypass,
+                          trace_bypass,
                           &dt,
                           &intermediate_shader_map ](
                                 const MeshMap::value_type &pair )
                         {
-                            if ( const Strong<Resources::Shader> &locked = Cast<Resources::Shader>( shader ) )
+                            // A bypass pass (shadow maps) draws with its own shader, so with ray tracing on it also draws
+                            // the ray tracing shader's objects: they cast shadows on raster objects.
+                            const Strong<Resources::Shader> &locked = Cast<Resources::Shader>( shader );
+                            if ( locked || trace_bypass ) // the other shaders are the ray tracing shaders
                             {
                                 if ( decltype( intermediate_shader_map )::const_accessor acc;
                                      intermediate_shader_map.find( acc, &pair.second ) )
                                 {
                                     StartPhase_MultiThread( dt,
                                                             shader_bypass,
-                                                            locked.get(),
+                                                            locked.get(), // null only when bypassed: not bound
                                                             static_cast<const Resources::Mesh*>( pair.first.get() ),
                                                             additional_sbs,
                                                             local_param,
@@ -230,12 +243,16 @@ namespace Engine
 		{
 			instances[idx] = instance_pair->instance;
 			texture_pairs[idx] = TexturePair(&instance_pair->textures, &instance_pair->reservedTextures);
+			texture_pairs[ idx ].instanceCount = instance_pair->instanceCount;
 			++idx;
 		}
 
+		// Shared buffers (lights, light view-projections) are read by lists recorded in parallel, so they are not transitioned
+		// here: they stay COMMON, are promoted implicitly on read and decay when their ExecuteCommandLists
+		// finishes (this engine submits one list per call). A tracked state shared
+		// across lists raced and recorded barriers with matching states.
 		for (const StructuredBufferDecorator* additional_sb : additional_sbs)
 		{
-			additional_sb->TransitionToSRV(&temp_context);
 			additional_sb->CopySRVHeap(&temp_context);
 		}
 		
@@ -287,10 +304,6 @@ namespace Engine
 			func(&temp_context);
 		}
 		
-		for (const StructuredBufferDecorator* additional_sb : additional_sbs)
-		{
-			additional_sb->TransitionCommon(&temp_context);
-		}
 
 		sb.TransitionCommon(&temp_context);
 		temp_context.commandList->FlagReady();
@@ -357,6 +370,18 @@ namespace Engine
 				}
 				
 				const TexturePair& pair = texture_pairs[ instance_resolved + instance_to_resolve ];
+				// A block of instances (InstancePair::instanceCount) is drawn by itself, from an empty batch.
+				if ( pair.instanceCount != 0 && instance_to_resolve != 0 )
+				{
+				    break;
+				}
+				const auto set_texture_slot = [ &, first = instances[ instance_resolved + instance_to_resolve ] ]( const size_t i, const size_t slot )
+				{
+				    for ( size_t n = 0; n < std::max<size_t>( pair.instanceCount, 1 ); ++n )
+				    {
+				        first[ n ].SetTextureSlot( i, static_cast<int>( slot ) );
+				    }
+				};
 				// Reserved textures (bones, atlas) bind one texture per slot for the whole batch: an instance
 				// with a different one, or one whose textures no longer fit, starts the next batch.
 				bool reserved_conflict = false;
@@ -379,7 +404,10 @@ namespace Engine
 				{
 					size_t msb = count - 1;
 					size_t lsb = max_tex_binds - count;
-					for (size_t i = 0; i < pair.textures->size(); ++i) // material slots may be sparse
+					// With the caller's shader (shadow maps: depth from the world matrix and bones only) the material
+					// textures are neither read nor bound: their slots are not assigned, so batches are only split by
+					// reserved textures and blocks. A bypass shader that samples material textures would need them back.
+					for (size_t i = 0; !shader_bypass && i < pair.textures->size(); ++i) // material slots may be sparse
 					{
 						if (pair.textures->at(i))
 						{
@@ -387,13 +415,13 @@ namespace Engine
 								it != std::end( assigned_texture ) )
 							{
                                 const size_t bind_slot = std::distance( std::begin( assigned_texture ), it );
-                                instances[ instance_resolved + instance_to_resolve ]->SetTextureSlot( i, bind_slot );
+                                set_texture_slot( i, bind_slot );
 							}
 							else
 							{
                                 tex_bind_mask |= 1 << msb;
                                 assigned_texture[ lsb ] = static_cast<Resources::Texture*>( pair.textures->at( i ).get() );
-                                instances[ instance_resolved + instance_to_resolve ]->SetTextureSlot( i, lsb );
+                                set_texture_slot( i, lsb );
                                 --msb;
                                 ++lsb;
 							}
@@ -409,10 +437,23 @@ namespace Engine
 					}
 
 					instance_to_resolve++;
+					if ( pair.instanceCount != 0 )
+					{
+					    break; // the block fills the batch
+					}
 				}
 			}
 
-			instance_buffer.SetDataPointerContainer(context, static_cast<UINT>(instance_to_resolve), instances.data() + instance_resolved);
+			// A block uploads its contiguous instances; otherwise gather the batch's instances.
+			const size_t block = texture_pairs[ instance_resolved ].instanceCount;
+			if ( block != 0 )
+			{
+			    instance_buffer.SetData( context, static_cast<UINT>( block ), instances[ instance_resolved ] );
+			}
+			else
+			{
+			    instance_buffer.SetDataPointerContainer( context, static_cast<UINT>( instance_to_resolve ), instances.data() + instance_resolved );
+			}
 			instance_buffer.TransitionToSRV(context);
 			instance_buffer.CopySRVHeap(context);
 			
@@ -450,7 +491,7 @@ namespace Engine
                 }
             }
 
-			gi.Draw( context, mesh, instance_to_resolve, instance_resolved );
+			gi.Draw( context, mesh, static_cast<UINT>( block != 0 ? block : instance_to_resolve ), instance_resolved );
 			
 			instance_buffer.TransitionCommon(context);
 			return instance_to_resolve;

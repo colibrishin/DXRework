@@ -1,6 +1,7 @@
 #pragma once
 #include <boost/serialization/export.hpp>
 #include "Delegation.hpp"
+#include "ChangeSignal.h"
 #include "Component.h"
 
 #include "Transform.generated.h"
@@ -76,6 +77,11 @@ namespace Engine::Components
 
 	private:
 		static Weak<Transform> FindNextTransform(const Transform& transform_);
+
+		// Broadcasts onTransformChanged and sends the change signal (once per epoch per transform).
+		void notifyChanged();
+
+		NotCopied<uint64_t> m_signal_epoch_;
 
 		EPROPERTY()
 		bool       m_b_s_absolute_;

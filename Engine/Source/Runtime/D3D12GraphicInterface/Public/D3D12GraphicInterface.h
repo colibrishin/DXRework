@@ -1,4 +1,6 @@
 #pragma once
+#include <deque>
+#include <mutex>
 #include "IModule.h"
 #include "CommandPair.h"
 #include "IGraphicAPI.h"
@@ -18,9 +20,7 @@
 #include "IGraphicAPI_Extensions.h"
 #include "IRaytracingExtension.h"
 
-#include "raytracing_heap_allocator.hpp"
-#include "raytracing_heap_binder.hpp"
-#include "raytracing_heap_getter.hpp"
+#include "raytracing_frame_heap.hpp"
 #endif
 
 #include "D3D12GraphicInterface.generated.h"
@@ -61,17 +61,17 @@ namespace Engine
         void ShutdownRaytracing() override;
 
         Unique<IHeapBase> GetRaytracingHeap() override;
+        size_t            ReserveRaytracingHeap(size_t tables) override;
 
         IRaytracingShader* GetNewRaytracingShader() override;
 
         void* GetRaytracingNativeInterface() override;
         void* GetRaytracingNativePipeline() override;
 
-        bool BuildTopLevelAccelerationBuffer( const IGraphicContext*   context,
-                                              RenderMap const*         render_map,
-                                              size_t                   render_map_size,
-                                              AccelStructBuffer&       out_tlas_buffer,
-                                              const ObjectPredication& predication = {} ) override;
+        bool BuildTopLevelAccelerationBuffer( const IGraphicContext*    context,
+                                              const RaytracingInstance* instances,
+                                              size_t                    instance_count,
+                                              AccelStructBuffer&        out_tlas_buffer ) override;
 
         void DispatchRay( const IGraphicContext*                                       context,
                           const Resources::RaytracingShader*                           shader,
@@ -83,6 +83,7 @@ namespace Engine
                           const AccelStructBuffer& top_level_accel_buffer ) override;
 
         void CopyRaytracingToRenderTarget( const IGraphicContext* context ) override;
+        bool CopyRaytracingDepthTo( const IGraphicContext* context, const Abstracts::Resource* depth ) override;
 
     private:
         void QueryDevice();
@@ -93,12 +94,14 @@ namespace Engine
         ComPtr<ID3D12Device5>       m_raytracing_dev_           = nullptr;
         ComPtr<ID3D12RootSignature> m_raytracing_root_pipeline_ = nullptr;
 
-        Strong<DescriptorHandler<raytracing_heap_allocator, raytracing_heap_getter, raytracing_heap_binder>>
-                m_raytracing_heap_handler_{};
+        Strong<raytracing_frame_heap> m_raytracing_heap_handler_{};
 
         ComPtr<ID3D12DescriptorHeap> m_raytracing_sampler_heap_ = nullptr;
         ComPtr<ID3D12Resource>       m_output_buffer_           = nullptr;
-        ComPtr<ID3D12DescriptorHeap> m_output_heap_             = nullptr;
+        // Depth of the primary ray hits (raster depth convention, 1 where nothing is hit), next to the colour output.
+        ComPtr<ID3D12Resource>       m_depth_output_buffer_     = nullptr;
+        // Frame whose rays are in the outputs; they are copied out only in that frame.
+        uint64_t                     m_raytracing_output_frame_ = UINT64_MAX;
 
     public:
 #endif
@@ -190,7 +193,12 @@ namespace Engine
         void  DetachCommandThread();
         float GetAspectRatio();
 
-        StructuredBufferTypeProxy<Graphics::SBs::LocalParamSB> m_local_param_;
+        // Dispatch: one local parameter buffer per dispatch of a frame (the n-th dispatch uses the n-th), so lists
+        // recorded before the GPU ran an earlier dispatch do not overwrite its parameters. A deque keeps them in place.
+        std::mutex                                                         m_local_param_mutex_;
+        uint64_t                                                           m_local_param_frame_ = UINT64_MAX;
+        size_t                                                             m_local_param_next_  = 0;
+        std::deque<StructuredBufferTypeProxy<Graphics::SBs::LocalParamSB>> m_local_params_;
 
         ComPtr<ID3D12Device2>   m_dev_;
         ComPtr<IDXGISwapChain4> m_swap_chain_ = nullptr;
@@ -201,6 +209,8 @@ namespace Engine
         ComPtr<ID3D12Resource>              m_depth_stencil_;
         ComPtr<ID3D12DescriptorHeap>        m_dsv_heap_;
         uint64_t                            m_frame_idx_ = 0;
+        uint64_t                            m_frame_fence_ = 0; // fence value of the last presented frame's last list
+        // Frames the present queue may hold (SetMaximumFrameLatency); separate from the waitable object's timeout.
 
         ComPtr<ID3D12RootSignature> m_pipeline_root_signature_;
 

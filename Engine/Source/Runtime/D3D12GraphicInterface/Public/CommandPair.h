@@ -4,8 +4,11 @@
 
 #include <array>
 #include <atomic>
+#include <chrono>
+#include <condition_variable>
 #include <deque>
 #include <mutex>
+#include <thread>
 
 #include <directx/d3d12.h>
 #include <wrl/client.h>
@@ -15,6 +18,8 @@
 #include "Allocator.h"
 #include "TypeLibrary.h"
 #include "DescriptorPtrImpl.h"
+#include "FenceRetireQueue.h"
+#include "FrameRelease.h"
 
 namespace Engine
 {
@@ -46,9 +51,16 @@ namespace Engine
 		// thread-safety of post_execution inside values should be guaranteed by the caller.
 		void               FlagReady(const std::function<void()>& post_execution = {}) override;
 		void               Execute() override;
+		// Flags the list ready and waits until it is handed to the GPU queue (not until it finished); returns its
+		// fence value. Work queued after this on the same queue runs after the list.
+		uint64_t           Submit();
+		// Runs on the command thread right after the list is handed to the queue (e.g. a fence signal that must
+		// follow it). Set before FlagReady.
+		void               SetSubmitHook(std::function<void()>&& hook);
 		void               DeferRelease(std::function<void()>&& holder) override;
 		[[nodiscard]] bool IsReady();
-		[[nodiscard]] bool IsExecuted();
+		[[nodiscard]] bool IsSubmitted(); // handed to the GPU queue
+		[[nodiscard]] bool IsExecuted();  // finished on the GPU
 		[[nodiscard]] bool IsDisposed();
 
 		[[nodiscard]] ID3D12GraphicsCommandList1* GetList() const;
@@ -77,9 +89,11 @@ namespace Engine
 
 		std::atomic<uint64_t>   m_latest_fence_value_;
 		std::function<void()> m_post_execute_function_;
+		std::function<void()> m_submit_hook_;
 		std::vector<std::function<void()>> m_deferred_release_;
 		std::mutex                         m_deferred_mutex_; // separate: m_critical_mutex_ is held while waiting for execution
 
+		std::atomic<bool>       m_b_submitted_{};
 		std::atomic<bool>       m_b_executed_{};
 		std::atomic<bool>       m_b_ready_{};
 		std::atomic<bool>       m_b_disposed_{};
@@ -105,6 +119,7 @@ namespace Engine
 			const std::wstring_view debug_name,
 			const bool heap_allocation);
 		void Deallocate(const Weak<CommandPair>& pointer);
+		[[nodiscard]] bool HasFree();
 		void Initialize(ID3D12Device2* dev, const Weak<DescriptorHandlerBase>& handler, CommandPairTask* task);
 
 	private:
@@ -181,15 +196,26 @@ namespace Engine
 		void StopTask();
 		void StartTask();
         void Cleanup();
-		void SwapBuffer(const uint32_t next_buffer);
+		// frame_fence: the fence value of the frame's last list (Present's).
+		void SwapBuffer(const uint32_t next_buffer, const uint64_t frame_fence);
+		// ReleaseAfterFrame (FrameRelease.h): collected per frame, handed to m_frame_retire_ with the frame's fence.
+		void ReleaseAfterFrame(std::function<void()>&& holder);
+		void EndFrame(const uint64_t frame_fence);
+		// Waits until the GPU finished everything queued so far and runs what waited for it (main thread).
+		void WaitForIdle();
+		[[nodiscard]] uint64_t RecordingFrame() const;
+		[[nodiscard]] uint64_t FramesInFlight() const { return m_frames_in_flight_; }
+		[[nodiscard]] bool     FrameDone(const uint64_t frame) const;
 
 	private:
 		friend struct CommandPair;
 
 		void Execute(const Strong<CommandPair>& pair, const bool lock_consuming);
-		void Signal(const Strong<CommandPair>& in_pair) const;
+		uint64_t SignalQueue(const D3D12_COMMAND_LIST_TYPE type); // under m_signal_mutex_
 		void WaitForEventCompletion(const uint64_t fence_value);
 		void ExecuteImpl(const Strong<CommandPair>& pair);
+		void Complete(const Strong<CommandPair>& pair); // after the GPU finished the pair's list
+		void RetireCompleted();
 
 		std::atomic<bool> m_running_{ false };
 
@@ -206,6 +232,30 @@ namespace Engine
 		uint64_t                  m_buffer_count_{};
 		uint64_t                  m_buffer_idx_{};
 		ComPtr<ID3D12Fence>       m_fence_{};
-		std::unique_ptr<uint64_t> m_fence_nonce_{};
+
+		// One fence value counter for every queue: incremented and signalled under one lock, so values reach the
+		// queues in increasing order. Lists of queues other than DIRECT are only submitted with the GPU idle and are
+		// waited for, so one queue at a time signals.
+		std::mutex                m_signal_mutex_;
+		uint64_t                  m_fence_value_{};
+		FenceRetireQueue          m_retire_;
+
+		std::mutex                         m_frame_release_mutex_;
+		std::vector<std::function<void()>> m_frame_releases_; // of the frame being recorded
+		FenceRetireQueue                   m_frame_retire_;   // run by the main thread (SwapBuffer)
+
+		static constexpr size_t                     s_frame_history = 8;
+		std::atomic<uint64_t>                       m_frame_index_{};    // frames ended
+		uint64_t                                    m_frames_in_flight_ = 1; // Initialize: KOLIBRI_FRAMES_IN_FLIGHT
+		uint64_t                                    m_overlapped_frames_ = 0; // EndFrame: previous frame still on the GPU
+		uint32_t                                    m_gpu_delay_ms_ = 0; // KOLIBRI_GPU_DELAY_MS: stall the queue per frame
+		ComPtr<ID3D12Fence>                         m_delay_fence_;
+		uint64_t                                    m_delay_value_ = 0;
+		std::thread                                 m_delay_thread_;   // signals m_delay_fence_ after the delay
+		std::mutex                                  m_delay_mutex_;
+		std::condition_variable                     m_delay_cv_;
+		std::deque<std::pair<std::chrono::steady_clock::time_point, uint64_t>> m_delay_signals_;
+		bool                                        m_delay_stop_ = false;
+		std::array<std::atomic<uint64_t>, s_frame_history> m_frame_fences_{}; // fence value per frame index % history
 	};
 }

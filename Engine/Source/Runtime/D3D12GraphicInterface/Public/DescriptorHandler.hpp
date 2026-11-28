@@ -1,4 +1,5 @@
 ﻿#pragma once
+#include "FrameRelease.h"
 #include <directx/d3d12.h>
 #include <wrl/client.h>
 
@@ -42,9 +43,13 @@ namespace Engine
 
         virtual void Release(const DescriptorPtrImpl& handles)
         {
-            std::lock_guard<std::mutex> l(m_slot_mutex_);
-            m_used_slots_[handles.m_heap_queue_offset_].m256i_u32[handles.m_segment_offset_] &= ~(
-                1 << handles.m_element_offset_);
+            // Lists of this frame may still read the block: hand it out again only after the frame finished.
+            ReleaseAfterFrame([this, queue = handles.m_heap_queue_offset_, segment = handles.m_segment_offset_,
+                               element = handles.m_element_offset_]
+            {
+                std::lock_guard<std::mutex> l(m_slot_mutex_);
+                m_used_slots_[queue].m256i_u32[segment] &= ~(1 << element);
+            });
         }
 
         [[nodiscard]] virtual UINT64 GetBufferHeapGPUAddress(const D3D12_GPU_DESCRIPTOR_HANDLE& m_gpu_handle, const size_t size) = 0;

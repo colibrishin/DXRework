@@ -102,7 +102,7 @@ namespace Engine::Resources
 
 #define ENUM_COMBOBOX(NAME, THIS_VAR, ENUM_TYPE, ENUM_ARR) \
 	(*parent |= ui.NewCombobox( this, std::format("{}Combobox", NAME), { NAME, &##THIS_VAR##selected_, ENUM_ARR##.data(), ENUM_ARR##.size(), true } )).SetFunction( [this]() {\
-		(THIS_VAR) = RecastNonlinearEnum<##ENUM_TYPE##>( ENUM_ARR, THIS_VAR##selected_ ); });
+		(THIS_VAR) = RecastNonlinearEnum<##ENUM_TYPE##>( ENUM_ARR, THIS_VAR##selected_ ); MarkModified(); });
 
             IUIAPI &ui = g_ui_accessor.GetInterface();
             ENUM_COMBOBOX( "Shader Domain", m_domain_, eShaderDomain, domain_enums );

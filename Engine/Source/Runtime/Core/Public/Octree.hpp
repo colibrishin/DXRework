@@ -1,8 +1,10 @@
 #pragma once
+#include <algorithm>
 #include <array>
 #include <bitset>
 #include <stack>
-#include <unordered_set>
+#include <unordered_map>
+#include <tuple>
 #include <vector>
 #include <queue>
 #include <memory>
@@ -84,11 +86,106 @@ namespace Engine
                     m_children_[ i ]->m_parent_ = this;
                 }
             }
+
+            if ( !m_parent_ )
+            {
+                // A copied root: its objects are in the copied nodes.
+                std::vector<octree_impl*> nodes{ this };
+                while ( !nodes.empty() )
+                {
+                    octree_impl* node = nodes.back();
+                    nodes.pop_back();
+                    for ( size_t i = 0; i < node->m_values_.size(); ++i )
+                    {
+                        // Held while id() locks it again.
+                        if ( const auto value = node->m_values_[ i ].lock() )
+                        {
+                            Where()[ BoundingValueGetter::id(node->m_values_[ i ]) ] = { node, i };
+                        }
+                    }
+                    for ( const auto& child : node->m_children_ )
+                    {
+                        if ( child )
+                        {
+                            nodes.push_back(child.get());
+                        }
+                    }
+                }
+            }
         }
 
         [[nodiscard]] const PoolVector& Read() const
         {
             return m_values_;
+        }
+
+        // Number of live objects (from this node down) not in the node Update would put them in: the deepest node that
+        // contains their bounds (or the root). 0 when the tree is up to date with the objects' bounds.
+        [[nodiscard]] size_t CheckPlacement() const
+        {
+            size_t                          wrong = 0;
+            std::vector<const octree_impl*> nodes{ this };
+            while ( !nodes.empty() )
+            {
+                const octree_impl* node = nodes.back();
+                nodes.pop_back();
+                const Vector3 extent_scale = node->Extent() * 2.f;
+                const bool    floor        = extent_scale.x <= smallest_scale && extent_scale.y <= smallest_scale &&
+                                             extent_scale.z <= smallest_scale;
+                for ( const WeakT& value : node->m_values_ )
+                {
+                    const auto locked = value.lock();
+                    if ( !locked )
+                    {
+                        continue;
+                    }
+                    const BoundingBox obj_box = BoundingValueGetter::value(locked).GetBoxAxisAlignedBounds();
+                    bool              ok      = !node->m_parent_ || node->m_bounds_.Contains(obj_box) == DirectX::CONTAINS;
+                    for ( int i = 0; ok && !floor && i < octant_count; ++i )
+                    {
+                        ok = GetBound(node->Extent(), node->WorldCenter(), static_cast<eOctant>(i)).Contains(obj_box) !=
+                             DirectX::CONTAINS;
+                    }
+                    wrong += !ok;
+                }
+                for ( const auto& child : node->m_children_ )
+                {
+                    if ( child )
+                    {
+                        nodes.push_back(child.get());
+                    }
+                }
+            }
+            return wrong;
+        }
+
+        // Number of live objects (from the root) whose recorded node is not the node they are in. 0 when consistent.
+        [[nodiscard]] size_t CheckWhere() const
+        {
+            size_t                          wrong = 0;
+            std::vector<const octree_impl*> nodes{ this };
+            while ( !nodes.empty() )
+            {
+                const octree_impl* node = nodes.back();
+                nodes.pop_back();
+                for ( const WeakT& value : node->m_values_ )
+                {
+                    if ( value.expired() )
+                    {
+                        continue;
+                    }
+                    const auto found = m_where_ ? m_where_->find(BoundingValueGetter::id(value)) : decltype(m_where_->end()){};
+                    wrong += !m_where_ || found == m_where_->end() || found->second.node != node;
+                }
+                for ( const auto& child : node->m_children_ )
+                {
+                    if ( child )
+                    {
+                        nodes.push_back(child.get());
+                    }
+                }
+            }
+            return wrong;
         }
 
         std::array<const octree_impl*, 8> Next() const
@@ -163,6 +260,17 @@ namespace Engine
                 return true;
             }
 
+            // Inserted again: move it instead of keeping two entries.
+            auto& where = Where();
+            if ( const auto found = where.find(BoundingValueGetter::id(obj)); found != where.end() )
+            {
+                octree_impl* node = found->second.node;
+                if ( node->Take(obj, found->second.index) )
+                {
+                    FreeVacant(node);
+                }
+            }
+
             return InsertBounded(obj, BoundingValueGetter::value(obj.lock()).GetBoxAxisAlignedBounds());
         }
 
@@ -205,7 +313,7 @@ namespace Engine
                 // possibly the smallest node that can contain the object
                 if ( floor_bit.all() )
                 {
-                    node_value.push_back(obj);
+                    node->Put(obj);
                     found = true;
                     break;
                 }
@@ -254,12 +362,12 @@ namespace Engine
             }
             if ( !found && last )
             {
-                last->m_values_.push_back(obj);
+                last->Put(obj);
                 return true;
             }
             if ( !last && root()->m_bounds_.Contains(obj_box) )
             {
-                root()->m_values_.push_back(obj);
+                root()->Put(obj);
                 return true;
             }
 
@@ -269,6 +377,23 @@ namespace Engine
 
         void Remove(const WeakT& obj)
         {
+            if ( !obj.expired() )
+            {
+                auto& where = Where();
+                if ( const auto found = where.find(BoundingValueGetter::id(obj)); found != where.end() )
+                {
+                    octree_impl* node  = found->second.node;
+                    const size_t index = found->second.index;
+                    where.erase(found);
+                    if ( node->Take(obj, index) )
+                    {
+                        FreeVacant(node);
+                        return;
+                    }
+                }
+            }
+
+            // Not placed by this tree (or expired): search every node, dropping expired objects on the way.
             std::stack<octree_impl*> stack;
             stack.push(this);
 
@@ -360,12 +485,9 @@ namespace Engine
 
                         const auto obj     = node_value[ i ].lock();
                         const auto obj_box = BoundingValueGetter::value(obj).GetBoxAxisAlignedBounds();
-                        if ( node_bound.Contains(obj_box) != DirectX::ContainmentType::CONTAINS )
+                        if ( node->m_parent_ && node_bound.Contains(obj_box) != DirectX::ContainmentType::CONTAINS )
                         {
-                            if ( !MoveUp(node, obj, obj_box) )
-                            {
-                                return;
-                            }
+                            MoveUp(node, obj, obj_box);
                             node_value.erase(node_value.begin() + i);
                             continue;
                         }
@@ -419,6 +541,11 @@ namespace Engine
                         life_count = node_lifespan;
                     }
 
+                    // Insert does not go below the smallest node size; neither does Update.
+                    const Vector3 extent_scale = node_extent * 2.f;
+                    const bool    node_floor   = extent_scale.x <= smallest_scale && extent_scale.y <= smallest_scale &&
+                                                 extent_scale.z <= smallest_scale;
+
                     if ( !node_value.empty() )
                     {
                         for ( auto it = node_value.begin(); it != node_value.end(); )
@@ -433,7 +560,7 @@ namespace Engine
                             const auto obj_box = BoundingValueGetter::value(obj).GetBoxAxisAlignedBounds();
                             bool       found   = false;
 
-                            for ( int i = 0; i < octant_count; ++i )
+                            for ( int i = 0; !node_floor && i < octant_count; ++i )
                             {
                                 if ( node_children[ i ] )
                                 {
@@ -477,13 +604,10 @@ namespace Engine
                                 continue;
                             }
 
-                            // Still bounded by this node? (Was checked in the post-visit with a second bounding.)
-                            if ( node_bound.Contains(obj_box) != DirectX::ContainmentType::CONTAINS )
+                            // Still bounded by this node? The root keeps what is outside the map.
+                            if ( node->m_parent_ && node_bound.Contains(obj_box) != DirectX::ContainmentType::CONTAINS )
                             {
-                                if ( !MoveUp(node, obj, obj_box) )
-                                {
-                                    return;
-                                }
+                                MoveUp(node, obj, obj_box);
                                 it = node_value.erase(it);
                                 continue;
                             }
@@ -505,8 +629,55 @@ namespace Engine
             }
         }
 
+        // Re-places only `objects` (Strong or Weak; those whose bounds may have changed), giving the placement
+        // Update gives them. Objects that are not in the tree are skipped. Call on the root.
+        template <typename Range>
+        void UpdateDirty(const Range& objects)
+        {
+            for ( unsigned attempt = 0; !ready(); ++attempt )
+            {
+                if ( attempt > retry_exhaust )
+                {
+                    throw std::logic_error("octree_impl update failed.");
+                }
+                UpdateInternal();
+            }
+
+            auto& where = Where();
+            for ( const auto& object : objects )
+            {
+                const WeakT weak   = object;
+                const auto  locked = weak.lock();
+                if ( !locked )
+                {
+                    continue;
+                }
+                const auto found = where.find(BoundingValueGetter::id(weak));
+                if ( found == where.end() )
+                {
+                    continue;
+                }
+
+                octree_impl* node = found->second.node;
+                if ( !node->Take(weak, found->second.index) )
+                {
+                    throw std::logic_error("octree_impl: an object is not in its recorded node.");
+                }
+
+                const BoundingBox obj_box = BoundingValueGetter::value(locked).GetBoxAxisAlignedBounds();
+                octree_impl*      cursor  = node;
+                while ( cursor->m_parent_ && cursor->m_bounds_.Contains(obj_box) != DirectX::ContainmentType::CONTAINS )
+                {
+                    cursor = cursor->m_parent_;
+                }
+                cursor->InsertBounded(weak, obj_box);
+                FreeVacant(node);
+            }
+        }
+
         void Clear()
         {
+            Where().clear();
             std::stack<octree_impl*> stack;
             stack.push(this);
 
@@ -566,12 +737,14 @@ namespace Engine
             }
         }
 
+        // The objects whose bounding touches the sphere, nearest center first (so the order does not depend on the
+        // tree's layout).
         [[nodiscard]] std::vector<WeakT> Nearest(const Vector3& point, float distance) const
         {
             using query_frame = std::pair<const octree_impl*, bool>;
-            std::stack<query_frame> q;
-            std::vector<WeakT>      result;
-            const BoundingSphere    search_sphere(point, distance);
+            std::stack<query_frame>             q;
+            std::vector<std::tuple<float, decltype(BoundingValueGetter::id(std::declval<const WeakT&>())), WeakT>> found;
+            const BoundingSphere                search_sphere(point, distance);
 
             q.emplace(this, false);
 
@@ -592,7 +765,8 @@ namespace Engine
                             if ( const auto& bounding = BoundingValueGetter::value(locked);
                                 bounding.Intersects(search_sphere) || bounding.ContainsBy(search_sphere) )
                             {
-                                result.push_back(v);
+                                const Vector3 center = bounding.GetBoxAxisAlignedBounds().Center;
+                                found.emplace_back(Vector3::DistanceSquared(center, point), BoundingValueGetter::id(v), v);
                             }
                         }
                     }
@@ -609,6 +783,17 @@ namespace Engine
                 }
             }
 
+            // Equal distances (objects on a grid) go by ID, not by where the objects are in the tree.
+            std::sort(found.begin(), found.end(), [](const auto& a, const auto& b)
+            {
+                return std::tie(std::get<0>(a), std::get<1>(a)) < std::tie(std::get<0>(b), std::get<1>(b));
+            });
+            std::vector<WeakT> result;
+            result.reserve(found.size());
+            for ( auto& [d, id, v] : found )
+            {
+                result.push_back(std::move(v));
+            }
             return result;
         }
 
@@ -678,36 +863,96 @@ namespace Engine
         }
 
     private:
-        // Moves an object that left `node` to the nearest ancestor that takes it (the caller erases it from `node`).
-        // Returns false after a panic rebuild (the caller must stop iterating).
-        bool MoveUp(octree_impl* node, const WeakT& obj, const BoundingBox& obj_box)
+        // Moves an object that left `node` (not the root) to the nearest ancestor that contains it, or to the root,
+        // which also keeps objects outside the map; InsertBounded takes it down from there. The caller erases it from
+        // `node`.
+        void MoveUp(octree_impl* node, const WeakT& obj, const BoundingBox& obj_box)
         {
-            auto* cursor = node->parent();
-            std::unordered_set<octree_impl*> seen_ancestors;
-            constexpr unsigned max_parent_walk = 65536u;
-            unsigned walk_steps = 0;
-            while ( cursor )
+            octree_impl* cursor = node->m_parent_;
+            while ( cursor->m_parent_ && cursor->m_bounds_.Contains(obj_box) != DirectX::ContainmentType::CONTAINS )
             {
-                if ( walk_steps++ >= max_parent_walk || !seen_ancestors.insert(cursor).second )
+                cursor = cursor->m_parent_;
+            }
+            cursor->InsertBounded(obj, obj_box);
+        }
+
+        using id_type   = decltype(BoundingValueGetter::id(std::declval<const WeakT&>()));
+        // The node an object is in and its index there when it was put (a hint: other changes can move it).
+        struct place
+        {
+            octree_impl* node;
+            size_t       index;
+        };
+        using where_map = std::unordered_map<id_type, place>;
+
+        // Object -> node it is in, kept by the root (every node puts its objects through Put).
+        where_map& Where()
+        {
+            octree_impl* r = root();
+            if ( !r->m_where_ )
+            {
+                r->m_where_ = std::make_unique<where_map>();
+            }
+            return *r->m_where_;
+        }
+
+        void Put(const WeakT& obj)
+        {
+            m_values_.push_back(obj);
+            Where()[ BoundingValueGetter::id(obj) ] = { this, m_values_.size() - 1 };
+        }
+
+        // Takes `obj` out of this node's objects, looking at `hint` (its recorded index) first; false when it is not
+        // here. The last object takes its slot. Values are compared by owner: locking each made re-placing k objects
+        // of a crowded node (the root keeps those on the map's center planes) cost k times its size.
+        bool Take(const WeakT& obj, const size_t hint)
+        {
+            const auto same = [&obj](const WeakT& value) { return !value.owner_before(obj) && !obj.owner_before(value); };
+            size_t     index = hint;
+            if ( index >= m_values_.size() || !same(m_values_[ index ]) )
+            {
+                const auto it = std::find_if(m_values_.begin(), m_values_.end(), same);
+                if ( it == m_values_.end() )
                 {
-                    // Cycle or unreasonably deep parent chain: rebuild tree to recover.
-                    root()->Panic();
                     return false;
                 }
-                if ( cursor->InsertBounded(obj, obj_box) )
-                {
-                    break;
-                }
-                cursor = cursor->parent();
+                index = static_cast<size_t>(it - m_values_.begin());
             }
 
-            if ( !cursor )
+            if ( index + 1 != m_values_.size() )
             {
-                // panic: Even root cannot contain the object, need to rebuild the whole tree.
-                root()->Panic();
-                return false;
+                m_values_[ index ] = std::move(m_values_.back());
+                // Held while id() locks it again.
+                if ( const auto moved = m_values_[ index ].lock() )
+                {
+                    if ( const auto found = Where().find(BoundingValueGetter::id(m_values_[ index ])); found != Where().end() )
+                    {
+                        found->second.index = index;
+                    }
+                }
             }
+            m_values_.pop_back();
             return true;
+        }
+
+        // Frees `node`, then its ancestors, while they hold no object and no child (the root stays).
+        static void FreeVacant(octree_impl* node)
+        {
+            while ( node->m_parent_ && node->m_values_.empty() &&
+                    std::none_of(node->m_children_.begin(), node->m_children_.end(), [](const auto& c) { return !!c; }) )
+            {
+                octree_impl* parent = node->m_parent_;
+                for ( int i = 0; i < octant_count; ++i )
+                {
+                    if ( parent->m_children_[ i ].get() == node )
+                    {
+                        parent->m_children_[ i ].reset();
+                        parent->m_active_children_.reset(i);
+                        break;
+                    }
+                }
+                node = parent;
+            }
         }
 
         static bool __vectorcall FloatCompare(const float a, const float b)
@@ -797,67 +1042,16 @@ namespace Engine
                     {
                         node_children[ i ]            = allocate(octants[ i ], octant_values[ i ]);
                         node_children[ i ]->m_parent_ = node;
+                        for ( size_t j = 0; j < octant_values[ i ].size(); ++j )
+                        {
+                            Where()[ BoundingValueGetter::id(octant_values[ i ][ j ]) ] = { node_children[ i ].get(), j };
+                        }
                         node_children[ i ]->Build();
                         node_active_children.set(i);
                         stack.push(node_children[ i ].get());
                     }
                 }
             }
-        }
-
-        // Resolving panic status, rebuilds the whole tree.
-        void Panic()
-        {
-            if ( root() != this )
-            {
-                throw std::logic_error("Cannot force update from child node.");
-            }
-
-            // Keep in mind that this is rebuilding the whole tree from root node.
-            m_b_initialized_ = false;
-
-            std::stack<octree_impl*> stack;
-            stack.push(root());
-
-            // Scan the whole tree and collect all objects
-            while ( !stack.empty() )
-            {
-                const auto node = stack.top();
-                stack.pop();
-
-                for ( const auto& obj : node->m_values_ )
-                {
-                    m_insertion_queue_.push(obj);
-                }
-
-                for ( int i = 0; i < octant_count; ++i )
-                {
-                    if ( node->m_children_[ i ] )
-                    {
-                        const auto& child = node->m_children_[ i ];
-
-                        if ( child->m_active_children_ == 0 && child->m_values_.size() <= 1 )
-                        {
-                            if ( child->m_values_.size() == 1 )
-                            {
-                                m_insertion_queue_.push(child->m_values_[ 0 ]);
-                            }
-
-                            node->m_children_[ i ].reset();
-                            node->m_active_children_.reset(i);
-                        }
-                        else
-                        {
-                            stack.push(node->m_children_[ i ].get());
-                        }
-                    }
-                }
-            }
-
-            m_values_.clear();
-
-            // Rebuild the tree
-            UpdateInternal();
         }
 
         // Resolving dirty status or rebuilding.
@@ -870,7 +1064,7 @@ namespace Engine
                 {
                     if ( auto obj = m_insertion_queue_.front().lock() )
                     {
-                        m_values_.push_back(obj);
+                        Put(obj);
                     }
 
                     m_insertion_queue_.pop();
@@ -1000,9 +1194,11 @@ namespace Engine
             return !m_insertion_queue_.empty();
         }
 
+        // Empty for its whole lifespan. A node that got an object or a child since it was last checked (a sibling's
+        // object moved up into the parent and down into it) is kept.
         bool garbage() const
         {
-            return m_life_count_ < 0;
+            return m_life_count_ < 0 && empty();
         }
 
         bool empty() const
@@ -1107,6 +1303,8 @@ namespace Engine
         int m_life_count_;
         // Update(): number of m_values_ checked at the first visit; the post-visit checks only those added since.
         size_t m_values_checked_ = 0;
+        // Root only (see Where()).
+        std::unique_ptr<where_map> m_where_;
     };
 
     template <typename WeakT, typename BoundingValueGetter, float Epsilon>

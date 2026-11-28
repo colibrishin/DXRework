@@ -3,8 +3,10 @@
 #include <ranges>
 
 #include "ThrowIfFailed.h"
+#include "FrameRelease.h"
 #include "Shader.h"
 #include "ResourceTypeValidation.h"
+#include "D3D12SamplerAddress.h"
 
 std::vector<std::tuple<Engine::eShaderType, std::string, std::string>> Engine::D3D12GraphicPrimitiveShader::s_main_version =
 		{
@@ -19,7 +21,9 @@ std::vector<std::tuple<Engine::eShaderType, std::string, std::string>> Engine::D
 namespace Engine
 {
     D3D12GraphicPrimitiveShader::~D3D12GraphicPrimitiveShader()
-    { }
+    {
+        KeepUntilFrameDone(std::move(m_pipeline_state_)); // lists of this frame may still use it
+    }
 
     void D3D12GraphicPrimitiveShader::Generate( const Abstracts::Resource* resource, void* pipeline_signature )
 	{
@@ -398,7 +402,7 @@ namespace Engine
 		m_depth_func_ = static_cast<D3D12_COMPARISON_FUNC>(shader->GetDepthFunction());
 		m_smp_filter_ = static_cast<D3D12_FILTER>(shader->GetSamplerFilter());
 		m_smp_func_ = static_cast<D3D12_COMPARISON_FUNC>(shader->GetSamplerFunction());
-		m_smp_address_ = static_cast<D3D12_TEXTURE_ADDRESS_MODE>(shader->GetSamplerAddressMode());
+		m_smp_address_ = ToD3D12AddressMode(shader->GetSamplerAddressMode());
 		m_cull_mode_ = static_cast<D3D12_CULL_MODE>(shader->GetRasterizerCull());
 		m_fill_mode_ = static_cast<D3D12_FILL_MODE>(shader->GetRasterizerDraw());
 

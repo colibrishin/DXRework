@@ -43,6 +43,12 @@ float3 BarycentricCoordinates(float3 pt, float3 v0, float3 v1, float3 v2)
 	return float3(u, v, w);
 }
 
+float3 SafeNormalize(float3 v)
+{
+	const float len2 = dot(v, v);
+	return len2 > 0.f ? v * rsqrt(len2) : v;
+}
+
 float4 CalculateSpecular(in float3 hitPosition, in float3 lightDir, in float3 normal, in float specularPower)
 {
 	const float3 reflected = normalize(reflect(lightDir, normal));
@@ -55,6 +61,7 @@ StructuredBuffer<ParamElement>    g_Instance : register(t2, space1);
 StructuredBuffer<VertexInputType> l_vertex : register(t3, space1);
 ByteAddressBuffer                 l_index : register(t4, space1);
 RWTexture2D<float4>               g_output : register(u0, space1);
+RWTexture2D<float>                g_depthOutput : register(u1, space1);
 SamplerState                      g_outputSampler : register(s0, space1);
 
 [shader("raygeneration")]
@@ -73,9 +80,21 @@ void raygen_main()
 	payload.isShadow  = false;
 	payload.isReflect = false;
 
-	TraceRay(g_tlas, RAY_FLAG_NONE, 0xFF, 0, 0, 0, ray, payload);
+	// Mask 1: the ray tracing shader's objects. Raster objects (mask 2) are drawn by the raster passes over this image;
+	// shadow and reflection rays see both.
+	TraceRay(g_tlas, RAY_FLAG_NONE, 0x01, 0, 0, 0, ray, payload);
 
 	g_output[dispatchRaysIndex.xy] = float4(payload.colorAndDist.rgb, 1.f);
+
+	// The raster depth of the hit (same camera), so raster objects can be depth tested against it; 1 on a miss.
+	float depth = 1.f;
+	if (payload.colorAndDist.w >= 0.f)
+	{
+		const float3 hit  = ray.Origin + ray.Direction * payload.colorAndDist.w;
+		const float4 clip = mul(mul(float4(hit, 1.f), g_camView), g_camProj);
+		depth             = saturate(clip.z / clip.w); // TMin is nearer than the near plane
+	}
+	g_depthOutput[dispatchRaysIndex.xy] = depth;
 }
 
 [shader("closesthit")]
@@ -99,18 +118,29 @@ void closest_hit_main(inout Payload payload, Attributes attr)
 	v_vertex[1] = l_vertex[v_index.y];
 	v_vertex[2] = l_vertex[v_index.z];
 
-	// Barycentric interpolation of normal
-	const float3 baryNormal = v_vertex[0].normal * barycentrics.x +
-	                          v_vertex[1].normal * barycentrics.y +
-	                          v_vertex[2].normal * barycentrics.z;
+	// The vertices are in object space; lighting, reflection and the UV derivatives work in world space.
+	const float3x4 objectToWorld = ObjectToWorld3x4();
+	const float3x3 worldToObject = (float3x3)WorldToObject3x4();
 
-	const float3 baryTangent = v_vertex[0].tangent * barycentrics.x +
-	                           v_vertex[1].tangent * barycentrics.y +
-	                           v_vertex[2].tangent * barycentrics.z;
+	float3 w_position[3];
+	[unroll] for (uint vi = 0; vi < 3; ++vi)
+	{
+		w_position[vi] = mul(objectToWorld, float4(v_vertex[vi].position, 1.f));
+	}
 
-	const float3 baryBinormal = v_vertex[0].binormal * barycentrics.x +
-	                            v_vertex[1].binormal * barycentrics.y +
-	                            v_vertex[2].binormal * barycentrics.z;
+	// Barycentric interpolation of normal (normals use the inverse transpose); unit length in world space, zero
+	// vectors (meshes without tangents) stay zero instead of becoming NaN.
+	const float3 baryNormal = SafeNormalize(mul(v_vertex[0].normal * barycentrics.x +
+	                                            v_vertex[1].normal * barycentrics.y +
+	                                            v_vertex[2].normal * barycentrics.z, worldToObject));
+
+	const float3 baryTangent = SafeNormalize(mul((float3x3)objectToWorld, v_vertex[0].tangent * barycentrics.x +
+	                                                                      v_vertex[1].tangent * barycentrics.y +
+	                                                                      v_vertex[2].tangent * barycentrics.z));
+
+	const float3 baryBinormal = SafeNormalize(mul((float3x3)objectToWorld, v_vertex[0].binormal * barycentrics.x +
+	                                                                       v_vertex[1].binormal * barycentrics.y +
+	                                                                       v_vertex[2].binormal * barycentrics.z));
 
 	float4 baryColor = float4(0.0f, 0.0f, 0.0f, 1.0f);
 	// Barycentric interpolation of coloring
@@ -139,8 +169,8 @@ void closest_hit_main(inout Payload payload, Attributes attr)
 			(
 			 cross
 			 (
-			  v_vertex[2].position - v_vertex[0].position,
-			  v_vertex[1].position - v_vertex[0].position
+			  w_position[2] - w_position[0],
+			  w_position[1] - w_position[0]
 			 )
 			);
 
@@ -157,25 +187,33 @@ void closest_hit_main(inout Payload payload, Attributes attr)
 	float3 yOffset = RayPlaneIntersection(hitPos, nonbary_normal, ddyOrigin, ddyDir);
 
 	// Compute the barycentric coordinates of the intersection points
-	float3 baryX = BarycentricCoordinates(xOffset, v_vertex[0].position, v_vertex[1].position, v_vertex[2].position);
-	float3 baryY = BarycentricCoordinates(yOffset, v_vertex[0].position, v_vertex[1].position, v_vertex[2].position);
+	float3 baryX = BarycentricCoordinates(xOffset, w_position[0], w_position[1], w_position[2]);
+	float3 baryY = BarycentricCoordinates(yOffset, w_position[0], w_position[1], w_position[2]);
 
 	// Compute the UV derivatives
 	float3x2 uvMat  = float3x2(v_vertex[0].tex, v_vertex[1].tex, v_vertex[2].tex);
 	float2   ddx_uv = mul(baryX, uvMat) - baryUV;
 	float2   ddy_uv = mul(baryY, uvMat) - baryUV;
 
-	if (INST_TEX_SLOT0_ENABLE(g_Instance, instanceId))
+	// Ray tracing materials: slot 0 base colour, slot 1 normal. Raster materials (InstanceID bit 23, seen by shadow and
+	// reflection rays): slot 0 normal, slot 1 base colour.
+	const bool rasterLayout = (InstanceID() & 0x800000) != 0;
+	const bool baseEnabled  = rasterLayout ? INST_TEX_SLOT1_ENABLE(g_Instance, instanceId) : INST_TEX_SLOT0_ENABLE(g_Instance, instanceId);
+	const int  baseSlot     = rasterLayout ? INST_TEX_SLOT1(g_Instance, instanceId) : INST_TEX_SLOT0(g_Instance, instanceId);
+	const bool normalEnabled = rasterLayout ? INST_TEX_SLOT0_ENABLE(g_Instance, instanceId) : INST_TEX_SLOT1_ENABLE(g_Instance, instanceId);
+	const int  normalSlot    = rasterLayout ? INST_TEX_SLOT0(g_Instance, instanceId) : INST_TEX_SLOT1(g_Instance, instanceId);
+
+	if (baseEnabled)
 	{
 		// Sampling the texture with the gradient changes.
-		baryColor = SampleGrad(PSSampler, baryUV, ddx_uv, ddy_uv, INST_TEX_SLOT0(g_Instance, instanceId));
+		baryColor = SampleGrad(PSSampler, baryUV, ddx_uv, ddy_uv, baseSlot);
 	}
 
 	float3 bumpNormal = float3(0.f, 0.f, 0.f);
 
-	if (INST_TEX_SLOT1_ENABLE(g_Instance, instanceId))
+	if (normalEnabled)
 	{
-		float3 normalMap = SampleGrad(PSSampler, baryUV, ddx_uv, ddy_uv, INST_TEX_SLOT1(g_Instance, instanceId)).rgb;
+		float3 normalMap = SampleGrad(PSSampler, baryUV, ddx_uv, ddy_uv, normalSlot).rgb;
 		normalMap        = (normalMap * 2.0f) - 1.0f;
 
 		bumpNormal = (normalMap.x * baryTangent) +
@@ -210,7 +248,7 @@ void closest_hit_main(inout Payload payload, Attributes attr)
 
 		// const float sphere = 4.f * PI * g_Light[i].radius.x * g_Light[i].radius.x;
 
-		if (INST_TEX_SLOT1_ENABLE(g_Instance, instanceId))
+		if (normalEnabled)
 		{
 			normalLightIntensity[i] = saturate(dot(bumpNormal, lightDir));
 			normalColorArray[i]     = g_Light[i].color * normalLightIntensity[i];
@@ -293,7 +331,7 @@ void closest_hit_main(inout Payload payload, Attributes attr)
 
 	float4 lightColor = saturate(colorSum);
 
-	if (INST_TEX_SLOT1_ENABLE(g_Instance, instanceId))
+	if (normalEnabled)
 	{
 		lightColor += saturate(normalColorSum);
 	}
@@ -351,5 +389,6 @@ void miss_main(inout Payload payload)
 		return;
 	}
 
-	payload.colorAndDist = float4(g_ambientColor.xyz, RayTCurrent());
+	// Black, like the raster background (no ambient term where nothing is hit); w < 0 marks the miss.
+	payload.colorAndDist = float4(0.0f, 0.0f, 0.0f, -1.0f);
 }

@@ -15,6 +15,7 @@ namespace Engine
 
         [[nodiscard]] uint64_t GetNativeVertexBufferGPUAddress() const override;
         [[nodiscard]] uint64_t GetNativeIndexBufferGPUAddress() const override;
+        [[nodiscard]] uint64_t GetRaytracingIndexBufferGPUAddress() const override;
 
     protected:
         const void* GetNativeVertexBufferInternal() const override;

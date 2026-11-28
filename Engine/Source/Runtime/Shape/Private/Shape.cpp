@@ -194,6 +194,7 @@ namespace Engine::Resources
 				addMeshImpl(mesh, false);
 			}
 		}
+		MarkModified();
 
 		if (const auto anims = AnimationTexture::GetByMetadataPath(m_animations_path_).lock())
 		{
@@ -351,6 +352,7 @@ namespace Engine::Resources
 			{
 				addTrAnimationImpl(tr_anim);
 			}
+			MarkModified();
 		}
 	}
 
@@ -392,6 +394,7 @@ namespace Engine::Resources
 			
 			m_material_paths_[target_mesh_idx] = locked->GetMetadataPath();
 			m_cached_meshes_[target_mesh_idx].second = locked;
+			MarkModified();
 		}
 	}
 

@@ -1,6 +1,8 @@
 #if CFG_RAYTRACING
 #include "RaytracingExtensionModule.h"
 
+#include <cstdlib>
+
 #include "RaytracingExtension.h"
 #include "TaskScheduler.h"
 
@@ -20,6 +22,12 @@ namespace Engine
     bool RaytracingExtensionModule::InitializeImpl()
 	{
 	    Managers::TaskScheduler::GetInstance().Inject( TASK_TOGGLE_RASTER, RaytracingProxyFunc );
+
+	    // KOLIBRI_RAYTRACING=1 starts with ray tracing on (off by default; the editor checkbox still toggles it).
+	    if ( const char* v = std::getenv( "KOLIBRI_RAYTRACING" ); v && v[ 0 ] == '1' )
+	    {
+	        Managers::TaskScheduler::GetInstance().AddTask( TASK_TOGGLE_RASTER, { true, 0.f } );
+	    }
 	    return true;
 	}
 

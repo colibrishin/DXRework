@@ -18,16 +18,17 @@ namespace Engine
 {
     D3D12PrimitiveMesh::~D3D12PrimitiveMesh()
     {
-        m_native_vertex_buffer_.Reset();
-        m_native_index_buffer_.Reset();
-        m_native_vertex_upload_buffer_.Reset();
-        m_native_index_upload_buffer_.Reset();
+        // Lists of this frame may still draw or copy from them.
+        KeepUntilFrameDone(std::move(m_native_vertex_buffer_));
+        KeepUntilFrameDone(std::move(m_native_index_buffer_));
+        KeepUntilFrameDone(std::move(m_native_vertex_upload_buffer_));
+        KeepUntilFrameDone(std::move(m_native_index_upload_buffer_));
 
 #if CFG_RAYTRACING
-        m_raytracing_vertex_buffer_.Reset();
-        m_raytracing_index_buffer_.Reset();
-        m_raytracing_vertex_buffer_upload_.Reset();
-		m_raytracing_index_buffer_upload_.Reset();
+        KeepUntilFrameDone(std::move(m_raytracing_vertex_buffer_));
+        KeepUntilFrameDone(std::move(m_raytracing_index_buffer_));
+        KeepUntilFrameDone(std::move(m_raytracing_vertex_buffer_upload_));
+        KeepUntilFrameDone(std::move(m_raytracing_index_buffer_upload_));
 #endif
 	}
 
@@ -357,6 +358,12 @@ namespace Engine
     uint64_t D3D12PrimitiveMesh::GetNativeIndexBufferGPUAddress() const
 	{
 	    return m_index_buffer_view_.BufferLocation;
+    }
+
+    uint64_t D3D12PrimitiveMesh::GetRaytracingIndexBufferGPUAddress() const
+	{
+	    // The copy made with the bottom level structure stays in NON_PIXEL_SHADER_RESOURCE.
+	    return m_raytracing_index_buffer_ ? m_raytracing_index_buffer_->GetGPUVirtualAddress() : GetNativeIndexBufferGPUAddress();
     }
     const void* D3D12PrimitiveMesh::GetNativeVertexBufferInternal() const
     {

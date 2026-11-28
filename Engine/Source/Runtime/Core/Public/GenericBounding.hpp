@@ -280,33 +280,32 @@ namespace Engine
 			throw std::exception("Contains: Invalid type");
 		}
 
+		// How `other` contains this bounding (of this bounding's type, whatever the type of `other`).
 		template <typename BoundingType>
 		[[nodiscard]] DirectX::ContainmentType __vectorcall ContainsBy(const BoundingType& other) const
 		{
-			if constexpr (std::is_same_v<BoundingType, BoundingOrientedBox>)
+			if (type == BOUNDING_TYPE_BOX)
 			{
 				return other.Contains(m_boundings_.box);
 			}
-			else if constexpr (std::is_same_v<BoundingType, BoundingSphere>)
+			if (type == BOUNDING_TYPE_SPHERE)
 			{
 				return other.Contains(m_boundings_.sphere);
 			}
-			else if constexpr (std::is_same_v<BoundingType, BoundingBox>)
-			{
-				return other.Contains(m_boundings_.box);
-			}
-			else
-			{
-				static_assert("ContainsBy: Invalid type");
-				return DirectX::ContainmentType::DISJOINT;
-			}
+			throw std::exception("ContainsBy: Invalid type");
 		}
 
-		// Axis-aligned bounds of the box view, the one ContainsBy(BoundingBox) tests. An axis-aligned box contains the
-		// oriented box exactly when it contains all 8 corners, i.e. these bounds; the octree computes them once per
-		// object and then tests box against box instead of transforming the corners for every node.
+		// Axis-aligned bounds, the ones ContainsBy(BoundingBox) tests. An axis-aligned box contains the oriented box
+		// exactly when it contains all 8 corners, i.e. these bounds (and a sphere exactly when it contains the sphere's
+		// box); the octree computes them once per object and then tests box against box for every node.
 		[[nodiscard]] BoundingBox __vectorcall GetBoxAxisAlignedBounds() const
 		{
+			if (type == BOUNDING_TYPE_SPHERE)
+			{
+				BoundingBox out;
+				BoundingBox::CreateFromSphere(out, m_boundings_.sphere);
+				return out;
+			}
 			DirectX::XMFLOAT3 corners[ BoundingOrientedBox::CORNER_COUNT ];
 			m_boundings_.box.GetCorners(corners);
 			BoundingBox out;

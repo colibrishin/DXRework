@@ -24,11 +24,13 @@ namespace Engine
 	struct ENGINE_RAYTRACINGRENDERPASSTASK_API RaytracingRenderPassTask : RenderPassTask
 	{
 		GENERATE_BODY
+		// Before the raster passes of the same domain: they draw over the ray traced image.
+		static constexpr int RenderPassOrder = -10;
+
 		RaytracingRenderPassTask();
 
 		RaytracingRenderPassTask( RaytracingRenderPassTask&& other ) noexcept
             : m_gi_ticket_( std::move( other.m_gi_ticket_ ) ),
-              m_local_param_pool_ticket_( std::move( other.m_local_param_pool_ticket_ ) ),
               m_instance_pool_ticket_( std::move( other.m_instance_pool_ticket_ ) ),
               m_texture_record_ticket_( std::move( other.m_texture_record_ticket_ ) ),
               m_heap_ticket_( std::move( other.m_heap_ticket_ ) ),
@@ -38,7 +40,6 @@ namespace Engine
             m_local_heaps_                   = std::move( other.m_local_heaps_ );
             m_byte_stream_                   = std::move( other.m_byte_stream_ );
             m_byte_stream_usage_             = std::move( other.m_byte_stream_usage_ );
-            m_local_param_pool_              = std::move( other.m_local_param_pool_ );
             m_instance_pool_                 = std::move( other.m_instance_pool_ );
             m_used_shader_textures_          = std::move( other.m_used_shader_textures_ );
         }
@@ -46,7 +47,6 @@ namespace Engine
 		RaytracingRenderPassTask& operator=(RaytracingRenderPassTask&& other) noexcept
 		{
 			m_gi_ticket_				= std::move(other.m_gi_ticket_);
-			m_local_param_pool_ticket_	= std::move(other.m_local_param_pool_ticket_);
 			m_instance_pool_ticket_		= std::move(other.m_instance_pool_ticket_);
 			m_texture_record_ticket_	= std::move(other.m_texture_record_ticket_);
 			m_heap_ticket_				= std::move(other.m_heap_ticket_);
@@ -56,7 +56,6 @@ namespace Engine
             m_local_heaps_                   = std::move( other.m_local_heaps_ );
             m_byte_stream_                   = std::move( other.m_byte_stream_ );
             m_byte_stream_usage_             = std::move( other.m_byte_stream_usage_ );
-            m_local_param_pool_              = std::move( other.m_local_param_pool_ );
             m_instance_pool_                 = std::move( other.m_instance_pool_ );
             m_used_shader_textures_          = std::move( other.m_used_shader_textures_ );
 			
@@ -78,10 +77,6 @@ namespace Engine
 		void Cleanup() override;
 
 	private:
-		using IntermediateShaderMap = concurrent_fast_pool_map<Resources::ShaderBase*, aligned_vector<InstancePair>>;
-		
-		inline void PredicateObject(const ObjectPredication& predicate, RenderMap const* domain_map, uint64_t& instance_count, IntermediateShaderMap& out_map) const;
-
         inline void
         StartPhase_MultiThread( float                                                             dt,
                                 bool                                                              shader_bypass,
@@ -93,7 +88,7 @@ namespace Engine
                                 const ContextSetupFunction&                                       postrender_predicate,
                                 const std::unordered_map<std::string_view, ContextSetupFunction>& prerender_predicates,
                                 const std::unordered_map<std::string_view, ContextSetupFunction>& postrender_predicates,
-                                const aligned_vector<InstancePair>&                               instance_pairs );
+                                const std::vector<const InstancePair*>&                           instance_pairs );
 	    
 		void RecordUsedTexture( const IGraphicContext* context,
                                 IGraphicAPI&                       gi,
@@ -111,7 +106,6 @@ namespace Engine
                                                const aligned_vector<Graphics::SBs::InstanceSB*>&     instances );
 
 		SpinLockTicket                                          m_gi_ticket_;
-        SpinLockTicket                                          m_local_param_pool_ticket_;
         SpinLockTicket                                          m_instance_pool_ticket_;
         SpinLockTicket                                          m_texture_record_ticket_;
         SpinLockTicket                                          m_heap_ticket_;
@@ -120,7 +114,6 @@ namespace Engine
         std::vector<Unique<IHeapBase>>                    m_local_heaps_{};
         std::vector<byte_stream>                                m_byte_stream_{};
         std::vector<uint32_t>                                   m_byte_stream_usage_{};
-        StructuredBufferMemoryPool<Graphics::SBs::LocalParamSB> m_local_param_pool_{};
         StructuredBufferMemoryPool<Graphics::SBs::InstanceSB>   m_instance_pool_{};
         std::vector<Resources::Texture*>                        m_used_shader_textures_{};
 	};

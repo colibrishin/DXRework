@@ -1,5 +1,7 @@
 #include "Renderer.h"
 
+#include <algorithm>
+
 #include "ConcurrentTypeLibrary.h"
 #include "ModuleManager.h"
 #include "RenderPipeline.h"
@@ -41,6 +43,14 @@ namespace Engine::Managers
 				ptr->Run(scene.get(), m_render_candidates_, SHADER_DOMAIN_MAX);
 			}
 		}
+		else
+		{
+			// Nothing to draw: tasks that keep instances across frames drop them.
+			for (const auto& task : m_render_instance_tasks_ | std::views::values)
+			{
+				task->Release(m_render_candidates_, SHADER_DOMAIN_MAX);
+			}
+		}
 	    
 		m_b_ready_ = true;
 	}
@@ -49,7 +59,22 @@ namespace Engine::Managers
 	{
 		for (size_t i = 0; i < SHADER_DOMAIN_MAX; ++i)
 		{
-			for (IRenderPassTaskFactory* factory : m_render_pass_tasks_factories_[i] | std::views::values)
+			// Sorted every frame (a domain has a few passes): a pass may come or go with its module.
+			std::vector<std::pair<const std::wstring*, IRenderPassTaskFactory*>> passes;
+			passes.reserve( m_render_pass_tasks_factories_[ i ].size() );
+			for ( const auto& [ name, factory ] : m_render_pass_tasks_factories_[ i ] )
+			{
+				passes.emplace_back( &name, factory );
+			}
+			std::ranges::sort( passes,
+			                   []( const auto& a, const auto& b )
+			                   {
+				                   const int oa = a.second->GetOrder();
+				                   const int ob = b.second->GetOrder();
+				                   return oa != ob ? oa < ob : *a.first < *b.first;
+			                   } );
+
+			for ( IRenderPassTaskFactory* factory : passes | std::views::values )
 			{
                 RenderPassAssisted( factory,
                                     dt,
@@ -133,9 +158,11 @@ namespace Engine::Managers
 
 	void Renderer::UnregisterRenderInstance(const std::wstring_view name)
 	{
-		if (m_render_instance_tasks_.contains(name.data()))
+		if (const auto it = m_render_instance_tasks_.find(name.data()); it != m_render_instance_tasks_.end())
 		{
-			m_render_instance_tasks_.erase(name.data());
+			// The task's instances must leave the render map before the task (and its buffers) goes away.
+			it->second->Release(m_render_candidates_, SHADER_DOMAIN_MAX);
+			m_render_instance_tasks_.erase(it);
 		}
 	}
 
@@ -273,8 +300,12 @@ namespace Engine::Managers
         BorrowedRenderPassFactories& borrowed_factories_ = GetFactories( traits );
         std::once_flag               delegate_flag;
 
-        auto binder = managed_bind( &Renderer::ResolveDirty, GetWeakPtr<Renderer>(), types, borrowed_factories_, inclusion );
+        // By reference: the binder stores decayed copies of its arguments, so the list it re-resolved was its own.
+        auto tasks  = std::ref( borrowed_factories_ );
+        auto binder = managed_bind( &Renderer::ResolveDirty, GetWeakPtr<Renderer>(), types, tasks, inclusion );
         onRenderTaskDirty.Listen( binder );
+        // Passes registered before this first call do not signal again.
+        ResolveDirty( types, borrowed_factories_, inclusion );
 
 		return borrowed_factories_;
     }

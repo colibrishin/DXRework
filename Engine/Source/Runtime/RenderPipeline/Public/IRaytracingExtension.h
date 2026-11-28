@@ -8,7 +8,16 @@
 
 namespace Engine
 {
-namespace Resources { class RaytracingShader; }
+namespace Resources { class RaytracingShader; class Mesh; }
+
+    // One top level instance: entry i uses hit record i and instance buffer element i.
+    struct RaytracingInstance
+    {
+        Resources::Mesh*                  mesh;
+        const Graphics::SBs::InstanceSB*  instance;
+        // Drawn by the raster passes: hidden from primary rays, seen by shadow and reflection rays.
+        bool                              raster = false;
+    };
 
     struct ENGINE_RENDERPIPELINE_API IRaytracingExtension : public virtual IGraphicAPIBase
     {
@@ -31,17 +40,19 @@ namespace Resources { class RaytracingShader; }
             return m_b_raytracing_;
         }
 
+        // Hit record descriptor tables come from one heap per frame: reserve the frame's table count before taking any.
+        // Returns how many were reserved (one shader-visible heap caps it).
+        virtual size_t             ReserveRaytracingHeap( size_t tables ) = 0;
         virtual Unique<IHeapBase>  GetRaytracingHeap()      = 0;
         virtual IRaytracingShader* GetNewRaytracingShader() = 0;
 
         virtual void* GetRaytracingNativeInterface() = 0;
         virtual void* GetRaytracingNativePipeline()  = 0;
 
-        virtual bool BuildTopLevelAccelerationBuffer( const IGraphicContext*   context,
-                                                      RenderMap const*         render_map,
-                                                      size_t                   render_map_size,
-                                                      AccelStructBuffer&       out_tlas_buffer,
-                                                      const ObjectPredication& predication = {} ) = 0;
+        virtual bool BuildTopLevelAccelerationBuffer( const IGraphicContext*    context,
+                                                      const RaytracingInstance* instances,
+                                                      size_t                    instance_count,
+                                                      AccelStructBuffer&        out_tlas_buffer ) = 0;
 
         virtual void DispatchRay( const IGraphicContext*                                       context,
                                   const Resources::RaytracingShader*                           shader,
@@ -53,6 +64,10 @@ namespace Resources { class RaytracingShader; }
                                   const AccelStructBuffer& top_level_accel_buffer ) = 0;
 
         virtual void CopyRaytracingToRenderTarget( const IGraphicContext* context ) = 0;
+        // Copies this frame's ray traced depth into a depth texture of the screen size in its resting (common) state,
+        // so raster objects are depth tested against the ray traced image. False (nothing copied) if this frame was not
+        // traced.
+        virtual bool CopyRaytracingDepthTo( const IGraphicContext* context, const Abstracts::Resource* depth ) = 0;
 
     private:
         bool m_b_raytracing_ = false;

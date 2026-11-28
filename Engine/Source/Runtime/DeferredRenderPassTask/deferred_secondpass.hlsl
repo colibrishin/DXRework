@@ -26,6 +26,11 @@ float4 ps_main(DeferredLightPixelInputType input) : SV_Target
     float4 worldPosition = float4(0.f, 0.f, 0.f, 1.f);
     
     worldNormal = tex[0].Sample(PSSampler, input.uv);
+    // Nothing rasterized here (the normal is cleared to 0): keep what is under it (the ray traced image, or the clear).
+    if (dot(worldNormal.rgb, worldNormal.rgb) == 0.f)
+    {
+        discard;
+    }
     baseColor = tex[1].Sample(PSSampler, input.uv);
     float4 MRAS = tex[2].Sample(PSSampler, input.uv);
     metallic = MRAS.r;

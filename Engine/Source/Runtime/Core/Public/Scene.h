@@ -12,6 +12,7 @@
 #include "Delegation.hpp"
 #include "SingletonSpinLock.h"
 #include "Layer.h"
+#include "ChangeSignal.h"
 
 #include "Scene.generated.h"
 
@@ -21,6 +22,11 @@ namespace physx
 	class PxScene;
 }
 #endif
+
+namespace Engine
+{
+	class ChangeCollector;
+}
 
 DEFINE_DELEGATE( OnObjectAdded, Engine::Weak<Engine::Abstracts::ObjectBase> );
 DEFINE_DELEGATE( OnObjectRemoved, Engine::Weak<Engine::Abstracts::ObjectBase> );
@@ -328,6 +334,11 @@ namespace Engine
 		void synchronize(const Weak<Scene>& ptr_scene);
         void deepCopy( const Weak<Scene> &other );
 
+		// Brings both octrees up to date with the objects whose bounds may have changed since the last call.
+		void UpdateTrees();
+		// The scene is no longer updated: its next UpdateTrees starts with a full update.
+		void StopTrackingTreeChanges();
+
 		EPROPERTY()
 		LocalActorID m_main_camera_local_id_;
 
@@ -362,6 +373,9 @@ namespace Engine
 		
 		Octree m_object_position_tree_;
 		Octree m_object_collision_tree_;
+		// Changes since the last UpdateTrees (none until the scene is first updated, dropped while it is not active).
+		NotCopied<std::unique_ptr<ChangeCollector>> m_tree_changes_;
+		NotCopied<std::vector<ChangeEvent>>         m_tree_events_;
 
 #ifdef PHYSX_ENABLED
 	public:

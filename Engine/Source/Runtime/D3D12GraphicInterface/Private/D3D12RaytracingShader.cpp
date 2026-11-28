@@ -6,12 +6,22 @@
 #include "SIMDExtension.hpp"
 #include "RaytracingShader.h"
 #include "ThrowIfFailed.h"
+#include "FrameRelease.h"
 #include "ResourceTypeValidation.h"
+#include "D3D12SamplerAddress.h"
 
 namespace Engine
 {
     D3D12RaytracingShader::~D3D12RaytracingShader()
-    { }
+    {
+        // Lists of this frame may still dispatch rays with them.
+        KeepUntilFrameDone(std::move(m_raytracing_pso_));
+        KeepUntilFrameDone(std::move(m_local_root_signature_));
+        for (ComPtr<ID3D12Resource>& table : m_shader_tables_)
+        {
+            KeepUntilFrameDone(std::move(table));
+        }
+    }
 
     void D3D12RaytracingShader::Generate( const Abstracts::Resource* resource, void* pipeline_signature )
     {
@@ -152,9 +162,9 @@ namespace Engine
 
         const D3D12_SAMPLER_DESC sampler{
             .Filter         = static_cast<D3D12_FILTER>( shader->GetSamplerFilter() ),
-            .AddressU       = static_cast<D3D12_TEXTURE_ADDRESS_MODE>( shader->GetSamplerAddressMode() ),
-            .AddressV       = static_cast<D3D12_TEXTURE_ADDRESS_MODE>( shader->GetSamplerAddressMode() ),
-            .AddressW       = static_cast<D3D12_TEXTURE_ADDRESS_MODE>( shader->GetSamplerAddressMode() ),
+            .AddressU       = ToD3D12AddressMode( shader->GetSamplerAddressMode() ),
+            .AddressV       = ToD3D12AddressMode( shader->GetSamplerAddressMode() ),
+            .AddressW       = ToD3D12AddressMode( shader->GetSamplerAddressMode() ),
             .MipLODBias     = 0,
             .MaxAnisotropy  = 0,
             .ComparisonFunc = static_cast<D3D12_COMPARISON_FUNC>( shader->GetSamplerFunction() ),
@@ -163,9 +173,10 @@ namespace Engine
             .MaxLOD         = D3D12_FLOAT32_MAX
         };
 
+        // Copy source for the per-instance sampler tables: shader-visible heaps are write-only for the CPU.
         constexpr D3D12_DESCRIPTOR_HEAP_DESC desc{ .Type           = D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER,
                                                    .NumDescriptors = 1,
-                                                   .Flags          = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE,
+                                                   .Flags          = D3D12_DESCRIPTOR_HEAP_FLAG_NONE,
                                                    .NodeMask       = 0 };
 
         dev->CreateDescriptorHeap( &desc, IID_PPV_ARGS( m_sampler_heap_.GetAddressOf() ) );
@@ -192,33 +203,13 @@ namespace Engine
         IGraphicAPI& gi = g_graphic_accessor.GetInterface();
         auto* dev = static_cast<ID3D12Device2*>(gi.GetNativeInterface());
         
-        auto& hit_record = m_shader_tables_[type];
         const auto& new_size = Align(
             records.size(),
             D3D12_RAYTRACING_SHADER_TABLE_BYTE_ALIGNMENT);
-        
-        if (new_size > m_allocated_shader_record_size_[type])
-        {
-            const auto& default_heap = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
-            const auto& buffer_desc  = CD3DX12_RESOURCE_DESC::Buffer
-                    (
-                     new_size,
-                     D3D12_RESOURCE_FLAG_NONE
-                    );
 
-            DX::ThrowIfFailed(
-                     dev->CreateCommittedResource
-                     (
-                      &default_heap,
-                      D3D12_HEAP_FLAG_NONE,
-                      &buffer_desc,
-                      D3D12_RESOURCE_STATE_GENERIC_READ,
-                      nullptr,
-                      IID_PPV_ARGS(hit_record.ReleaseAndGetAddressOf())
-                     ));
-
-            m_allocated_shader_record_size_[type] = new_size;
-        }
+        // The GPU reads the table from upload memory: one per frame in flight, GetShaderRecord returns this frame's.
+        auto& hit_record = m_shader_tables_[type];
+        hit_record = m_shader_table_slots_[type].Get(dev, new_size, D3D12_RESOURCE_STATE_GENERIC_READ, L"Raytracing shader table");
 
         const wchar_t* key;
         switch (type)
@@ -236,10 +227,18 @@ namespace Engine
             throw std::runtime_error("Unknown type iterated");
         }
         
+        // Hit records are one per instance (HitShaderRecord each) and every record starts with the identifier.
+        const bool   per_record = type == RAY_SHADER_REC_HIT;
+        const void*  id         = m_raytracing_pso_properties_->GetShaderIdentifier(key);
+
         char* copy_dst = nullptr;
         DX::ThrowIfFailed(hit_record->Map(0, nullptr, reinterpret_cast<void**>(&copy_dst)));
         SIMDExtension::_mm256_memcpy(copy_dst, records.data(), records.size());
-        std::memcpy(copy_dst, m_raytracing_pso_properties_->GetShaderIdentifier(key), D3D12_SHADER_IDENTIFIER_SIZE_IN_BYTES);
+        std::memcpy(copy_dst, id, D3D12_SHADER_IDENTIFIER_SIZE_IN_BYTES);
+        for (size_t offset = sizeof(HitShaderRecord); per_record && offset < records.size(); offset += sizeof(HitShaderRecord))
+        {
+            std::memcpy(copy_dst + offset, id, D3D12_SHADER_IDENTIFIER_SIZE_IN_BYTES);
+        }
         hit_record->Unmap(0, nullptr);
     }
 

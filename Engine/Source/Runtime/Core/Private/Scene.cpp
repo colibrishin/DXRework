@@ -5,6 +5,9 @@
 #include <extensions/PxDefaultSimulationFilterShader.h>
 #endif
 #include "Scene.h"
+#include "ChangeSignal.h"
+#include "ChangeCollector.h"
+#include <unordered_set>
 
 #if WITH_EDITOR
 #include "IUIAPI.h"
@@ -252,6 +255,7 @@ namespace Engine
             }
 
             onObjectAdded.Broadcast( obj );
+            SignalActor( "object.add", *obj, eChange::Added );
 		}	
 	}
 
@@ -265,6 +269,10 @@ namespace Engine
 
 		const Weak<Abstracts::ObjectBase> obj = m_cached_objects_[id];
 		onObjectRemoved.Broadcast(obj);
+		if (const auto locked = obj.lock())
+		{
+			SignalActor("object.remove", *locked, eChange::Removed);
+		}
 		
 		{
 			SpinLockToken token = SingletonSpinLock::GetInstance().Lock(m_component_lock_);
@@ -324,6 +332,7 @@ namespace Engine
 
 	void Scene::synchronize(const Weak<Scene>& ptr_scene)
 	{
+		SignalScene("scene.sync", *this);
 		if (const Strong<Scene>& scene = ptr_scene.lock())
 		{
 #ifdef PHYSX_ENABLED
@@ -691,6 +700,7 @@ namespace Engine
 			ConcurrentWeakComRootMap::accessor comp_acc;
 			if (!m_concurrent_cached_components_.find(comp_acc, type)) m_concurrent_cached_components_.insert(comp_acc, type);
 			comp_acc->second.emplace(component->GetID(), component);
+			SignalComponent("component.cache", *component, eChange::Added);
 
 			if (type->IsDerivedOf(Components::Transform::StaticTypeHash()))
 			{
@@ -717,6 +727,7 @@ namespace Engine
 				ConcurrentWeakComRootMap::accessor comp_acc;
 
 				if (m_concurrent_cached_components_.find(comp_acc, type)) comp_acc->second.erase(component->GetID());
+				SignalComponent("component.uncache", *component, eChange::Removed);
 			}
 
 			if (type->IsDerivedOf(Components::Transform::StaticTypeHash()))
@@ -771,7 +782,134 @@ namespace Engine
 			layer->Update(dt);
 		}
 
-		m_object_position_tree_.Update();
+		UpdateTrees();
+	}
+
+	void Scene::UpdateTrees()
+	{
+		// KOLIBRI_OCT_LEGACY=1: re-evaluate every object of the position tree each frame and leave the collision tree
+		// to synchronization, deserialization and copies (the previous behaviour; read in every build).
+		static const bool legacy = []
+		{
+			char*  value  = nullptr;
+			size_t length = 0;
+			bool   result = false;
+			if ( _dupenv_s( &value, &length, "KOLIBRI_OCT_LEGACY" ) == 0 && value )
+			{
+				result = value[ 0 ] == '1';
+				free( value );
+			}
+			return result;
+		}();
+		if ( legacy )
+		{
+			static const bool logged = [] { OutputDebugStringA( "KOLIBRI_OCT_LEGACY: full octree updates\n" ); return true; }();
+			(void)logged;
+			m_object_position_tree_.Update();
+			return;
+		}
+
+		auto& collector = m_tree_changes_.value;
+		bool  full      = !collector;
+		if ( !collector )
+		{
+			// Changes made before listening (or while the scene was not active) are not known.
+			collector = std::make_unique<ChangeCollector>();
+		}
+
+		std::vector<ChangeEvent>& events = m_tree_events_.value;
+		collector->Drain( events );
+
+		// The objects whose bounds may have changed: moved or reparented ones (and their descendants), and the owners
+		// of added, removed, moved or modified components (a collider decides the bounds). Active and layer changes
+		// do not move anything in the trees.
+		std::unordered_set<GlobalEntityID> changed;
+		for ( const ChangeEvent& event : events )
+		{
+			if ( event.kind == eChange::SceneReset )
+			{
+				full |= event.scene == GetID();
+				continue;
+			}
+			if ( event.kind != eChange::Active && event.kind != eChange::Layer && event.object != 0 )
+			{
+				changed.insert( event.object );
+			}
+		}
+
+		std::vector<Strong<Abstracts::ObjectBase>> objects;
+		if ( !full )
+		{
+			std::vector<Strong<Abstracts::ObjectBase>> stack;
+			for ( const GlobalEntityID id : changed )
+			{
+				if ( const Strong<Abstracts::ObjectBase> object = FindGameObject( id ).lock() )
+				{
+					stack.push_back( object );
+				}
+			}
+			std::unordered_set<GlobalEntityID> listed;
+			while ( !stack.empty() )
+			{
+				const Strong<Abstracts::ObjectBase> object = std::move( stack.back() );
+				stack.pop_back();
+				if ( !listed.insert( object->GetID() ).second )
+				{
+					continue;
+				}
+				for ( const Weak<Abstracts::ObjectBase>& child : object->GetChildren() )
+				{
+					if ( const Strong<Abstracts::ObjectBase> locked = child.lock() )
+					{
+						stack.push_back( locked );
+					}
+				}
+				objects.push_back( object );
+			}
+
+			// Past this share of the scene's objects one full update is cheaper (KOLIBRI_OCT_FALLBACK=<percent>).
+			static const size_t fallback_percent = []
+			{
+				const std::optional<std::string> value = GetDiagSwitch( "KOLIBRI_OCT_FALLBACK" );
+				return value ? static_cast<size_t>( std::strtoul( value->c_str(), nullptr, 10 ) ) : size_t{ 50 };
+			}();
+			full = objects.size() * 100 > m_cached_objects_.size() * fallback_percent;
+		}
+
+		if ( full )
+		{
+			m_object_position_tree_.Update();
+			m_object_collision_tree_.Update();
+		}
+		else
+		{
+			m_object_position_tree_.UpdateDirty( objects );
+			m_object_collision_tree_.UpdateDirty( objects );
+		}
+
+		// KOLIBRI_OCT_CHECK=1 (Editor/Debug): every object must be where a full update would put it. Violations are
+		// logged (a line per tree and frame) rather than thrown, so an unattended run keeps going and reports them all.
+		static const bool check = GetDiagSwitch( "KOLIBRI_OCT_CHECK" ).value_or( "" ) == "1";
+		if ( check )
+		{
+			const char* names[] = { "position", "collision" };
+			const Octree* trees[] = { &m_object_position_tree_, &m_object_collision_tree_ };
+			for ( int i = 0; i < 2; ++i )
+			{
+				if ( const size_t wrong = trees[ i ]->CheckPlacement() + trees[ i ]->CheckWhere() )
+				{
+					const std::string line = "KOLIBRI_OCT_CHECK: " + std::to_string( wrong ) + " " + names[ i ] +
+					                         " octree objects misplaced (" + ( full ? "full" : "changed only" ) + ")\n";
+					OutputDebugStringA( line.c_str() );
+				}
+			}
+		}
+	}
+
+	void Scene::StopTrackingTreeChanges()
+	{
+		m_tree_changes_.value.reset();
+		m_tree_events_.value = {};
 	}
 
 	void Scene::PreRender(const float dt)
@@ -900,6 +1038,7 @@ namespace Engine
 
 	void Scene::OnDeserialized()
 	{
+		SignalScene("scene.deserialize", *this);
 		Renderable::OnDeserialized();
 
 		auto ui = m_layers_[static_cast<size_t>(RESERVED_LAYER_OBSERVER)]->GetGameObjects();

@@ -16,7 +16,7 @@ namespace Engine::Resources
         SimpleParticleComputeShader()
             : ParticleComputeShader( "cs_particle.hlsl" ) 
         {
-            SetThread( { 32, 32, 1 } );
+            SetThread( { 1024, 1, 1 } );
         }
 
 #if WITH_EDITOR
