@@ -483,6 +483,40 @@ TEST( Octree, UpdateDirtyFollowsMovedObjects )
     EXPECT_TRUE( Placement( tree ) == placement );
 }
 
+// Objects that fit in a node of the smallest size stay there: a full Update does not push them further down than
+// Insert and UpdateDirty place them.
+TEST( Octree, SmallObjectsStayInTheSmallestNodes )
+{
+    World world;
+    Tree  tree;
+    for ( int i = 0; i < 300; ++i )
+    {
+        auto object    = std::make_shared<FakeObject>();
+        object->center = Vector3( world.Uniform( -100.f, 100.f ), world.Uniform( -100.f, 100.f ), world.Uniform( -100.f, 100.f ) );
+        object->bounding.SetType( Engine::BOUNDING_TYPE_BOX );
+        object->bounding.UpdateFromBoundingBox(
+                DirectX::BoundingOrientedBox( object->center, Vector3( 0.05f, 0.05f, 0.05f ), Quaternion::Identity ) );
+        world.objects.push_back( object );
+        tree.Insert( object );
+    }
+    tree.UpdateDirty( std::vector<Strong>{} );
+    ExpectConsistent( tree, world, 16 );
+
+    std::vector<Strong> moved;
+    for ( const Strong& object : world.objects )
+    {
+        object->center += Vector3( 0.3f, 0.f, 0.f );
+        object->bounding.SetCenter( object->center );
+        moved.push_back( object );
+    }
+    tree.UpdateDirty( moved );
+    ExpectConsistent( tree, world, 16 );
+
+    const auto placement = Placement( tree );
+    tree.Update();
+    EXPECT_TRUE( Placement( tree ) == placement );
+}
+
 TEST( Octree, UpdateDirtySkipsObjectsNotInTheTree )
 {
     World world;

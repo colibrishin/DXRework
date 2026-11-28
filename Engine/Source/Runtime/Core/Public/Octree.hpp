@@ -498,6 +498,11 @@ namespace Engine
                         life_count = node_lifespan;
                     }
 
+                    // Insert does not go below the smallest node size; neither does Update.
+                    const Vector3 extent_scale = node_extent * 2.f;
+                    const bool    node_floor   = extent_scale.x <= smallest_scale && extent_scale.y <= smallest_scale &&
+                                                 extent_scale.z <= smallest_scale;
+
                     if ( !node_value.empty() )
                     {
                         for ( auto it = node_value.begin(); it != node_value.end(); )
@@ -512,7 +517,7 @@ namespace Engine
                             const auto obj_box = BoundingValueGetter::value(obj).GetBoxAxisAlignedBounds();
                             bool       found   = false;
 
-                            for ( int i = 0; i < octant_count; ++i )
+                            for ( int i = 0; !node_floor && i < octant_count; ++i )
                             {
                                 if ( node_children[ i ] )
                                 {
