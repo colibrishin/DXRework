@@ -1,4 +1,5 @@
 #pragma once
+#include <algorithm>
 #include <array>
 #include <bitset>
 #include <stack>
@@ -566,12 +567,14 @@ namespace Engine
             }
         }
 
+        // The objects whose bounding touches the sphere, nearest center first (so the order does not depend on the
+        // tree's layout).
         [[nodiscard]] std::vector<WeakT> Nearest(const Vector3& point, float distance) const
         {
             using query_frame = std::pair<const octree_impl*, bool>;
-            std::stack<query_frame> q;
-            std::vector<WeakT>      result;
-            const BoundingSphere    search_sphere(point, distance);
+            std::stack<query_frame>             q;
+            std::vector<std::pair<float, WeakT>> found;
+            const BoundingSphere                search_sphere(point, distance);
 
             q.emplace(this, false);
 
@@ -592,7 +595,8 @@ namespace Engine
                             if ( const auto& bounding = BoundingValueGetter::value(locked);
                                 bounding.Intersects(search_sphere) || bounding.ContainsBy(search_sphere) )
                             {
-                                result.push_back(v);
+                                const Vector3 center = bounding.GetBoxAxisAlignedBounds().Center;
+                                found.emplace_back(Vector3::DistanceSquared(center, point), v);
                             }
                         }
                     }
@@ -609,6 +613,13 @@ namespace Engine
                 }
             }
 
+            std::stable_sort(found.begin(), found.end(), [](const auto& a, const auto& b) { return a.first < b.first; });
+            std::vector<WeakT> result;
+            result.reserve(found.size());
+            for ( auto& [d, v] : found )
+            {
+                result.push_back(std::move(v));
+            }
             return result;
         }
 

@@ -294,6 +294,33 @@ TEST( Octree, SphereObjectsArePlacedByTheirSphere )
     }
 }
 
+TEST( Octree, NearestReturnsTheNearestCenterFirst )
+{
+    World world;
+    world.sphere_share = 0.3f;
+    Tree  tree;
+    for ( int i = 0; i < 2000; ++i )
+    {
+        world.Add( tree, 100.f );
+    }
+    tree.Update();
+
+    for ( int q = 0; q < 32; ++q )
+    {
+        const Vector3 point( world.Uniform( -100.f, 100.f ), world.Uniform( -100.f, 100.f ),
+                             world.Uniform( -100.f, 100.f ) );
+        const std::vector<Weak> nearest = tree.Nearest( point, 30.f );
+        ASSERT_FALSE( nearest.empty() );
+        float last = 0.f;
+        for ( const Weak& value : nearest )
+        {
+            const float distance = Vector3::DistanceSquared( value.lock()->center, point );
+            EXPECT_GE( distance, last );
+            last = distance;
+        }
+    }
+}
+
 TEST( Octree, RemovedAndExpiredObjectsLeave )
 {
     World world;
