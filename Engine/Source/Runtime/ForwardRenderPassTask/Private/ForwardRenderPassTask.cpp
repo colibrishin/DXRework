@@ -404,7 +404,10 @@ namespace Engine
 				{
 					size_t msb = count - 1;
 					size_t lsb = max_tex_binds - count;
-					for (size_t i = 0; i < pair.textures->size(); ++i) // material slots may be sparse
+					// With the caller's shader (shadow maps: depth from the world matrix and bones only) the material
+					// textures are neither read nor bound: their slots are not assigned, so batches are only split by
+					// reserved textures and blocks. A bypass shader that samples material textures would need them back.
+					for (size_t i = 0; !shader_bypass && i < pair.textures->size(); ++i) // material slots may be sparse
 					{
 						if (pair.textures->at(i))
 						{
