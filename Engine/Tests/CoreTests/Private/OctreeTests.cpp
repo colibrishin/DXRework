@@ -16,6 +16,7 @@ namespace
     struct FakeObject
     {
         Engine::GenericBounding<> bounding;
+        Vector3                   center;
     };
 
     using Strong = std::shared_ptr<FakeObject>;
@@ -35,6 +36,7 @@ namespace
     {
         std::mt19937          random{ 1234 };
         std::vector<Strong>   objects;
+        float                 sphere_share = 0.f; // share of objects with a sphere bounding
 
         float Uniform( const float lo, const float hi )
         {
@@ -43,12 +45,24 @@ namespace
 
         void Place( FakeObject& object, const float range )
         {
-            const DirectX::BoundingOrientedBox box(
-                    Vector3( Uniform( -range, range ), Uniform( -range, range ), Uniform( -range, range ) ),
-                    Vector3( Uniform( 0.2f, 5.f ), Uniform( 0.2f, 5.f ), Uniform( 0.2f, 5.f ) ),
-                    Quaternion::Identity );
+            object.center = Vector3( Uniform( -range, range ), Uniform( -range, range ), Uniform( -range, range ) );
+            const Vector3 extents( Uniform( 0.2f, 5.f ), Uniform( 0.2f, 5.f ), Uniform( 0.2f, 5.f ) );
+            if ( Uniform( 0.f, 1.f ) < sphere_share )
+            {
+                object.bounding.SetType( Engine::BOUNDING_TYPE_SPHERE );
+                object.bounding.SetCenter( object.center );
+                object.bounding.SetExtents( extents );
+                return;
+            }
             object.bounding.SetType( Engine::BOUNDING_TYPE_BOX );
-            object.bounding.UpdateFromBoundingBox( box );
+            object.bounding.UpdateFromBoundingBox(
+                    DirectX::BoundingOrientedBox( object.center, extents, Quaternion::Identity ) );
+        }
+
+        void Move( FakeObject& object, const float step )
+        {
+            object.center += Vector3( Uniform( -step, step ), Uniform( -step, step ), Uniform( -step, step ) );
+            object.bounding.SetCenter( object.center );
         }
 
         Strong Add( Tree& tree, const float range )
@@ -66,6 +80,7 @@ namespace
     {
         std::multiset<const FakeObject*> in_tree;
         std::vector<const Tree*>         nodes{ &tree };
+        size_t                           outside = 0;
         while ( !nodes.empty() )
         {
             const Tree* node = nodes.back();
@@ -75,6 +90,11 @@ namespace
                 const Strong locked = value.lock();
                 ASSERT_TRUE( locked ) << "expired object left in the tree";
                 in_tree.insert( locked.get() );
+                // The root also keeps what is outside the map; any other node contains its objects.
+                if ( node != &tree && !node->Contains( locked->bounding.GetBoxAxisAlignedBounds() ) )
+                {
+                    ++outside;
+                }
             }
             for ( const Tree* child : node->Next() )
             {
@@ -84,6 +104,8 @@ namespace
                 }
             }
         }
+
+        EXPECT_EQ( outside, 0u ) << "objects in a node that does not contain them";
 
         std::multiset<const FakeObject*> live;
         for ( const Strong& object : world.objects )
@@ -109,9 +131,20 @@ namespace
 
         for ( int q = 0; q < queries; ++q )
         {
-            const Vector3 point( world.Uniform( -350.f, 350.f ), world.Uniform( -350.f, 350.f ),
-                                 world.Uniform( -350.f, 350.f ) );
-            const float   radius = world.Uniform( 1.f, 60.f );
+            Vector3 point( world.Uniform( -350.f, 350.f ), world.Uniform( -350.f, 350.f ),
+                           world.Uniform( -350.f, 350.f ) );
+            float   radius = world.Uniform( 1.f, 60.f );
+            if ( q % 2 && !world.objects.empty() )
+            {
+                // Just outside an object: finds an object that sticks out of its node.
+                const FakeObject& probe = *world.objects[ static_cast<size_t>(
+                        world.Uniform( 0.f, static_cast<float>( world.objects.size() ) - 0.01f ) ) ];
+                Vector3 offset( world.Uniform( -1.f, 1.f ), world.Uniform( -1.f, 1.f ), world.Uniform( -1.f, 1.f ) );
+                offset.Normalize();
+                const Vector3 extents = probe.bounding.GetExtents();
+                point  = probe.center + offset * ( std::max( { extents.x, extents.y, extents.z } ) * 1.2f );
+                radius = world.Uniform( 0.5f, 2.f );
+            }
 
             std::set<const FakeObject*> expected;
             const DirectX::BoundingSphere sphere( point, radius );
@@ -150,6 +183,40 @@ namespace
     }
 }
 
+TEST( GenericBounding, AxisAlignedBoundsOfASphereContainTheSphere )
+{
+    Engine::GenericBounding<> bounding;
+    bounding.SetType( Engine::BOUNDING_TYPE_SPHERE );
+    bounding.SetCenter( Vector3( 10.f, -4.f, 2.f ) );
+    bounding.SetExtents( Vector3( 3.f ) );
+
+    const BoundingBox aabb = bounding.GetBoxAxisAlignedBounds();
+    EXPECT_EQ( aabb.Contains( DirectX::BoundingSphere( Vector3( 10.f, -4.f, 2.f ), 3.f ) ), DirectX::CONTAINS )
+        << "center " << aabb.Center.x << " " << aabb.Center.y << " " << aabb.Center.z << " extents " << aabb.Extents.x
+        << " " << aabb.Extents.y << " " << aabb.Extents.z;
+}
+
+TEST( GenericBounding, ContainsByTestsTheBoundingOfItsType )
+{
+    // A box whose first floats, read as a sphere (center, radius = extents.x), would reach the sphere below.
+    Engine::GenericBounding<> box;
+    box.SetType( Engine::BOUNDING_TYPE_BOX );
+    box.UpdateFromBoundingBox( DirectX::BoundingOrientedBox( Vector3( 0.f, 0.f, 0.f ), Vector3( 3.f, 3.f, 0.5f ),
+                                                             Quaternion::Identity ) );
+    const DirectX::BoundingSphere below( Vector3( 0.f, 0.f, -2.f ), 1.f );
+    EXPECT_FALSE( box.Intersects( below ) );
+    EXPECT_EQ( box.ContainsBy( below ), DirectX::DISJOINT );
+
+    Engine::GenericBounding<> sphere;
+    sphere.SetType( Engine::BOUNDING_TYPE_SPHERE );
+    sphere.SetCenter( Vector3( 0.f, 0.f, 0.f ) );
+    sphere.SetExtents( Vector3( 1.f ) );
+    EXPECT_EQ( sphere.ContainsBy( DirectX::BoundingSphere( Vector3( 0.f, 0.f, 0.f ), 2.f ) ), DirectX::CONTAINS );
+    EXPECT_EQ( sphere.ContainsBy( DirectX::BoundingOrientedBox( Vector3( 0.f, 0.f, 0.f ), Vector3( 2.f, 2.f, 2.f ),
+                                                                Quaternion::Identity ) ),
+               DirectX::CONTAINS );
+}
+
 TEST( Octree, InsertThenUpdatePlacesEveryObject )
 {
     World world;
@@ -181,15 +248,40 @@ TEST( Octree, UpdateFollowsMovedObjects )
                 // Mostly small steps (stays in or near its node), sometimes anywhere.
                 if ( world.Uniform( 0.f, 1.f ) < 0.8f )
                 {
-                    auto box = object->bounding;
-                    DirectX::BoundingOrientedBox moved;
-                    moved.Extents     = box.GetExtents();
-                    moved.Orientation = Quaternion::Identity;
-                    const BoundingBox aabb = box.GetBoxAxisAlignedBounds();
-                    moved.Center = Vector3( aabb.Center ) +
-                                   Vector3( world.Uniform( -3.f, 3.f ), world.Uniform( -3.f, 3.f ),
-                                            world.Uniform( -3.f, 3.f ) );
-                    object->bounding.UpdateFromBoundingBox( moved );
+                    world.Move( *object, 3.f );
+                }
+                else
+                {
+                    world.Place( *object, 300.f );
+                }
+            }
+        }
+        tree.Update();
+        ExpectConsistent( tree, world, 16 );
+    }
+}
+
+TEST( Octree, SphereObjectsArePlacedByTheirSphere )
+{
+    World world;
+    world.sphere_share = 0.5f;
+    Tree  tree;
+    for ( int i = 0; i < 2000; ++i )
+    {
+        world.Add( tree, 300.f );
+    }
+    tree.Update();
+
+    for ( int frame = 0; frame < 10; ++frame )
+    {
+        for ( const Strong& object : world.objects )
+        {
+            if ( world.Uniform( 0.f, 1.f ) < 0.2f )
+            {
+                // Mostly small steps (stays in or near its node), sometimes anywhere.
+                if ( world.Uniform( 0.f, 1.f ) < 0.8f )
+                {
+                    world.Move( *object, 3.f );
                 }
                 else
                 {
