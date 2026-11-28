@@ -517,6 +517,43 @@ TEST( Octree, SmallObjectsStayInTheSmallestNodes )
     EXPECT_TRUE( Placement( tree ) == placement );
 }
 
+// Objects at the same distance come in ID order, whatever their order in the tree.
+TEST( Octree, NearestOrdersEqualDistancesById )
+{
+    World world;
+    Tree  tree;
+    // Six objects at the same distance on the axes (in different octants of the root), inserted in a shuffled order.
+    const Vector3 axes[] = { Vector3( 10.f, 0.f, 0.f ), Vector3( -10.f, 0.f, 0.f ), Vector3( 0.f, 10.f, 0.f ),
+                             Vector3( 0.f, -10.f, 0.f ), Vector3( 0.f, 0.f, 10.f ), Vector3( 0.f, 0.f, -10.f ) };
+    for ( int round = 0; round < 8; ++round )
+    {
+        Tree                round_tree;
+        std::vector<Strong> objects;
+        for ( const Vector3& center : axes )
+        {
+            auto object    = std::make_shared<FakeObject>();
+            object->center = center;
+            object->bounding.SetType( Engine::BOUNDING_TYPE_BOX );
+            object->bounding.UpdateFromBoundingBox(
+                    DirectX::BoundingOrientedBox( center, Vector3( 0.5f, 0.5f, 0.5f ), Quaternion::Identity ) );
+            objects.push_back( object );
+        }
+        std::shuffle( objects.begin(), objects.end(), world.random );
+        for ( const Strong& object : objects )
+        {
+            round_tree.Insert( object );
+        }
+        round_tree.Update();
+
+        const std::vector<Weak> nearest = round_tree.Nearest( Vector3::Zero, 12.f );
+        ASSERT_EQ( nearest.size(), objects.size() );
+        for ( size_t i = 1; i < nearest.size(); ++i )
+        {
+            EXPECT_LT( FakeGetter::id( nearest[ i - 1 ] ), FakeGetter::id( nearest[ i ] ) ) << "round " << round;
+        }
+    }
+}
+
 TEST( Octree, UpdateDirtySkipsObjectsNotInTheTree )
 {
     World world;

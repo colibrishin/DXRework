@@ -4,6 +4,7 @@
 #include <bitset>
 #include <stack>
 #include <unordered_map>
+#include <tuple>
 #include <vector>
 #include <queue>
 #include <memory>
@@ -700,7 +701,7 @@ namespace Engine
         {
             using query_frame = std::pair<const octree_impl*, bool>;
             std::stack<query_frame>             q;
-            std::vector<std::pair<float, WeakT>> found;
+            std::vector<std::tuple<float, decltype(BoundingValueGetter::id(std::declval<const WeakT&>())), WeakT>> found;
             const BoundingSphere                search_sphere(point, distance);
 
             q.emplace(this, false);
@@ -723,7 +724,7 @@ namespace Engine
                                 bounding.Intersects(search_sphere) || bounding.ContainsBy(search_sphere) )
                             {
                                 const Vector3 center = bounding.GetBoxAxisAlignedBounds().Center;
-                                found.emplace_back(Vector3::DistanceSquared(center, point), v);
+                                found.emplace_back(Vector3::DistanceSquared(center, point), BoundingValueGetter::id(v), v);
                             }
                         }
                     }
@@ -740,10 +741,14 @@ namespace Engine
                 }
             }
 
-            std::stable_sort(found.begin(), found.end(), [](const auto& a, const auto& b) { return a.first < b.first; });
+            // Equal distances (objects on a grid) go by ID, not by where the objects are in the tree.
+            std::sort(found.begin(), found.end(), [](const auto& a, const auto& b)
+            {
+                return std::tie(std::get<0>(a), std::get<1>(a)) < std::tie(std::get<0>(b), std::get<1>(b));
+            });
             std::vector<WeakT> result;
             result.reserve(found.size());
-            for ( auto& [d, v] : found )
+            for ( auto& [d, id, v] : found )
             {
                 result.push_back(std::move(v));
             }
