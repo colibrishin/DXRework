@@ -162,6 +162,46 @@ TEST( Octree, InsertThenUpdatePlacesEveryObject )
     ExpectConsistent( tree, world );
 }
 
+TEST( Octree, UpdateFollowsMovedObjects )
+{
+    World world;
+    Tree  tree;
+    for ( int i = 0; i < 2000; ++i )
+    {
+        world.Add( tree, 300.f );
+    }
+    tree.Update();
+
+    for ( int frame = 0; frame < 40; ++frame )
+    {
+        for ( const Strong& object : world.objects )
+        {
+            if ( world.Uniform( 0.f, 1.f ) < 0.2f )
+            {
+                // Mostly small steps (stays in or near its node), sometimes anywhere.
+                if ( world.Uniform( 0.f, 1.f ) < 0.8f )
+                {
+                    auto box = object->bounding;
+                    DirectX::BoundingOrientedBox moved;
+                    moved.Extents     = box.GetExtents();
+                    moved.Orientation = Quaternion::Identity;
+                    const BoundingBox aabb = box.GetBoxAxisAlignedBounds();
+                    moved.Center = Vector3( aabb.Center ) +
+                                   Vector3( world.Uniform( -3.f, 3.f ), world.Uniform( -3.f, 3.f ),
+                                            world.Uniform( -3.f, 3.f ) );
+                    object->bounding.UpdateFromBoundingBox( moved );
+                }
+                else
+                {
+                    world.Place( *object, 300.f );
+                }
+            }
+        }
+        tree.Update();
+        ExpectConsistent( tree, world, 16 );
+    }
+}
+
 TEST( Octree, RemovedAndExpiredObjectsLeave )
 {
     World world;

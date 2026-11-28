@@ -1000,9 +1000,11 @@ namespace Engine
             return !m_insertion_queue_.empty();
         }
 
+        // Empty for its whole lifespan. A node that got an object or a child since it was last checked (a sibling's
+        // object moved up into the parent and down into it) is kept.
         bool garbage() const
         {
-            return m_life_count_ < 0;
+            return m_life_count_ < 0 && empty();
         }
 
         bool empty() const
