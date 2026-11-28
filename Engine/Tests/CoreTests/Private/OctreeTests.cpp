@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 
 #include <algorithm>
+#include <map>
 #include <memory>
 #include <random>
 #include <set>
@@ -79,6 +80,30 @@ namespace
             return object;
         }
     };
+
+    // Object -> node it is in.
+    std::map<const FakeObject*, const Tree*> Placement( const Tree& tree )
+    {
+        std::map<const FakeObject*, const Tree*> placement;
+        std::vector<const Tree*>                 nodes{ &tree };
+        while ( !nodes.empty() )
+        {
+            const Tree* node = nodes.back();
+            nodes.pop_back();
+            for ( const Weak& value : node->Read() )
+            {
+                placement[ value.lock().get() ] = node;
+            }
+            for ( const Tree* child : node->Next() )
+            {
+                if ( child )
+                {
+                    nodes.push_back( child );
+                }
+            }
+        }
+        return placement;
+    }
 
     // Objects in the root or its children (an object deeper than that is away from the map's center planes).
     size_t ShallowObjects( const Tree& tree )
@@ -398,6 +423,78 @@ TEST( Octree, InsertingAnObjectAgainMovesIt )
     }
     ExpectConsistent( tree, world );
     tree.Update();
+    ExpectConsistent( tree, world );
+}
+
+TEST( Octree, UpdateDirtyFollowsMovedObjects )
+{
+    World world;
+    world.sphere_share = 0.3f;
+    Tree  tree;
+    for ( int i = 0; i < 2000; ++i )
+    {
+        world.Add( tree, 300.f );
+    }
+    // The first objects are still queued: UpdateDirty places them first.
+    tree.UpdateDirty( std::vector<Strong>{} );
+    ExpectConsistent( tree, world, 16 );
+
+    for ( int frame = 0; frame < 40; ++frame )
+    {
+        std::vector<Strong> moved;
+        for ( const Strong& object : world.objects )
+        {
+            const float roll = world.Uniform( 0.f, 1.f );
+            if ( roll < 0.16f )
+            {
+                world.Move( *object, 3.f );
+                moved.push_back( object );
+            }
+            else if ( roll < 0.2f )
+            {
+                world.Place( *object, 300.f );
+                moved.push_back( object );
+            }
+            else if ( roll < 0.201f )
+            {
+                const DirectX::BoundingOrientedBox away( Vector3( world.Uniform( 1500.f, 3000.f ), 0.f, 0.f ),
+                                                         Vector3( 1.f, 1.f, 1.f ), Quaternion::Identity );
+                object->bounding.SetType( Engine::BOUNDING_TYPE_BOX );
+                object->bounding.UpdateFromBoundingBox( away );
+                object->center = away.Center;
+                moved.push_back( object );
+            }
+        }
+        // Unchanged objects may be listed too, and an object twice.
+        moved.push_back( world.objects[ 0 ] );
+        moved.push_back( world.objects[ 0 ] );
+        tree.UpdateDirty( moved );
+        SCOPED_TRACE( frame );
+        ExpectConsistent( tree, world, 16 );
+        if ( HasFatalFailure() )
+        {
+            return;
+        }
+    }
+
+    // A full Update afterwards moves nothing: UpdateDirty placed every object where Update would.
+    const auto placement = Placement( tree );
+    tree.Update();
+    EXPECT_TRUE( Placement( tree ) == placement );
+}
+
+TEST( Octree, UpdateDirtySkipsObjectsNotInTheTree )
+{
+    World world;
+    Tree  tree;
+    for ( int i = 0; i < 100; ++i )
+    {
+        world.Add( tree, 300.f );
+    }
+    tree.Update();
+    auto stranger = std::make_shared<FakeObject>();
+    world.Place( *stranger, 300.f );
+    tree.UpdateDirty( std::vector<Strong>{ stranger } );
     ExpectConsistent( tree, world );
 }
 

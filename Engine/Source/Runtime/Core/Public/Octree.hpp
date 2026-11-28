@@ -581,6 +581,52 @@ namespace Engine
             }
         }
 
+        // Re-places only `objects` (Strong or Weak; those whose bounds may have changed), giving the placement
+        // Update gives them. Objects that are not in the tree are skipped. Call on the root.
+        template <typename Range>
+        void UpdateDirty(const Range& objects)
+        {
+            for ( unsigned attempt = 0; !ready(); ++attempt )
+            {
+                if ( attempt > retry_exhaust )
+                {
+                    throw std::logic_error("octree_impl update failed.");
+                }
+                UpdateInternal();
+            }
+
+            auto& where = Where();
+            for ( const auto& object : objects )
+            {
+                const WeakT weak   = object;
+                const auto  locked = weak.lock();
+                if ( !locked )
+                {
+                    continue;
+                }
+                const auto found = where.find(BoundingValueGetter::id(weak));
+                if ( found == where.end() )
+                {
+                    continue;
+                }
+
+                octree_impl* node = found->second;
+                if ( !node->Take(weak) )
+                {
+                    throw std::logic_error("octree_impl: an object is not in its recorded node.");
+                }
+
+                const BoundingBox obj_box = BoundingValueGetter::value(locked).GetBoxAxisAlignedBounds();
+                octree_impl*      cursor  = node;
+                while ( cursor->m_parent_ && cursor->m_bounds_.Contains(obj_box) != DirectX::ContainmentType::CONTAINS )
+                {
+                    cursor = cursor->m_parent_;
+                }
+                cursor->InsertBounded(weak, obj_box);
+                FreeVacant(node);
+            }
+        }
+
         void Clear()
         {
             Where().clear();
