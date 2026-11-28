@@ -28,6 +28,11 @@ namespace
         {
             return object->bounding;
         }
+
+        static uintptr_t id( const Weak& object )
+        {
+            return reinterpret_cast<uintptr_t>( object.lock().get() );
+        }
     };
 
     using Tree = Engine::octree_impl<Weak, FakeGetter>;
@@ -120,6 +125,7 @@ namespace
         }
 
         EXPECT_EQ( outside, 0u ) << "objects in a node that does not contain them";
+        EXPECT_EQ( tree.CheckWhere(), 0u ) << "objects whose recorded node is another";
 
         std::multiset<const FakeObject*> live;
         for ( const Strong& object : world.objects )
@@ -371,6 +377,28 @@ TEST( Octree, ObjectsOutsideTheMapStayInTheTree )
             return;
         }
     }
+}
+
+TEST( Octree, InsertingAnObjectAgainMovesIt )
+{
+    World world;
+    Tree  tree;
+    for ( int i = 0; i < 200; ++i )
+    {
+        world.Add( tree, 300.f );
+    }
+    tree.Update();
+
+    // Inserted again (deserialization inserts directly) after it moved: still once, in its new place.
+    for ( int i = 0; i < 20; ++i )
+    {
+        FakeObject& object = *world.objects[ static_cast<size_t>( i * 7 ) ];
+        world.Place( object, 300.f );
+        tree.Insert( world.objects[ static_cast<size_t>( i * 7 ) ] );
+    }
+    ExpectConsistent( tree, world );
+    tree.Update();
+    ExpectConsistent( tree, world );
 }
 
 TEST( Octree, RemovedAndExpiredObjectsLeave )

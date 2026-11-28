@@ -12,5 +12,6 @@ namespace Engine
 	struct ENGINE_CORE_API bounding_getter
 	{
 		static GenericBounding<> value(const Weak<Abstracts::ObjectBase>& object);
+		static GlobalEntityID    id(const Weak<Abstracts::ObjectBase>& object);
 	};
 }

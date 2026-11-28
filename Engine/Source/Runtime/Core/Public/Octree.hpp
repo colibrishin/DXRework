@@ -3,6 +3,7 @@
 #include <array>
 #include <bitset>
 #include <stack>
+#include <unordered_map>
 #include <vector>
 #include <queue>
 #include <memory>
@@ -84,11 +85,65 @@ namespace Engine
                     m_children_[ i ]->m_parent_ = this;
                 }
             }
+
+            if ( !m_parent_ )
+            {
+                // A copied root: its objects are in the copied nodes.
+                std::vector<octree_impl*> nodes{ this };
+                while ( !nodes.empty() )
+                {
+                    octree_impl* node = nodes.back();
+                    nodes.pop_back();
+                    for ( const WeakT& value : node->m_values_ )
+                    {
+                        if ( !value.expired() )
+                        {
+                            Where()[ BoundingValueGetter::id(value) ] = node;
+                        }
+                    }
+                    for ( const auto& child : node->m_children_ )
+                    {
+                        if ( child )
+                        {
+                            nodes.push_back(child.get());
+                        }
+                    }
+                }
+            }
         }
 
         [[nodiscard]] const PoolVector& Read() const
         {
             return m_values_;
+        }
+
+        // Number of live objects (from the root) whose recorded node is not the node they are in. 0 when consistent.
+        [[nodiscard]] size_t CheckWhere() const
+        {
+            size_t                          wrong = 0;
+            std::vector<const octree_impl*> nodes{ this };
+            while ( !nodes.empty() )
+            {
+                const octree_impl* node = nodes.back();
+                nodes.pop_back();
+                for ( const WeakT& value : node->m_values_ )
+                {
+                    if ( value.expired() )
+                    {
+                        continue;
+                    }
+                    const auto found = m_where_ ? m_where_->find(BoundingValueGetter::id(value)) : decltype(m_where_->end()){};
+                    wrong += !m_where_ || found == m_where_->end() || found->second != node;
+                }
+                for ( const auto& child : node->m_children_ )
+                {
+                    if ( child )
+                    {
+                        nodes.push_back(child.get());
+                    }
+                }
+            }
+            return wrong;
         }
 
         std::array<const octree_impl*, 8> Next() const
@@ -163,6 +218,17 @@ namespace Engine
                 return true;
             }
 
+            // Inserted again: move it instead of keeping two entries.
+            auto& where = Where();
+            if ( const auto found = where.find(BoundingValueGetter::id(obj)); found != where.end() )
+            {
+                octree_impl* node = found->second;
+                if ( node->Take(obj) )
+                {
+                    FreeVacant(node);
+                }
+            }
+
             return InsertBounded(obj, BoundingValueGetter::value(obj.lock()).GetBoxAxisAlignedBounds());
         }
 
@@ -205,7 +271,7 @@ namespace Engine
                 // possibly the smallest node that can contain the object
                 if ( floor_bit.all() )
                 {
-                    node_value.push_back(obj);
+                    node->Put(obj);
                     found = true;
                     break;
                 }
@@ -254,12 +320,12 @@ namespace Engine
             }
             if ( !found && last )
             {
-                last->m_values_.push_back(obj);
+                last->Put(obj);
                 return true;
             }
             if ( !last && root()->m_bounds_.Contains(obj_box) )
             {
-                root()->m_values_.push_back(obj);
+                root()->Put(obj);
                 return true;
             }
 
@@ -269,6 +335,22 @@ namespace Engine
 
         void Remove(const WeakT& obj)
         {
+            if ( !obj.expired() )
+            {
+                auto& where = Where();
+                if ( const auto found = where.find(BoundingValueGetter::id(obj)); found != where.end() )
+                {
+                    octree_impl* node = found->second;
+                    where.erase(found);
+                    if ( node->Take(obj) )
+                    {
+                        FreeVacant(node);
+                        return;
+                    }
+                }
+            }
+
+            // Not placed by this tree (or expired): search every node, dropping expired objects on the way.
             std::stack<octree_impl*> stack;
             stack.push(this);
 
@@ -501,6 +583,7 @@ namespace Engine
 
         void Clear()
         {
+            Where().clear();
             std::stack<octree_impl*> stack;
             stack.push(this);
 
@@ -695,6 +778,61 @@ namespace Engine
             cursor->InsertBounded(obj, obj_box);
         }
 
+        using id_type   = decltype(BoundingValueGetter::id(std::declval<const WeakT&>()));
+        using where_map = std::unordered_map<id_type, octree_impl*>;
+
+        // Object -> node it is in, kept by the root (every node puts its objects through Put).
+        where_map& Where()
+        {
+            octree_impl* r = root();
+            if ( !r->m_where_ )
+            {
+                r->m_where_ = std::make_unique<where_map>();
+            }
+            return *r->m_where_;
+        }
+
+        void Put(const WeakT& obj)
+        {
+            m_values_.push_back(obj);
+            Where()[ BoundingValueGetter::id(obj) ] = this;
+        }
+
+        // Takes `obj` out of this node's objects; false when it is not here.
+        bool Take(const WeakT& obj)
+        {
+            const auto locked = obj.lock();
+            for ( auto it = m_values_.begin(); it != m_values_.end(); ++it )
+            {
+                if ( it->lock() == locked )
+                {
+                    m_values_.erase(it);
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        // Frees `node`, then its ancestors, while they hold no object and no child (the root stays).
+        static void FreeVacant(octree_impl* node)
+        {
+            while ( node->m_parent_ && node->m_values_.empty() &&
+                    std::none_of(node->m_children_.begin(), node->m_children_.end(), [](const auto& c) { return !!c; }) )
+            {
+                octree_impl* parent = node->m_parent_;
+                for ( int i = 0; i < octant_count; ++i )
+                {
+                    if ( parent->m_children_[ i ].get() == node )
+                    {
+                        parent->m_children_[ i ].reset();
+                        parent->m_active_children_.reset(i);
+                        break;
+                    }
+                }
+                node = parent;
+            }
+        }
+
         static bool __vectorcall FloatCompare(const float a, const float b)
         {
             return std::fabs(a - b) < Epsilon * std::fmaxf(1.0f,
@@ -782,6 +920,10 @@ namespace Engine
                     {
                         node_children[ i ]            = allocate(octants[ i ], octant_values[ i ]);
                         node_children[ i ]->m_parent_ = node;
+                        for ( const WeakT& value : octant_values[ i ] )
+                        {
+                            Where()[ BoundingValueGetter::id(value) ] = node_children[ i ].get();
+                        }
                         node_children[ i ]->Build();
                         node_active_children.set(i);
                         stack.push(node_children[ i ].get());
@@ -800,7 +942,7 @@ namespace Engine
                 {
                     if ( auto obj = m_insertion_queue_.front().lock() )
                     {
-                        m_values_.push_back(obj);
+                        Put(obj);
                     }
 
                     m_insertion_queue_.pop();
@@ -1039,6 +1181,8 @@ namespace Engine
         int m_life_count_;
         // Update(): number of m_values_ checked at the first visit; the post-visit checks only those added since.
         size_t m_values_checked_ = 0;
+        // Root only (see Where()).
+        std::unique_ptr<where_map> m_where_;
     };
 
     template <typename WeakT, typename BoundingValueGetter, float Epsilon>
