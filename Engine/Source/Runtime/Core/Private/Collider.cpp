@@ -1,4 +1,5 @@
 #include "Collider.h"
+#include "ChangeSignal.h"
 #include "Resource.h"
 #include "ObjectBase.h"
 #include "Transform.h"
@@ -150,12 +151,14 @@ namespace Engine::Components
 	void Collider::FromMatrix(const Matrix& mat)
 	{
 		m_local_matrix_ = mat;
+		SignalComponent("collider.shape", *this, eChange::Modified);
 	}
 
 	void Collider::SetType(const eBoundingType type)
 	{
 		m_type_ = type;
 		m_boundings_.SetType(type);
+		SignalComponent("collider.shape", *this, eChange::Modified);
 
 		if (m_type_ == BOUNDING_TYPE_BOX)
 		{
@@ -177,6 +180,7 @@ namespace Engine::Components
 	void Collider::SetBoundingBox(const BoundingOrientedBox& bounding)
 	{
 		m_boundings_.UpdateFromBoundingBox(bounding);
+		SignalComponent("collider.shape", *this, eChange::Modified);
 
 		if (m_type_ == BOUNDING_TYPE_BOX)
 		{
