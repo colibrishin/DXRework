@@ -151,6 +151,7 @@ namespace
 
         EXPECT_EQ( outside, 0u ) << "objects in a node that does not contain them";
         EXPECT_EQ( tree.CheckWhere(), 0u ) << "objects whose recorded node is another";
+        EXPECT_EQ( tree.CheckPlacement(), 0u ) << "objects not where Update would put them";
 
         std::multiset<const FakeObject*> live;
         for ( const Strong& object : world.objects )
@@ -614,6 +615,27 @@ TEST( Octree, CrowdedNodeKeepsEveryObjectOnce )
             return;
         }
     }
+}
+
+// The placement check finds objects that moved without being re-placed (what a missed change would leave).
+TEST( Octree, CheckPlacementFindsUnlistedMoves )
+{
+    World world;
+    Tree  tree;
+    for ( int i = 0; i < 200; ++i )
+    {
+        world.Add( tree, 300.f );
+    }
+    tree.UpdateDirty( std::vector<Strong>{} );
+    ASSERT_EQ( tree.CheckPlacement(), 0u );
+
+    for ( const Strong& object : world.objects )
+    {
+        world.Place( *object, 300.f );
+    }
+    EXPECT_GT( tree.CheckPlacement(), 0u );
+    tree.UpdateDirty( world.objects );
+    EXPECT_EQ( tree.CheckPlacement(), 0u );
 }
 
 TEST( Octree, UpdateDirtySkipsObjectsNotInTheTree )

@@ -18,6 +18,10 @@ namespace Engine::Managers
 {
 	void SceneManager::SetActiveFinalize(const Weak<Scene>& it)
 	{
+		if (const auto& previous = m_active_scene_.lock(); previous && previous != it.lock())
+		{
+			previous->StopTrackingTreeChanges();
+		}
 		m_active_scene_ = it;
 
 		if (const auto& scene = m_active_scene_.lock())
@@ -43,6 +47,10 @@ namespace Engine::Managers
         {
             m_playing_scene_ = play_scene;
             std::swap( m_playing_scene_, m_active_scene_ );
+            if ( const auto &edited = m_playing_scene_.lock() )
+            {
+                edited->StopTrackingTreeChanges();
+            }
 
             if ( !play_scene->IsInitialized() )
             {
@@ -65,6 +73,7 @@ namespace Engine::Managers
 		{
             m_b_playing_ = false;
             play_scene->EndPlay( dt );
+            play_scene->StopTrackingTreeChanges(); // a copy that is dropped; someone may still hold it
 
             m_active_scene_ = {};
             std::swap( m_active_scene_, m_playing_scene_ );
@@ -83,6 +92,7 @@ namespace Engine::Managers
 
 	void SceneManager::RemoveSceneFinalize(const Strong<Scene>& scene)
 	{
+		scene->StopTrackingTreeChanges();
 		if (scene == m_active_scene_.lock())
 		{
 #if WITH_DEBUG

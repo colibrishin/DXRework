@@ -119,6 +119,46 @@ namespace Engine
             return m_values_;
         }
 
+        // Number of live objects (from this node down) not in the node Update would put them in: the deepest node that
+        // contains their bounds (or the root). 0 when the tree is up to date with the objects' bounds.
+        [[nodiscard]] size_t CheckPlacement() const
+        {
+            size_t                          wrong = 0;
+            std::vector<const octree_impl*> nodes{ this };
+            while ( !nodes.empty() )
+            {
+                const octree_impl* node = nodes.back();
+                nodes.pop_back();
+                const Vector3 extent_scale = node->Extent() * 2.f;
+                const bool    floor        = extent_scale.x <= smallest_scale && extent_scale.y <= smallest_scale &&
+                                             extent_scale.z <= smallest_scale;
+                for ( const WeakT& value : node->m_values_ )
+                {
+                    const auto locked = value.lock();
+                    if ( !locked )
+                    {
+                        continue;
+                    }
+                    const BoundingBox obj_box = BoundingValueGetter::value(locked).GetBoxAxisAlignedBounds();
+                    bool              ok      = !node->m_parent_ || node->m_bounds_.Contains(obj_box) == DirectX::CONTAINS;
+                    for ( int i = 0; ok && !floor && i < octant_count; ++i )
+                    {
+                        ok = GetBound(node->Extent(), node->WorldCenter(), static_cast<eOctant>(i)).Contains(obj_box) !=
+                             DirectX::CONTAINS;
+                    }
+                    wrong += !ok;
+                }
+                for ( const auto& child : node->m_children_ )
+                {
+                    if ( child )
+                    {
+                        nodes.push_back(child.get());
+                    }
+                }
+            }
+            return wrong;
+        }
+
         // Number of live objects (from the root) whose recorded node is not the node they are in. 0 when consistent.
         [[nodiscard]] size_t CheckWhere() const
         {
