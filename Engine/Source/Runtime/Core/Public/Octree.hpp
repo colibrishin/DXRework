@@ -3,7 +3,6 @@
 #include <array>
 #include <bitset>
 #include <stack>
-#include <unordered_set>
 #include <vector>
 #include <queue>
 #include <memory>
@@ -361,12 +360,9 @@ namespace Engine
 
                         const auto obj     = node_value[ i ].lock();
                         const auto obj_box = BoundingValueGetter::value(obj).GetBoxAxisAlignedBounds();
-                        if ( node_bound.Contains(obj_box) != DirectX::ContainmentType::CONTAINS )
+                        if ( node->m_parent_ && node_bound.Contains(obj_box) != DirectX::ContainmentType::CONTAINS )
                         {
-                            if ( !MoveUp(node, obj, obj_box) )
-                            {
-                                return;
-                            }
+                            MoveUp(node, obj, obj_box);
                             node_value.erase(node_value.begin() + i);
                             continue;
                         }
@@ -478,13 +474,10 @@ namespace Engine
                                 continue;
                             }
 
-                            // Still bounded by this node? (Was checked in the post-visit with a second bounding.)
-                            if ( node_bound.Contains(obj_box) != DirectX::ContainmentType::CONTAINS )
+                            // Still bounded by this node? The root keeps what is outside the map.
+                            if ( node->m_parent_ && node_bound.Contains(obj_box) != DirectX::ContainmentType::CONTAINS )
                             {
-                                if ( !MoveUp(node, obj, obj_box) )
-                                {
-                                    return;
-                                }
+                                MoveUp(node, obj, obj_box);
                                 it = node_value.erase(it);
                                 continue;
                             }
@@ -689,36 +682,17 @@ namespace Engine
         }
 
     private:
-        // Moves an object that left `node` to the nearest ancestor that takes it (the caller erases it from `node`).
-        // Returns false after a panic rebuild (the caller must stop iterating).
-        bool MoveUp(octree_impl* node, const WeakT& obj, const BoundingBox& obj_box)
+        // Moves an object that left `node` (not the root) to the nearest ancestor that contains it, or to the root,
+        // which also keeps objects outside the map; InsertBounded takes it down from there. The caller erases it from
+        // `node`.
+        void MoveUp(octree_impl* node, const WeakT& obj, const BoundingBox& obj_box)
         {
-            auto* cursor = node->parent();
-            std::unordered_set<octree_impl*> seen_ancestors;
-            constexpr unsigned max_parent_walk = 65536u;
-            unsigned walk_steps = 0;
-            while ( cursor )
+            octree_impl* cursor = node->m_parent_;
+            while ( cursor->m_parent_ && cursor->m_bounds_.Contains(obj_box) != DirectX::ContainmentType::CONTAINS )
             {
-                if ( walk_steps++ >= max_parent_walk || !seen_ancestors.insert(cursor).second )
-                {
-                    // Cycle or unreasonably deep parent chain: rebuild tree to recover.
-                    root()->Panic();
-                    return false;
-                }
-                if ( cursor->InsertBounded(obj, obj_box) )
-                {
-                    break;
-                }
-                cursor = cursor->parent();
+                cursor = cursor->m_parent_;
             }
-
-            if ( !cursor )
-            {
-                // panic: Even root cannot contain the object, need to rebuild the whole tree.
-                root()->Panic();
-                return false;
-            }
-            return true;
+            cursor->InsertBounded(obj, obj_box);
         }
 
         static bool __vectorcall FloatCompare(const float a, const float b)
@@ -814,61 +788,6 @@ namespace Engine
                     }
                 }
             }
-        }
-
-        // Resolving panic status, rebuilds the whole tree.
-        void Panic()
-        {
-            if ( root() != this )
-            {
-                throw std::logic_error("Cannot force update from child node.");
-            }
-
-            // Keep in mind that this is rebuilding the whole tree from root node.
-            m_b_initialized_ = false;
-
-            std::stack<octree_impl*> stack;
-            stack.push(root());
-
-            // Scan the whole tree and collect all objects
-            while ( !stack.empty() )
-            {
-                const auto node = stack.top();
-                stack.pop();
-
-                for ( const auto& obj : node->m_values_ )
-                {
-                    m_insertion_queue_.push(obj);
-                }
-
-                for ( int i = 0; i < octant_count; ++i )
-                {
-                    if ( node->m_children_[ i ] )
-                    {
-                        const auto& child = node->m_children_[ i ];
-
-                        if ( child->m_active_children_ == 0 && child->m_values_.size() <= 1 )
-                        {
-                            if ( child->m_values_.size() == 1 )
-                            {
-                                m_insertion_queue_.push(child->m_values_[ 0 ]);
-                            }
-
-                            node->m_children_[ i ].reset();
-                            node->m_active_children_.reset(i);
-                        }
-                        else
-                        {
-                            stack.push(node->m_children_[ i ].get());
-                        }
-                    }
-                }
-            }
-
-            m_values_.clear();
-
-            // Rebuild the tree
-            UpdateInternal();
         }
 
         // Resolving dirty status or rebuilding.

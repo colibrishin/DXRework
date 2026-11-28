@@ -75,6 +75,20 @@ namespace
         }
     };
 
+    // Objects in the root or its children (an object deeper than that is away from the map's center planes).
+    size_t ShallowObjects( const Tree& tree )
+    {
+        size_t count = tree.Read().size();
+        for ( const Tree* child : tree.Next() )
+        {
+            if ( child )
+            {
+                count += child->Read().size();
+            }
+        }
+        return count;
+    }
+
     // Every live object exactly once, nothing expired, and queries equal to testing every object.
     void ExpectConsistent( const Tree& tree, World& world, const int queries = 64 )
     {
@@ -317,6 +331,44 @@ TEST( Octree, NearestReturnsTheNearestCenterFirst )
             const float distance = Vector3::DistanceSquared( value.lock()->center, point );
             EXPECT_GE( distance, last );
             last = distance;
+        }
+    }
+}
+
+TEST( Octree, ObjectsOutsideTheMapStayInTheTree )
+{
+    World world;
+    Tree  tree;
+    for ( int i = 0; i < 500; ++i )
+    {
+        world.Add( tree, 300.f );
+    }
+    tree.Update();
+
+    for ( int frame = 0; frame < 10; ++frame )
+    {
+        // A few objects leave the map (+-1024), a few come back.
+        for ( int i = 0; i < 5; ++i )
+        {
+            FakeObject& object = *world.objects[ static_cast<size_t>( world.Uniform( 0.f, 499.f ) ) ];
+            if ( frame % 3 == 2 )
+            {
+                world.Place( object, 300.f );
+                continue;
+            }
+            const DirectX::BoundingOrientedBox away( Vector3( world.Uniform( 1500.f, 3000.f ), 0.f, 0.f ),
+                                                     Vector3( 1.f, 1.f, 1.f ), Quaternion::Identity );
+            object.bounding.UpdateFromBoundingBox( away );
+        }
+        const size_t shallow_before = ShallowObjects( tree );
+        tree.Update();
+        SCOPED_TRACE( frame );
+        ExpectConsistent( tree, world, 16 );
+        // Leaving the map does not collapse the tree: the other objects stay in their deep nodes.
+        EXPECT_LE( ShallowObjects( tree ), shallow_before + 5 );
+        if ( HasFatalFailure() )
+        {
+            return;
         }
     }
 }
