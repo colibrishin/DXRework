@@ -554,6 +554,68 @@ TEST( Octree, NearestOrdersEqualDistancesById )
     }
 }
 
+// Many objects in one node (the root keeps those across the map's center planes), re-placed, removed and moved by
+// full updates in turn: the recorded index of an object is only a hint after other changes in its node.
+TEST( Octree, CrowdedNodeKeepsEveryObjectOnce )
+{
+    World world;
+    Tree  tree;
+    for ( int i = 0; i < 600; ++i )
+    {
+        const Strong object = world.Add( tree, 200.f );
+        if ( i % 2 == 0 )
+        {
+            // Across the x = 0 plane: stays in the root.
+            object->center.x = world.Uniform( -1.f, 1.f );
+            object->bounding.SetCenter( object->center );
+        }
+    }
+    tree.Update();
+    ExpectConsistent( tree, world, 16 );
+
+    for ( int frame = 0; frame < 30; ++frame )
+    {
+        std::vector<Strong> moved;
+        for ( size_t i = 0; i < world.objects.size(); )
+        {
+            const Strong object = world.objects[ i ];
+            const float  roll   = world.Uniform( 0.f, 1.f );
+            if ( roll < 0.02f )
+            {
+                tree.Remove( object );
+                world.objects.erase( world.objects.begin() + static_cast<ptrdiff_t>( i ) );
+                continue;
+            }
+            if ( roll < 0.3f )
+            {
+                object->center.x = roll < 0.15f ? world.Uniform( -1.f, 1.f ) : world.Uniform( -200.f, 200.f );
+                object->bounding.SetCenter( object->center );
+                moved.push_back( object );
+            }
+            ++i;
+        }
+        for ( int i = 0; i < 10; ++i )
+        {
+            world.Add( tree, 200.f );
+        }
+
+        SCOPED_TRACE( frame );
+        if ( frame % 3 == 2 )
+        {
+            tree.Update(); // erases inside nodes: recorded indices go stale
+        }
+        else
+        {
+            tree.UpdateDirty( moved );
+        }
+        ExpectConsistent( tree, world, 16 );
+        if ( HasFatalFailure() )
+        {
+            return;
+        }
+    }
+}
+
 TEST( Octree, UpdateDirtySkipsObjectsNotInTheTree )
 {
     World world;

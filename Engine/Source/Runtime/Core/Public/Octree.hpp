@@ -95,11 +95,12 @@ namespace Engine
                 {
                     octree_impl* node = nodes.back();
                     nodes.pop_back();
-                    for ( const WeakT& value : node->m_values_ )
+                    for ( size_t i = 0; i < node->m_values_.size(); ++i )
                     {
-                        if ( !value.expired() )
+                        // Held while id() locks it again.
+                        if ( const auto value = node->m_values_[ i ].lock() )
                         {
-                            Where()[ BoundingValueGetter::id(value) ] = node;
+                            Where()[ BoundingValueGetter::id(node->m_values_[ i ]) ] = { node, i };
                         }
                     }
                     for ( const auto& child : node->m_children_ )
@@ -134,7 +135,7 @@ namespace Engine
                         continue;
                     }
                     const auto found = m_where_ ? m_where_->find(BoundingValueGetter::id(value)) : decltype(m_where_->end()){};
-                    wrong += !m_where_ || found == m_where_->end() || found->second != node;
+                    wrong += !m_where_ || found == m_where_->end() || found->second.node != node;
                 }
                 for ( const auto& child : node->m_children_ )
                 {
@@ -223,8 +224,8 @@ namespace Engine
             auto& where = Where();
             if ( const auto found = where.find(BoundingValueGetter::id(obj)); found != where.end() )
             {
-                octree_impl* node = found->second;
-                if ( node->Take(obj) )
+                octree_impl* node = found->second.node;
+                if ( node->Take(obj, found->second.index) )
                 {
                     FreeVacant(node);
                 }
@@ -341,9 +342,10 @@ namespace Engine
                 auto& where = Where();
                 if ( const auto found = where.find(BoundingValueGetter::id(obj)); found != where.end() )
                 {
-                    octree_impl* node = found->second;
+                    octree_impl* node  = found->second.node;
+                    const size_t index = found->second.index;
                     where.erase(found);
-                    if ( node->Take(obj) )
+                    if ( node->Take(obj, index) )
                     {
                         FreeVacant(node);
                         return;
@@ -616,8 +618,8 @@ namespace Engine
                     continue;
                 }
 
-                octree_impl* node = found->second;
-                if ( !node->Take(weak) )
+                octree_impl* node = found->second.node;
+                if ( !node->Take(weak, found->second.index) )
                 {
                     throw std::logic_error("octree_impl: an object is not in its recorded node.");
                 }
@@ -835,7 +837,13 @@ namespace Engine
         }
 
         using id_type   = decltype(BoundingValueGetter::id(std::declval<const WeakT&>()));
-        using where_map = std::unordered_map<id_type, octree_impl*>;
+        // The node an object is in and its index there when it was put (a hint: other changes can move it).
+        struct place
+        {
+            octree_impl* node;
+            size_t       index;
+        };
+        using where_map = std::unordered_map<id_type, place>;
 
         // Object -> node it is in, kept by the root (every node puts its objects through Put).
         where_map& Where()
@@ -851,22 +859,40 @@ namespace Engine
         void Put(const WeakT& obj)
         {
             m_values_.push_back(obj);
-            Where()[ BoundingValueGetter::id(obj) ] = this;
+            Where()[ BoundingValueGetter::id(obj) ] = { this, m_values_.size() - 1 };
         }
 
-        // Takes `obj` out of this node's objects; false when it is not here.
-        bool Take(const WeakT& obj)
+        // Takes `obj` out of this node's objects, looking at `hint` (its recorded index) first; false when it is not
+        // here. The last object takes its slot. Values are compared by owner: locking each made re-placing k objects
+        // of a crowded node (the root keeps those on the map's center planes) cost k times its size.
+        bool Take(const WeakT& obj, const size_t hint)
         {
-            const auto locked = obj.lock();
-            for ( auto it = m_values_.begin(); it != m_values_.end(); ++it )
+            const auto same = [&obj](const WeakT& value) { return !value.owner_before(obj) && !obj.owner_before(value); };
+            size_t     index = hint;
+            if ( index >= m_values_.size() || !same(m_values_[ index ]) )
             {
-                if ( it->lock() == locked )
+                const auto it = std::find_if(m_values_.begin(), m_values_.end(), same);
+                if ( it == m_values_.end() )
                 {
-                    m_values_.erase(it);
-                    return true;
+                    return false;
+                }
+                index = static_cast<size_t>(it - m_values_.begin());
+            }
+
+            if ( index + 1 != m_values_.size() )
+            {
+                m_values_[ index ] = std::move(m_values_.back());
+                // Held while id() locks it again.
+                if ( const auto moved = m_values_[ index ].lock() )
+                {
+                    if ( const auto found = Where().find(BoundingValueGetter::id(m_values_[ index ])); found != Where().end() )
+                    {
+                        found->second.index = index;
+                    }
                 }
             }
-            return false;
+            m_values_.pop_back();
+            return true;
         }
 
         // Frees `node`, then its ancestors, while they hold no object and no child (the root stays).
@@ -976,9 +1002,9 @@ namespace Engine
                     {
                         node_children[ i ]            = allocate(octants[ i ], octant_values[ i ]);
                         node_children[ i ]->m_parent_ = node;
-                        for ( const WeakT& value : octant_values[ i ] )
+                        for ( size_t j = 0; j < octant_values[ i ].size(); ++j )
                         {
-                            Where()[ BoundingValueGetter::id(value) ] = node_children[ i ].get();
+                            Where()[ BoundingValueGetter::id(octant_values[ i ][ j ]) ] = { node_children[ i ].get(), j };
                         }
                         node_children[ i ]->Build();
                         node_active_children.set(i);
